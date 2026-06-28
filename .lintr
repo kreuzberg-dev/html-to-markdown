@@ -1,7 +1,7 @@
 linters: linters_with_defaults()
 # Every .R file in this repo is alef-generated (the extendr binding under
 # packages/r, plus the generated e2e/ and test_apps/ R suites). Generated code
-# ships as alef emits it and is not linted here — matching the e2e/test_apps
+# ships as alef emits it and is not linted here - matching the e2e/test_apps
 # exclusion every other language tool uses. The `lintr` shared hook runs
 # `lintr::lint_dir(".")` and ignores pre-commit file scoping, so the exclusion
 # must live here. Add hand-written R paths back to linting by narrowing this.

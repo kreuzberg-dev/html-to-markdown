@@ -121,7 +121,7 @@ impl NewlineStyle {
 pub enum CodeBlockStyle {
     /// Indented code blocks (4 spaces). `CommonMark` standard.
     Indented,
-    /// Fenced code blocks with backticks (```). Default (GFM). Supports language hints.
+    /// Fenced code blocks with triple backticks. Default (GFM). Supports language hints.
     #[default]
     Backticks,
     /// Fenced code blocks with tildes (~~~). Supports language hints.

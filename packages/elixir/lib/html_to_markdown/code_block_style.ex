@@ -19,7 +19,7 @@ defmodule HtmlToMarkdown.CodeBlockStyle do
   @doc "Indented code blocks (4 spaces). `CommonMark` standard."
   @spec indented() :: t()
   def indented, do: @indented
-  @doc "Fenced code blocks with backticks (```). Default (GFM). Supports language hints."
+  @doc "Fenced code blocks with triple backticks. Default (GFM). Supports language hints."
   @spec backticks() :: t()
   def backticks, do: @backticks
   @doc "Fenced code blocks with tildes (~~~). Supports language hints."
