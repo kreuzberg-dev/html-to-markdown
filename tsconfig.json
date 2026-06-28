@@ -3,6 +3,6 @@
 	"compilerOptions": {
 		"noEmit": true
 	},
-	"include": ["packages/typescript/src/**/*.ts"],
+	"include": ["crates/html-to-markdown-node/index.d.ts"],
 	"exclude": ["node_modules", "dist", "e2e", "test_apps"]
 }

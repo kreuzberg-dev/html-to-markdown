@@ -231,6 +231,7 @@ test_apps/**/test_output.log
 
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .agents/
+.ai-rulez/.generated-manifest.json
 .codex/
 .cursor/
 .github/agents/
@@ -241,3 +242,43 @@ test_apps/**/test_output.log
 AGENTS.md
 CLAUDE.md
 # END ai-rulez
+
+# Alef-generated skills are source-controlled; other agent-local state stays ignored.
+!.codex/
+.codex/*
+!.codex/skills/
+.codex/skills/*
+!.codex/skills/api/
+!.codex/skills/api/SKILL.md
+!.codex/skills/cli/
+!.codex/skills/cli/SKILL.md
+!.codex/skills/mcp/
+!.codex/skills/mcp/SKILL.md
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/api/
+!.agents/skills/api/SKILL.md
+!.agents/skills/cli/
+!.agents/skills/cli/SKILL.md
+!.agents/skills/mcp/
+!.agents/skills/mcp/SKILL.md
+!.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/api/
+!.claude/skills/api/SKILL.md
+!.claude/skills/cli/
+!.claude/skills/cli/SKILL.md
+!.claude/skills/mcp/
+!.claude/skills/mcp/SKILL.md
+!.github/skills/
+.github/skills/*
+!.github/skills/api/
+!.github/skills/api/SKILL.md
+!.github/skills/cli/
+!.github/skills/cli/SKILL.md
+!.github/skills/mcp/
+!.github/skills/mcp/SKILL.md

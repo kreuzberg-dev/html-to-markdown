@@ -1,0 +1,9 @@
+# {{ krate.name }} MCP Reference
+
+Use this skill when integrating {{ krate.name }} through Model Context Protocol tools, prompts, or resources.
+
+{% for tool in mcp.tools %}
+- `{{ tool.name }}`{{ ": " ~ tool.description if tool.description else "" }}
+{% else %}
+No MCP tools were discovered from the configured source paths.
+{% endfor %}
