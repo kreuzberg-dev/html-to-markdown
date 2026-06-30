@@ -267,6 +267,7 @@ This is the core Rust library. For other languages:
 
 - **JavaScript/TypeScript**: [html-to-markdown-node](https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-node) (NAPI-RS) or [html-to-markdown-wasm](https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-wasm) (WebAssembly)
 - **Python**: [html-to-markdown](https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-py) (PyO3)
+- **Dart/Flutter**: [h2m](https://pub.dev/packages/h2m) (official Dart binding) or [html_to_markdown_rust](https://pub.dev/packages/html_to_markdown_rust) (unofficial FFI wrapper via Hooks)
 - **PHP**: [html-to-markdown](https://github.com/xberg-io/html-to-markdown/tree/main/packages/php) (PIE + Composer helpers)
 - **Ruby**: [html-to-markdown](https://github.com/xberg-io/html-to-markdown/tree/main/packages/ruby) (Magnus + rb-sys)
 - **CLI**: [html-to-markdown-cli](https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-cli)
