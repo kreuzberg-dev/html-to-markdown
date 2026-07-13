@@ -1,0 +1,8 @@
+name: html_to_markdown_rs_e2e
+version: 0.0.0
+
+dependencies:
+  html_to_markdown_rs:
+    path: ../../packages/crystal
+
+crystal: ">= 1.0.0"

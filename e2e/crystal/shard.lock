@@ -1,0 +1,6 @@
+version: 2.0
+shards:
+  html_to_markdown_rs:
+    path: ../../packages/crystal
+    version: 3.8.3
+

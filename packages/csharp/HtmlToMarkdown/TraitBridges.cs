@@ -351,7 +351,7 @@ public sealed class HtmlVisitorBridge : IDisposable {
     // --- Marshalling helpers ---
 
     private static string Str(IntPtr p) =>
-    p == IntPtr.Zero ? string.Empty : (Marshal.PtrToStringUTF8(p) ?? string.Empty);
+        p == IntPtr.Zero ? string.Empty : (Marshal.PtrToStringUTF8(p) ?? string.Empty);
 
     private static NodeContext DecodeContext(IntPtr ctx) {
         if (ctx == IntPtr.Zero) {
@@ -388,19 +388,19 @@ public sealed class HtmlVisitorBridge : IDisposable {
     private static unsafe int EncodeResult(VisitResult result, IntPtr outCustom, IntPtr outLen) {
         switch (result) {
             case VisitResult.Continue:
-            return 0;
+                return 0;
             case VisitResult.Custom c:
-            WriteCustom(c.Value, outCustom, outLen);
-            return 1;
+                WriteCustom(c.Value, outCustom, outLen);
+                return 1;
             case VisitResult.Skip:
-            return 2;
+                return 2;
             case VisitResult.PreserveHtml:
-            return 3;
+                return 3;
             case VisitResult.Error e:
-            WriteCustom(e.Value, outCustom, outLen);
-            return 4;
+                WriteCustom(e.Value, outCustom, outLen);
+                return 4;
             default:
-            return 0;
+                return 0;
         }
     }
 
@@ -445,85 +445,85 @@ public sealed class HtmlVisitorBridge : IDisposable {
     // --- Callbacks ---
 
     private int VisitTextCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitText(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitText(DecodeContext(ctx), Str(text)));
     private int VisitElementStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitElementStart(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitElementStart(DecodeContext(ctx)));
     private int VisitElementEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitElementEnd(DecodeContext(ctx), Str(output)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitElementEnd(DecodeContext(ctx), Str(output)));
     private int VisitLinkCallback(IntPtr ctx, IntPtr userData, IntPtr href, IntPtr text, IntPtr title, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitLink(DecodeContext(ctx), Str(href), Str(text), Str(title)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitLink(DecodeContext(ctx), Str(href), Str(text), Str(title)));
     private int VisitImageCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr alt, IntPtr title, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitImage(DecodeContext(ctx), Str(src), Str(alt), Str(title)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitImage(DecodeContext(ctx), Str(src), Str(alt), Str(title)));
     private int VisitHeadingCallback(IntPtr ctx, IntPtr userData, uint level, IntPtr text, IntPtr id, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitHeading(DecodeContext(ctx), level, Str(text), Str(id)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitHeading(DecodeContext(ctx), level, Str(text), Str(id)));
     private int VisitCodeBlockCallback(IntPtr ctx, IntPtr userData, IntPtr lang, IntPtr code, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitCodeBlock(DecodeContext(ctx), Str(lang), Str(code)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitCodeBlock(DecodeContext(ctx), Str(lang), Str(code)));
     private int VisitCodeInlineCallback(IntPtr ctx, IntPtr userData, IntPtr code, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitCodeInline(DecodeContext(ctx), Str(code)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitCodeInline(DecodeContext(ctx), Str(code)));
     private int VisitListItemCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr marker, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitListItem(DecodeContext(ctx), ordered != 0, Str(marker), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitListItem(DecodeContext(ctx), ordered != 0, Str(marker), Str(text)));
     private int VisitListStartCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitListStart(DecodeContext(ctx), ordered != 0));
+        Dispatch(userData, outCustom, outLen, v => v.VisitListStart(DecodeContext(ctx), ordered != 0));
     private int VisitListEndCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitListEnd(DecodeContext(ctx), ordered != 0, Str(output)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitListEnd(DecodeContext(ctx), ordered != 0, Str(output)));
     private int VisitTableStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitTableStart(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableStart(DecodeContext(ctx)));
     private int VisitTableRowCallback(IntPtr ctx, IntPtr userData, IntPtr cells, UIntPtr cellsCount, int isHeader, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitTableRow(DecodeContext(ctx), DecodeStringArray(cells, cellsCount), isHeader != 0));
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableRow(DecodeContext(ctx), DecodeStringArray(cells, cellsCount), isHeader != 0));
     private int VisitTableEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitTableEnd(DecodeContext(ctx), Str(output)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableEnd(DecodeContext(ctx), Str(output)));
     private int VisitBlockquoteCallback(IntPtr ctx, IntPtr userData, IntPtr content, UIntPtr depth, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitBlockquote(DecodeContext(ctx), Str(content), (ulong)depth));
+        Dispatch(userData, outCustom, outLen, v => v.VisitBlockquote(DecodeContext(ctx), Str(content), (ulong)depth));
     private int VisitStrongCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitStrong(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitStrong(DecodeContext(ctx), Str(text)));
     private int VisitEmphasisCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitEmphasis(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitEmphasis(DecodeContext(ctx), Str(text)));
     private int VisitStrikethroughCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitStrikethrough(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitStrikethrough(DecodeContext(ctx), Str(text)));
     private int VisitUnderlineCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitUnderline(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitUnderline(DecodeContext(ctx), Str(text)));
     private int VisitSubscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitSubscript(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitSubscript(DecodeContext(ctx), Str(text)));
     private int VisitSuperscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitSuperscript(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitSuperscript(DecodeContext(ctx), Str(text)));
     private int VisitMarkCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitMark(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitMark(DecodeContext(ctx), Str(text)));
     private int VisitLineBreakCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitLineBreak(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitLineBreak(DecodeContext(ctx)));
     private int VisitHorizontalRuleCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitHorizontalRule(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitHorizontalRule(DecodeContext(ctx)));
     private int VisitCustomElementCallback(IntPtr ctx, IntPtr userData, IntPtr tagName, IntPtr html, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitCustomElement(DecodeContext(ctx), Str(tagName), Str(html)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitCustomElement(DecodeContext(ctx), Str(tagName), Str(html)));
     private int VisitDefinitionListStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListStart(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListStart(DecodeContext(ctx)));
     private int VisitDefinitionTermCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionTerm(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionTerm(DecodeContext(ctx), Str(text)));
     private int VisitDefinitionDescriptionCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionDescription(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionDescription(DecodeContext(ctx), Str(text)));
     private int VisitDefinitionListEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListEnd(DecodeContext(ctx), Str(output)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListEnd(DecodeContext(ctx), Str(output)));
     private int VisitFormCallback(IntPtr ctx, IntPtr userData, IntPtr action, IntPtr method, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitForm(DecodeContext(ctx), Str(action), Str(method)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitForm(DecodeContext(ctx), Str(action), Str(method)));
     private int VisitInputCallback(IntPtr ctx, IntPtr userData, IntPtr inputType, IntPtr name, IntPtr value, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitInput(DecodeContext(ctx), Str(inputType), Str(name), Str(value)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitInput(DecodeContext(ctx), Str(inputType), Str(name), Str(value)));
     private int VisitButtonCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitButton(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitButton(DecodeContext(ctx), Str(text)));
     private int VisitAudioCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitAudio(DecodeContext(ctx), Str(src)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitAudio(DecodeContext(ctx), Str(src)));
     private int VisitVideoCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitVideo(DecodeContext(ctx), Str(src)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitVideo(DecodeContext(ctx), Str(src)));
     private int VisitIframeCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitIframe(DecodeContext(ctx), Str(src)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitIframe(DecodeContext(ctx), Str(src)));
     private int VisitDetailsCallback(IntPtr ctx, IntPtr userData, int open, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitDetails(DecodeContext(ctx), open != 0));
+        Dispatch(userData, outCustom, outLen, v => v.VisitDetails(DecodeContext(ctx), open != 0));
     private int VisitSummaryCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitSummary(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitSummary(DecodeContext(ctx), Str(text)));
     private int VisitFigureStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitFigureStart(DecodeContext(ctx)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigureStart(DecodeContext(ctx)));
     private int VisitFigcaptionCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitFigcaption(DecodeContext(ctx), Str(text)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigcaption(DecodeContext(ctx), Str(text)));
     private int VisitFigureEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
-    Dispatch(userData, outCustom, outLen, v => v.VisitFigureEnd(DecodeContext(ctx), Str(output)));
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigureEnd(DecodeContext(ctx), Str(output)));
 
     public void Dispose() {
         if (_disposed) return;

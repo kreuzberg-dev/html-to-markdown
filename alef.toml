@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.34.5"
+alef_version = "0.32.6"
 languages = [
     "python",
     "node",
@@ -925,6 +925,9 @@ path = "../../packages/swift"
 [crates.e2e.packages.dart]
 name = "h2m"
 path = "../../packages/dart"
+
+[crates.e2e.packages.crystal]
+path = "../../packages/crystal"
 
 [crates.e2e.packages.zig]
 path = "../../packages/zig"
