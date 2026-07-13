@@ -4,6 +4,7 @@
 //! HTML to Markdown. It tracks nesting levels, element types, and feature-specific collectors
 //! that are passed through the conversion pipeline.
 
+use std::cell::Cell;
 #[cfg(any(feature = "inline-images", feature = "visitor"))]
 use std::cell::RefCell;
 #[cfg(feature = "metadata")]
@@ -84,6 +85,8 @@ pub struct Context {
     pub(crate) keep_inline_images_in: Rc<HashSet<String>>,
     /// Node IDs matching `exclude_selectors` — these nodes and all descendants are dropped.
     pub(crate) excluded_node_ids: Rc<HashSet<u32>>,
+    /// Shared flag set when the guarded DOM walk reaches its effective depth limit.
+    pub(crate) depth_limit_reached: Rc<Cell<bool>>,
     #[cfg(feature = "inline-images")]
     /// Shared collector for inline images when enabled.
     pub(crate) inline_collector: Option<InlineCollectorHandle>,
@@ -206,6 +209,7 @@ impl Context {
             preserve_tags: Rc::new(options.preserve_tags.iter().cloned().collect()),
             keep_inline_images_in: Rc::new(options.keep_inline_images_in.iter().cloned().collect()),
             excluded_node_ids: Rc::new(HashSet::new()),
+            depth_limit_reached: Rc::new(Cell::new(false)),
             #[cfg(feature = "inline-images")]
             inline_collector,
             #[cfg(feature = "metadata")]

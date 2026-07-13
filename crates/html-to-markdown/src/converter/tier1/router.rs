@@ -24,6 +24,8 @@ pub enum RouterDecision {
 /// - `options.wrap` — wrapping logic lives in the Tier-2 path (for now)
 /// - `options.convert_as_inline` — inline-conversion mode not yet in Tier-1
 /// - `options.hocr_spatial_tables` — hOCR spatial reconstruction is Tier-2 only
+/// - `options.max_depth.is_some()` — Tier-1 does not implement explicit depth
+///   truncation or warnings
 /// - `options.preprocessing.preset != PreprocessingPreset::Standard`
 ///   — non-standard preprocessing has Tier-2-specific semantics
 /// - `!options.strip_tags.is_empty()` — tag stripping requires DOM awareness
@@ -88,6 +90,7 @@ pub fn classify(report: &PrescanReport, options: &ConversionOptions) -> RouterDe
         || report.had_unescaped_lt
         || options.wrap
         || options.convert_as_inline
+        || options.max_depth.is_some()
         || options.preprocessing.preset != PreprocessingPreset::Standard
         || !options.strip_tags.is_empty()
         || !options.preserve_tags.is_empty()

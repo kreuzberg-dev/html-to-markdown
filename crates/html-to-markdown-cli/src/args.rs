@@ -377,8 +377,8 @@ pub struct Cli {
 
     /// Maximum DOM traversal depth
     ///
-    /// Silently truncate subtrees beyond this nesting depth. Useful for
-    /// pathologically deep documents. Omit for unlimited depth (default).
+    /// Truncate subtrees beyond this nesting depth. Records a processing warning;
+    /// use --show-warnings to print it. Omission uses the native-stack safety limit.
     #[arg(long, value_name = "N")]
     #[arg(help_heading = "Element Handling")]
     pub max_depth: Option<usize>,

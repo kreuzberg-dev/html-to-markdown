@@ -36,10 +36,17 @@ use crate::options::ConversionOptions;
 use crate::converter::context::{Context, InlineCollectorHandle};
 use crate::types::structure_collector::StructureCollectorHandle;
 
+type ConversionOutput = (
+    String,
+    Option<crate::types::DocumentStructure>,
+    Vec<crate::types::TableData>,
+    Option<crate::types::ProcessingWarning>,
+);
+
 /// Internal implementation of HTML to Markdown conversion.
 ///
-/// Returns `(markdown, Option<DocumentStructure>)`.  The structure is populated when
-/// `options.include_document_structure == true` and a `structure_collector` handle is provided.
+/// Returns the converted content, optional document structure, extracted tables, and an
+/// optional depth-limit warning.
 #[cfg_attr(
     any(not(feature = "inline-images"), not(feature = "metadata"), not(feature = "visitor")),
     allow(unused_variables)
@@ -54,11 +61,7 @@ pub fn convert_html_impl(
     #[cfg(feature = "visitor")] visitor: Option<crate::visitor::VisitorHandle>,
     #[cfg(not(feature = "visitor"))] _visitor: Option<()>,
     structure_collector: Option<StructureCollectorHandle>,
-) -> Result<(
-    String,
-    Option<crate::types::DocumentStructure>,
-    Vec<crate::types::TableData>,
-)> {
+) -> Result<ConversionOutput> {
     let stripped = strip_script_and_style_tags(html);
     let stripped = strip_hidden_elements(&stripped);
     // ~keep Normalise bogus HTML comment endings (`--->`, `---->`, …) that cause the
@@ -267,6 +270,12 @@ pub fn convert_html_impl(
         return Err(crate::error::ConversionError::Visitor(err.clone()));
     }
 
+    let max_depth = effective_max_depth(options);
+    let depth_warning = ctx.depth_limit_reached.get().then(|| crate::types::ProcessingWarning {
+        kind: crate::types::WarningKind::DepthLimitExceeded,
+        message: format!("DOM traversal reached the effective depth limit of {max_depth}; deeper nodes were skipped."),
+    });
+
     // ~keep Drop ctx before unwrapping the structure collector Rc — ctx holds a cloned Rc
     // ~keep reference to the same collector, and Rc::try_unwrap requires exactly one reference.
     drop(ctx);
@@ -291,7 +300,7 @@ pub fn convert_html_impl(
         output
     };
     let (document, tables) = finish_structure_collector(structure_collector);
-    Ok((output, document, tables))
+    Ok((output, document, tables, depth_warning))
 }
 
 /// Consume the structure collector and return the [`DocumentStructure`] and extracted
@@ -324,6 +333,7 @@ pub fn walk_node(
     let Some(node) = node_handle.get(parser) else { return };
 
     if depth >= effective_max_depth(options) {
+        ctx.depth_limit_reached.set(true);
         return;
     }
 

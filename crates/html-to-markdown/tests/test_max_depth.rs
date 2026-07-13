@@ -3,13 +3,21 @@
 
 //! Tests for the `max_depth` recursion-safety option.
 
-use html_to_markdown_rs::ConversionOptions;
+use html_to_markdown_rs::options::{OutputFormat, TierStrategy};
+use html_to_markdown_rs::{ConversionOptions, ConversionResult, WarningKind};
 
-fn convert_with_options(html: &str, options: ConversionOptions) -> String {
-    html_to_markdown_rs::convert(html, Some(options))
-        .expect("conversion should not fail")
-        .content
-        .unwrap_or_default()
+fn convert_with_options(html: &str, options: ConversionOptions) -> ConversionResult {
+    html_to_markdown_rs::convert(html, Some(options)).expect("conversion should not fail")
+}
+
+fn assert_depth_warning(result: &ConversionResult, max_depth: usize) {
+    assert_eq!(result.warnings.len(), 1, "expected exactly one depth warning");
+    let warning = &result.warnings[0];
+    assert_eq!(warning.kind, WarningKind::DepthLimitExceeded);
+    assert_eq!(
+        warning.message,
+        format!("DOM traversal reached the effective depth limit of {max_depth}; deeper nodes were skipped.")
+    );
 }
 
 /// With the default `max_depth: None`, ordinary nesting below the native stack
@@ -28,14 +36,15 @@ fn test_max_depth_none_converts_reasonably_nested_content() {
     };
 
     let result = convert_with_options(&html, options);
+    let content = result.content.as_deref().unwrap_or_default();
     assert!(
-        result.contains("deep"),
-        "Deeply nested text should be present when max_depth is None. Got:\n{result}"
+        content.contains("deep"),
+        "Deeply nested text should be present when max_depth is None. Got:\n{content}"
     );
+    assert!(result.warnings.is_empty());
 }
 
-/// With `max_depth: Some(2)`, block elements at depth 2 are not visited, so
-/// their text content is excluded from the output.
+/// Content at the configured limit is truncated and reported.
 #[test]
 fn test_max_depth_truncates_at_limit() {
     let html = "<div><p>shallow</p><div><p>deep</p></div></div>";
@@ -47,17 +56,36 @@ fn test_max_depth_truncates_at_limit() {
     };
 
     let result = convert_with_options(html, options);
+    let content = result.content.as_deref().unwrap_or_default();
     assert!(
-        result.contains("shallow"),
-        "Content at depth < max_depth should be present. Got:\n{result}"
+        content.contains("shallow"),
+        "Content at depth < max_depth should be present. Got:\n{content}"
     );
     assert!(
-        !result.contains("deep"),
-        "Content at depth >= max_depth should be absent. Got:\n{result}"
+        !content.contains("deep"),
+        "Content at depth >= max_depth should be absent. Got:\n{content}"
     );
+    assert_depth_warning(&result, 3);
 }
 
-/// With `max_depth: Some(0)`, no nodes are processed and the output is empty or whitespace only.
+/// Multiple truncated subtrees still produce one conversion-level warning.
+#[test]
+fn test_max_depth_warns_once_for_multiple_truncated_subtrees() {
+    let html = "<div><div><p>first</p></div><div><p>second</p></div></div>";
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: Some(2),
+        ..Default::default()
+    };
+
+    let result = convert_with_options(html, options);
+    let content = result.content.as_deref().unwrap_or_default();
+    assert!(!content.contains("first"));
+    assert!(!content.contains("second"));
+    assert_depth_warning(&result, 2);
+}
+
+/// With `max_depth: Some(0)`, no nodes are processed and truncation is reported.
 #[test]
 fn test_max_depth_zero_produces_empty() {
     let html = "<p>hello</p>";
@@ -69,8 +97,88 @@ fn test_max_depth_zero_produces_empty() {
     };
 
     let result = convert_with_options(html, options);
+    let content = result.content.as_deref().unwrap_or_default();
     assert!(
-        result.trim().is_empty(),
-        "max_depth: Some(0) should produce no output. Got:\n{result}"
+        content.trim().is_empty(),
+        "max_depth: Some(0) should produce no output. Got:\n{content}"
     );
+    assert_depth_warning(&result, 0);
+}
+
+/// Tier-2 applies its native stack-safe limit when no explicit limit is configured.
+#[test]
+fn test_tier2_default_limit_truncates_and_warns() {
+    let html = format!("{}leaf{}", "<div>".repeat(65), "</div>".repeat(65));
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: None,
+        tier_strategy: TierStrategy::Tier2,
+        ..Default::default()
+    };
+
+    let result = convert_with_options(&html, options);
+    let content = result.content.as_deref().unwrap_or_default();
+    assert!(!content.contains("leaf"));
+    assert_depth_warning(&result, 64);
+}
+
+/// Tier-2 processes every node below the default limit without warning.
+#[test]
+fn test_tier2_default_limit_boundary_does_not_warn() {
+    let html = format!("{}leaf{}", "<div>".repeat(63), "</div>".repeat(63));
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: None,
+        tier_strategy: TierStrategy::Tier2,
+        ..Default::default()
+    };
+
+    let result = convert_with_options(&html, options);
+    assert!(result.content.as_deref().unwrap_or_default().contains("leaf"));
+    assert!(result.warnings.is_empty());
+}
+
+/// Explicit limits above the native stack-safe limit are clamped and report the effective value.
+#[test]
+fn test_max_depth_above_safety_limit_is_clamped() {
+    let html = format!("{}leaf{}", "<div>".repeat(65), "</div>".repeat(65));
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: Some(usize::MAX),
+        ..Default::default()
+    };
+
+    let result = convert_with_options(&html, options);
+    assert!(!result.content.as_deref().unwrap_or_default().contains("leaf"));
+    assert_depth_warning(&result, 64);
+}
+
+/// Plain-text output reports the same default Tier-2 truncation as Markdown output.
+#[test]
+fn test_plain_text_default_limit_truncates_and_warns() {
+    let html = format!("{}leaf{}", "<div>".repeat(65), "</div>".repeat(65));
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: None,
+        output_format: OutputFormat::Plain,
+        ..Default::default()
+    };
+
+    let result = convert_with_options(&html, options);
+    assert!(!result.content.as_deref().unwrap_or_default().contains("leaf"));
+    assert_depth_warning(&result, 64);
+}
+
+/// A tree whose deepest node is below the configured limit is not truncated.
+#[test]
+fn test_max_depth_below_limit_does_not_warn() {
+    let options = ConversionOptions {
+        extract_metadata: false,
+        max_depth: Some(3),
+        ..Default::default()
+    };
+
+    let result = convert_with_options("<div><p>safe</p></div>", options);
+    assert!(result.content.as_deref().unwrap_or_default().contains("safe"));
+    assert!(result.warnings.is_empty());
 }

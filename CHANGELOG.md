@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Emit the existing `DepthLimitExceeded` processing warning exactly once when DOM traversal skips
+  nodes at the effective depth limit, including explicit limits routed through Tier-2.
+
 ## [3.8.3] - 2026-07-09
 
 ### Fixed

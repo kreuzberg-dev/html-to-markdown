@@ -212,7 +212,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
     // ~keep Run the conversion pipeline.
     // ~keep Pass structure_collector by value — convert_html_impl will consume it via Rc::try_unwrap
     // ~keep to return the finished DocumentStructure. We must not hold a second Rc reference.
-    let (markdown, document, tables) = {
+    let (markdown, document, tables, depth_warning) = {
         #[cfg(all(feature = "metadata", feature = "inline-images"))]
         {
             crate::converter::convert_html_impl(
@@ -286,7 +286,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
     };
 
     #[cfg(feature = "inline-images")]
-    let warnings: Vec<crate::types::ProcessingWarning> = image_warnings
+    let mut warnings: Vec<crate::types::ProcessingWarning> = image_warnings
         .into_iter()
         .map(|w| crate::types::ProcessingWarning {
             kind: crate::types::WarningKind::ImageExtractionFailed,
@@ -294,7 +294,10 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
         })
         .collect();
     #[cfg(not(feature = "inline-images"))]
-    let warnings: Vec<crate::types::ProcessingWarning> = Vec::new();
+    let mut warnings: Vec<crate::types::ProcessingWarning> = Vec::new();
+    if let Some(warning) = depth_warning {
+        warnings.push(warning);
+    }
 
     let _ = wants_metadata;
     let _ = wants_images;
