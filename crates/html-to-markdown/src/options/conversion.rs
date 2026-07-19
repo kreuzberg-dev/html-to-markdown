@@ -6,9 +6,15 @@ use crate::options::validation::{
     UrlEscapeStyle, WhitespaceMode,
 };
 
-/// Native recursion guard used when DOM traversal would otherwise be unlimited
-/// or set beyond the process stack's safe range.
+/// Native recursion guard used as the default when the caller does not set an
+/// explicit `max_depth`. Kept conservative so untrusted input cannot overflow
+/// the process stack.
 pub(crate) const NATIVE_STACK_SAFE_DEPTH: usize = 64;
+
+/// Absolute ceiling a caller may raise `max_depth` to. Callers can exceed the
+/// conservative native default (issue #434) but not this backstop, which still
+/// guards the recursive walker against a genuine stack overflow.
+pub(crate) const MAX_CONFIGURABLE_DEPTH: usize = 1024;
 
 /// Controls which conversion tier is used.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]

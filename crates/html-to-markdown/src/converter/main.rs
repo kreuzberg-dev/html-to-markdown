@@ -58,6 +58,7 @@ pub fn convert_html_impl(
     String,
     Option<crate::types::DocumentStructure>,
     Vec<crate::types::TableData>,
+    bool,
 )> {
     let stripped = strip_script_and_style_tags(html);
     let stripped = strip_hidden_elements(&stripped);
@@ -267,6 +268,9 @@ pub fn convert_html_impl(
         return Err(crate::error::ConversionError::Visitor(err.clone()));
     }
 
+    // ~keep Capture the depth-limit signal before ctx is dropped (issue #434).
+    let depth_limit_hit = ctx.depth_limit_hit.get();
+
     // ~keep Drop ctx before unwrapping the structure collector Rc — ctx holds a cloned Rc
     // ~keep reference to the same collector, and Rc::try_unwrap requires exactly one reference.
     drop(ctx);
@@ -291,7 +295,7 @@ pub fn convert_html_impl(
         output
     };
     let (document, tables) = finish_structure_collector(structure_collector);
-    Ok((output, document, tables))
+    Ok((output, document, tables, depth_limit_hit))
 }
 
 /// Consume the structure collector and return the [`DocumentStructure`] and extracted
@@ -324,6 +328,9 @@ pub fn walk_node(
     let Some(node) = node_handle.get(parser) else { return };
 
     if depth >= effective_max_depth(options) {
+        // ~keep issue #434: record that a subtree was dropped so the caller can be
+        // ~keep warned instead of silently losing content.
+        ctx.depth_limit_hit.set(true);
         return;
     }
 

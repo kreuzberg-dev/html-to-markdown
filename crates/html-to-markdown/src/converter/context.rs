@@ -4,6 +4,7 @@
 //! HTML to Markdown. It tracks nesting levels, element types, and feature-specific collectors
 //! that are passed through the conversion pipeline.
 
+use std::cell::Cell;
 #[cfg(any(feature = "inline-images", feature = "visitor"))]
 use std::cell::RefCell;
 #[cfg(feature = "metadata")]
@@ -67,6 +68,10 @@ pub struct Context {
     /// Whether inline images should remain markdown inside the current
     /// layout-table cell (its tag name is in `keep_inline_images_in`).
     pub(crate) cell_allow_inline_images: bool,
+    /// Shared flag set when the traversal-depth limit truncated a subtree, so a
+    /// `DepthLimitExceeded` warning can be surfaced (issue #434). Shared via `Rc`
+    /// so it survives the frequent `Context` clones made by child handlers.
+    pub(crate) depth_limit_hit: Rc<Cell<bool>>,
     /// Are we inside a paragraph element?
     pub(crate) in_paragraph: bool,
     /// Output buffer position where the current block's content starts.
@@ -201,6 +206,7 @@ impl Context {
             in_heading: false,
             heading_allow_inline_images: false,
             cell_allow_inline_images: false,
+            depth_limit_hit: Rc::new(Cell::new(false)),
             in_paragraph: false,
             block_content_start: 0,
             in_ruby: false,
