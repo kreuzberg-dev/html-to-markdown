@@ -109,7 +109,11 @@ fn plain_text_output_does_not_overflow_stack() {
         max_depth: Some(200),
         ..Default::default()
     };
-    assert!(converts_without_overflow(html, options));
+    // ~keep Plain output forces the recursive Tier-2 walk, and issue #434 lets an explicit
+    // ~keep max_depth exceed the native stack-safe default (64), so depth 200 genuinely recurses
+    // ~keep 200 frames. Raising the ceiling is the caller opting into deeper traversal, which needs
+    // ~keep a proportionate stack — mirror the 8 MiB budget used by deep_link_descendant_text.
+    assert!(converts_without_overflow_on_stack(html, options, 8 * 1024 * 1024));
 }
 
 #[test]
