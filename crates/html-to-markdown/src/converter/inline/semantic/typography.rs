@@ -406,6 +406,12 @@ pub fn handle_span(
         && options.whitespace_mode == crate::options::WhitespaceMode::Normalized
         && output.ends_with('\n')
         && !output.ends_with("\n\n")
+        // ~keep issue #432: never strip an intentional Markdown hard break.
+        && !output.ends_with("  \n")
+        && !output.ends_with("\\\n")
+        // ~keep issue #431: never cross a block boundary — a table row ends with
+        // ~keep "|\n"; popping it would glue this span onto the delimiter row.
+        && !output.ends_with("|\n")
     {
         output.pop();
     }

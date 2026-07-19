@@ -29,6 +29,42 @@ fn test_br_inside_strong_tags() {
 }
 
 #[test]
+fn test_br_between_spans_preserves_hard_break_spaces_issue_432() {
+    // ~keep issue #432: the normalized span handler must not strip an intentional
+    // ~keep hard break ("  \n") emitted by <br> between two <span> elements.
+    let html = "<div><span>First</span><br><span>Second</span></div>";
+    let result = convert(html, None).unwrap();
+
+    assert!(
+        result.contains("First  \nSecond"),
+        "Expected preserved spaces-style hard break: {result:?}"
+    );
+    assert!(
+        !result.contains("First  Second") && !result.contains("FirstSecond"),
+        "Hard break must not be collapsed: {result:?}"
+    );
+}
+
+#[test]
+fn test_br_between_spans_preserves_hard_break_backslash_issue_432() {
+    let html = "<div><span>First</span><br><span>Second</span></div>";
+    let options = ConversionOptions {
+        newline_style: html_to_markdown_rs::NewlineStyle::Backslash,
+        ..Default::default()
+    };
+    let result = convert(html, Some(options)).unwrap();
+
+    assert!(
+        result.contains("First\\\nSecond"),
+        "Expected preserved backslash-style hard break: {result:?}"
+    );
+    assert!(
+        !result.contains("First\\Second") && !result.contains("FirstSecond"),
+        "Hard break must not be collapsed: {result:?}"
+    );
+}
+
+#[test]
 fn test_multiple_bolds_with_br() {
     let html = "<b>Line 1<br/></b><b>Line 2<br/></b><b>Line 3</b>";
     let result = convert(html, None).unwrap();
