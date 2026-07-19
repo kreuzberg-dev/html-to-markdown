@@ -88,6 +88,16 @@ pub fn process_text_node(
                         }
                         return;
                     }
+                } else if newline_span_needs_separating_space(node_handle, parser, dom_ctx)
+                    && !output.ends_with(' ')
+                    && !output.ends_with('\n')
+                {
+                    // ~keep issue #430: a lone "\n" inside an inline wrapper (e.g. a
+                    // ~keep <span>) has no in-parent next sibling, but when that wrapper
+                    // ~keep is itself followed by inline content the newline still
+                    // ~keep separates words — collapse it to a single space.
+                    output.push(' ');
+                    return;
                 }
             }
             return;
@@ -259,4 +269,28 @@ pub fn process_text_node(
     } else {
         output.push_str(&final_text);
     }
+}
+
+/// Whether a whitespace-only newline text node with no in-parent next sibling
+/// still separates inline content (issue #430).
+///
+/// Returns true when the node's parent is an inline-like element that is itself
+/// followed by inline content — e.g. the lone `"\n"` inside the middle `<span>`
+/// of `<span>a</span><span>\n</span><span>b</span>`.
+fn newline_span_needs_separating_space(
+    node_handle: &tl::NodeHandle,
+    parser: &tl::Parser,
+    dom_ctx: &DomContext,
+) -> bool {
+    let Some(parent_id) = dom_ctx.parent_of(node_handle.get_inner()) else {
+        return false;
+    };
+    let parent_is_inline = dom_ctx
+        .tag_info(parent_id, parser)
+        .is_some_and(|info| info.is_inline_like);
+    if !parent_is_inline {
+        return false;
+    }
+    let parent_handle = tl::NodeHandle::new(parent_id);
+    next_sibling_is_inline_tag(&parent_handle, parser, dom_ctx)
 }
