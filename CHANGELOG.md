@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.9.0] - 2026-07-19
+
+### Added
+
+- **Configurable traversal-depth ceiling** (#434): callers may now raise the recursion limit above the
+  conservative native default (64) by setting an explicit `max_depth`, honored up to an internal
+  backstop of 1024. Deeply-nested email HTML that previously lost content past depth 64 now converts.
+  When the limit does truncate a subtree, a `DepthLimitExceeded` warning is surfaced instead of the
+  content being dropped silently.
+
+### Fixed
+
+- **`<br>` in table cells with `br_in_tables`** (#429): a `<br>` inside a table cell now emits a literal
+  `<br>` (valid single-line GFM) instead of a physical newline that broke the row.
+- **Newline-only inline span separator** (#430): in normalized whitespace mode a `<span>` whose sole
+  content is a newline now collapses to a single separating space instead of being dropped, so adjacent
+  inline text no longer glues together.
+- **Paragraph after a table inside a blockquote** (#431): the span newline-pop no longer crosses a
+  table-row boundary, so a following paragraph is not glued onto the delimiter row.
+- **Intentional hard break inside a span** (#432): the span newline-pop no longer eats a `<br>` hard
+  break (`  \n` / `\\\n`), preserving the line break.
+- **`keep_inline_images_in` inside layout-table cells** (#433): images inside a `td`/`th` listed in
+  `keep_inline_images_in` now stay as markdown when a Tier-2 layout table converts cells as inline,
+  instead of reducing to alt text.
+
+### Changed
+
+- Regenerate all bindings with alef 0.37.0.
+- Update dependencies across language packages.
+
 ## [3.8.3] - 2026-07-09
 
 ### Fixed

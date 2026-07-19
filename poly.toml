@@ -29,59 +29,16 @@ exclude = [
     "**/*.min.js",
     "**/tsconfig*.json",
     "docs/demo/**",
-    "docs-site/public/demo/html_to_markdown_wasm.js",
     "e2e/wasm/tests/**",
     "test_apps/wasm/tests/**",
     "crates/html-to-markdown-node/index.js",
     "**/Cargo.toml",
     "**/*_bridge_generated/**",
-    "packages/dart/rust/src/frb_generated.rs",
-    "crates/*-ffi/include/*.h",
-    "packages/go/include/*.h",
 ]
 
 [lint.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
-
-[lint.uncomment]
-enabled = true
-remove_todos = false
-remove_fixme = false
-remove_docs = false
-use_default_ignores = true
-preserve_patterns = [
-    "SAFETY",
-    "HACK",
-    "WORKAROUND",
-    "NOTE",
-    "Copyright",
-    "Licensed",
-    "License",
-    "SPDX",
-    "Apache",
-    "MIT",
-    "WITHOUT WARRANTIES",
-    "limitations under the License",
-    "copyright",
-    "licensed",
-    "license",
-    "apache",
-    "you may not use this file except in compliance",
-    "You may obtain a copy of the License",
-    "you may obtain a copy of the license",
-    "http://www.apache.org/licenses/LICENSE-2.0",
-    "http://www.apache.org/licenses/license-2.0",
-    "Unless required by applicable law",
-    "unless required by applicable law",
-    "distributed under the License",
-    "distributed under the license",
-    "AS IS",
-    "as is",
-    "without warranties",
-    "specific language governing permissions",
-    "limitations under the license",
-]
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
@@ -277,8 +234,6 @@ yor = "yor"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
 "**/test_apps/**" = [
     "ANN",
@@ -320,8 +275,6 @@ yor = "yor"
     "EXE001",
     "A001",
     "N801",
-    "comment",
-    "doc-comment",
 ]
 "**/skills/**/SKILL.md" = ["MD032"]
 ".github/workflows/publish.yaml" = ["typo"]
@@ -334,16 +287,6 @@ yor = "yor"
 "packages/swift/Sources/RustBridge*/**" = ["trailing-whitespace"]
 "readme_templates/**" = ["MD057"]
 "scripts/**/*.py" = ["INP001", "S607", "T201", "D103", "D212"]
-"e2e/**" = ["comment", "doc-comment"]
-"test_apps/**" = ["comment", "doc-comment"]
-"docs/assets/**" = ["comment", "doc-comment"]
-"**/generated/**" = ["comment", "doc-comment"]
-"**/*.generated.*" = ["comment", "doc-comment"]
-"**/*.g.*" = ["comment", "doc-comment"]
-"**/*.freezed.*" = ["comment", "doc-comment"]
-"crates/*-ffi/include/*.h" = ["comment", "doc-comment"]
-"packages/go/include/*.h" = ["comment", "doc-comment"]
-"Package.swift" = ["comment", "doc-comment"]
 
 [hooks]
 stages = ["pre-commit"]
@@ -384,8 +327,6 @@ lint = { exclude = [
     "crates/html-to-markdown-node/index.js",
     "**/Cargo.toml",
     "**/*_bridge_generated/**",
-    "crates/*-ffi/include/*.h",
-    "packages/go/include/*.h",
 ] }
 fmt = { exclude = [
     "**/*.freezed.dart",
@@ -422,8 +363,6 @@ fmt = { exclude = [
     "crates/html-to-markdown-node/index.js",
     "**/Cargo.toml",
     "**/*_bridge_generated/**",
-    "crates/*-ffi/include/*.h",
-    "packages/go/include/*.h",
 ] }
 file_safety = { exclude = [
     "**/*.freezed.dart",
@@ -460,8 +399,6 @@ file_safety = { exclude = [
     "crates/html-to-markdown-node/index.js",
     "**/Cargo.toml",
     "**/*_bridge_generated/**",
-    "crates/*-ffi/include/*.h",
-    "packages/go/include/*.h",
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }
@@ -469,8 +406,3 @@ commit = { stages = ["commit-msg"] }
 [hooks.pre-commit.commands.pyrefly]
 run = "pyrefly check packages/python"
 files = "packages/python/**/*.py"
-[[hooks.sources]]
-id = "ai-rulez"
-git = "https://github.com/Goldziher/ai-rulez.git"
-revision = "v4.9.3"
-hooks = ["ai-rulez-validate"]

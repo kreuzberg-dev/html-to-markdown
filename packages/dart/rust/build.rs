@@ -1,14 +1,23 @@
 use std::path::Path;
 
 fn main() {
+    // Re-run whenever any Rust source changes or FRB config changes.
     println!("cargo:rerun-if-changed=src");
     println!("cargo:rerun-if-changed=flutter_rust_bridge.yaml");
 
+    // Optional FRB codegen: regenerate flutter_rust_bridge artifacts when the
+    // tool is on PATH. Missing tool is not fatal — committed generated sources
+    // are checked in, and CI environments without FRB still build cleanly.
     match std::process::Command::new("flutter_rust_bridge_codegen")
         .args(["generate", "--config-file", "flutter_rust_bridge.yaml"])
         .status()
     {
         Ok(status) if status.success() => {
+            // FRB v2.12+ emits `use` lists in an order rustfmt 2024 edition rewrites
+            // (e.g. `{transform_result_dco, Lifetimeable, Lockable}` →
+            // `{Lifetimeable, Lockable, transform_result_dco}`). Run rustfmt against
+            // the generated file so committed output is fmt-clean and `cargo fmt --check`
+            // stays green in CI.
             match std::process::Command::new("rustfmt")
                 .args(["--edition", "2024", "src/frb_generated.rs"])
                 .status()
@@ -23,8 +32,18 @@ fn main() {
                 Err(err) => println!("cargo:warning=failed to spawn rustfmt: {err}"),
             }
 
+            // Patch the generated Dart entrypoint so the published package resolves
+            // its native library from its own installed location.
             patch_published_loader();
 
+            // Rewrite FRB-generated handler.executeSync/handler.executeNormal calls
+            // into direct handler invocations. FRB 2.x emits these calls assuming
+            // `handler` is a BaseHandler field, but in service-API methods `handler`
+            // is a user-supplied function parameter (FutureOr<R> Function(T)) which
+            // does not expose those methods, so the generated Dart fails to compile.
+            // The rewrite is idempotent (marker-gated) and runs after every FRB
+            // invocation — including the rebuild that fires during `dart pub get`
+            // in e2e flows, which is when this otherwise reverts.
             fix_handler_executor_calls();
         }
         Ok(status) => panic!("flutter_rust_bridge_codegen generate failed (exit code: {status})"),
@@ -133,6 +152,7 @@ fn patch_published_loader() {
 
     let mut patched = source.replacen(FRB_INIT_PROLOGUE, FRB_INIT_REPLACEMENT, 1);
 
+    // Ensure the helper's `File`/`Isolate`/`Abi` dependencies are imported.
     for (probe, line) in [
         ("import 'dart:io';", "import 'dart:io';\n"),
         ("import 'dart:isolate';", "import 'dart:isolate';\n"),
@@ -235,6 +255,7 @@ fn fix_handler_executor_calls() {
             }
         }
         let block_text = lines[start..i].join("\n");
+        // Extract signature: text from method start up to and including the opening brace.
         let signature_part = extract_signature(&block_text);
         let rewritten = if signature_part.contains("handler") && signature_part.contains("Function(") {
             rewrite_executor_to_task(&block_text)
@@ -270,6 +291,7 @@ fn extract_signature(src: &str) -> String {
                 paren -= 1;
             }
             '{' if paren == 0 => {
+                // Only treat `{` as body-start when all parens are closed.
                 result.push(ch);
                 break;
             }
@@ -387,6 +409,7 @@ mod tests {
 
     #[test]
     fn extract_signature_ignores_function_in_body() {
+        // The pattern "Function(" in a comment or nested type in the body should not affect signature extraction.
         let src = r#"void process(String data) {
     // This comment mentions Function(String) but it's in the body
     return handleData();

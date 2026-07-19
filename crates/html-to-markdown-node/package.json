@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/html-to-markdown",
-  "version": "3.8.3",
+  "version": "3.9.0",
   "description": "High-performance HTML to Markdown converter",
   "license": "MIT",
   "repository": {
@@ -18,14 +18,14 @@
   },
   "files": ["index.js", "index.d.ts", "*.node"],
   "optionalDependencies": {
-    "@xberg-io/html-to-markdown-linux-x64-gnu": "3.8.3",
-    "@xberg-io/html-to-markdown-linux-arm64-gnu": "3.8.3",
-    "@xberg-io/html-to-markdown-linux-x64-musl": "3.8.3",
-    "@xberg-io/html-to-markdown-linux-arm64-musl": "3.8.3",
-    "@xberg-io/html-to-markdown-darwin-x64": "3.8.3",
-    "@xberg-io/html-to-markdown-darwin-arm64": "3.8.3",
-    "@xberg-io/html-to-markdown-win32-x64-msvc": "3.8.3",
-    "@xberg-io/html-to-markdown-win32-arm64-msvc": "3.8.3"
+    "@xberg-io/html-to-markdown-linux-x64-gnu": "3.9.0",
+    "@xberg-io/html-to-markdown-linux-arm64-gnu": "3.9.0",
+    "@xberg-io/html-to-markdown-linux-x64-musl": "3.9.0",
+    "@xberg-io/html-to-markdown-linux-arm64-musl": "3.9.0",
+    "@xberg-io/html-to-markdown-darwin-x64": "3.9.0",
+    "@xberg-io/html-to-markdown-darwin-arm64": "3.9.0",
+    "@xberg-io/html-to-markdown-win32-x64-msvc": "3.9.0",
+    "@xberg-io/html-to-markdown-win32-arm64-msvc": "3.9.0"
   },
   "napi": {
     "packageName": "@xberg-io/html-to-markdown",
@@ -42,11 +42,11 @@
     ]
   },
   "scripts": {
-    "build": "npx --yes -p @napi-rs/cli@^3.6.2 napi build --platform --release",
-    "artifacts": "npx --yes -p @napi-rs/cli@^3.6.2 napi artifacts",
-    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.6.2 napi prepublish -t npm --skip-optional-publish"
+    "build": "npx --yes -p @napi-rs/cli@^3.7.3 napi build --platform --release",
+    "artifacts": "npx --yes -p @napi-rs/cli@^3.7.3 napi artifacts",
+    "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.7.3 napi prepublish -t npm --skip-optional-publish"
   },
   "engines": { "node": ">= 22" },
   "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.6.2" }
+  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
 }

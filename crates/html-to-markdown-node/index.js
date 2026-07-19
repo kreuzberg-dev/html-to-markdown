@@ -1,7 +1,6 @@
 "use strict";
 
 const { platform, arch } = process;
-const isWindows = platform === "win32";
 const isMusl = () => {
   // Prefer the report-header `glibcVersion` string when present — fastest and
   // unambiguous on Node builds that populate it. On Node 22+, certain CI

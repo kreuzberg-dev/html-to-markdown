@@ -160,11 +160,15 @@ pub fn decode_options(options: Robj) -> std::result::Result<crate::ConversionOpt
         return Ok(crate::ConversionOptions::default());
     }
 
+    // Accept the wrapper struct returned by the options type's default() / builder methods,
+    // which extendr exposes as an `ExternalPtr`. The binding struct is returned directly
     // from the #[extendr] impl methods, so unwrap it as the binding type.
     if let Ok(ext) = ExternalPtr::<crate::ConversionOptions>::try_from(&options) {
+        // Clone the binding struct and convert to core type via the generated From impl
         return Ok((*ext).clone().into());
     }
 
+    // Try to decode as a named list
     let list =
         List::try_from(&options).map_err(|e| format!("options must be NULL, ExternalPtr, or named list: {e}"))?;
     let mut opts = crate::ConversionOptions::default();
@@ -309,6 +313,7 @@ pub fn decode_options(options: Robj) -> std::result::Result<crate::ConversionOpt
     if let Some(v) = list_get(&list, "tier_strategy") {
         opts.tier_strategy = decode_tier_strategy(v)?;
     }
+    // Note: visitor field is skipped — R has no visitor concept, so it remains at default None
 
     Ok(opts)
 }

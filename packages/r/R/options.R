@@ -1,3 +1,8 @@
+#' Create an options list for generated bindings
+#'
+#' All parameters default to `NULL`, which means the Rust default is used.
+#' Pass named arguments to override individual settings.
+#'
 #' @param heading_style Heading style to use in Markdown output (ATX `#` or Setext underline)
 #' @param list_indent_type How to indent nested list items (spaces or tab)
 #' @param list_indent_width Number of spaces (or tabs) to use for each level of list indentation
@@ -43,6 +48,7 @@
 #' @param tier_strategy Which conversion tier to use
 #' @param visitor Optional visitor for custom traversal logic
 #' @return A named list suitable for the `options` argument of [convert()].
+#' @export
 conversion_options <- function(
   heading_style = NULL,
   list_indent_type = NULL,

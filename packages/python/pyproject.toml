@@ -4,7 +4,7 @@ requires = ["maturin>=1,<2"]
 
 [project]
 name = "html-to-markdown"
-version = "3.8.3"
+version = "3.9.0"
 description = "High-performance HTML to Markdown converter"
 keywords = ["converter", "html", "markdown"]
 license = "MIT"
@@ -28,6 +28,8 @@ dev = ["pyrefly>=1.1.1", "ruff>=0.14.8"]
 profile = "release"
 module-name = "html_to_markdown._html_to_markdown"
 manifest-path = "../../crates/html-to-markdown-py/Cargo.toml"
+# abi3-py310 produces a single wheel per platform that loads on Python 3.10+,
+# avoiding a per-Python-version build matrix.
 features = ["pyo3/extension-module", "pyo3/abi3-py310"]
 python-packages = ["html_to_markdown"]
 sdist-include = ["crates/html-to-markdown"]
@@ -35,6 +37,13 @@ sdist-include = ["crates/html-to-markdown"]
 [tool.pyrefly]
 python-version = "3.10"
 preset = "strict"
+# The alef-emitted `api.py` wrapper has a structural mismatch between its
+# `options.*` dataclass signatures and the `_internal_bindings.*` pyclass types
+# pyo3 accepts/returns at runtime. pyo3 reconciles them dynamically via
+# FromPyObject — the Python e2e suite exercises the runtime path — but a static
+# checker sees only the discrepancy. Suppress the errors it raises on the
+# wrapper until the codegen emits matching `_to_rust_*` calls and casts the
+# return values.
 [[tool.pyrefly.sub-config]]
 matches = "**/api.py"
 [tool.pyrefly.sub-config.errors]

@@ -4,6 +4,10 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    // Default library/include search paths follow the conventional Cargo workspace
+    // layout. `alef publish package --lang zig` rewrites this file for the
+    // distributed tarball so consumers link the bundled lib/ and include/ dirs.
+    // Override with -Dffi_path=... and -Dffi_include_path=... if your layout differs.
     const ffi_path = b.option(
         []const u8,
         "ffi_path",
