@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Refine the depth-limit warning (#434): the `DepthLimitExceeded` message now reports the effective
+  limit value, and the warning is emitted exactly once when a deeply-nested DOM is truncated.
+  Thanks @br411 (#428).
+
 ## [3.9.0] - 2026-07-19
 
 ### Added

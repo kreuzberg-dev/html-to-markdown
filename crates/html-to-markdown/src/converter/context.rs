@@ -68,10 +68,6 @@ pub struct Context {
     /// Whether inline images should remain markdown inside the current
     /// layout-table cell (its tag name is in `keep_inline_images_in`).
     pub(crate) cell_allow_inline_images: bool,
-    /// Shared flag set when the traversal-depth limit truncated a subtree, so a
-    /// `DepthLimitExceeded` warning can be surfaced (issue #434). Shared via `Rc`
-    /// so it survives the frequent `Context` clones made by child handlers.
-    pub(crate) depth_limit_hit: Rc<Cell<bool>>,
     /// Are we inside a paragraph element?
     pub(crate) in_paragraph: bool,
     /// Output buffer position where the current block's content starts.
@@ -92,6 +88,8 @@ pub struct Context {
     pub(crate) keep_inline_images_in: Rc<HashSet<String>>,
     /// Node IDs matching `exclude_selectors` — these nodes and all descendants are dropped.
     pub(crate) excluded_node_ids: Rc<HashSet<u32>>,
+    /// Shared flag set when the guarded DOM walk reaches its effective depth limit.
+    pub(crate) depth_limit_reached: Rc<Cell<bool>>,
     #[cfg(feature = "inline-images")]
     /// Shared collector for inline images when enabled.
     pub(crate) inline_collector: Option<InlineCollectorHandle>,
@@ -206,7 +204,6 @@ impl Context {
             in_heading: false,
             heading_allow_inline_images: false,
             cell_allow_inline_images: false,
-            depth_limit_hit: Rc::new(Cell::new(false)),
             in_paragraph: false,
             block_content_start: 0,
             in_ruby: false,
@@ -216,6 +213,7 @@ impl Context {
             preserve_tags: Rc::new(options.preserve_tags.iter().cloned().collect()),
             keep_inline_images_in: Rc::new(options.keep_inline_images_in.iter().cloned().collect()),
             excluded_node_ids: Rc::new(HashSet::new()),
+            depth_limit_reached: Rc::new(Cell::new(false)),
             #[cfg(feature = "inline-images")]
             inline_collector,
             #[cfg(feature = "metadata")]

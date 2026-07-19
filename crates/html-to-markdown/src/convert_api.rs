@@ -212,7 +212,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
     // ~keep Run the conversion pipeline.
     // ~keep Pass structure_collector by value — convert_html_impl will consume it via Rc::try_unwrap
     // ~keep to return the finished DocumentStructure. We must not hold a second Rc reference.
-    let (markdown, document, tables, depth_limit_hit) = {
+    let (markdown, document, tables, depth_warning) = {
         #[cfg(all(feature = "metadata", feature = "inline-images"))]
         {
             crate::converter::convert_html_impl(
@@ -295,15 +295,8 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
         .collect();
     #[cfg(not(feature = "inline-images"))]
     let mut warnings: Vec<crate::types::ProcessingWarning> = Vec::new();
-
-    // ~keep issue #434: surface truncated content instead of dropping it silently.
-    if depth_limit_hit {
-        warnings.push(crate::types::ProcessingWarning {
-            kind: crate::types::WarningKind::DepthLimitExceeded,
-            message: "DOM traversal was truncated because the max depth was exceeded; \
-                      some content was omitted. Raise `max_depth` to include it."
-                .to_string(),
-        });
+    if let Some(warning) = depth_warning {
+        warnings.push(warning);
     }
 
     let _ = wants_metadata;
