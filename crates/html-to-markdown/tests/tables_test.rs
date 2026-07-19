@@ -270,12 +270,10 @@ fn test_table_with_link_and_image_no_rows() {
 // ~keep ==============================================================================
 // ~keep Comprehensive tests for <br> tags in table cells
 // ~keep ==============================================================================
-// ~keep These tests cover the issue where literal <br> HTML tags were being output
-// ~keep in table cells instead of being converted to proper Markdown line breaks.
-// ~keep
-// ~keep ISSUE: When br_in_tables option is enabled, <br> tags in table cells should
-// ~keep be converted to proper Markdown line breaks (spaces-style: "  \n" or
-// ~keep backslash-style: "\\\n") rather than being output as literal "<br>" tags.
+// ~keep These tests cover issue #429: with br_in_tables enabled, an explicit <br>
+// ~keep inside a table cell must be preserved as a literal "<br>" so the GFM table
+// ~keep row stays on one physical line. Emitting a hard break ("  \n" / "\\\n")
+// ~keep injects a raw newline mid-row and produces an invalid table.
 
 #[test]
 fn test_br_in_table_cell_basic_spaces_style() {
@@ -290,15 +288,15 @@ fn test_br_in_table_cell_basic_spaces_style() {
     };
     let result = convert(html, Some(options)).unwrap();
 
+    // ~keep br_in_tables keeps the cell on one physical line via a literal <br>.
     assert!(
-        result.contains("Line 1  \nLine 2") || result.contains("Line 1  <br>Line 2"),
-        "Expected spaces-style line break in table cell: {result}"
+        result.contains("Line 1<br>Line 2"),
+        "Expected literal <br> inside the cell: {result}"
     );
-    let has_literal_br = result.contains("<br>");
-    let properly_converted = result.contains("Line 1  \nLine 2");
+    // ~keep A hard break must never split the row across physical lines.
     assert!(
-        has_literal_br || properly_converted,
-        "Should either have literal <br> (bug) or proper break: {result}"
+        !result.contains("Line 1  \nLine 2"),
+        "Must not emit a spaces-style hard break inside a cell: {result}"
     );
 }
 
@@ -316,10 +314,38 @@ fn test_br_in_table_cell_backslash_style() {
     };
     let result = convert(html, Some(options)).unwrap();
 
+    // ~keep br_in_tables emits a literal <br> regardless of newline_style.
     assert!(
-        result.contains("Line 1\\\nLine 2") || result.contains("Line 1\\<br>Line 2"),
-        "Expected backslash-style line break in table cell: {result}"
+        result.contains("Line 1<br>Line 2"),
+        "Expected literal <br> inside the cell: {result}"
     );
+    assert!(
+        !result.contains("Line 1\\\nLine 2"),
+        "Must not emit a backslash-style hard break inside a cell: {result}"
+    );
+}
+
+#[test]
+fn test_br_in_table_cell_issue_429_repro() {
+    // ~keep Exact repro from issue #429.
+    let html = "<table><tr><td>First line<br>Second line</td><td>Other</td></tr></table>";
+
+    for style in [
+        html_to_markdown_rs::NewlineStyle::Spaces,
+        html_to_markdown_rs::NewlineStyle::Backslash,
+    ] {
+        let options = ConversionOptions {
+            br_in_tables: true,
+            compact_tables: true,
+            newline_style: style,
+            ..Default::default()
+        };
+        let result = convert(html, Some(options)).unwrap();
+        assert!(
+            result.contains("| First line<br>Second line | Other |"),
+            "Expected single-line GFM row with literal <br> ({style:?}): {result}"
+        );
+    }
 }
 
 #[test]

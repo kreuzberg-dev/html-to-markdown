@@ -83,6 +83,11 @@ pub fn handle(
     if ctx.in_heading {
         trim_trailing_whitespace(output);
         output.push_str("  ");
+    } else if ctx.in_table_cell && options.br_in_tables {
+        // ~keep Inside a table cell with br_in_tables, emit a literal <br> so the
+        // ~keep GFM row stays on one physical line (issue #429). A hard break here
+        // ~keep would inject a raw newline mid-row and break the table.
+        output.push_str("<br>");
     } else if output.is_empty() || output.ends_with('\n') {
         output.push('\n');
     } else {
