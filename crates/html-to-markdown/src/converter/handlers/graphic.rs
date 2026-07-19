@@ -89,7 +89,7 @@ pub fn handle_graphic(
         metadata_payload = Some((attributes_map, width, height));
     }
 
-    let keep_as_markdown = ctx.in_heading && ctx.heading_allow_inline_images;
+    let keep_as_markdown = (ctx.in_heading && ctx.heading_allow_inline_images) || ctx.cell_allow_inline_images;
 
     let should_use_alt_text =
         !keep_as_markdown && (ctx.convert_as_inline || (ctx.in_heading && !ctx.heading_allow_inline_images));

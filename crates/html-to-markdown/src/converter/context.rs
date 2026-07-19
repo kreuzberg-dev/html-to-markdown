@@ -64,6 +64,9 @@ pub struct Context {
     pub(crate) in_heading: bool,
     /// Whether inline images should remain markdown inside the current heading.
     pub(crate) heading_allow_inline_images: bool,
+    /// Whether inline images should remain markdown inside the current
+    /// layout-table cell (its tag name is in `keep_inline_images_in`).
+    pub(crate) cell_allow_inline_images: bool,
     /// Are we inside a paragraph element?
     pub(crate) in_paragraph: bool,
     /// Output buffer position where the current block's content starts.
@@ -197,6 +200,7 @@ impl Context {
             prev_item_had_blocks: false,
             in_heading: false,
             heading_allow_inline_images: false,
+            cell_allow_inline_images: false,
             in_paragraph: false,
             block_content_start: 0,
             in_ruby: false,

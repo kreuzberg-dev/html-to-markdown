@@ -45,8 +45,13 @@ pub fn append_layout_row(
                 );
                 if matches!(cell_name.as_ref(), "td" | "th" | "cell") {
                     let mut cell_text = String::new();
+                    // ~keep issue #433: honor keep_inline_images_in for images in
+                    // ~keep layout-table cells even though cell content is converted
+                    // ~keep as inline. A matching cell tag keeps images as markdown.
+                    let cell_allow_inline_images = ctx.keep_inline_images_in.contains(cell_name.as_ref());
                     let cell_ctx = super::super::super::Context {
                         convert_as_inline: true,
+                        cell_allow_inline_images,
                         ..ctx.clone()
                     };
                     let cell_children = cell_tag.children();
