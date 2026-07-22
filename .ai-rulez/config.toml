@@ -26,36 +26,37 @@ builtins = [
     'default-commands',
 ]
 
+compact = true
 [header]
 style = 'minimal'
 
 [[includes]]
 name = 'xberg-core'
-source = 'https://github.com/xberg-io/ai-rulez.git'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/core'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-languages'
-source = 'https://github.com/xberg-io/ai-rulez.git'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/languages'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-cicd'
-source = 'https://github.com/xberg-io/ai-rulez.git'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/cicd'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-infrastructure'
-source = 'https://github.com/xberg-io/ai-rulez.git'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/infrastructure'
 merge_strategy = 'local-override'
 
 [[includes]]
 name = 'xberg-e2e-generator'
-source = 'https://github.com/xberg-io/ai-rulez.git'
+source = 'https://github.com/xberg-io/agent-conventions.git'
 path = 'modules/e2e-generator'
 merge_strategy = 'local-override'
 

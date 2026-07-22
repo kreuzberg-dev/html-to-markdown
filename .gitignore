@@ -279,11 +279,12 @@ docs-site/dist/
 docs-site/.astro/
 docs-site/node_modules/
 
+e2e/java/src/main/resources/natives/
+poly.local.toml
+
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .ai-rulez/.generated-manifest.json
 .mcp.json
 AGENTS.md
 CLAUDE.md
 # END ai-rulez
-e2e/java/src/main/resources/natives/
-poly.local.toml
