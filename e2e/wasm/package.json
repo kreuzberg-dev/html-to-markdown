@@ -11,7 +11,7 @@
   },
   "devDependencies": {
     "@xberg-io/html-to-markdown-wasm": "file:../../crates/html-to-markdown-wasm",
-    "rollup": "^4.53.3",
+    "rollup": "^4.62.2",
     "vitest": "^4.1.10"
   }
 }

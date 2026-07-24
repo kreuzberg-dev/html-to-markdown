@@ -48,5 +48,5 @@
   },
   "engines": { "node": ">= 22" },
   "publishConfig": { "access": "public" },
-  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
+  "devDependencies": { "@napi-rs/cli": "^3.7.4" }
 }
