@@ -9,24 +9,24 @@ feature-depth = 1
 
 [advisories]
 ignore = [
-    { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28: Out-of-bounds read in nth/nth_back for PyList/PyTuple iterators. The h2m bindings never call these iterator paths — every PyList/PyTuple traversal goes through the bound-handle wrappers." },
-    { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28: Missing Sync bound on PyCFunction::new_closure closures. The h2m bindings do not use PyCFunction::new_closure." },
+  { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28: Out-of-bounds read in nth/nth_back for PyList/PyTuple iterators. The h2m bindings never call these iterator paths — every PyList/PyTuple traversal goes through the bound-handle wrappers." },
+  { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28: Missing Sync bound on PyCFunction::new_closure closures. The h2m bindings do not use PyCFunction::new_closure." },
 ]
 
 [licenses]
 allow = [
-    "Apache-2.0",
-    "Apache-2.0 WITH LLVM-exception",
-    "MIT",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "Zlib",
-    "Unlicense",
-    "CC0-1.0",
-    "CDLA-Permissive-2.0",
-    "Unicode-3.0",
-    "bzip2-1.0.6",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "MIT",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "Unlicense",
+  "CC0-1.0",
+  "CDLA-Permissive-2.0",
+  "Unicode-3.0",
+  "bzip2-1.0.6",
 ]
 confidence-threshold = 0.8
 exceptions = [{ allow = ["MPL-2.0"], crate = "cbindgen" }]

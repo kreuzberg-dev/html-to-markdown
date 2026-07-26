@@ -1,6 +1,6 @@
-import init, {
-  convert,
-} from "https://cdn.jsdelivr.net/npm/@xberg-io/html-to-markdown-wasm@latest/dist-web/html_to_markdown_wasm.js";
+import init,
+{convert,} from
+ "https://cdn.jsdelivr.net/npm/@xberg-io/html-to-markdown-wasm@latest/dist-web/html_to_markdown_wasm.js";
 
 let wasmInitialized = false;
 
@@ -33,15 +33,20 @@ async function initWasm() {
 function highlightJson(obj) {
   const raw = JSON.stringify(obj, null, 2);
   return raw.replace(
-    /("[^"]*"\s*:)|("[^"]*")|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|(true|false)|(null)/g,
-    (match, key, str, num, bool, nil) => {
-      if (key) return `<span class="json-key">${key}</span>`;
-      if (str) return `<span class="json-string">${str}</span>`;
-      if (num) return `<span class="json-number">${num}</span>`;
-      if (bool) return `<span class="json-bool">${bool}</span>`;
-      if (nil) return `<span class="json-null">${nil}</span>`;
-      return match;
-    },
+      /("[^"]*"\s*:)|("[^"]*")|(-?\d+\.?\d*(?:[eE][+-]?\d+)?)|(true|false)|(null)/g,
+      (match, key, str, num, bool, nil) => {
+        if (key)
+          return `<span class="json-key">${key}</span>`;
+        if (str)
+          return `<span class="json-string">${str}</span>`;
+        if (num)
+          return `<span class="json-number">${num}</span>`;
+        if (bool)
+          return `<span class="json-bool">${bool}</span>`;
+        if (nil)
+          return `<span class="json-null">${nil}</span>`;
+        return match;
+      },
   );
 }
 
@@ -70,18 +75,19 @@ function performConversion() {
     outputMarkdown.textContent = result.content ?? "";
 
     const jsonData = {
-      content: result.content ?? null,
-      metadata: result.metadata ?? null,
-      tables: result.tables ?? [],
-      images: (result.images ?? []).map((img) => ({
-        format: img.format,
-        filename: img.filename ?? null,
-        description: img.description ?? null,
-        width: img.width ?? null,
-        height: img.height ?? null,
-        source: img.source,
-      })),
-      warnings: result.warnings ?? [],
+      content : result.content ?? null,
+      metadata : result.metadata ?? null,
+      tables : result.tables ?? [],
+      images :
+          (result.images ?? []).map((img) => ({
+                                      format : img.format,
+                                      filename : img.filename ?? null,
+                                      description : img.description ?? null,
+                                      width : img.width ?? null,
+                                      height : img.height ?? null,
+                                      source : img.source,
+                                    })),
+      warnings : result.warnings ?? [],
     };
     outputJson.innerHTML = highlightJson(jsonData);
 
@@ -109,7 +115,8 @@ function switchTab(tab) {
 }
 
 async function copyToClipboard() {
-  const text = activeTab === "markdown" ? outputMarkdown.textContent : outputJson.innerText;
+  const text = activeTab === "markdown" ? outputMarkdown.textContent
+                                        : outputJson.innerText;
 
   if (!text) {
     statusEl.textContent = "Nothing to copy";

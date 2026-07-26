@@ -21,7 +21,6 @@ import { Content as Snip_kotlin_android_visitor_basic_visitor } from "../../snip
 import { Content as Snip_zig_visitor_basic_visitor } from "../../snippets/zig/visitor/basic_visitor.md";
 import { Content as Snip_feedback } from "../../snippets/feedback.md";
 
-
 The visitor system is the library's main extensibility point. Implement `HtmlVisitor` and you can replace, skip, or augment how any HTML element becomes Markdown. No fork required.
 
 Rust users must opt in with `features = ["visitor"]`. The Rust trait is `HtmlVisitor: Debug + Send`, and the public handle is `Arc<Mutex<dyn HtmlVisitor + Send>>`. Generated bindings expose visitors only where the backend supports trait handles; Kotlin Android excludes visitor support.

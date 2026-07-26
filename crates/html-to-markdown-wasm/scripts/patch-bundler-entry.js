@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Post-process the bundler entry emitted by wasm-pack so we can support runtimes
- * that instantiate WebAssembly modules asynchronously (Cloudflare Workers, esbuild, etc).
+ * Post-process the bundler entry emitted by wasm-pack so we can support
+ * runtimes that instantiate WebAssembly modules asynchronously (Cloudflare
+ * Workers, esbuild, etc).
  */
 
 const fs = require("node:fs");
@@ -147,7 +148,8 @@ export interface WasmConversionResult {
 `;
 
 function injectTypedef(content, specifier) {
-  const typedefBlock = `\n/**\n * @typedef {import("${specifier}").WasmConversionOptions} WasmConversionOptions\n */\n`;
+  const typedefBlock = `\n/**\n * @typedef {import("${
+      specifier}").WasmConversionOptions} WasmConversionOptions\n */\n`;
   if (content.includes("WasmConversionOptions} WasmConversionOptions")) {
     return content;
   }
@@ -167,7 +169,8 @@ function patchJsDoc(targetPath, typeSpecifier) {
   jsContent = injectTypedef(jsContent, typeSpecifier);
 
   const optionsPattern = /@param\s+\{any\}\s+options/g;
-  const optionsReplacement = "@param {WasmConversionOptions | null | undefined} [options]";
+  const optionsReplacement =
+      "@param {WasmConversionOptions | null | undefined} [options]";
   jsContent = jsContent.replace(optionsPattern, optionsReplacement);
 
   const returnsPattern = /@returns\s+\{any\}/g;
@@ -185,7 +188,8 @@ if (!typesOnly) {
     process.exit(1);
   }
 
-  const wrapper = `import * as wasmModule from "./html_to_markdown_wasm_bg.wasm";
+  const wrapper =
+      `import * as wasmModule from "./html_to_markdown_wasm_bg.wasm";
 export * from "./html_to_markdown_wasm_bg.js";
 import * as imports_mod from "./html_to_markdown_wasm_bg.js";
 import { convert as wasmConvert, WasmConversionOptions, WasmVisitorHandle } from "./html_to_markdown_wasm_bg.js";
@@ -413,32 +417,35 @@ if (!fs.existsSync(dtsPath)) {
 let content = fs.readFileSync(dtsPath, "utf8");
 
 if (!typesOnly && !content.includes("initWasm():")) {
-  const additions = `\nexport declare function initWasm(): Promise<void>;\nexport declare const wasmReady: Promise<void>;\n`;
+  const additions =
+      `\nexport declare function initWasm(): Promise<void>;\nexport declare const wasmReady: Promise<void>;\n`;
   content += additions;
 }
 
 if (content.includes("options: any")) {
-  content = content.replace(/options: any/g, "options?: WasmConversionOptions | null");
+  content = content.replace(/options: any/g,
+                            "options?: WasmConversionOptions | null");
 }
 
-content = content.replace("readonly attributes: any;", "readonly attributes: Record<string, string>;");
+content = content.replace("readonly attributes: any;",
+                          "readonly attributes: Record<string, string>;");
 
 if (!content.includes("WasmConversionResult")) {
   content = content.replace(
-    /export function convert\(html: string, options\?: WasmConversionOptions \| null\): string;/,
-    "export function convert(html: string, options?: WasmConversionOptions | null): WasmConversionResult;",
+      /export function convert\(html: string, options\?: WasmConversionOptions \| null\): string;/,
+      "export function convert(html: string, options?: WasmConversionOptions | null): WasmConversionResult;",
   );
   content = content.replace(
-    /export function convert\(html: string, options\?: WasmConversionOptions \| null\): any;/,
-    "export function convert(html: string, options?: WasmConversionOptions | null): WasmConversionResult;",
+      /export function convert\(html: string, options\?: WasmConversionOptions \| null\): any;/,
+      "export function convert(html: string, options?: WasmConversionOptions | null): WasmConversionResult;",
   );
   content = content.replace(
-    /export function convertWithMetadata\(([^)]*)\): any;/,
-    "export function convertWithMetadata($1): WasmConversionResult;",
+      /export function convertWithMetadata\(([^)]*)\): any;/,
+      "export function convertWithMetadata($1): WasmConversionResult;",
   );
   content = content.replace(
-    /export function convertBytesWithMetadata\(([^)]*)\): any;/,
-    "export function convertBytesWithMetadata($1): WasmConversionResult;",
+      /export function convertBytesWithMetadata\(([^)]*)\): any;/,
+      "export function convertBytesWithMetadata($1): WasmConversionResult;",
   );
 }
 
@@ -456,8 +463,10 @@ const pkgJsonPath = path.join(distDir, "package.json");
 if (fs.existsSync(pkgJsonPath)) {
   const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, "utf8"));
 
-  pkgJson.files = ["*.wasm", "*.js", "*.d.ts"];
+  pkgJson.files = [ "*.wasm", "*.js", "*.d.ts" ];
 
-  fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n", "utf8");
-  console.log(`[patch-bundler-entry] Updated package.json files field in ${distArg}`);
+  fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n",
+                   "utf8");
+  console.log(
+      `[patch-bundler-entry] Updated package.json files field in ${distArg}`);
 }

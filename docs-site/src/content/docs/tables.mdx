@@ -21,7 +21,6 @@ import { Content as Snip_kotlin_android_table_extraction_basic_extraction } from
 import { Content as Snip_zig_table_extraction_basic_extraction } from "../../snippets/zig/table-extraction/basic_extraction.md";
 import { Content as Snip_feedback } from "../../snippets/feedback.md";
 
-
 Every call to `convert()` populates `result.tables` with one entry per `<table>` found in the input. Each entry has both a rendered Markdown string and a structured cell grid, so you can embed the Markdown in downstream documents or walk the grid for analysis without re-parsing.
 
 Table extraction runs on every call. There is no opt-in flag. Use JSON output with `--no-content` in the CLI, or ignore `result.content` in library code, when you only want table data.

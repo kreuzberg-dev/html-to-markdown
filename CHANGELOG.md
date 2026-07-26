@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.9.1] - 2026-07-26
+
 ### Changed
 
 - Refine the depth-limit warning (#434): the `DepthLimitExceeded` message now reports the effective
   limit value, and the warning is emitted exactly once when a deeply-nested DOM is truncated.
   Thanks @br411 (#428).
+- Regenerate all language bindings on alef 0.48.2.
+- Update dependencies to their latest compatible versions.
+
+### Removed
+
+- Remove unused Java PMD ruleset and stale linter configuration.
 
 ## [3.9.0] - 2026-07-19
 

@@ -1,13 +1,13 @@
 name: h2m
 description: High-performance HTML to Markdown converter
-version: 3.9.0
+version: 3.9.1
 repository: https://github.com/xberg-io/html-to-markdown
 environment:
   sdk: ">=3.11.0 <4.0.0"
 executables:
   download_libs:
 dependencies:
-  http: "^1.1.0"
+  http: "^1.2.0"
   # SHA-256 verification of downloaded native-library release assets.
   crypto: "^3.0.0"
   # FRB runtime is pure-Dart; works in both Flutter and server-Dart contexts.

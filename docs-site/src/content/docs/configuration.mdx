@@ -5,7 +5,6 @@ title: Configuration
 import { Tabs, TabItem } from "@astrojs/starlight/components";
 import { Content as Snip_feedback } from "../../snippets/feedback.md";
 
-
 All options are passed via `ConversionOptions` (builder pattern in Rust, keyword arguments in Python/Ruby/Elixir/R, object literal in TypeScript, struct in Go/Java/C#, constructor in PHP).
 
 ## Options Reference
@@ -148,13 +147,11 @@ Script and style tags are always stripped before the DOM walk starts, independen
 
 Given this HTML:
 
-```html
-<h1>Report</h1>
-<p>
-  See <a href="https://example.com"><strong>example</strong></a
-  >.
-</p>
-```
+    <h1>Report</h1>
+    <p>
+      See <a href="https://example.com"><strong>example</strong></a
+      >.
+    </p>
 
 <Tabs syncKey="lang">
 <TabItem label="markdown">
@@ -163,229 +160,223 @@ Given this HTML:
 </TabItem>
 </Tabs>
 
-`````markdown
-    # Report
+        # Report
 
-    See [**example**](https://example.com).
-    ```
+        See [**example**](https://example.com).
+        ```
 
-<Tabs syncKey="lang">
-<TabItem label="djot">
-
-
-</TabItem>
-</Tabs>
-
-````djot
-
-    # Report
-
-    See [*example*](https://example.com).
-    ```
-
-<Tabs syncKey="lang">
-<TabItem label="plain">
+    <Tabs syncKey="lang">
+    <TabItem label="djot">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-```text
-Report
+    ````djot
 
-    See example.
-    ```
+        # Report
 
-`markdown` and `djot` both preserve structure and link targets. `djot` uses single-asterisk strong emphasis; `markdown` uses double asterisks. `plain` strips all formatting, link targets, and list markers, returning readable text only.
+        See [*example*](https://example.com).
+        ```
 
-## Builder Examples
-
-<Tabs syncKey="lang">
-<TabItem label="Rust">
+    <Tabs syncKey="lang">
+    <TabItem label="plain">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-```rust
-use html_to_markdown_rs::{convert, ConversionOptions, HeadingStyle};
+    ```text
+    Report
 
-    let options = ConversionOptions::builder()
-        .heading_style(HeadingStyle::Atx)
-        .code_block_style("backticks")
-        .wrap(true)
-        .wrap_width(80)
-        .extract_metadata(true)
-        .build();
+        See example.
+        ```
 
-    let result = convert(html, Some(options))?;
-    ```
+    `markdown` and `djot` both preserve structure and link targets. `djot` uses single-asterisk strong emphasis; `markdown` uses double asterisks. `plain` strips all formatting, link targets, and list markers, returning readable text only.
 
-<Tabs syncKey="lang">
-<TabItem label="Python">
+    ## Builder Examples
+
+    <Tabs syncKey="lang">
+    <TabItem label="Rust">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-```python
-from html_to_markdown import ConversionOptions, convert
+    ```rust
+    use html_to_markdown_rs::{convert, ConversionOptions, HeadingStyle};
 
-    options = ConversionOptions(
-        heading_style="atx",
-        code_block_style="backticks",
-        wrap=True,
-        wrap_width=80,
-        extract_metadata=True,
-    )
-    result = convert(html, options)
-    ```
+        let options = ConversionOptions::builder()
+            .heading_style(HeadingStyle::Atx)
+            .code_block_style("backticks")
+            .wrap(true)
+            .wrap_width(80)
+            .extract_metadata(true)
+            .build();
 
-<Tabs syncKey="lang">
-<TabItem label="TypeScript">
+        let result = convert(html, Some(options))?;
+        ```
 
-
-</TabItem>
-</Tabs>
-
-```typescript
-import { convert, ConversionOptions } from '@xberg-io/html-to-markdown';
-
-    const options: ConversionOptions = {
-      headingStyle: 'atx',
-      codeBlockStyle: 'backticks',
-      wrap: true,
-      wrapWidth: 80,
-      extractMetadata: true,
-    };
-
-    const result = convert(html, options);
-    ```
-
-<Tabs syncKey="lang">
-<TabItem label="Go">
+    <Tabs syncKey="lang">
+    <TabItem label="Python">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-`go
-    opts := htmltomarkdown.ConversionOptions{
-        HeadingStyle:    "atx",
-        CodeBlockStyle:  "backticks",
-        Wrap:            true,
-        WrapWidth:       80,
-        ExtractMetadata: true,
-    }
-    result, err := htmltomarkdown.Convert(html, opts)`
+    ```python
+    from html_to_markdown import ConversionOptions, convert
 
-<Tabs syncKey="lang">
-<TabItem label="Ruby">
+        options = ConversionOptions(
+            heading_style="atx",
+            code_block_style="backticks",
+            wrap=True,
+            wrap_width=80,
+            extract_metadata=True,
+        )
+        result = convert(html, options)
+        ```
 
-
-</TabItem>
-</Tabs>
-
-`ruby
-    result = HtmlToMarkdown.convert(
-      html,
-      heading_style: :atx,
-      code_block_style: :fenced,
-      wrap: true,
-      wrap_width: 80,
-      extract_metadata: true,
-    )`
-
-<Tabs syncKey="lang">
-<TabItem label="PHP">
+    <Tabs syncKey="lang">
+    <TabItem label="TypeScript">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-`php
-    $options = new ConversionOptions(
-        headingStyle: 'Atx',
-        codeBlockStyle: 'Backticks',
-        wrap: true,
-        wrapWidth: 80,
-        extractMetadata: true,
-    );
-    $result = $converter->convert($html, $options);`
+    ```typescript
+    import { convert, ConversionOptions } from '@xberg-io/html-to-markdown';
 
-<Tabs syncKey="lang">
-<TabItem label="Java">
+        const options: ConversionOptions = {
+          headingStyle: 'atx',
+          codeBlockStyle: 'backticks',
+          wrap: true,
+          wrapWidth: 80,
+          extractMetadata: true,
+        };
 
+        const result = convert(html, options);
+        ```
 
-</TabItem>
-</Tabs>
-
-`java
-    ConversionOptions options = ConversionOptions.builder()
-        .headingStyle("atx")
-        .codeBlockStyle("backticks")
-        .wrap(true)
-        .wrapWidth(80)
-        .extractMetadata(true)
-        .build();
-    ConversionResult result = HtmlToMarkdown.convert(html, options);`
-
-<Tabs syncKey="lang">
-<TabItem label="C#">
+    <Tabs syncKey="lang">
+    <TabItem label="Go">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-`csharp
-    var options = new ConversionOptions
-    {
-        HeadingStyle = "atx",
-        CodeBlockStyle = "backticks",
-        Wrap = true,
-        WrapWidth = 80,
-        ExtractMetadata = true,
-    };
-    var result = HtmlToMarkdownConverter.Convert(html, options);`
+    `go
+        opts := htmltomarkdown.ConversionOptions{
+            HeadingStyle:    "atx",
+            CodeBlockStyle:  "backticks",
+            Wrap:            true,
+            WrapWidth:       80,
+            ExtractMetadata: true,
+        }
+        result, err := htmltomarkdown.Convert(html, opts)`
 
-<Tabs syncKey="lang">
-<TabItem label="Elixir">
-
-
-</TabItem>
-</Tabs>
-
-`elixir
-    opts = %HtmlToMarkdown.Options{
-      heading_style: :atx,
-      code_block_style: :backticks,
-      wrap: true,
-      wrap_width: 80,
-      extract_metadata: true,
-    }
-    {:ok, result} = HtmlToMarkdown.convert(html, opts)`
-
-<Tabs syncKey="lang">
-<TabItem label="R">
+    <Tabs syncKey="lang">
+    <TabItem label="Ruby">
 
 
-</TabItem>
-</Tabs>
+    </TabItem>
+    </Tabs>
 
-`r
-    opts <- conversion_options(
-      heading_style = "atx",
-      code_block_style = "backticks",
-      wrap = TRUE,
-      wrap_width = 80L,
-      extract_metadata = TRUE
-    )
-    result <- convert(html, opts)`
+    `ruby
+        result = HtmlToMarkdown.convert(
+          html,
+          heading_style: :atx,
+          code_block_style: :fenced,
+          wrap: true,
+          wrap_width: 80,
+          extract_metadata: true,
+        )`
 
-<Snip_feedback />
-````
-`````
+    <Tabs syncKey="lang">
+    <TabItem label="PHP">
 
-```text
 
-```
+    </TabItem>
+    </Tabs>
+
+    `php
+        $options = new ConversionOptions(
+            headingStyle: 'Atx',
+            codeBlockStyle: 'Backticks',
+            wrap: true,
+            wrapWidth: 80,
+            extractMetadata: true,
+        );
+        $result = $converter->convert($html, $options);`
+
+    <Tabs syncKey="lang">
+    <TabItem label="Java">
+
+
+    </TabItem>
+    </Tabs>
+
+    `java
+        ConversionOptions options = ConversionOptions.builder()
+            .headingStyle("atx")
+            .codeBlockStyle("backticks")
+            .wrap(true)
+            .wrapWidth(80)
+            .extractMetadata(true)
+            .build();
+        ConversionResult result = HtmlToMarkdown.convert(html, options);`
+
+    <Tabs syncKey="lang">
+    <TabItem label="C#">
+
+
+    </TabItem>
+    </Tabs>
+
+    `csharp
+        var options = new ConversionOptions
+        {
+            HeadingStyle = "atx",
+            CodeBlockStyle = "backticks",
+            Wrap = true,
+            WrapWidth = 80,
+            ExtractMetadata = true,
+        };
+        var result = HtmlToMarkdownConverter.Convert(html, options);`
+
+    <Tabs syncKey="lang">
+    <TabItem label="Elixir">
+
+
+    </TabItem>
+    </Tabs>
+
+    `elixir
+        opts = %HtmlToMarkdown.Options{
+          heading_style: :atx,
+          code_block_style: :backticks,
+          wrap: true,
+          wrap_width: 80,
+          extract_metadata: true,
+        }
+        {:ok, result} = HtmlToMarkdown.convert(html, opts)`
+
+    <Tabs syncKey="lang">
+    <TabItem label="R">
+
+
+    </TabItem>
+    </Tabs>
+
+    `r
+        opts <- conversion_options(
+          heading_style = "atx",
+          code_block_style = "backticks",
+          wrap = TRUE,
+          wrap_width = 80L,
+          extract_metadata = TRUE
+        )
+        result <- convert(html, opts)`
+
+    <Snip_feedback />
+    ````

@@ -1,15 +1,25 @@
 {
   "name": "@xberg-io/html-to-markdown-darwin-x64",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xberg-io/html-to-markdown.git"
   },
   "main": "html-to-markdown-node.darwin-x64.node",
-  "files": ["html-to-markdown-node.darwin-x64.node"],
-  "os": ["darwin"],
-  "cpu": ["x64"],
-  "engines": { "node": ">= 22" },
-  "publishConfig": { "access": "public" }
+  "files": [
+    "html-to-markdown-node.darwin-x64.node"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "engines": {
+    "node": ">= 22"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }

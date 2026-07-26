@@ -13,7 +13,8 @@
 /**
  * The type of an inline text annotation.
  *
- * Uses internally tagged representation (`"annotation_type": "bold"`) for JSON serialization.
+ * Uses internally tagged representation (`"annotation_type": "bold"`) for JSON
+ * serialization.
  */
 typedef struct HTMAnnotationKind HTMAnnotationKind;
 /**
@@ -25,7 +26,8 @@ typedef struct HTMCodeBlockStyle HTMCodeBlockStyle;
 /**
  * Main conversion options for HTML to Markdown conversion.
  *
- * Use `ConversionOptions.builder()` to construct, or `Default.default()` for defaults.
+ * Use `ConversionOptions.builder()` to construct, or `Default.default()` for
+ * defaults.
  * \code
  * use html_to_markdown_rs::{ConversionOptions, HeadingStyle};
  *
@@ -41,7 +43,8 @@ typedef struct HTMConversionOptions HTMConversionOptions;
  * Partial update for `ConversionOptions`.
  *
  * Uses `Option<T>` fields for selective updates. Bindings use this to construct
- * options from language-native types. Prefer `ConversionOptionsBuilder` for Rust code.
+ * options from language-native types. Prefer `ConversionOptionsBuilder` for
+ * Rust code.
  */
 typedef struct HTMConversionOptionsUpdate HTMConversionOptionsUpdate;
 /**
@@ -61,8 +64,8 @@ typedef struct HTMConversionResult HTMConversionResult;
 /**
  * Document-level metadata extracted from `<head>` and top-level elements.
  *
- * Contains all metadata typically used by search engines, social media platforms,
- * and browsers for document indexing and presentation.
+ * Contains all metadata typically used by search engines, social media
+ * platforms, and browsers for document indexing and presentation.
  * \code
  * let doc = DocumentMetadata {
  *     title: Some("My Article".to_string()),
@@ -80,9 +83,11 @@ typedef struct HTMDocumentMetadata HTMDocumentMetadata;
  */
 typedef struct HTMDocumentNode HTMDocumentNode;
 /**
- * A structured document tree representing the semantic content of an HTML document.
+ * A structured document tree representing the semantic content of an HTML
+ * document.
  *
- * Uses a flat node array with index-based parent/child references for efficient traversal.
+ * Uses a flat node array with index-based parent/child references for efficient
+ * traversal.
  */
 typedef struct HTMDocumentStructure HTMDocumentStructure;
 /**
@@ -141,9 +146,9 @@ typedef struct HTMHtmlMetadata HTMHtmlMetadata;
 /**
  * Visitor for HTMLâMarkdown conversion.
  *
- * Provide a visitor object whose methods customize the conversion behavior for any
- * HTML element type. Override only the methods you care about; unimplemented methods
- * default to `Continue` (emit the standard rendering).
+ * Provide a visitor object whose methods customize the conversion behavior for
+ * any HTML element type. Override only the methods you care about;
+ * unimplemented methods default to `Continue` (emit the standard rendering).
  *
  * Each callback returns one of:
  *
@@ -153,18 +158,20 @@ typedef struct HTMHtmlMetadata HTMHtmlMetadata;
  * - `Custom(text)` â replace the rendering with `text`.
  * - `Error(message)` â abort conversion with `message`.
  *
- * **Language idioms.** In Rust, return one of the `VisitResult` variants directly.
- * In Python, Ruby, JavaScript/TypeScript, and other duck-typed bindings, define a
- * plain class (no base class required) and return either a string (`"continue"`,
+ * **Language idioms.** In Rust, return one of the `VisitResult` variants
+ * directly. In Python, Ruby, JavaScript/TypeScript, and other duck-typed
+ * bindings, define a plain class (no base class required) and return either a
+ * string (`"continue"`,
  * `"skip"`, `"preserve_html"`) or a tagged map (`{"custom": "..."}`,
- * `{"error": "..."}`) â the binding converts the return value to the corresponding
- * `VisitResult` variant automatically.
+ * `{"error": "..."}`) â the binding converts the return value to the
+ * corresponding `VisitResult` variant automatically.
  *
  * # Method Naming Convention
  *
  * - `visit_*_start`: Called before entering an element (pre-order traversal)
  * - `visit_*_end`: Called after exiting an element (post-order traversal)
- * - `visit_*`: Called for specific element types (e.g., `visit_link`, `visit_image`)
+ * - `visit_*`: Called for specific element types (e.g., `visit_link`,
+ * `visit_image`)
  *
  * # Execution Order
  *
@@ -177,7 +184,8 @@ typedef struct HTMHtmlMetadata HTMHtmlMetadata;
  *
  * # Performance Notes
  *
- * - `visit_text` is the most frequently called method (~100+ times per document)
+ * - `visit_text` is the most frequently called method (~100+ times per
+ * document)
  * - Return `Continue` quickly for elements you don't need to customize
  * - Avoid heavy computation in visitor methods; consider caching if needed
  */
@@ -213,13 +221,15 @@ typedef struct HTMImageMetadata HTMImageMetadata;
 /**
  * Image source classification for proper handling and processing.
  *
- * Determines whether an image is embedded (data URI), inline SVG, external, or relative.
+ * Determines whether an image is embedded (data URI), inline SVG, external, or
+ * relative.
  */
 typedef struct HTMImageType HTMImageType;
 /**
  * Hyperlink metadata with categorization and attributes.
  *
- * Represents `<a>` elements with parsed href values, text content, and link type classification.
+ * Represents `<a>` elements with parsed href values, text content, and link
+ * type classification.
  * \code
  * let link = LinkMetadata {
  *     href: "https://example.com".to_string(),
@@ -265,13 +275,15 @@ typedef struct HTMMetadataEntry HTMMetadataEntry;
 /**
  * Line break syntax in Markdown output.
  *
- * Controls how soft line breaks (from `<br>` or line breaks in source) are rendered.
+ * Controls how soft line breaks (from `<br>` or line breaks in source) are
+ * rendered.
  */
 typedef struct HTMNewlineStyle HTMNewlineStyle;
 /**
  * The semantic content type of a document node.
  *
- * Uses internally tagged representation (`"node_type": "heading"`) for JSON serialization.
+ * Uses internally tagged representation (`"node_type": "heading"`) for JSON
+ * serialization.
  */
 typedef struct HTMNodeContent HTMNodeContent;
 /**
@@ -285,8 +297,8 @@ typedef struct HTMNodeContent HTMNodeContent;
  * Access attributes via `NodeContext.attributes`, which returns
  * `&BTreeMap<String, String>`. When the context was built with
  * `NodeContext.with_lazy_attributes` (the hot path inside the converter),
- * the map is only materialized on the first call â if the visitor never reads
- * attributes, the allocation is skipped.
+ * the map is only materialized on the first call â if the visitor never
+ * reads attributes, the allocation is skipped.
  *
  * ## Lifetimes
  *
@@ -315,27 +327,30 @@ typedef struct HTMPreprocessingOptions HTMPreprocessingOptions;
 /**
  * Partial update for `PreprocessingOptions`.
  *
- * This struct uses `Option<T>` to represent optional fields that can be selectively updated.
- * Only specified fields (Some values) will override existing options; None values leave the
- * corresponding fields unchanged when applied via `PreprocessingOptions.apply_update`.
+ * This struct uses `Option<T>` to represent optional fields that can be
+ * selectively updated. Only specified fields (Some values) will override
+ * existing options; None values leave the corresponding fields unchanged when
+ * applied via `PreprocessingOptions.apply_update`.
  */
 typedef struct HTMPreprocessingOptionsUpdate HTMPreprocessingOptionsUpdate;
 /**
  * HTML preprocessing aggressiveness level.
  *
- * Controls the extent of cleanup performed before conversion. Higher levels remove more elements.
+ * Controls the extent of cleanup performed before conversion. Higher levels
+ * remove more elements.
  */
 typedef struct HTMPreprocessingPreset HTMPreprocessingPreset;
 /**
  * A non-fatal diagnostic produced during HTML conversion.
  *
- * Warnings indicate that conversion completed but some content may have been handled
- * differently than expected â for example, an image that could not be extracted, a truncated
- * input, or malformed HTML that was repaired with best-effort parsing.
+ * Warnings indicate that conversion completed but some content may have been
+ * handled differently than expected â for example, an image that could not
+ * be extracted, a truncated input, or malformed HTML that was repaired with
+ * best-effort parsing.
  *
- * Conversion always succeeds (returns `ConversionResult`) even when warnings are
- * present. Callers should inspect `warnings` and decide how to
- * handle them based on their tolerance for partial results:
+ * Conversion always succeeds (returns `ConversionResult`) even when warnings
+ * are present. Callers should inspect `warnings` and decide how to handle them
+ * based on their tolerance for partial results:
  *
  * - **Logging pipelines**: emit each warning at `WARN` level and continue.
  * - **Strict pipelines**: treat any warning as a hard error by checking
@@ -352,7 +367,8 @@ typedef struct HTMProcessingWarning HTMProcessingWarning;
  * \code
  * let schema = StructuredData {
  *     data_type: StructuredDataType::JsonLd,
- *     raw_json: r#"{"@context":"https://schema.org","@type":"Article"}"#.to_string(),
+ *     raw_json:
+ * r#"{"@context":"https://schema.org","@type":"Article"}"#.to_string(),
  *     schema_type: Some("Article".to_string()),
  * };
  *
@@ -367,7 +383,8 @@ typedef struct HTMStructuredData HTMStructuredData;
  */
 typedef struct HTMStructuredDataType HTMStructuredDataType;
 /**
- * A top-level extracted table with both structured data and markdown representation.
+ * A top-level extracted table with both structured data and markdown
+ * representation.
  */
 typedef struct HTMTableData HTMTableData;
 /**
@@ -375,17 +392,19 @@ typedef struct HTMTableData HTMTableData;
  */
 typedef struct HTMTableGrid HTMTableGrid;
 /**
- * A styling or semantic annotation that applies to a byte range within a node's text.
+ * A styling or semantic annotation that applies to a byte range within a node's
+ * text.
  *
- * Unlike `DocumentNode`, which captures block-level structure (headings, paragraphs, etc.),
- * a `TextAnnotation` describes inline-level markup â bold, italic, links, code spans, and
- * similar â that spans a contiguous run of bytes inside `DocumentNode::content`'s text field.
+ * Unlike `DocumentNode`, which captures block-level structure (headings,
+ * paragraphs, etc.), a `TextAnnotation` describes inline-level markup â
+ * bold, italic, links, code spans, and similar â that spans a contiguous
+ * run of bytes inside `DocumentNode::content`'s text field.
  *
- * Byte offsets (`start`..`end`) are into the UTF-8 encoded text of the parent node. The range
- * is half-open: `start` is inclusive and `end` is exclusive.
+ * Byte offsets (`start`..`end`) are into the UTF-8 encoded text of the parent
+ * node. The range is half-open: `start` is inclusive and `end` is exclusive.
  *
- * Multiple annotations on the same node can overlap (e.g. bold-italic text), and they are
- * stored in the order they are encountered during DOM traversal.
+ * Multiple annotations on the same node can overlap (e.g. bold-italic text),
+ * and they are stored in the order they are encountered during DOM traversal.
  *
  * See `AnnotationKind` for the full list of supported annotation types.
  */
@@ -439,10 +458,10 @@ typedef struct HTMWarningKind HTMWarningKind;
 /**
  * Whitespace handling strategy during conversion.
  *
- * Determines how sequences of whitespace characters (spaces, tabs, newlines) are processed.
+ * Determines how sequences of whitespace characters (spaces, tabs, newlines)
+ * are processed.
  */
 typedef struct HTMWhitespaceMode HTMWhitespaceMode;
-
 
 /**
  * Visit-result code for `Continue`.
@@ -559,10 +578,8 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `ctx`: Node context (will have `node_type: NodeType::Text`)
    * - `text`: The raw text content (HTML entities already decoded)
    */
-  int32_t (*visit_text)(const struct HTMHtmContext *ctx,
-                        void *user_data,
-                        const char *text,
-                        char **out_custom,
+  int32_t (*visit_text)(const struct HTMHtmContext *ctx, void *user_data,
+                        const char *text, char **out_custom,
                         uintptr_t *out_len);
   /**
    * Called before entering any element.
@@ -571,8 +588,7 @@ typedef struct HTMHtmVisitorCallbacks {
    * visitors to implement generic element handling before tag-specific logic.
    */
   int32_t (*visit_element_start)(const struct HTMHtmContext *ctx,
-                                 void *user_data,
-                                 char **out_custom,
+                                 void *user_data, char **out_custom,
                                  uintptr_t *out_len);
   /**
    * Called after exiting any element.
@@ -580,10 +596,8 @@ typedef struct HTMHtmVisitorCallbacks {
    * Receives the default markdown output that would be generated.
    * Visitors can inspect or replace this output.
    */
-  int32_t (*visit_element_end)(const struct HTMHtmContext *ctx,
-                               void *user_data,
-                               const char *output,
-                               char **out_custom,
+  int32_t (*visit_element_end)(const struct HTMHtmContext *ctx, void *user_data,
+                               const char *output, char **out_custom,
                                uintptr_t *out_len);
   /**
    * Visit anchor links `<a href="...">`.
@@ -594,13 +608,9 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `text`: The link text content (already converted to markdown)
    * - `title`: Optional title attribute
    */
-  int32_t (*visit_link)(const struct HTMHtmContext *ctx,
-                        void *user_data,
-                        const char *href,
-                        const char *text,
-                        const char *title,
-                        char **out_custom,
-                        uintptr_t *out_len);
+  int32_t (*visit_link)(const struct HTMHtmContext *ctx, void *user_data,
+                        const char *href, const char *text, const char *title,
+                        char **out_custom, uintptr_t *out_len);
   /**
    * Visit images `<img src="...">`.
    *
@@ -610,13 +620,9 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `alt`: The alt text
    * - `title`: Optional title attribute
    */
-  int32_t (*visit_image)(const struct HTMHtmContext *ctx,
-                         void *user_data,
-                         const char *src,
-                         const char *alt,
-                         const char *title,
-                         char **out_custom,
-                         uintptr_t *out_len);
+  int32_t (*visit_image)(const struct HTMHtmContext *ctx, void *user_data,
+                         const char *src, const char *alt, const char *title,
+                         char **out_custom, uintptr_t *out_len);
   /**
    * Visit heading elements `<h1>` through `<h6>`.
    *
@@ -626,13 +632,9 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `text`: The heading text content
    * - `id`: Optional id attribute (for anchor links)
    */
-  int32_t (*visit_heading)(const struct HTMHtmContext *ctx,
-                           void *user_data,
-                           uint32_t level,
-                           const char *text,
-                           const char *id,
-                           char **out_custom,
-                           uintptr_t *out_len);
+  int32_t (*visit_heading)(const struct HTMHtmContext *ctx, void *user_data,
+                           uint32_t level, const char *text, const char *id,
+                           char **out_custom, uintptr_t *out_len);
   /**
    * Visit code blocks `<pre><code>`.
    *
@@ -641,12 +643,9 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `lang`: Optional language specifier (from class attribute)
    * - `code`: The code content
    */
-  int32_t (*visit_code_block)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              const char *lang,
-                              const char *code,
-                              char **out_custom,
-                              uintptr_t *out_len);
+  int32_t (*visit_code_block)(const struct HTMHtmContext *ctx, void *user_data,
+                              const char *lang, const char *code,
+                              char **out_custom, uintptr_t *out_len);
   /**
    * Visit inline code `<code>`.
    *
@@ -654,10 +653,8 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `ctx`: Node context
    * - `code`: The code content
    */
-  int32_t (*visit_code_inline)(const struct HTMHtmContext *ctx,
-                               void *user_data,
-                               const char *code,
-                               char **out_custom,
+  int32_t (*visit_code_inline)(const struct HTMHtmContext *ctx, void *user_data,
+                               const char *code, char **out_custom,
                                uintptr_t *out_len);
   /**
    * Visit list items `<li>`.
@@ -668,37 +665,27 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `marker`: The list marker (e.g., "-", "1.", "a)")
    * - `text`: The list item content (already converted)
    */
-  int32_t (*visit_list_item)(const struct HTMHtmContext *ctx,
-                             void *user_data,
-                             int32_t ordered,
-                             const char *marker,
-                             const char *text,
-                             char **out_custom,
+  int32_t (*visit_list_item)(const struct HTMHtmContext *ctx, void *user_data,
+                             int32_t ordered, const char *marker,
+                             const char *text, char **out_custom,
                              uintptr_t *out_len);
   /**
    * Called before processing a list `<ul>` or `<ol>`.
    */
-  int32_t (*visit_list_start)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              int32_t ordered,
-                              char **out_custom,
+  int32_t (*visit_list_start)(const struct HTMHtmContext *ctx, void *user_data,
+                              int32_t ordered, char **out_custom,
                               uintptr_t *out_len);
   /**
    * Called after processing a list `</ul>` or `</ol>`.
    */
-  int32_t (*visit_list_end)(const struct HTMHtmContext *ctx,
-                            void *user_data,
-                            int32_t ordered,
-                            const char *output,
-                            char **out_custom,
-                            uintptr_t *out_len);
+  int32_t (*visit_list_end)(const struct HTMHtmContext *ctx, void *user_data,
+                            int32_t ordered, const char *output,
+                            char **out_custom, uintptr_t *out_len);
   /**
    * Called before processing a table `<table>`.
    */
-  int32_t (*visit_table_start)(const struct HTMHtmContext *ctx,
-                               void *user_data,
-                               char **out_custom,
-                               uintptr_t *out_len);
+  int32_t (*visit_table_start)(const struct HTMHtmContext *ctx, void *user_data,
+                               char **out_custom, uintptr_t *out_len);
   /**
    * Visit table rows `<tr>`.
    *
@@ -707,20 +694,15 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `cells`: Cell contents (already converted to markdown)
    * - `is_header`: Whether this row is in `<thead>`
    */
-  int32_t (*visit_table_row)(const struct HTMHtmContext *ctx,
-                             void *user_data,
-                             const char *const *cells,
-                             uintptr_t cell_count,
-                             int32_t is_header,
-                             char **out_custom,
+  int32_t (*visit_table_row)(const struct HTMHtmContext *ctx, void *user_data,
+                             const char *const *cells, uintptr_t cell_count,
+                             int32_t is_header, char **out_custom,
                              uintptr_t *out_len);
   /**
    * Called after processing a table `</table>`.
    */
-  int32_t (*visit_table_end)(const struct HTMHtmContext *ctx,
-                             void *user_data,
-                             const char *output,
-                             char **out_custom,
+  int32_t (*visit_table_end)(const struct HTMHtmContext *ctx, void *user_data,
+                             const char *output, char **out_custom,
                              uintptr_t *out_len);
   /**
    * Visit blockquote elements `<blockquote>`.
@@ -730,81 +712,61 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `content`: The blockquote content (already converted)
    * - `depth`: Nesting depth (for nested blockquotes)
    */
-  int32_t (*visit_blockquote)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              const char *content,
-                              uintptr_t depth,
-                              char **out_custom,
-                              uintptr_t *out_len);
+  int32_t (*visit_blockquote)(const struct HTMHtmContext *ctx, void *user_data,
+                              const char *content, uintptr_t depth,
+                              char **out_custom, uintptr_t *out_len);
   /**
    * Visit strong/bold elements `<strong>`, `<b>`.
    */
-  int32_t (*visit_strong)(const struct HTMHtmContext *ctx,
-                          void *user_data,
-                          const char *text,
-                          char **out_custom,
+  int32_t (*visit_strong)(const struct HTMHtmContext *ctx, void *user_data,
+                          const char *text, char **out_custom,
                           uintptr_t *out_len);
   /**
    * Visit emphasis/italic elements `<em>`, `<i>`.
    */
-  int32_t (*visit_emphasis)(const struct HTMHtmContext *ctx,
-                            void *user_data,
-                            const char *text,
-                            char **out_custom,
+  int32_t (*visit_emphasis)(const struct HTMHtmContext *ctx, void *user_data,
+                            const char *text, char **out_custom,
                             uintptr_t *out_len);
   /**
    * Visit strikethrough elements `<s>`, `<del>`, `<strike>`.
    */
   int32_t (*visit_strikethrough)(const struct HTMHtmContext *ctx,
-                                 void *user_data,
-                                 const char *text,
-                                 char **out_custom,
-                                 uintptr_t *out_len);
+                                 void *user_data, const char *text,
+                                 char **out_custom, uintptr_t *out_len);
   /**
    * Visit underline elements `<u>`, `<ins>`.
    */
-  int32_t (*visit_underline)(const struct HTMHtmContext *ctx,
-                             void *user_data,
-                             const char *text,
-                             char **out_custom,
+  int32_t (*visit_underline)(const struct HTMHtmContext *ctx, void *user_data,
+                             const char *text, char **out_custom,
                              uintptr_t *out_len);
   /**
    * Visit subscript elements `<sub>`.
    */
-  int32_t (*visit_subscript)(const struct HTMHtmContext *ctx,
-                             void *user_data,
-                             const char *text,
-                             char **out_custom,
+  int32_t (*visit_subscript)(const struct HTMHtmContext *ctx, void *user_data,
+                             const char *text, char **out_custom,
                              uintptr_t *out_len);
   /**
    * Visit superscript elements `<sup>`.
    */
-  int32_t (*visit_superscript)(const struct HTMHtmContext *ctx,
-                               void *user_data,
-                               const char *text,
-                               char **out_custom,
+  int32_t (*visit_superscript)(const struct HTMHtmContext *ctx, void *user_data,
+                               const char *text, char **out_custom,
                                uintptr_t *out_len);
   /**
    * Visit mark/highlight elements `<mark>`.
    */
-  int32_t (*visit_mark)(const struct HTMHtmContext *ctx,
-                        void *user_data,
-                        const char *text,
-                        char **out_custom,
+  int32_t (*visit_mark)(const struct HTMHtmContext *ctx, void *user_data,
+                        const char *text, char **out_custom,
                         uintptr_t *out_len);
   /**
    * Visit line break elements `<br>`.
    */
-  int32_t (*visit_line_break)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              char **out_custom,
-                              uintptr_t *out_len);
+  int32_t (*visit_line_break)(const struct HTMHtmContext *ctx, void *user_data,
+                              char **out_custom, uintptr_t *out_len);
   /**
    * Visit horizontal rule elements `<hr>`.
    */
   int32_t (*visit_horizontal_rule)(const struct HTMHtmContext *ctx,
-                                   void *user_data,
-                                   char **out_custom,
+                                   void *user_data, char **out_custom,
                                    uintptr_t *out_len);
   /**
    * Visit custom elements (web components) or unknown tags.
@@ -815,131 +777,99 @@ typedef struct HTMHtmVisitorCallbacks {
    * - `html`: The raw HTML of this element
    */
   int32_t (*visit_custom_element)(const struct HTMHtmContext *ctx,
-                                  void *user_data,
-                                  const char *tag_name,
-                                  const char *html,
-                                  char **out_custom,
+                                  void *user_data, const char *tag_name,
+                                  const char *html, char **out_custom,
                                   uintptr_t *out_len);
   /**
    * Visit definition list `<dl>`.
    */
   int32_t (*visit_definition_list_start)(const struct HTMHtmContext *ctx,
-                                         void *user_data,
-                                         char **out_custom,
+                                         void *user_data, char **out_custom,
                                          uintptr_t *out_len);
   /**
    * Visit definition term `<dt>`.
    */
   int32_t (*visit_definition_term)(const struct HTMHtmContext *ctx,
-                                   void *user_data,
-                                   const char *text,
-                                   char **out_custom,
-                                   uintptr_t *out_len);
+                                   void *user_data, const char *text,
+                                   char **out_custom, uintptr_t *out_len);
   /**
    * Visit definition description `<dd>`.
    */
   int32_t (*visit_definition_description)(const struct HTMHtmContext *ctx,
-                                          void *user_data,
-                                          const char *text,
+                                          void *user_data, const char *text,
                                           char **out_custom,
                                           uintptr_t *out_len);
   /**
    * Called after processing a definition list `</dl>`.
    */
   int32_t (*visit_definition_list_end)(const struct HTMHtmContext *ctx,
-                                       void *user_data,
-                                       const char *output,
-                                       char **out_custom,
-                                       uintptr_t *out_len);
+                                       void *user_data, const char *output,
+                                       char **out_custom, uintptr_t *out_len);
   /**
    * Visit form elements `<form>`.
    */
-  int32_t (*visit_form)(const struct HTMHtmContext *ctx,
-                        void *user_data,
-                        const char *action,
-                        const char *method,
-                        char **out_custom,
-                        uintptr_t *out_len);
+  int32_t (*visit_form)(const struct HTMHtmContext *ctx, void *user_data,
+                        const char *action, const char *method,
+                        char **out_custom, uintptr_t *out_len);
   /**
    * Visit input elements `<input>`.
    */
-  int32_t (*visit_input)(const struct HTMHtmContext *ctx,
-                         void *user_data,
-                         const char *input_type,
-                         const char *name,
-                         const char *value,
-                         char **out_custom,
+  int32_t (*visit_input)(const struct HTMHtmContext *ctx, void *user_data,
+                         const char *input_type, const char *name,
+                         const char *value, char **out_custom,
                          uintptr_t *out_len);
   /**
    * Visit button elements `<button>`.
    */
-  int32_t (*visit_button)(const struct HTMHtmContext *ctx,
-                          void *user_data,
-                          const char *text,
-                          char **out_custom,
+  int32_t (*visit_button)(const struct HTMHtmContext *ctx, void *user_data,
+                          const char *text, char **out_custom,
                           uintptr_t *out_len);
   /**
    * Visit audio elements `<audio>`.
    */
-  int32_t (*visit_audio)(const struct HTMHtmContext *ctx,
-                         void *user_data,
-                         const char *src,
-                         char **out_custom,
+  int32_t (*visit_audio)(const struct HTMHtmContext *ctx, void *user_data,
+                         const char *src, char **out_custom,
                          uintptr_t *out_len);
   /**
    * Visit video elements `<video>`.
    */
-  int32_t (*visit_video)(const struct HTMHtmContext *ctx,
-                         void *user_data,
-                         const char *src,
-                         char **out_custom,
+  int32_t (*visit_video)(const struct HTMHtmContext *ctx, void *user_data,
+                         const char *src, char **out_custom,
                          uintptr_t *out_len);
   /**
    * Visit iframe elements `<iframe>`.
    */
-  int32_t (*visit_iframe)(const struct HTMHtmContext *ctx,
-                          void *user_data,
-                          const char *src,
-                          char **out_custom,
+  int32_t (*visit_iframe)(const struct HTMHtmContext *ctx, void *user_data,
+                          const char *src, char **out_custom,
                           uintptr_t *out_len);
   /**
    * Visit details elements `<details>`.
    */
-  int32_t (*visit_details)(const struct HTMHtmContext *ctx,
-                           void *user_data,
-                           int32_t open,
-                           char **out_custom,
-                           uintptr_t *out_len);
+  int32_t (*visit_details)(const struct HTMHtmContext *ctx, void *user_data,
+                           int32_t open, char **out_custom, uintptr_t *out_len);
   /**
    * Visit summary elements `<summary>`.
    */
-  int32_t (*visit_summary)(const struct HTMHtmContext *ctx,
-                           void *user_data,
-                           const char *text,
-                           char **out_custom,
+  int32_t (*visit_summary)(const struct HTMHtmContext *ctx, void *user_data,
+                           const char *text, char **out_custom,
                            uintptr_t *out_len);
   /**
    * Visit figure elements `<figure>`.
    */
   int32_t (*visit_figure_start)(const struct HTMHtmContext *ctx,
-                                void *user_data,
-                                char **out_custom,
+                                void *user_data, char **out_custom,
                                 uintptr_t *out_len);
   /**
    * Visit figcaption elements `<figcaption>`.
    */
-  int32_t (*visit_figcaption)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              const char *text,
-                              char **out_custom,
+  int32_t (*visit_figcaption)(const struct HTMHtmContext *ctx, void *user_data,
+                              const char *text, char **out_custom,
                               uintptr_t *out_len);
   /**
    * Called after processing a figure `</figure>`.
    */
-  int32_t (*visit_figure_end)(const struct HTMHtmContext *ctx,
-                              void *user_data,
-                              const char *output,
-                              char **out_custom,
+  int32_t (*visit_figure_end)(const struct HTMHtmContext *ctx, void *user_data,
+                              const char *output, char **out_custom,
                               uintptr_t *out_len);
 } HTMHtmVisitorCallbacks;
 
@@ -948,9 +878,9 @@ typedef struct HTMHtmVisitorCallbacks {
  *
  * # Safety
  *
- * All function pointers must be valid for the lifetime of any bridge created from
- * this vtable.  `free_user_data`, when non-null, is called once with `user_data`
- * when the bridge is dropped.
+ * All function pointers must be valid for the lifetime of any bridge created
+ * from this vtable.  `free_user_data`, when non-null, is called once with
+ * `user_data` when the bridge is dropped.
  */
 typedef struct HTMHtmHtmlVisitorVTable {
   /**
@@ -960,31 +890,24 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `ctx`: Node context (will have `node_type: NodeType::Text`)
    * - `text`: The raw text content (HTML entities already decoded)
    */
-  int32_t (*visit_text)(const void *user_data,
-                        const char *_ctx,
-                        const char *_text,
-                        char **out_result,
-                        char **out_error);
+  int32_t (*visit_text)(const void *user_data, const char *_ctx,
+                        const char *_text, char **out_result, char **out_error);
   /**
    * Called before entering any element.
    *
    * This is the first callback invoked for every HTML element, allowing
    * visitors to implement generic element handling before tag-specific logic.
    */
-  int32_t (*visit_element_start)(const void *user_data,
-                                 const char *_ctx,
-                                 char **out_result,
-                                 char **out_error);
+  int32_t (*visit_element_start)(const void *user_data, const char *_ctx,
+                                 char **out_result, char **out_error);
   /**
    * Called after exiting any element.
    *
    * Receives the default markdown output that would be generated.
    * Visitors can inspect or replace this output.
    */
-  int32_t (*visit_element_end)(const void *user_data,
-                               const char *_ctx,
-                               const char *_output,
-                               char **out_result,
+  int32_t (*visit_element_end)(const void *user_data, const char *_ctx,
+                               const char *_output, char **out_result,
                                char **out_error);
   /**
    * Visit anchor links `<a href="...">`.
@@ -995,12 +918,9 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `text`: The link text content (already converted to markdown)
    * - `title`: Optional title attribute
    */
-  int32_t (*visit_link)(const void *user_data,
-                        const char *_ctx,
-                        const char *_href,
-                        const char *_text,
-                        const char *_title,
-                        char **out_result,
+  int32_t (*visit_link)(const void *user_data, const char *_ctx,
+                        const char *_href, const char *_text,
+                        const char *_title, char **out_result,
                         char **out_error);
   /**
    * Visit images `<img src="...">`.
@@ -1011,13 +931,9 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `alt`: The alt text
    * - `title`: Optional title attribute
    */
-  int32_t (*visit_image)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         const char *_alt,
-                         const char *_title,
-                         char **out_result,
-                         char **out_error);
+  int32_t (*visit_image)(const void *user_data, const char *_ctx,
+                         const char *_src, const char *_alt, const char *_title,
+                         char **out_result, char **out_error);
   /**
    * Visit heading elements `<h1>` through `<h6>`.
    *
@@ -1027,13 +943,9 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `text`: The heading text content
    * - `id`: Optional id attribute (for anchor links)
    */
-  int32_t (*visit_heading)(const void *user_data,
-                           const char *_ctx,
-                           uint32_t _level,
-                           const char *_text,
-                           const char *_id,
-                           char **out_result,
-                           char **out_error);
+  int32_t (*visit_heading)(const void *user_data, const char *_ctx,
+                           uint32_t _level, const char *_text, const char *_id,
+                           char **out_result, char **out_error);
   /**
    * Visit code blocks `<pre><code>`.
    *
@@ -1042,12 +954,9 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `lang`: Optional language specifier (from class attribute)
    * - `code`: The code content
    */
-  int32_t (*visit_code_block)(const void *user_data,
-                              const char *_ctx,
-                              const char *_lang,
-                              const char *_code,
-                              char **out_result,
-                              char **out_error);
+  int32_t (*visit_code_block)(const void *user_data, const char *_ctx,
+                              const char *_lang, const char *_code,
+                              char **out_result, char **out_error);
   /**
    * Visit inline code `<code>`.
    *
@@ -1055,10 +964,8 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `ctx`: Node context
    * - `code`: The code content
    */
-  int32_t (*visit_code_inline)(const void *user_data,
-                               const char *_ctx,
-                               const char *_code,
-                               char **out_result,
+  int32_t (*visit_code_inline)(const void *user_data, const char *_ctx,
+                               const char *_code, char **out_result,
                                char **out_error);
   /**
    * Visit list items `<li>`.
@@ -1069,37 +976,27 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `marker`: The list marker (e.g., "-", "1.", "a)")
    * - `text`: The list item content (already converted)
    */
-  int32_t (*visit_list_item)(const void *user_data,
-                             const char *_ctx,
-                             int32_t _ordered,
-                             const char *_marker,
-                             const char *_text,
-                             char **out_result,
+  int32_t (*visit_list_item)(const void *user_data, const char *_ctx,
+                             int32_t _ordered, const char *_marker,
+                             const char *_text, char **out_result,
                              char **out_error);
   /**
    * Called before processing a list `<ul>` or `<ol>`.
    */
-  int32_t (*visit_list_start)(const void *user_data,
-                              const char *_ctx,
-                              int32_t _ordered,
-                              char **out_result,
+  int32_t (*visit_list_start)(const void *user_data, const char *_ctx,
+                              int32_t _ordered, char **out_result,
                               char **out_error);
   /**
    * Called after processing a list `</ul>` or `</ol>`.
    */
-  int32_t (*visit_list_end)(const void *user_data,
-                            const char *_ctx,
-                            int32_t _ordered,
-                            const char *_output,
-                            char **out_result,
-                            char **out_error);
+  int32_t (*visit_list_end)(const void *user_data, const char *_ctx,
+                            int32_t _ordered, const char *_output,
+                            char **out_result, char **out_error);
   /**
    * Called before processing a table `<table>`.
    */
-  int32_t (*visit_table_start)(const void *user_data,
-                               const char *_ctx,
-                               char **out_result,
-                               char **out_error);
+  int32_t (*visit_table_start)(const void *user_data, const char *_ctx,
+                               char **out_result, char **out_error);
   /**
    * Visit table rows `<tr>`.
    *
@@ -1108,19 +1005,14 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `cells`: Cell contents (already converted to markdown)
    * - `is_header`: Whether this row is in `<thead>`
    */
-  int32_t (*visit_table_row)(const void *user_data,
-                             const char *_ctx,
-                             const char *_cells,
-                             int32_t _is_header,
-                             char **out_result,
-                             char **out_error);
+  int32_t (*visit_table_row)(const void *user_data, const char *_ctx,
+                             const char *_cells, int32_t _is_header,
+                             char **out_result, char **out_error);
   /**
    * Called after processing a table `</table>`.
    */
-  int32_t (*visit_table_end)(const void *user_data,
-                             const char *_ctx,
-                             const char *_output,
-                             char **out_result,
+  int32_t (*visit_table_end)(const void *user_data, const char *_ctx,
+                             const char *_output, char **out_result,
                              char **out_error);
   /**
    * Visit blockquote elements `<blockquote>`.
@@ -1130,82 +1022,60 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `content`: The blockquote content (already converted)
    * - `depth`: Nesting depth (for nested blockquotes)
    */
-  int32_t (*visit_blockquote)(const void *user_data,
-                              const char *_ctx,
-                              const char *_content,
-                              uintptr_t _depth,
-                              char **out_result,
-                              char **out_error);
+  int32_t (*visit_blockquote)(const void *user_data, const char *_ctx,
+                              const char *_content, uintptr_t _depth,
+                              char **out_result, char **out_error);
   /**
    * Visit strong/bold elements `<strong>`, `<b>`.
    */
-  int32_t (*visit_strong)(const void *user_data,
-                          const char *_ctx,
-                          const char *_text,
-                          char **out_result,
+  int32_t (*visit_strong)(const void *user_data, const char *_ctx,
+                          const char *_text, char **out_result,
                           char **out_error);
   /**
    * Visit emphasis/italic elements `<em>`, `<i>`.
    */
-  int32_t (*visit_emphasis)(const void *user_data,
-                            const char *_ctx,
-                            const char *_text,
-                            char **out_result,
+  int32_t (*visit_emphasis)(const void *user_data, const char *_ctx,
+                            const char *_text, char **out_result,
                             char **out_error);
   /**
    * Visit strikethrough elements `<s>`, `<del>`, `<strike>`.
    */
-  int32_t (*visit_strikethrough)(const void *user_data,
-                                 const char *_ctx,
-                                 const char *_text,
-                                 char **out_result,
+  int32_t (*visit_strikethrough)(const void *user_data, const char *_ctx,
+                                 const char *_text, char **out_result,
                                  char **out_error);
   /**
    * Visit underline elements `<u>`, `<ins>`.
    */
-  int32_t (*visit_underline)(const void *user_data,
-                             const char *_ctx,
-                             const char *_text,
-                             char **out_result,
+  int32_t (*visit_underline)(const void *user_data, const char *_ctx,
+                             const char *_text, char **out_result,
                              char **out_error);
   /**
    * Visit subscript elements `<sub>`.
    */
-  int32_t (*visit_subscript)(const void *user_data,
-                             const char *_ctx,
-                             const char *_text,
-                             char **out_result,
+  int32_t (*visit_subscript)(const void *user_data, const char *_ctx,
+                             const char *_text, char **out_result,
                              char **out_error);
   /**
    * Visit superscript elements `<sup>`.
    */
-  int32_t (*visit_superscript)(const void *user_data,
-                               const char *_ctx,
-                               const char *_text,
-                               char **out_result,
+  int32_t (*visit_superscript)(const void *user_data, const char *_ctx,
+                               const char *_text, char **out_result,
                                char **out_error);
   /**
    * Visit mark/highlight elements `<mark>`.
    */
-  int32_t (*visit_mark)(const void *user_data,
-                        const char *_ctx,
-                        const char *_text,
-                        char **out_result,
-                        char **out_error);
+  int32_t (*visit_mark)(const void *user_data, const char *_ctx,
+                        const char *_text, char **out_result, char **out_error);
   /**
    * Visit line break elements `<br>`.
    */
-  int32_t (*visit_line_break)(const void *user_data,
-                              const char *_ctx,
-                              char **out_result,
-                              char **out_error);
+  int32_t (*visit_line_break)(const void *user_data, const char *_ctx,
+                              char **out_result, char **out_error);
   /**
    * Visit horizontal rule elements `<hr>`.
    */
-  int32_t (*visit_horizontal_rule)(const void *user_data,
-                                   const char *_ctx,
-                                   char **out_result,
-                                   char **out_error);
+  int32_t (*visit_horizontal_rule)(const void *user_data, const char *_ctx,
+                                   char **out_result, char **out_error);
   /**
    * Visit custom elements (web components) or unknown tags.
    *
@@ -1214,141 +1084,106 @@ typedef struct HTMHtmHtmlVisitorVTable {
    * - `tag_name`: The custom element's tag name
    * - `html`: The raw HTML of this element
    */
-  int32_t (*visit_custom_element)(const void *user_data,
-                                  const char *_ctx,
-                                  const char *_tag_name,
-                                  const char *_html,
-                                  char **out_result,
-                                  char **out_error);
+  int32_t (*visit_custom_element)(const void *user_data, const char *_ctx,
+                                  const char *_tag_name, const char *_html,
+                                  char **out_result, char **out_error);
   /**
    * Visit definition list `<dl>`.
    */
   int32_t (*visit_definition_list_start)(const void *user_data,
-                                         const char *_ctx,
-                                         char **out_result,
+                                         const char *_ctx, char **out_result,
                                          char **out_error);
   /**
    * Visit definition term `<dt>`.
    */
-  int32_t (*visit_definition_term)(const void *user_data,
-                                   const char *_ctx,
-                                   const char *_text,
-                                   char **out_result,
+  int32_t (*visit_definition_term)(const void *user_data, const char *_ctx,
+                                   const char *_text, char **out_result,
                                    char **out_error);
   /**
    * Visit definition description `<dd>`.
    */
   int32_t (*visit_definition_description)(const void *user_data,
-                                          const char *_ctx,
-                                          const char *_text,
-                                          char **out_result,
-                                          char **out_error);
+                                          const char *_ctx, const char *_text,
+                                          char **out_result, char **out_error);
   /**
    * Called after processing a definition list `</dl>`.
    */
-  int32_t (*visit_definition_list_end)(const void *user_data,
-                                       const char *_ctx,
-                                       const char *_output,
-                                       char **out_result,
+  int32_t (*visit_definition_list_end)(const void *user_data, const char *_ctx,
+                                       const char *_output, char **out_result,
                                        char **out_error);
   /**
    * Visit form elements `<form>`.
    */
-  int32_t (*visit_form)(const void *user_data,
-                        const char *_ctx,
-                        const char *_action,
-                        const char *_method,
-                        char **out_result,
-                        char **out_error);
+  int32_t (*visit_form)(const void *user_data, const char *_ctx,
+                        const char *_action, const char *_method,
+                        char **out_result, char **out_error);
   /**
    * Visit input elements `<input>`.
    */
-  int32_t (*visit_input)(const void *user_data,
-                         const char *_ctx,
-                         const char *_input_type,
-                         const char *_name,
-                         const char *_value,
-                         char **out_result,
+  int32_t (*visit_input)(const void *user_data, const char *_ctx,
+                         const char *_input_type, const char *_name,
+                         const char *_value, char **out_result,
                          char **out_error);
   /**
    * Visit button elements `<button>`.
    */
-  int32_t (*visit_button)(const void *user_data,
-                          const char *_ctx,
-                          const char *_text,
-                          char **out_result,
+  int32_t (*visit_button)(const void *user_data, const char *_ctx,
+                          const char *_text, char **out_result,
                           char **out_error);
   /**
    * Visit audio elements `<audio>`.
    */
-  int32_t (*visit_audio)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         char **out_result,
-                         char **out_error);
+  int32_t (*visit_audio)(const void *user_data, const char *_ctx,
+                         const char *_src, char **out_result, char **out_error);
   /**
    * Visit video elements `<video>`.
    */
-  int32_t (*visit_video)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         char **out_result,
-                         char **out_error);
+  int32_t (*visit_video)(const void *user_data, const char *_ctx,
+                         const char *_src, char **out_result, char **out_error);
   /**
    * Visit iframe elements `<iframe>`.
    */
-  int32_t (*visit_iframe)(const void *user_data,
-                          const char *_ctx,
-                          const char *_src,
-                          char **out_result,
+  int32_t (*visit_iframe)(const void *user_data, const char *_ctx,
+                          const char *_src, char **out_result,
                           char **out_error);
   /**
    * Visit details elements `<details>`.
    */
-  int32_t (*visit_details)(const void *user_data,
-                           const char *_ctx,
-                           int32_t _open,
-                           char **out_result,
-                           char **out_error);
+  int32_t (*visit_details)(const void *user_data, const char *_ctx,
+                           int32_t _open, char **out_result, char **out_error);
   /**
    * Visit summary elements `<summary>`.
    */
-  int32_t (*visit_summary)(const void *user_data,
-                           const char *_ctx,
-                           const char *_text,
-                           char **out_result,
+  int32_t (*visit_summary)(const void *user_data, const char *_ctx,
+                           const char *_text, char **out_result,
                            char **out_error);
   /**
    * Visit figure elements `<figure>`.
    */
-  int32_t (*visit_figure_start)(const void *user_data,
-                                const char *_ctx,
-                                char **out_result,
-                                char **out_error);
+  int32_t (*visit_figure_start)(const void *user_data, const char *_ctx,
+                                char **out_result, char **out_error);
   /**
    * Visit figcaption elements `<figcaption>`.
    */
-  int32_t (*visit_figcaption)(const void *user_data,
-                              const char *_ctx,
-                              const char *_text,
-                              char **out_result,
+  int32_t (*visit_figcaption)(const void *user_data, const char *_ctx,
+                              const char *_text, char **out_result,
                               char **out_error);
   /**
    * Called after processing a figure `</figure>`.
    */
-  int32_t (*visit_figure_end)(const void *user_data,
-                              const char *_ctx,
-                              const char *_output,
-                              char **out_result,
+  int32_t (*visit_figure_end)(const void *user_data, const char *_ctx,
+                              const char *_output, char **out_result,
                               char **out_error);
   /**
-   * Optional string destructor: called for strings returned by vtable callbacks.
+   * Optional string destructor: called for strings returned by vtable
+   * callbacks.
    */
-  void (*free_string)(char*);
+  void (*free_string)(char *);
   /**
-   * Optional destructor: called once with `user_data` when the bridge is dropped.
+   * Optional destructor: called once with `user_data` when the bridge is
+   * dropped.
    */
-  void (*free_user_data)(void*);
+  void (*free_user_data)(void *);
 } HTMHtmHtmlVisitorVTable;
 
 /**
@@ -1360,10 +1195,10 @@ typedef struct HTMHtmHtmlVisitorVTable {
 int32_t htm_last_error_code(void);
 
 /**
- * Return the last error message. The pointer is borrowed and valid until the next FFI call on this thread.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * The returned pointer is borrowed from thread-local storage and must NOT be freed.
+ * Return the last error message. The pointer is borrowed and valid until the
+ * next FFI call on this thread. # Safety Caller must ensure all pointer
+ * arguments are valid or null. The returned pointer is borrowed from
+ * thread-local storage and must NOT be freed.
  */
 const char *htm_last_error_context(void);
 
@@ -1376,20 +1211,18 @@ void htm_free_string(char *ptr);
 
 /**
  * Free a byte buffer previously returned by this library via out-params.
- * `ptr`, `len`, and `cap` must match the values written by the library function,
- * or the call must pass `ptr = null` (in which case it is a no-op).
+ * `ptr`, `len`, and `cap` must match the values written by the library
+ * function, or the call must pass `ptr = null` (in which case it is a no-op).
  * # Safety
- * Pointer must have been returned by this library (via out_ptr / out_len / out_cap
- * out-params), or be null. The len and cap values must be unchanged since the call.
+ * Pointer must have been returned by this library (via out_ptr / out_len /
+ * out_cap out-params), or be null. The len and cap values must be unchanged
+ * since the call.
  */
-void htm_free_bytes(uint8_t *ptr,
-                    uintptr_t len,
-                    uintptr_t cap);
+void htm_free_bytes(uint8_t *ptr, uintptr_t len, uintptr_t cap);
 
 /**
- * Return the library version string. The pointer is static and must NOT be freed.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Return the library version string. The pointer is static and must NOT be
+ * freed. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 const char *htm_version(void);
@@ -1471,7 +1304,8 @@ char *htm_document_metadata_language(const HTMDocumentMetadata *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMTextDirection *htm_document_metadata_text_direction(const HTMDocumentMetadata *ptr);
+HTMTextDirection *
+htm_document_metadata_text_direction(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `open_graph` field from a `DocumentMetadata`.
@@ -1555,8 +1389,8 @@ uintptr_t htm_header_metadata_html_offset(const HTMHeaderMetadata *ptr);
 /**
  * Validate that the header level is within valid range (1-6).
  * \return `true` if level is 1-6, `false` otherwise.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  * \code
  * let valid = HeaderMetadata {
  *     level: 3,
@@ -1737,7 +1571,8 @@ void htm_structured_data_free(HTMStructuredData *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMStructuredDataType *htm_structured_data_data_type(const HTMStructuredData *ptr);
+HTMStructuredDataType *
+htm_structured_data_data_type(const HTMStructuredData *ptr);
 
 /**
  * Get the `raw_json` field from a `StructuredData`.
@@ -1839,21 +1674,24 @@ void htm_conversion_options_free(HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMHeadingStyle *htm_conversion_options_heading_style(const HTMConversionOptions *ptr);
+HTMHeadingStyle *
+htm_conversion_options_heading_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `list_indent_type` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMListIndentType *htm_conversion_options_list_indent_type(const HTMConversionOptions *ptr);
+HTMListIndentType *
+htm_conversion_options_list_indent_type(const HTMConversionOptions *ptr);
 
 /**
  * Get the `list_indent_width` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-uintptr_t htm_conversion_options_list_indent_width(const HTMConversionOptions *ptr);
+uintptr_t
+htm_conversion_options_list_indent_width(const HTMConversionOptions *ptr);
 
 /**
  * Get the `bullets` field from a `ConversionOptions`.
@@ -1874,14 +1712,16 @@ char *htm_conversion_options_strong_em_symbol(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_escape_asterisks(const HTMConversionOptions *ptr);
+int32_t
+htm_conversion_options_escape_asterisks(const HTMConversionOptions *ptr);
 
 /**
  * Get the `escape_underscores` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_escape_underscores(const HTMConversionOptions *ptr);
+int32_t
+htm_conversion_options_escape_underscores(const HTMConversionOptions *ptr);
 
 /**
  * Get the `escape_misc` field from a `ConversionOptions`.
@@ -1937,21 +1777,24 @@ int32_t htm_conversion_options_compact_tables(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMHighlightStyle *htm_conversion_options_highlight_style(const HTMConversionOptions *ptr);
+HTMHighlightStyle *
+htm_conversion_options_highlight_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `extract_metadata` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_extract_metadata(const HTMConversionOptions *ptr);
+int32_t
+htm_conversion_options_extract_metadata(const HTMConversionOptions *ptr);
 
 /**
  * Get the `whitespace_mode` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMWhitespaceMode *htm_conversion_options_whitespace_mode(const HTMConversionOptions *ptr);
+HTMWhitespaceMode *
+htm_conversion_options_whitespace_mode(const HTMConversionOptions *ptr);
 
 /**
  * Get the `strip_newlines` field from a `ConversionOptions`.
@@ -1979,7 +1822,8 @@ uintptr_t htm_conversion_options_wrap_width(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_convert_as_inline(const HTMConversionOptions *ptr);
+int32_t
+htm_conversion_options_convert_as_inline(const HTMConversionOptions *ptr);
 
 /**
  * Get the `sub_symbol` field from a `ConversionOptions`.
@@ -2000,28 +1844,32 @@ char *htm_conversion_options_sup_symbol(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMNewlineStyle *htm_conversion_options_newline_style(const HTMConversionOptions *ptr);
+HTMNewlineStyle *
+htm_conversion_options_newline_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `code_block_style` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMCodeBlockStyle *htm_conversion_options_code_block_style(const HTMConversionOptions *ptr);
+HTMCodeBlockStyle *
+htm_conversion_options_code_block_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `keep_inline_images_in` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_keep_inline_images_in(const HTMConversionOptions *ptr);
+char *
+htm_conversion_options_keep_inline_images_in(const HTMConversionOptions *ptr);
 
 /**
  * Get the `preprocessing` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMPreprocessingOptions *htm_conversion_options_preprocessing(const HTMConversionOptions *ptr);
+HTMPreprocessingOptions *
+htm_conversion_options_preprocessing(const HTMConversionOptions *ptr);
 
 /**
  * Get the `encoding` field from a `ConversionOptions`.
@@ -2063,28 +1911,32 @@ int32_t htm_conversion_options_skip_images(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMUrlEscapeStyle *htm_conversion_options_url_escape_style(const HTMConversionOptions *ptr);
+HTMUrlEscapeStyle *
+htm_conversion_options_url_escape_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `link_style` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMLinkStyle *htm_conversion_options_link_style(const HTMConversionOptions *ptr);
+HTMLinkStyle *
+htm_conversion_options_link_style(const HTMConversionOptions *ptr);
 
 /**
  * Get the `output_format` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMOutputFormat *htm_conversion_options_output_format(const HTMConversionOptions *ptr);
+HTMOutputFormat *
+htm_conversion_options_output_format(const HTMConversionOptions *ptr);
 
 /**
  * Get the `include_document_structure` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_include_document_structure(const HTMConversionOptions *ptr);
+int32_t htm_conversion_options_include_document_structure(
+    const HTMConversionOptions *ptr);
 
 /**
  * Get the `extract_images` field from a `ConversionOptions`.
@@ -2112,7 +1964,8 @@ int32_t htm_conversion_options_capture_svg(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_infer_dimensions(const HTMConversionOptions *ptr);
+int32_t
+htm_conversion_options_infer_dimensions(const HTMConversionOptions *ptr);
 
 /**
  * Get the `max_depth` field from a `ConversionOptions`.
@@ -2133,28 +1986,30 @@ char *htm_conversion_options_exclude_selectors(const HTMConversionOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMTierStrategy *htm_conversion_options_tier_strategy(const HTMConversionOptions *ptr);
+HTMTierStrategy *
+htm_conversion_options_tier_strategy(const HTMConversionOptions *ptr);
 
 /**
  * Get the `visitor` field from a `ConversionOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMVisitorHandle *htm_conversion_options_visitor(const HTMConversionOptions *ptr);
+HTMVisitorHandle *
+htm_conversion_options_visitor(const HTMConversionOptions *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
 HTMConversionOptions *htm_conversion_options_default(void);
 
 /**
- * Create a `ConversionOptionsUpdate` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
+ * Create a `ConversionOptionsUpdate` from a JSON string. Returns null on
+ * failure. # Safety JSON string must be valid UTF-8 and null-terminated.
  * Returned handle must be freed with `htm_conversion_options_update_free`.
  */
-HTMConversionOptionsUpdate *htm_conversion_options_update_from_json(const char *json);
+HTMConversionOptionsUpdate *
+htm_conversion_options_update_from_json(const char *json);
 
 /**
  * Free a `ConversionOptionsUpdate` handle.
@@ -2168,308 +2023,352 @@ void htm_conversion_options_update_free(HTMConversionOptionsUpdate *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMHeadingStyle *htm_conversion_options_update_heading_style(const HTMConversionOptionsUpdate *ptr);
+HTMHeadingStyle *htm_conversion_options_update_heading_style(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `list_indent_type` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMListIndentType *htm_conversion_options_update_list_indent_type(const HTMConversionOptionsUpdate *ptr);
+HTMListIndentType *htm_conversion_options_update_list_indent_type(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `list_indent_width` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-uintptr_t htm_conversion_options_update_list_indent_width(const HTMConversionOptionsUpdate *ptr);
+uintptr_t htm_conversion_options_update_list_indent_width(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `bullets` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_bullets(const HTMConversionOptionsUpdate *ptr);
+char *
+htm_conversion_options_update_bullets(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `strong_em_symbol` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_strong_em_symbol(const HTMConversionOptionsUpdate *ptr);
+char *htm_conversion_options_update_strong_em_symbol(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `escape_asterisks` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_escape_asterisks(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_escape_asterisks(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `escape_underscores` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_escape_underscores(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_escape_underscores(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `escape_misc` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_escape_misc(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_escape_misc(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `escape_ascii` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_escape_ascii(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_escape_ascii(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `code_language` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_code_language(const HTMConversionOptionsUpdate *ptr);
+char *htm_conversion_options_update_code_language(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `autolinks` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_autolinks(const HTMConversionOptionsUpdate *ptr);
+int32_t
+htm_conversion_options_update_autolinks(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `default_title` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_default_title(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_default_title(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `br_in_tables` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_br_in_tables(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_br_in_tables(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `compact_tables` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_compact_tables(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_compact_tables(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `highlight_style` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMHighlightStyle *htm_conversion_options_update_highlight_style(const HTMConversionOptionsUpdate *ptr);
+HTMHighlightStyle *htm_conversion_options_update_highlight_style(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `extract_metadata` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_extract_metadata(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_extract_metadata(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `whitespace_mode` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMWhitespaceMode *htm_conversion_options_update_whitespace_mode(const HTMConversionOptionsUpdate *ptr);
+HTMWhitespaceMode *htm_conversion_options_update_whitespace_mode(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `strip_newlines` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_strip_newlines(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_strip_newlines(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `wrap` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_wrap(const HTMConversionOptionsUpdate *ptr);
+int32_t
+htm_conversion_options_update_wrap(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `wrap_width` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-uintptr_t htm_conversion_options_update_wrap_width(const HTMConversionOptionsUpdate *ptr);
+uintptr_t
+htm_conversion_options_update_wrap_width(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `convert_as_inline` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_convert_as_inline(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_convert_as_inline(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `sub_symbol` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_sub_symbol(const HTMConversionOptionsUpdate *ptr);
+char *
+htm_conversion_options_update_sub_symbol(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `sup_symbol` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_sup_symbol(const HTMConversionOptionsUpdate *ptr);
+char *
+htm_conversion_options_update_sup_symbol(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `newline_style` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMNewlineStyle *htm_conversion_options_update_newline_style(const HTMConversionOptionsUpdate *ptr);
+HTMNewlineStyle *htm_conversion_options_update_newline_style(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `code_block_style` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMCodeBlockStyle *htm_conversion_options_update_code_block_style(const HTMConversionOptionsUpdate *ptr);
+HTMCodeBlockStyle *htm_conversion_options_update_code_block_style(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `keep_inline_images_in` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_keep_inline_images_in(const HTMConversionOptionsUpdate *ptr);
+char *htm_conversion_options_update_keep_inline_images_in(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `preprocessing` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMPreprocessingOptionsUpdate *htm_conversion_options_update_preprocessing(const HTMConversionOptionsUpdate *ptr);
+HTMPreprocessingOptionsUpdate *htm_conversion_options_update_preprocessing(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `encoding` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_encoding(const HTMConversionOptionsUpdate *ptr);
+char *
+htm_conversion_options_update_encoding(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `debug` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_debug(const HTMConversionOptionsUpdate *ptr);
+int32_t
+htm_conversion_options_update_debug(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `strip_tags` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_strip_tags(const HTMConversionOptionsUpdate *ptr);
+char *
+htm_conversion_options_update_strip_tags(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `preserve_tags` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_preserve_tags(const HTMConversionOptionsUpdate *ptr);
+char *htm_conversion_options_update_preserve_tags(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `skip_images` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_skip_images(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_skip_images(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `url_escape_style` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMUrlEscapeStyle *htm_conversion_options_update_url_escape_style(const HTMConversionOptionsUpdate *ptr);
+HTMUrlEscapeStyle *htm_conversion_options_update_url_escape_style(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `link_style` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMLinkStyle *htm_conversion_options_update_link_style(const HTMConversionOptionsUpdate *ptr);
+HTMLinkStyle *
+htm_conversion_options_update_link_style(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `output_format` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMOutputFormat *htm_conversion_options_update_output_format(const HTMConversionOptionsUpdate *ptr);
+HTMOutputFormat *htm_conversion_options_update_output_format(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `include_document_structure` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_include_document_structure(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_include_document_structure(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `extract_images` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_extract_images(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_extract_images(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `max_image_size` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-uint64_t htm_conversion_options_update_max_image_size(const HTMConversionOptionsUpdate *ptr);
+uint64_t htm_conversion_options_update_max_image_size(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `capture_svg` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_capture_svg(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_capture_svg(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `infer_dimensions` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_conversion_options_update_infer_dimensions(const HTMConversionOptionsUpdate *ptr);
+int32_t htm_conversion_options_update_infer_dimensions(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `max_depth` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-uintptr_t htm_conversion_options_update_max_depth(const HTMConversionOptionsUpdate *ptr);
+uintptr_t
+htm_conversion_options_update_max_depth(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `exclude_selectors` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_conversion_options_update_exclude_selectors(const HTMConversionOptionsUpdate *ptr);
+char *htm_conversion_options_update_exclude_selectors(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `tier_strategy` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMTierStrategy *htm_conversion_options_update_tier_strategy(const HTMConversionOptionsUpdate *ptr);
+HTMTierStrategy *htm_conversion_options_update_tier_strategy(
+    const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `visitor` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMVisitorHandle *htm_conversion_options_update_visitor(const HTMConversionOptionsUpdate *ptr);
+HTMVisitorHandle *
+htm_conversion_options_update_visitor(const HTMConversionOptionsUpdate *ptr);
 
 /**
  * Create a `PreprocessingOptions` from a JSON string. Returns null on failure.
@@ -2506,35 +2405,38 @@ int32_t htm_preprocessing_options_enabled(const HTMPreprocessingOptions *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMPreprocessingPreset *htm_preprocessing_options_preset(const HTMPreprocessingOptions *ptr);
+HTMPreprocessingPreset *
+htm_preprocessing_options_preset(const HTMPreprocessingOptions *ptr);
 
 /**
  * Get the `remove_navigation` field from a `PreprocessingOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_options_remove_navigation(const HTMPreprocessingOptions *ptr);
+int32_t
+htm_preprocessing_options_remove_navigation(const HTMPreprocessingOptions *ptr);
 
 /**
  * Get the `remove_forms` field from a `PreprocessingOptions`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_options_remove_forms(const HTMPreprocessingOptions *ptr);
+int32_t
+htm_preprocessing_options_remove_forms(const HTMPreprocessingOptions *ptr);
 
 /**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
 HTMPreprocessingOptions *htm_preprocessing_options_default(void);
 
 /**
- * Create a `PreprocessingOptionsUpdate` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
+ * Create a `PreprocessingOptionsUpdate` from a JSON string. Returns null on
+ * failure. # Safety JSON string must be valid UTF-8 and null-terminated.
  * Returned handle must be freed with `htm_preprocessing_options_update_free`.
  */
-HTMPreprocessingOptionsUpdate *htm_preprocessing_options_update_from_json(const char *json);
+HTMPreprocessingOptionsUpdate *
+htm_preprocessing_options_update_from_json(const char *json);
 
 /**
  * Free a `PreprocessingOptionsUpdate` handle.
@@ -2548,28 +2450,32 @@ void htm_preprocessing_options_update_free(HTMPreprocessingOptionsUpdate *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_options_update_enabled(const HTMPreprocessingOptionsUpdate *ptr);
+int32_t htm_preprocessing_options_update_enabled(
+    const HTMPreprocessingOptionsUpdate *ptr);
 
 /**
  * Get the `preset` field from a `PreprocessingOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMPreprocessingPreset *htm_preprocessing_options_update_preset(const HTMPreprocessingOptionsUpdate *ptr);
+HTMPreprocessingPreset *htm_preprocessing_options_update_preset(
+    const HTMPreprocessingOptionsUpdate *ptr);
 
 /**
  * Get the `remove_navigation` field from a `PreprocessingOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_options_update_remove_navigation(const HTMPreprocessingOptionsUpdate *ptr);
+int32_t htm_preprocessing_options_update_remove_navigation(
+    const HTMPreprocessingOptionsUpdate *ptr);
 
 /**
  * Get the `remove_forms` field from a `PreprocessingOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_options_update_remove_forms(const HTMPreprocessingOptionsUpdate *ptr);
+int32_t htm_preprocessing_options_update_remove_forms(
+    const HTMPreprocessingOptionsUpdate *ptr);
 
 /**
  * Create a `ImageDimensions` from a JSON string. Returns null on failure.
@@ -2826,7 +2732,8 @@ char *htm_conversion_result_content(const HTMConversionResult *ptr);
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-HTMDocumentStructure *htm_conversion_result_document(const HTMConversionResult *ptr);
+HTMDocumentStructure *
+htm_conversion_result_document(const HTMConversionResult *ptr);
 
 /**
  * Get the `metadata` field from a `ConversionResult`.
@@ -3110,8 +3017,8 @@ int32_t htm_node_context_is_inline(const HTMNodeContext *ptr);
  * If the context was built with `NodeContext.with_lazy_attributes`, the
  * map is materialized on the first call and cached for subsequent calls.
  * If this method is never called, no allocation occurs for attributes.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
 char *htm_node_context_attributes(const HTMNodeContext *this_);
 
@@ -3119,21 +3026,19 @@ char *htm_node_context_attributes(const HTMNodeContext *this_);
  * Construct a `NodeContext` with an owned attribute map.
  *
  * Use this when the caller already has materialized attributes.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
-HTMNodeContext *htm_node_context_with_owned_attributes(int32_t node_type,
-                                                       const char *tag_name,
-                                                       const char *attributes,
-                                                       uintptr_t depth,
-                                                       uintptr_t index_in_parent,
-                                                       const char *parent_tag,
-                                                       int32_t is_inline);
+HTMNodeContext *htm_node_context_with_owned_attributes(
+    int32_t node_type, const char *tag_name, const char *attributes,
+    uintptr_t depth, uintptr_t index_in_parent, const char *parent_tag,
+    int32_t is_inline);
 
 /**
- * Promote any borrowed fields into owned storage so the context can outlive `'a`.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
+ * Promote any borrowed fields into owned storage so the context can outlive
+ * `'a`.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
 HTMNodeContext *htm_node_context_into_owned(HTMNodeContext *this_);
 
@@ -3146,9 +3051,9 @@ HTMNodeContext *htm_node_context_into_owned(HTMNodeContext *this_);
 int32_t htm_text_direction_from_i32(int32_t value);
 
 /**
- * Convert a `TextDirection` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `TextDirection` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_text_direction_from_str(const char *name);
 
@@ -3161,9 +3066,9 @@ int32_t htm_text_direction_from_str(const char *name);
 int32_t htm_link_type_from_i32(int32_t value);
 
 /**
- * Convert a `LinkType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `LinkType` serde wire value (C string) to its integer discriminant.
+ * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
+ * pointer to a `c_char` or null.
  */
 int32_t htm_link_type_from_str(const char *name);
 
@@ -3176,24 +3081,23 @@ int32_t htm_link_type_from_str(const char *name);
 int32_t htm_image_type_from_i32(int32_t value);
 
 /**
- * Convert a `ImageType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `ImageType` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_image_type_from_str(const char *name);
 
 /**
- * Convert an integer to a `StructuredDataType` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `StructuredDataType` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_structured_data_type_from_i32(int32_t value);
 
 /**
- * Convert a `StructuredDataType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `StructuredDataType` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_structured_data_type_from_str(const char *name);
 
@@ -3206,24 +3110,23 @@ int32_t htm_structured_data_type_from_str(const char *name);
 int32_t htm_tier_strategy_from_i32(int32_t value);
 
 /**
- * Convert a `TierStrategy` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `TierStrategy` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_tier_strategy_from_str(const char *name);
 
 /**
- * Convert an integer to a `PreprocessingPreset` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `PreprocessingPreset` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_preprocessing_preset_from_i32(int32_t value);
 
 /**
- * Convert a `PreprocessingPreset` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `PreprocessingPreset` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_preprocessing_preset_from_str(const char *name);
 
@@ -3236,39 +3139,37 @@ int32_t htm_preprocessing_preset_from_str(const char *name);
 int32_t htm_heading_style_from_i32(int32_t value);
 
 /**
- * Convert a `HeadingStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `HeadingStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_heading_style_from_str(const char *name);
 
 /**
- * Convert an integer to a `ListIndentType` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `ListIndentType` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_list_indent_type_from_i32(int32_t value);
 
 /**
- * Convert a `ListIndentType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `ListIndentType` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_list_indent_type_from_str(const char *name);
 
 /**
- * Convert an integer to a `WhitespaceMode` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `WhitespaceMode` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_whitespace_mode_from_i32(int32_t value);
 
 /**
- * Convert a `WhitespaceMode` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `WhitespaceMode` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_whitespace_mode_from_str(const char *name);
 
@@ -3281,39 +3182,37 @@ int32_t htm_whitespace_mode_from_str(const char *name);
 int32_t htm_newline_style_from_i32(int32_t value);
 
 /**
- * Convert a `NewlineStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `NewlineStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_newline_style_from_str(const char *name);
 
 /**
- * Convert an integer to a `CodeBlockStyle` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `CodeBlockStyle` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_code_block_style_from_i32(int32_t value);
 
 /**
- * Convert a `CodeBlockStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `CodeBlockStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_code_block_style_from_str(const char *name);
 
 /**
- * Convert an integer to a `HighlightStyle` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `HighlightStyle` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_highlight_style_from_i32(int32_t value);
 
 /**
- * Convert a `HighlightStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `HighlightStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_highlight_style_from_str(const char *name);
 
@@ -3326,24 +3225,23 @@ int32_t htm_highlight_style_from_str(const char *name);
 int32_t htm_link_style_from_i32(int32_t value);
 
 /**
- * Convert a `LinkStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `LinkStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_link_style_from_str(const char *name);
 
 /**
- * Convert an integer to a `UrlEscapeStyle` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `UrlEscapeStyle` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_url_escape_style_from_i32(int32_t value);
 
 /**
- * Convert a `UrlEscapeStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `UrlEscapeStyle` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_url_escape_style_from_str(const char *name);
 
@@ -3356,9 +3254,9 @@ int32_t htm_url_escape_style_from_str(const char *name);
 int32_t htm_output_format_from_i32(int32_t value);
 
 /**
- * Convert a `OutputFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `OutputFormat` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_output_format_from_str(const char *name);
 
@@ -3371,24 +3269,23 @@ int32_t htm_output_format_from_str(const char *name);
 int32_t htm_node_content_from_i32(int32_t value);
 
 /**
- * Convert a `NodeContent` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `NodeContent` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_node_content_from_str(const char *name);
 
 /**
- * Convert an integer to a `AnnotationKind` variant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure all pointer arguments are valid or null.
+ * Convert an integer to a `AnnotationKind` variant. Returns -1 on invalid
+ * input. # Safety Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
 int32_t htm_annotation_kind_from_i32(int32_t value);
 
 /**
- * Convert a `AnnotationKind` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `AnnotationKind` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_annotation_kind_from_str(const char *name);
 
@@ -3401,9 +3298,9 @@ int32_t htm_annotation_kind_from_str(const char *name);
 int32_t htm_warning_kind_from_i32(int32_t value);
 
 /**
- * Convert a `WarningKind` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `WarningKind` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_warning_kind_from_str(const char *name);
 
@@ -3416,9 +3313,9 @@ int32_t htm_warning_kind_from_str(const char *name);
 int32_t htm_node_type_from_i32(int32_t value);
 
 /**
- * Convert a `NodeType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `NodeType` serde wire value (C string) to its integer discriminant.
+ * Returns -1 on invalid input. # Safety Caller must ensure `ptr` is a valid
+ * pointer to a `c_char` or null.
  */
 int32_t htm_node_type_from_str(const char *name);
 
@@ -3431,16 +3328,16 @@ int32_t htm_node_type_from_str(const char *name);
 int32_t htm_visit_result_from_i32(int32_t value);
 
 /**
- * Convert a `VisitResult` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Convert a `VisitResult` serde wire value (C string) to its integer
+ * discriminant. Returns -1 on invalid input. # Safety Caller must ensure `ptr`
+ * is a valid pointer to a `c_char` or null.
  */
 int32_t htm_visit_result_from_str(const char *name);
 
 /**
- * Free a heap-allocated `TextDirection` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `TextDirection` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_text_direction_free(HTMTextDirection *ptr);
 
@@ -3463,9 +3360,9 @@ char *htm_text_direction_to_json(const HTMTextDirection *ptr);
 char *htm_text_direction_to_string(const HTMTextDirection *ptr);
 
 /**
- * Free a heap-allocated `LinkType` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `LinkType` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_link_type_free(HTMLinkType *ptr);
 
@@ -3488,9 +3385,9 @@ char *htm_link_type_to_json(const HTMLinkType *ptr);
 char *htm_link_type_to_string(const HTMLinkType *ptr);
 
 /**
- * Free a heap-allocated `ImageType` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `ImageType` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_image_type_free(HTMImageType *ptr);
 
@@ -3513,9 +3410,9 @@ char *htm_image_type_to_json(const HTMImageType *ptr);
 char *htm_image_type_to_string(const HTMImageType *ptr);
 
 /**
- * Free a heap-allocated `StructuredDataType` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `StructuredDataType` returned by a pointer-returning
+ * FFI function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_structured_data_type_free(HTMStructuredDataType *ptr);
 
@@ -3538,9 +3435,9 @@ char *htm_structured_data_type_to_json(const HTMStructuredDataType *ptr);
 char *htm_structured_data_type_to_string(const HTMStructuredDataType *ptr);
 
 /**
- * Free a heap-allocated `TierStrategy` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `TierStrategy` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_tier_strategy_free(HTMTierStrategy *ptr);
 
@@ -3563,79 +3460,79 @@ char *htm_tier_strategy_to_json(const HTMTierStrategy *ptr);
 char *htm_tier_strategy_to_string(const HTMTierStrategy *ptr);
 
 /**
- * Free a heap-allocated `PreprocessingPreset` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `PreprocessingPreset` returned by a pointer-returning
+ * FFI function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_preprocessing_preset_free(HTMPreprocessingPreset *ptr);
 
 /**
- * Free a heap-allocated `HeadingStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `HeadingStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_heading_style_free(HTMHeadingStyle *ptr);
 
 /**
- * Free a heap-allocated `ListIndentType` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `ListIndentType` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_list_indent_type_free(HTMListIndentType *ptr);
 
 /**
- * Free a heap-allocated `WhitespaceMode` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `WhitespaceMode` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_whitespace_mode_free(HTMWhitespaceMode *ptr);
 
 /**
- * Free a heap-allocated `NewlineStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `NewlineStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_newline_style_free(HTMNewlineStyle *ptr);
 
 /**
- * Free a heap-allocated `CodeBlockStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `CodeBlockStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_code_block_style_free(HTMCodeBlockStyle *ptr);
 
 /**
- * Free a heap-allocated `HighlightStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `HighlightStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_highlight_style_free(HTMHighlightStyle *ptr);
 
 /**
- * Free a heap-allocated `LinkStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `LinkStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_link_style_free(HTMLinkStyle *ptr);
 
 /**
- * Free a heap-allocated `UrlEscapeStyle` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `UrlEscapeStyle` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_url_escape_style_free(HTMUrlEscapeStyle *ptr);
 
 /**
- * Free a heap-allocated `OutputFormat` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `OutputFormat` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_output_format_free(HTMOutputFormat *ptr);
 
 /**
- * Free a heap-allocated `NodeContent` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `NodeContent` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_node_content_free(HTMNodeContent *ptr);
 
@@ -3658,9 +3555,9 @@ char *htm_node_content_to_json(const HTMNodeContent *ptr);
 char *htm_node_content_to_string(const HTMNodeContent *ptr);
 
 /**
- * Free a heap-allocated `AnnotationKind` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `AnnotationKind` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_annotation_kind_free(HTMAnnotationKind *ptr);
 
@@ -3683,9 +3580,9 @@ char *htm_annotation_kind_to_json(const HTMAnnotationKind *ptr);
 char *htm_annotation_kind_to_string(const HTMAnnotationKind *ptr);
 
 /**
- * Free a heap-allocated `WarningKind` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `WarningKind` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_warning_kind_free(HTMWarningKind *ptr);
 
@@ -3708,9 +3605,9 @@ char *htm_warning_kind_to_json(const HTMWarningKind *ptr);
 char *htm_warning_kind_to_string(const HTMWarningKind *ptr);
 
 /**
- * Free a heap-allocated `NodeType` returned by a pointer-returning FFI function.
- * # Safety
- * Pointer must have been returned by this library, or be null.
+ * Free a heap-allocated `NodeType` returned by a pointer-returning FFI
+ * function. # Safety Pointer must have been returned by this library, or be
+ * null.
  */
 void htm_node_type_free(HTMNodeType *ptr);
 
@@ -3739,12 +3636,13 @@ char *htm_node_type_to_string(const HTMNodeType *ptr);
  * Check `htm_last_error_code` / `htm_last_error_context` for error details.
  * The returned pointer must be freed with `htm_conversion_result_free`.
  *
- * If a bridge was attached to `options`, it will be passed through to the core call.
+ * If a bridge was attached to `options`, it will be passed through to the core
+ * call.
  *
  * # Safety
  *
- * Pointer arguments must be valid for the duration of this call. Returned pointer must be
- * freed with `htm_conversion_result_free`.
+ * Pointer arguments must be valid for the duration of this call. Returned
+ * pointer must be freed with `htm_conversion_result_free`.
  */
 HTMConversionResult *htm_convert(const char *html,
                                  const HTMConversionOptions *options);
@@ -3753,19 +3651,19 @@ HTMConversionResult *htm_convert(const char *html,
  * Attach a vtable visitor bridge to a `ConversionOptions` options struct.
  *
  * The `HtmVisitor` encapsulates a set of C function pointers that receive visit
- * callbacks during generated conversion. Call this setter before invoking the generated
- * options-field bridge wrapper to activate visitor callbacks. Pass `visitor = null` to clear
- * a previously attached visitor.
+ * callbacks during generated conversion. Call this setter before invoking the
+ * generated options-field bridge wrapper to activate visitor callbacks. Pass
+ * `visitor = null` to clear a previously attached visitor.
  *
- * Neither pointer is consumed: the caller retains ownership of both `options` and `visitor`
- * and must free them independently after conversion completes.
+ * Neither pointer is consumed: the caller retains ownership of both `options`
+ * and `visitor` and must free them independently after conversion completes.
  *
  * # Safety
  *
- * `options` must be a non-null pointer returned by `htm_conversion_options_new` (or
- * equivalent), valid for write access.  `visitor` must be a non-null pointer returned by
- * `htm_visitor_create`, or null.  Both must remain valid for the duration of any
- * subsequent options-field bridge wrapper call.
+ * `options` must be a non-null pointer returned by `htm_conversion_options_new`
+ * (or equivalent), valid for write access.  `visitor` must be a non-null
+ * pointer returned by `htm_visitor_create`, or null.  Both must remain valid
+ * for the duration of any subsequent options-field bridge wrapper call.
  */
 void htm_options_set_visitor(HTMConversionOptions *options,
                              struct HTMHtmVisitor *visitor);
@@ -3786,7 +3684,8 @@ void htm_options_set_visitor(HTMConversionOptions *options,
  * any thread that calls `htm_convert_with_visitor` until after
  * `htm_visitor_free` is called.
  */
-struct HTMHtmVisitor *htm_visitor_create(const struct HTMHtmVisitorCallbacks *callbacks);
+struct HTMHtmVisitor *
+htm_visitor_create(const struct HTMHtmVisitorCallbacks *callbacks);
 
 /**
  * Free a visitor handle previously returned by `htm_visitor_create`.
@@ -3801,20 +3700,24 @@ struct HTMHtmVisitor *htm_visitor_create(const struct HTMHtmVisitorCallbacks *ca
 void htm_visitor_free(struct HTMHtmVisitor *visitor);
 
 /**
- * Create a new `HtmHtmlVisitorBridge` from a vtable and opaque user_data pointer.
+ * Create a new `HtmHtmlVisitorBridge` from a vtable and opaque user_data
+ * pointer.
  *
- * Returns a heap-allocated `HtmHtmlVisitorBridge` on success, or null if `vtable` is null.
- * The caller is responsible for calling `htm_htm_html_visitor_bridge_free` exactly once when the bridge is
- * no longer needed.
+ * Returns a heap-allocated `HtmHtmlVisitorBridge` on success, or null if
+ * `vtable` is null. The caller is responsible for calling
+ * `htm_htm_html_visitor_bridge_free` exactly once when the bridge is no longer
+ * needed.
  *
  * # Safety
  *
- * `vtable` must be a non-null pointer to a fully initialised `HtmHtmlVisitorVTable` that
- * remains valid for the lifetime of the returned bridge.  `user_data` must be valid
- * for any thread that calls methods on this bridge.
+ * `vtable` must be a non-null pointer to a fully initialised
+ * `HtmHtmlVisitorVTable` that remains valid for the lifetime of the returned
+ * bridge.  `user_data` must be valid for any thread that calls methods on this
+ * bridge.
  */
-struct HTMHtmHtmlVisitorBridge *htm_htm_html_visitor_bridge_new(const struct HTMHtmHtmlVisitorVTable *vtable,
-                                                                const void *user_data);
+struct HTMHtmHtmlVisitorBridge *
+htm_htm_html_visitor_bridge_new(const struct HTMHtmHtmlVisitorVTable *vtable,
+                                const void *user_data);
 
 /**
  * Free a `HtmHtmlVisitorBridge` created by `htm_htm_html_visitor_bridge_new`.
@@ -3823,9 +3726,9 @@ struct HTMHtmHtmlVisitorBridge *htm_htm_html_visitor_bridge_new(const struct HTM
  *
  * # Safety
  *
- * `ptr` must be either null or a non-null pointer returned by `htm_htm_html_visitor_bridge_new` that has
- * not yet been freed.
+ * `ptr` must be either null or a non-null pointer returned by
+ * `htm_htm_html_visitor_bridge_new` that has not yet been freed.
  */
 void htm_htm_html_visitor_bridge_free(struct HTMHtmHtmlVisitorBridge *ptr);
 
-#endif  /* HTM_H */
+#endif /* HTM_H */

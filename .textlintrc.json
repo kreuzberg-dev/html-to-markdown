@@ -2,7 +2,10 @@
   "filters": {
     "comments": true,
     "node-types": {
-      "nodeTypes": ["CodeBlock", "Code"]
+      "nodeTypes": [
+        "CodeBlock",
+        "Code"
+      ]
     }
   },
   "rules": {
@@ -15,7 +18,10 @@
     },
     "terminology": {
       "defaultTerms": false,
-      "terms": ["Xberg", "html-to-markdown"]
+      "terms": [
+        "Xberg",
+        "html-to-markdown"
+      ]
     },
     "no-zero-width-spaces": true,
     "@textlint-rule/no-invalid-control-character": true,

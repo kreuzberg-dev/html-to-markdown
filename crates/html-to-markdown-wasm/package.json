@@ -1,6 +1,6 @@
 {
   "name": "@xberg-io/html-to-markdown-wasm",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "private": false,
   "description": "High-performance HTML to Markdown converter",
   "license": "MIT",
@@ -13,7 +13,12 @@
     "access": "public"
   },
   "type": "module",
-  "files": ["pkg", "*.wasm", "*.d.ts", "README.md"],
+  "files": [
+    "pkg",
+    "*.wasm",
+    "*.d.ts",
+    "README.md"
+  ],
   "main": "pkg/nodejs/html_to_markdown_wasm.js",
   "module": "pkg/web/html_to_markdown_wasm.js",
   "types": "pkg/nodejs/html_to_markdown_wasm.d.ts",

@@ -8,26 +8,26 @@ version = "0.0.0"
 description = "Workspace-only metadata for tooling."
 requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 
 [dependency-groups]
 dev = [
-    "covdefaults>=2.3",
-    "jinja2>=3.1.6",
-    "pyrefly>=1.1.1",
-    "pytest>=9.0.2",
-    "pytest-asyncio>=1.3",
-    "pytest-benchmark>=5.2.3",
-    "pytest-cov>=7",
-    "pytest-mock>=3.15.1",
-    "pyyaml>=6.0.3",
-    "uv-bump",
+  "covdefaults>=2.3",
+  "jinja2>=3.1.6",
+  "pyrefly>=1.1.1",
+  "pytest>=9.0.2",
+  "pytest-asyncio>=1.3",
+  "pytest-benchmark>=5.2.3",
+  "pytest-cov>=7",
+  "pytest-mock>=3.15.1",
+  "pyyaml>=6.0.3",
+  "uv-bump",
 ]
 
 [tool.setuptools]
@@ -38,12 +38,12 @@ default-groups = ["dev"]
 sources.uv-bump = { git = "https://github.com/Goldziher/uv-bump" }
 workspace.members = ["packages/python"]
 cache-keys = [
-    { file = "pyproject.toml" },
-    { file = "Cargo.toml" },
-    { file = "Cargo.lock" },
-    { file = "packages/python/pyproject.toml" },
-    { file = "crates/**/Cargo.toml" },
-    { file = "crates/**/*.rs" },
+  { file = "pyproject.toml" },
+  { file = "Cargo.toml" },
+  { file = "Cargo.lock" },
+  { file = "packages/python/pyproject.toml" },
+  { file = "crates/**/Cargo.toml" },
+  { file = "crates/**/*.rs" },
 ]
 
 [tool.pytest]
@@ -51,10 +51,10 @@ ini_options.asyncio_mode = "auto"
 ini_options.asyncio_default_fixture_loop_scope = "function"
 ini_options.testpaths = ["packages/python/tests"]
 ini_options.filterwarnings = [
-    "error",
-    "ignore::pytest.PytestConfigWarning",
-    "ignore::pytest.PytestUnraisableExceptionWarning",
-    "ignore::ResourceWarning",
+  "error",
+  "ignore::pytest.PytestConfigWarning",
+  "ignore::pytest.PytestUnraisableExceptionWarning",
+  "ignore::ResourceWarning",
 ]
 
 [tool.coverage]

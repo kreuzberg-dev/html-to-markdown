@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>HtmlToMarkdown</RootNamespace>
     <PackageId>XbergIo.HtmlToMarkdown</PackageId>
-    <Version>3.9.0</Version>
-    <AssemblyVersion>3.8.3.0</AssemblyVersion>
-    <FileVersion>3.8.3.0</FileVersion>
-    <InformationalVersion>3.9.0</InformationalVersion>
+    <Version>3.9.1</Version>
+    <AssemblyVersion>3.9.1.0</AssemblyVersion>
+    <FileVersion>3.9.1.0</FileVersion>
+    <InformationalVersion>3.9.1</InformationalVersion>
     <Description>High-performance HTML to Markdown converter</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/xberg-io/html-to-markdown</RepositoryUrl>
@@ -27,8 +27,20 @@
 
   <ItemGroup>
     <None Include="../../../LICENSE" Pack="true" PackagePath="/" />
-    <None Include="runtimes/**" Pack="true" PackagePath="runtimes/" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Thin meta-package: no runtimes/** payload here. Native closures ship in the
+         per-RID XbergIo.HtmlToMarkdown.runtime.<rid> packages (see ../HtmlToMarkdown.Runtime); this
+         package only carries the managed assembly plus runtime.json, which tells
+         NuGet's RID-fallback graph which runtime package to pull in for the
+         consumer's RID. runtime.json is rendered
+         from runtime.json.template by CI before pack; RequireRuntimeJson guards
+         against packing without it. -->
+    <None Include="runtime.json" Pack="true" PackagePath="/" Condition="Exists('runtime.json')" />
   </ItemGroup>
+
+  <Target Name="RequireRuntimeJson" BeforeTargets="Pack">
+    <Error Condition="!Exists('runtime.json')"
+           Text="packages/csharp/HtmlToMarkdown/runtime.json is missing. Render it from runtime.json.template (substituting {{VERSION}}) before packing HtmlToMarkdown.csproj." />
+  </Target>
 
   <ItemGroup>
     <Compile Include="../src/**/*.cs" />

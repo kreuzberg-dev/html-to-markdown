@@ -8,7 +8,7 @@
 
   <groupId>io.xberg</groupId>
   <artifactId>html-to-markdown</artifactId>
-  <version>3.9.0</version>
+  <version>3.9.1</version>
   <packaging>jar</packaging>
 
   <name>html-to-markdown</name>
@@ -38,27 +38,25 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>25</maven.compiler.release>
-    <junit.version>5.11.4</junit.version>
-    <maven.version>3.9.11</maven.version>
+    <junit.version>6.1.2</junit.version>
+    <maven.version>3.9.16</maven.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>3.5.5</maven-surefire-plugin.version>
+    <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
-    <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
     <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
     <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
     <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
-    <maven-clean-plugin.version>3.4.1</maven-clean-plugin.version>
-    <maven-resources-plugin.version>3.3.1</maven-resources-plugin.version>
-    <maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
-    <maven-install-plugin.version>3.1.3</maven-install-plugin.version>
-    <maven-deploy-plugin.version>3.1.3</maven-deploy-plugin.version>
+    <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
+    <maven-resources-plugin.version>3.5.0</maven-resources-plugin.version>
+    <maven-jar-plugin.version>3.5.1</maven-jar-plugin.version>
+    <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
+    <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
     <maven-site-plugin.version>4.0.0-M16</maven-site-plugin.version>
-    <central-publishing-plugin.version>0.10.0</central-publishing-plugin.version>
+    <central-publishing-plugin.version>0.11.0</central-publishing-plugin.version>
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
-    <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
-    <jacoco-maven-plugin.version>0.8.14</jacoco-maven-plugin.version>
-    <checkstyle.version>13.4.0</checkstyle.version>
-    <pmd.version>7.17.0</pmd.version>
+    <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
+    <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
+    <checkstyle.version>13.8.0</checkstyle.version>
     <gpg.skip>true</gpg.skip>
   </properties>
 
@@ -71,12 +69,12 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
-      <version>2.21.2</version>
+      <version>2.22.1</version>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.datatype</groupId>
       <artifactId>jackson-datatype-jdk8</artifactId>
-      <version>2.21.2</version>
+      <version>2.22.1</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -276,43 +274,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <version>${maven-pmd-plugin.version}</version>
-        <dependencies>
-          <dependency>
-            <groupId>net.sourceforge.pmd</groupId>
-            <artifactId>pmd-java</artifactId>
-            <version>${pmd.version}</version>
-          </dependency>
-        </dependencies>
-        <configuration>
-          <targetJdk>${maven.compiler.release}</targetJdk>
-          <typeResolution>false</typeResolution>
-          <rulesets>
-            <ruleset>/rulesets/java/quickstart.xml</ruleset>
-          </rulesets>
-          <!--
-                        CPD threshold raised above the default 100 tokens because alef-generated
-                        streaming method bodies (`streamItems`, `batchStreamItems`, etc.) share
-                        an identical iterator-driving loop by design (per-stream-handle JNI
-                        externs differ, the surrounding plumbing is the same). The shared block
-                        is ~106 tokens — well within the default. 200 is the smallest threshold
-                        that lets two streaming methods coexist in the same handle class without
-                        a false-positive while still catching genuine large-scale duplication.
-                    -->
-          <minimumTokens>200</minimumTokens>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>pmd</goal>
-              <goal>cpd-check</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>versions-maven-plugin</artifactId>
         <version>${versions-maven-plugin.version}</version>
@@ -369,11 +330,6 @@
       <id>publish</id>
       <properties>
         <gpg.skip>false</gpg.skip>
-        <!-- alef-emitted stream methods can exceed 200 tokens and trigger CPD/PMD
-                     duplicate-code violations; skip those checks in the publish profile so
-                     they do not block Maven Central deployment. -->
-        <cpd.skip>true</cpd.skip>
-        <pmd.skip>true</pmd.skip>
       </properties>
       <build>
         <plugins>

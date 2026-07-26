@@ -4,7 +4,7 @@ requires = ["maturin>=1,<2"]
 
 [project]
 name = "html-to-markdown"
-version = "3.9.0"
+version = "3.9.1"
 description = "High-performance HTML to Markdown converter"
 keywords = ["converter", "html", "markdown"]
 license = "MIT"
@@ -12,12 +12,12 @@ license-files = ["LICENSE"]
 authors = [{ name = "Xberg" }]
 requires-python = ">=3.10"
 classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 urls.repository = "https://github.com/xberg-io/html-to-markdown"
 
@@ -38,29 +38,29 @@ format.docstring-code-line-length = 120
 format.docstring-code-format = true
 lint.select = ["ALL"]
 lint.ignore = [
-    "ANN401",
-    "ASYNC109",
-    "ASYNC110",
-    "BLE001",
-    "COM812",
-    "D100",
-    "D104",
-    "D107",
-    "D205",
-    "E501",
-    "EM",
-    "FBT",
-    "FIX",
-    "ISC001",
-    "PD011",
-    "PGH003",
-    "PLR2004",
-    "PLW0603",
-    "S104",
-    "S110",
-    "S603",
-    "TD",
-    "TRY",
+  "ANN401",
+  "ASYNC109",
+  "ASYNC110",
+  "BLE001",
+  "COM812",
+  "D100",
+  "D104",
+  "D107",
+  "D205",
+  "E501",
+  "EM",
+  "FBT",
+  "FIX",
+  "ISC001",
+  "PD011",
+  "PGH003",
+  "PLR2004",
+  "PLW0603",
+  "S104",
+  "S110",
+  "S603",
+  "TD",
+  "TRY",
 ]
 lint.per-file-ignores."html_to_markdown/__init__.py" = ["I001"]
 # single-line import block, options.py carries # noqa: TC001 / F401 markers
@@ -80,10 +80,10 @@ show_error_codes = true
 implicit_reexport = false
 namespace_packages = true
 overrides = [
-    { module = "html_to_markdown.api", disable_error_code = [
-        "call-arg",
-        "arg-type",
-        "return-value",
-        "attr-defined",
-    ] },
+  { module = "html_to_markdown.api", disable_error_code = [
+    "call-arg",
+    "arg-type",
+    "return-value",
+    "attr-defined",
+  ] },
 ]

@@ -9,9 +9,16 @@ const isMusl = () => {
   // "is musl" positive. Fall through to the filesystem heuristic instead: on
   // glibc systems `/lib64/ld-musl-x86_64.so.1` does not exist; on musl systems
   // it always does. statSync errors → not musl.
-  if (typeof process.report === "object" && typeof process.report.getReport === "function") {
+  if (
+    typeof process.report === "object" &&
+    typeof process.report.getReport === "function"
+  ) {
     const report = process.report.getReport();
-    if (report && report.header && typeof report.header.glibcVersion === "string") {
+    if (
+      report &&
+      report.header &&
+      typeof report.header.glibcVersion === "string"
+    ) {
       return false;
     }
   }
@@ -41,37 +48,13 @@ const tryLoadBinding = () => {
   // which inherits any scope prefix from the parent package.
   const targets = [
     ["linux", "x64", "gnu", "./html-to-markdown-node.linux-x64-gnu.node", "@xberg-io/html-to-markdown-linux-x64-gnu"],
-    [
-      "linux",
-      "arm64",
-      "gnu",
-      "./html-to-markdown-node.linux-arm64-gnu.node",
-      "@xberg-io/html-to-markdown-linux-arm64-gnu",
-    ],
-    [
-      "linux",
-      "x64",
-      "musl",
-      "./html-to-markdown-node.linux-x64-musl.node",
-      "@xberg-io/html-to-markdown-linux-x64-musl",
-    ],
-    [
-      "linux",
-      "arm64",
-      "musl",
-      "./html-to-markdown-node.linux-arm64-musl.node",
-      "@xberg-io/html-to-markdown-linux-arm64-musl",
-    ],
+    ["linux", "arm64", "gnu", "./html-to-markdown-node.linux-arm64-gnu.node", "@xberg-io/html-to-markdown-linux-arm64-gnu"],
+    ["linux", "x64", "musl", "./html-to-markdown-node.linux-x64-musl.node", "@xberg-io/html-to-markdown-linux-x64-musl"],
+    ["linux", "arm64", "musl", "./html-to-markdown-node.linux-arm64-musl.node", "@xberg-io/html-to-markdown-linux-arm64-musl"],
     ["darwin", "x64", null, "./html-to-markdown-node.darwin-x64.node", "@xberg-io/html-to-markdown-darwin-x64"],
     ["darwin", "arm64", null, "./html-to-markdown-node.darwin-arm64.node", "@xberg-io/html-to-markdown-darwin-arm64"],
     ["win32", "x64", null, "./html-to-markdown-node.win32-x64-msvc.node", "@xberg-io/html-to-markdown-win32-x64-msvc"],
-    [
-      "win32",
-      "arm64",
-      null,
-      "./html-to-markdown-node.win32-arm64-msvc.node",
-      "@xberg-io/html-to-markdown-win32-arm64-msvc",
-    ],
+    ["win32", "arm64", null, "./html-to-markdown-node.win32-arm64-msvc.node", "@xberg-io/html-to-markdown-win32-arm64-msvc"],
   ];
 
   for (const [plat, a, abi, localPath, optionalDep] of targets) {
@@ -110,7 +93,9 @@ const tryLoadBinding = () => {
 tryLoadBinding();
 
 if (!nativeBinding) {
-  throw new Error(`Failed to load native binding for ${platform}-${arch}. Errors: ${loadErrors.join(", ")}`);
+  throw new Error(
+    `Failed to load native binding for ${platform}-${arch}. Errors: ${loadErrors.join(", ")}`
+  );
 }
 
 module.exports = nativeBinding;
