@@ -39,7 +39,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>25</maven.compiler.release>
     <junit.version>6.1.2</junit.version>
-    <maven.version>3.9.16</maven.version>
+    <maven.version>3.6.3</maven.version>
     <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
     <maven-surefire-plugin.version>3.5.6</maven-surefire-plugin.version>
     <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
@@ -56,7 +56,7 @@
     <versions-maven-plugin.version>2.21.0</versions-maven-plugin.version>
     <maven-enforcer-plugin.version>3.6.3</maven-enforcer-plugin.version>
     <jacoco-maven-plugin.version>0.8.15</jacoco-maven-plugin.version>
-    <checkstyle.version>13.8.0</checkstyle.version>
+    <checkstyle.version>13.9.0</checkstyle.version>
     <gpg.skip>true</gpg.skip>
   </properties>
 

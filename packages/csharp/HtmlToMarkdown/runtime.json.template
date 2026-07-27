@@ -1,0 +1,44 @@
+{
+  "runtimes": {
+    "linux-arm64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.linux-arm64": "{{VERSION}}"
+      }
+    },
+    "linux-musl-arm64": {
+      "#import": [
+        "linux-arm64"
+      ]
+    },
+    "linux-musl-x64": {
+      "#import": [
+        "linux-x64"
+      ]
+    },
+    "linux-x64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.linux-x64": "{{VERSION}}"
+      }
+    },
+    "osx-arm64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.osx-arm64": "{{VERSION}}"
+      }
+    },
+    "osx-x64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.osx-x64": "{{VERSION}}"
+      }
+    },
+    "win-arm64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.win-arm64": "{{VERSION}}"
+      }
+    },
+    "win-x64": {
+      "XbergIo.HtmlToMarkdown": {
+        "XbergIo.HtmlToMarkdown.runtime.win-x64": "{{VERSION}}"
+      }
+    }
+  }
+}
