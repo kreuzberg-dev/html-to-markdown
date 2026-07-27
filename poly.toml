@@ -1,3 +1,5 @@
+extends = [{ path = "../alef", file = "poly-base.toml" }]
+
 [discovery]
 exclude = [
   "**/*.freezed.dart",
@@ -48,70 +50,6 @@ disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051
 
 [fmt.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
-
-[lint.python.ruff]
-select = [
-  "F",
-  "E",
-  "W",
-  "I",
-  "N",
-  "D",
-  "UP",
-  "ANN",
-  "ASYNC",
-  "S",
-  "B",
-  "A",
-  "C4",
-  "DTZ",
-  "T10",
-  "T20",
-  "ISC",
-  "ICN",
-  "PIE",
-  "PT",
-  "Q",
-  "RSE",
-  "RET",
-  "SIM",
-  "TID",
-  "TC",
-  "ARG",
-  "PTH",
-  "PGH",
-  "PL",
-  "PERF",
-  "FURB",
-  "RUF",
-]
-ignore = [
-  "ANN401",
-  "ASYNC109",
-  "ASYNC110",
-  "D100",
-  "D104",
-  "D107",
-  "D205",
-  "E501",
-  "ISC001",
-  "PGH003",
-  "PLR2004",
-  "PLW0603",
-  "S104",
-  "S110",
-  "S603",
-]
-mccabe_max_complexity = 15
-pydocstyle_convention = "google"
-pylint_max_args = 10
-pylint_max_branches = 15
-pylint_max_returns = 10
-
-[lint.php.mago]
-select = ["correctness", "security"]
-ignore = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
-php_version = "8.2"
 
 [lint.typos.extend_words]
 ake = "ake"
@@ -198,9 +136,6 @@ remove_fixme = false
 remove_docs = false
 use_default_ignores = true
 preserve_patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under"]
-
-[tools.clang-format]
-enabled = true
 
 [per-file-ignores]
 "**/api.py" = ["F401", "I001", "TC006", "UP035"]
@@ -492,44 +427,3 @@ file_safety = { exclude = [
 ] }
 cargo = true
 commit = { stages = ["commit-msg"] }
-
-[hooks.pre-commit.commands.pyrefly]
-run = "pyrefly check packages/python"
-workspace = true
-files = "packages/python/**/*.py"
-
-[hooks.pre-commit.commands.rubocop]
-run = "bundle exec rubocop"
-root = "packages/ruby"
-workspace = true
-files = "packages/ruby/**/*.rb"
-
-[hooks.pre-commit.commands.steep]
-run = "bundle exec steep check"
-root = "packages/ruby"
-workspace = true
-files = "packages/ruby/**/*.rb"
-
-[hooks.pre-commit.commands.golangci-lint]
-run = "golangci-lint run ./..."
-root = "packages/go"
-workspace = true
-files = "packages/go/**/*.go"
-
-[hooks.pre-commit.commands.checkstyle]
-run = "mvn -q checkstyle:check"
-root = "packages/java"
-workspace = true
-files = "packages/java/**/*.java"
-
-[hooks.pre-commit.commands.dart-analyze]
-run = "dart analyze"
-root = "packages/dart"
-workspace = true
-files = "packages/dart/**/*.dart"
-
-[hooks.pre-commit.commands.credo]
-run = "mix credo --strict"
-root = "packages/elixir"
-workspace = true
-files = "packages/elixir/**/*.{ex,exs}"
