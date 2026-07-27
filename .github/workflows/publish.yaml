@@ -1896,6 +1896,12 @@ jobs:
         with:
           dotnet-version: "8.0.x"
 
+      - name: Render runtime.json from template
+        uses: xberg-io/actions/render-runtime-json@v1
+        with:
+          template-path: packages/csharp/HtmlToMarkdown/runtime.json.template
+          version: ${{ needs.prepare.outputs.version }}
+
       - name: Pack NuGet package
         shell: bash
         run: |
