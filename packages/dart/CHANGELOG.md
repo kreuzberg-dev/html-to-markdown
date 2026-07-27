@@ -2,6 +2,6 @@
 
 All notable changes to this package will be documented in this file.
 
-## 3.9.1
+## 3.9.2
 
 - Initial release.

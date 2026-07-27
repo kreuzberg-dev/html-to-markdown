@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.9.2] - 2026-07-27
+
+### Fixed
+
+- Java (Maven Central) and C# (NuGet) publishing, which failed in 3.9.1. Regenerated all language
+  bindings on alef 0.48.4: the generated pom's Maven enforcer floor no longer exceeds the CI
+  runner's Maven version, and the C# package now renders `runtime.json` (from the newly generated
+  `runtime.json.template`) before `dotnet pack` via the `xberg-io/actions/render-runtime-json` step.
+
+### Changed
+
+- Upgrade dependencies to their latest incompatible versions.
+
 ## [3.9.1] - 2026-07-26
 
 ### Changed
