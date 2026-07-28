@@ -6,16 +6,16 @@ Give your coding agent working knowledge of html-to-markdown so it writes correc
 
 ## What this plugin does
 
-The plugin packages html-to-markdown's usage patterns, options, and per-language APIs as agent skills. Once installed, your assistant can answer html-to-markdown questions and generate accurate code straight from your editor or terminal. It installs from the [`xberg-io/plugins`](https://github.com/xberg-io/plugins) marketplace and works with every major coding agent — pick yours below.
+The plugin packages html-to-markdown's usage patterns, options, and per-language APIs as agent skills. Once installed, your assistant can answer html-to-markdown questions and generate accurate code straight from your editor or terminal. It installs from this repo's own [`xberg-io/html-to-markdown`](https://github.com/xberg-io/html-to-markdown) marketplace and works with every major coding agent — pick yours below.
 
-## Installing
+## Install as a plugin
 
 <details open>
 <summary><strong>Claude Code</strong></summary>
 
 ```text
-/plugin marketplace add xberg-io/plugins
-/plugin install html-to-markdown@xberg-io
+/plugin marketplace add xberg-io/html-to-markdown
+/plugin install html-to-markdown@html-to-markdown
 ```
 
 </details>
@@ -24,7 +24,7 @@ The plugin packages html-to-markdown's usage patterns, options, and per-language
 <summary><strong>Codex CLI</strong></summary>
 
 ```text
-/plugins add https://github.com/xberg-io/plugins
+/plugins add https://github.com/xberg-io/html-to-markdown
 ```
 
 Then search for `html-to-markdown` and select **Install Plugin**.
@@ -33,14 +33,14 @@ Then search for `html-to-markdown` and select **Install Plugin**.
 <details>
 <summary><strong>Cursor</strong></summary>
 
-Settings → Plugins → Add from URL → `https://github.com/xberg-io/plugins`, then select **html-to-markdown**.
+Settings → Plugins → Add from URL → `https://github.com/xberg-io/html-to-markdown`, then select **html-to-markdown**.
 </details>
 
 <details>
 <summary><strong>Gemini CLI</strong></summary>
 
 ```text
-gemini extensions install https://github.com/xberg-io/plugins
+gemini extensions install https://github.com/xberg-io/html-to-markdown
 ```
 
 </details>
@@ -49,8 +49,8 @@ gemini extensions install https://github.com/xberg-io/plugins
 <summary><strong>Factory Droid</strong></summary>
 
 ```text
-droid plugin marketplace add https://github.com/xberg-io/plugins
-droid plugin install html-to-markdown@xberg-io
+droid plugin marketplace add https://github.com/xberg-io/html-to-markdown
+droid plugin install html-to-markdown@html-to-markdown
 ```
 
 </details>
@@ -59,8 +59,8 @@ droid plugin install html-to-markdown@xberg-io
 <summary><strong>GitHub Copilot CLI</strong></summary>
 
 ```text
-copilot plugin marketplace add https://github.com/xberg-io/plugins
-copilot plugin install html-to-markdown@xberg-io
+copilot plugin marketplace add https://github.com/xberg-io/html-to-markdown
+copilot plugin install html-to-markdown@html-to-markdown
 ```
 
 </details>
@@ -78,3 +78,39 @@ Add the package to `opencode.json`:
 ```
 
 </details>
+
+## Install as an MCP server
+
+Every plugin above bundles the html-to-markdown MCP server and registers it for you, so there is nothing to configure by hand. To wire the same server into any other MCP client directly, point it at the published CLI — no plugin required:
+
+```json
+{
+  "mcpServers": {
+    "html-to-markdown": {
+      "command": "npx",
+      "args": ["-y", "@xberg-io/html-to-markdown-cli@latest", "mcp"]
+    }
+  }
+}
+```
+
+Python users can launch it through `uvx` instead:
+
+```json
+{
+  "mcpServers": {
+    "html-to-markdown": {
+      "command": "uvx",
+      "args": ["--from", "html-to-markdown-cli", "html-to-markdown", "mcp"]
+    }
+  }
+}
+```
+
+The server exposes `convert_html` and `extract_metadata` — see the [MCP Reference](/reference/mcp/) for the full tool and parameter schema.
+
+For the Hermes Python agent framework, install the plugin as a package instead:
+
+```bash
+pip install html-to-markdown-hermes-plugin
+```
