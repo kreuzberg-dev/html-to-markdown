@@ -5,17 +5,18 @@ description: Use when converting HTML to Markdown, Djot, or plain text. Covers o
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:a3ac9809f94e8799a4dea0f0bd7b52aeb358b3de882df5eea976506f62f98b1a
-Source-Hash: blake3:a26895b430a4566af1f3db095f3acc5c0318657e3df55befeba6187e6bf8dcb9
+Content-Hash: blake3:f1b6e5eedc9f268752e34b2c9ad6ecab9ae40c23a8373b1a97838f95a96945d1
+Source-Hash: blake3:82396c4e076dc863f9ed6d50bf24b435d6588002de0f733d4990b6cc697f7ef4
 Schema-Version: v1
 -->
 
 # Converting HTML
 
 Use this when the user wants to turn HTML into clean Markdown (or Djot) — a
-saved page, an HTML email body, a fragment, or a string. The CLI takes
-**flags only** (no subcommands); `FILE` is positional and stdin is the default
-input when no file is given.
+saved page, an HTML email body, a fragment, or a string. Conversion is driven by
+**flags** with a positional `FILE` (stdin is the default input when no file is
+given); the only subcommand is `mcp` (run-as-server, see the
+`using-the-mcp-server` skill).
 
 ## Basic conversion
 
@@ -106,8 +107,13 @@ from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
 result = convert(
     html,
-    ConversionOptions(heading_style="atx", code_block_style="backticks", wrap=True, wrap_width=100),
-    PreprocessingOptions(enabled=True, preset="aggressive"),
+    ConversionOptions(
+        heading_style="atx",
+        code_block_style="backticks",
+        wrap=True,
+        wrap_width=100,
+        preprocessing=PreprocessingOptions(enabled=True, preset="aggressive"),
+    ),
 )
 print(result.content)
 ```

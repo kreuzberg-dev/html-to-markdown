@@ -15,8 +15,8 @@ metadata:
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:c60ca71925e3dec29b8b9dfc1e2775c899c932e93fca99e659fb0aac87ac79e4
-Source-Hash: blake3:a26895b430a4566af1f3db095f3acc5c0318657e3df55befeba6187e6bf8dcb9
+Content-Hash: blake3:c58547fe180379b7493a0be88e1f2c24e324f11f81386340513172310b155888
+Source-Hash: blake3:82396c4e076dc863f9ed6d50bf24b435d6588002de0f733d4990b6cc697f7ef4
 Schema-Version: v1
 -->
 
@@ -204,14 +204,18 @@ from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
 result = convert(
     html,
-    ConversionOptions(heading_style="atx", wrap=True, wrap_width=100),
-    PreprocessingOptions(enabled=True, preset="aggressive"),
+    ConversionOptions(
+        heading_style="atx",
+        wrap=True,
+        wrap_width=100,
+        preprocessing=PreprocessingOptions(enabled=True, preset="aggressive"),
+    ),
 )
 ```
 
 ## Metadata extraction
 
-Metadata is extracted by default; in the CLI it appears under `metadata` in `--json` output. Fields include `document` (title, description, language, charset, open_graph), `headers`, `links` (with `link_type`), `images`, and `structured_data` (JSON-LD/Microdata/RDFa). See the **extracting-metadata** skill for details.
+The library `convert()` extracts metadata by default; the CLI needs `--json --extract-metadata` (see the **extracting-metadata** skill). Fields include `document` (title, description, language, canonical_url, open_graph), `headers`, `links` (with `link_type`), `images`, and `structured_data` (JSON-LD/Microdata/RDFa).
 
 ## Table extraction
 

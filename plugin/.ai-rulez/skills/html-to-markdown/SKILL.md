@@ -197,14 +197,18 @@ from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
 result = convert(
     html,
-    ConversionOptions(heading_style="atx", wrap=True, wrap_width=100),
-    PreprocessingOptions(enabled=True, preset="aggressive"),
+    ConversionOptions(
+        heading_style="atx",
+        wrap=True,
+        wrap_width=100,
+        preprocessing=PreprocessingOptions(enabled=True, preset="aggressive"),
+    ),
 )
 ```
 
 ## Metadata extraction
 
-Metadata is extracted by default; in the CLI it appears under `metadata` in `--json` output. Fields include `document` (title, description, language, charset, open_graph), `headers`, `links` (with `link_type`), `images`, and `structured_data` (JSON-LD/Microdata/RDFa). See the **extracting-metadata** skill for details.
+The library `convert()` extracts metadata by default; the CLI needs `--json --extract-metadata` (see the **extracting-metadata** skill). Fields include `document` (title, description, language, canonical_url, open_graph), `headers`, `links` (with `link_type`), `images`, and `structured_data` (JSON-LD/Microdata/RDFa).
 
 ## Table extraction
 

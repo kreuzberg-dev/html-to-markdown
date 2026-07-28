@@ -10,17 +10,21 @@ addition to) the Markdown body — page title, description, language, Open Graph
 tags, structured data, the heading outline, links, or image references.
 
 Metadata lives in `result.metadata` and is surfaced on the CLI through
-`--json`. Metadata is extracted by default; all sub-fields below populate
-automatically inside `result.metadata` whenever `--json` is used. There are no
-per-field extraction flags.
+`--json`. On the CLI, metadata extraction is **opt-in**: pass
+`--extract-metadata` alongside `--json`, otherwise `result.metadata` comes back
+empty (`document.title` is null, `headers`/`links`/`images`/`structured_data`
+are `[]`). The library `convert()` call extracts metadata by default
+(`extract_metadata=True`) — that default is a property of the API, not the CLI.
+There are no per-field extraction flags: `--extract-metadata` populates all
+sub-fields below at once.
 
 ## Get all metadata
 
 ```bash
-html-to-markdown --json input.html | jq '.metadata'
+html-to-markdown --json --extract-metadata input.html | jq '.metadata'
 
 # Extraction-only (skip the Markdown body)
-html-to-markdown --json --no-content input.html | jq '.metadata'
+html-to-markdown --json --extract-metadata --no-content input.html | jq '.metadata'
 ```
 
 ## Metadata sub-fields
@@ -39,17 +43,17 @@ html-to-markdown --json --no-content input.html | jq '.metadata'
 
 ## Metadata flag
 
-There is one metadata flag. The sub-fields above (`document`, `headers`,
-`links`, `images`, `structured_data`) are always populated under
-`result.metadata` when `--json` is set — select what you need with `jq`.
+There is one metadata flag: `--extract-metadata`. With `--json` set it populates
+all sub-fields above (`document`, `headers`, `links`, `images`,
+`structured_data`) under `result.metadata` — select what you need with `jq`.
 
 | Flag | Effect |
 | ---- | ------ |
-| `--extract-metadata` | (plain-text mode, no `--json`) emit title + meta tags as an HTML-comment header at the top of the Markdown output |
+| `--extract-metadata` | With `--json`: populate `result.metadata`. In plain-text mode (no `--json`): prepend title + meta tags as a YAML frontmatter block (`---`-delimited) at the top of the Markdown output |
 
 ```bash
 # Pull just the document-level metadata and the heading outline
-html-to-markdown --json --no-content input.html \
+html-to-markdown --json --extract-metadata --no-content input.html \
   | jq '{title: .metadata.document.title, lang: .metadata.document.language, outline: [.metadata.headers[].text]}'
 ```
 
@@ -57,16 +61,16 @@ html-to-markdown --json --no-content input.html \
 
 ```bash
 # Title + canonical language
-html-to-markdown --json input.html | jq '{title: .metadata.document.title, lang: .metadata.document.language}'
+html-to-markdown --json --extract-metadata input.html | jq '{title: .metadata.document.title, lang: .metadata.document.language}'
 
 # External links only
-html-to-markdown --json input.html | jq '[.metadata.links[] | select(.link_type == "external") | .href]'
+html-to-markdown --json --extract-metadata input.html | jq '[.metadata.links[] | select(.link_type == "external") | .href]'
 
 # Open Graph card
-html-to-markdown --json input.html | jq '.metadata.document.open_graph'
+html-to-markdown --json --extract-metadata input.html | jq '.metadata.document.open_graph'
 
 # JSON-LD blocks
-html-to-markdown --json input.html | jq '.metadata.structured_data'
+html-to-markdown --json --extract-metadata input.html | jq '.metadata.structured_data'
 ```
 
 ## Programmatic access

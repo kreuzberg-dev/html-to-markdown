@@ -6,9 +6,10 @@ description: Use when converting HTML to Markdown, Djot, or plain text. Covers o
 # Converting HTML
 
 Use this when the user wants to turn HTML into clean Markdown (or Djot) — a
-saved page, an HTML email body, a fragment, or a string. The CLI takes
-**flags only** (no subcommands); `FILE` is positional and stdin is the default
-input when no file is given.
+saved page, an HTML email body, a fragment, or a string. Conversion is driven by
+**flags** with a positional `FILE` (stdin is the default input when no file is
+given); the only subcommand is `mcp` (run-as-server, see the
+`using-the-mcp-server` skill).
 
 ## Basic conversion
 
@@ -99,8 +100,13 @@ from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
 result = convert(
     html,
-    ConversionOptions(heading_style="atx", code_block_style="backticks", wrap=True, wrap_width=100),
-    PreprocessingOptions(enabled=True, preset="aggressive"),
+    ConversionOptions(
+        heading_style="atx",
+        code_block_style="backticks",
+        wrap=True,
+        wrap_width=100,
+        preprocessing=PreprocessingOptions(enabled=True, preset="aggressive"),
+    ),
 )
 print(result.content)
 ```

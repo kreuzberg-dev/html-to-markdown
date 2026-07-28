@@ -59,7 +59,7 @@ function runCli(args, context, stdin) {
         resolve({
           title : "html-to-markdown CLI not found",
           output :
-              "Install the html-to-markdown CLI with `brew install xberg-io/tap/html-to-markdown`, or run it via `npx html-to-markdown` / `uvx --from html-to-markdown html-to-markdown`.",
+              "Install the html-to-markdown CLI with `brew install xberg-io/tap/html-to-markdown`, or run it via `npx -y @xberg-io/html-to-markdown-cli` / `uvx --from html-to-markdown-cli html-to-markdown`.",
           metadata : {exitCode : 127, command : "html-to-markdown"},
         });
         return;

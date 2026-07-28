@@ -1,6 +1,6 @@
 // AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-// Content-Hash: blake3:f2784bdf7c91876cbbef2210973be32dc22825d05b6d177b22c0580e0a605715
-// Source-Hash: blake3:a26895b430a4566af1f3db095f3acc5c0318657e3df55befeba6187e6bf8dcb9
+// Content-Hash: blake3:a6fa2bc34f3c3e8e95bd74acc79163d573b3c7d544c54ad82b5ca81e21f0f39c
+// Source-Hash: blake3:82396c4e076dc863f9ed6d50bf24b435d6588002de0f733d4990b6cc697f7ef4
 // Schema-Version: v1
 
 import {tool} from "@opencode-ai/plugin";
@@ -64,7 +64,7 @@ function runCli(args, context, stdin) {
         resolve({
           title : "html-to-markdown CLI not found",
           output :
-              "Install the html-to-markdown CLI with `brew install xberg-io/tap/html-to-markdown`, or run it via `npx html-to-markdown` / `uvx --from html-to-markdown html-to-markdown`.",
+              "Install the html-to-markdown CLI with `brew install xberg-io/tap/html-to-markdown`, or run it via `npx -y @xberg-io/html-to-markdown-cli` / `uvx --from html-to-markdown-cli html-to-markdown`.",
           metadata : {exitCode : 127, command : "html-to-markdown"},
         });
         return;
