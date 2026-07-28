@@ -83,3 +83,15 @@ marketplace = "basemind"
 name = "basemind"
 scope = "project"
 enabled = true
+
+# Plugin authoring: `ai-rulez generate --plugin` fans plugin/.ai-rulez/config.toml
+# ([plugin] block) out to per-runtime bundles under plugin/ and emits the repo-root
+# marketplace index. Only read by `generate --plugin`; normal governance generation ignores it.
+[marketplace]
+name = "html-to-markdown"
+description = "Fast, lossless HTML→Markdown conversion for coding agents, by Kreuzberg, Inc."
+members = ["plugin"]
+
+[marketplace.owner]
+name = "Kreuzberg, Inc."
+email = "contact@xberg.io"

@@ -1,0 +1,25 @@
+[build-system]
+requires = ['hatchling>=1.27']
+build-backend = 'hatchling.build'
+
+[project]
+name = 'html-to-markdown-hermes-plugin'
+version = '3.9.2'
+description = 'Fast, lossless HTML→Markdown conversion with structured metadata, tables, and document-structure extraction.'
+requires-python = '>=3.11'
+keywords = ['html-to-markdown', 'markdown', 'html', 'conversion', 'metadata']
+
+[project.entry-points]
+[project.entry-points.'hermes_agent.plugins']
+html-to-markdown = 'html_to_markdown_hermes_plugin'
+
+[project.urls]
+Homepage = 'https://xberg.io'
+Repository = 'https://github.com/xberg-io/html-to-markdown'
+
+[tool]
+[tool.hatch]
+[tool.hatch.build]
+[tool.hatch.build.targets]
+[tool.hatch.build.targets.wheel]
+packages = ['src/html_to_markdown_hermes_plugin']

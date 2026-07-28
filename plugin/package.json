@@ -1,0 +1,31 @@
+{
+  "name": "@xberg-io/opencode-html-to-markdown",
+  "version": "3.9.2",
+  "description": "Fast, lossless HTML→Markdown conversion with structured metadata, tables, and document-structure extraction.",
+  "keywords": [
+    "html-to-markdown",
+    "markdown",
+    "html",
+    "conversion",
+    "metadata"
+  ],
+  "homepage": "https://xberg.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xberg-io/html-to-markdown"
+  },
+  "license": "MIT",
+  "type": "module",
+  "main": ".opencode/plugins/html-to-markdown.js",
+  "exports": {
+    ".": "./.opencode/plugins/html-to-markdown.js"
+  },
+  "files": [
+    ".opencode/",
+    "assets/",
+    "README.md"
+  ],
+  "dependencies": {
+    "@opencode-ai/plugin": "^1.17.8"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "html-to-markdown",
+  "version": "3.9.2",
+  "description": "Fast, lossless HTML→Markdown conversion with structured metadata, tables, and document-structure extraction.",
+  "author": {
+    "name": "Kreuzberg, Inc.",
+    "email": "contact@xberg.io",
+    "url": "https://xberg.io"
+  },
+  "homepage": "https://xberg.io",
+  "repository": "https://github.com/xberg-io/html-to-markdown",
+  "license": "MIT",
+  "category": "developer-tools",
+  "keywords": [
+    "html-to-markdown",
+    "markdown",
+    "html",
+    "conversion",
+    "metadata"
+  ],
+  "brandColor": "#58FBDA",
+  "icon": "./assets/icon.svg",
+  "logo": "./assets/logo.svg"
+}

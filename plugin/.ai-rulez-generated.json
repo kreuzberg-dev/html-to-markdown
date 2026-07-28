@@ -1,0 +1,204 @@
+{
+  "schema_version": "v1",
+  "source_hash": "blake3:a26895b430a4566af1f3db095f3acc5c0318657e3df55befeba6187e6bf8dcb9",
+  "outputs": {
+    ".claude-plugin/plugin.json": {
+      "content_hash": "blake3:b829ddf504a11ba92fca75f8dcb4f165de0184ff4ee16318538c3ae2f0387378"
+    },
+    ".codex-plugin/plugin.json": {
+      "content_hash": "blake3:4e985c251dc74fc0f188523163722c29e99996d79f4c62cb3c52776692df8ae9"
+    },
+    ".cursor-plugin/plugin.json": {
+      "content_hash": "blake3:ac17be07737b9eb5a9ee0f202ec8c1871d555a7c1fe754faed759a1b5b0f569f"
+    },
+    ".cursor-plugin/skills/converting-html/SKILL.md": {
+      "content_hash": "blake3:a3ac9809f94e8799a4dea0f0bd7b52aeb358b3de882df5eea976506f62f98b1a"
+    },
+    ".cursor-plugin/skills/extracting-metadata/SKILL.md": {
+      "content_hash": "blake3:ae51acb06cdeff000766f2be8e3ad4fd789ea46c0b61c78d3158a3646842e276"
+    },
+    ".cursor-plugin/skills/extracting-tables/SKILL.md": {
+      "content_hash": "blake3:5597559a9133a3ac5068186a37ec61e7dcdac7881ee4a8077c8efd446e382be1"
+    },
+    ".cursor-plugin/skills/fetching-and-converting-urls/SKILL.md": {
+      "content_hash": "blake3:0ec0d1cfab92165c75146dc9c2cd55f3885f8b8e94c2ef4adf24d251263e8697"
+    },
+    ".cursor-plugin/skills/html-to-markdown/SKILL.md": {
+      "content_hash": "blake3:c60ca71925e3dec29b8b9dfc1e2775c899c932e93fca99e659fb0aac87ac79e4"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/cli-reference.md": {
+      "content_hash": "blake3:8ed4848ac660796356fab89003d9a449335bab39c241966b18f3685be730ecfd"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/configuration.md": {
+      "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/other-bindings.md": {
+      "content_hash": "blake3:69281dbfc69d0c6bb67f00339f1927fe7a1dd313348e645a0790c5b17dbae52f"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/python-api.md": {
+      "content_hash": "blake3:3a549d78cae90a733d9f61b66c421033718f873a073f90772da4476ed168e3f9"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/rust-api.md": {
+      "content_hash": "blake3:875289a052b7ca9e146876523bc0ece9c68256d7f11b63f03581b6f3b4462f15"
+    },
+    ".cursor-plugin/skills/html-to-markdown/references/typescript-api.md": {
+      "content_hash": "blake3:619164e67e4f15549b29ee0909dbd13112b27a64883ee5256a426c57357ee7a3"
+    },
+    ".cursor-plugin/skills/using-the-mcp-server/SKILL.md": {
+      "content_hash": "blake3:c6276d5c9515b3ea110d1f483a3c0ac259c4edb0b9e298431f5644d1c4103c66"
+    },
+    ".factory-plugin/plugin.json": {
+      "content_hash": "blake3:c4f7fba8fddc7e99791afb8491c7bcfdb61de4a5e73a2031534f43970ab8064c"
+    },
+    ".hermes/package/pyproject.toml": {
+      "content_hash": "blake3:26eb427e76cec31c9f1f0418f8c3b4462007075408cb34a9d0a441b31530890a"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/__init__.py": {
+      "content_hash": "blake3:0b0a4cd03db3e83805837b11d256bc16a927bc5f2e7d853a82ab924eeaa4486b"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/hermes.py": {
+      "content_hash": "blake3:37afa818c3d0b98819c2cbb5a6b3bc7aecb66c6e37a8a1ffa2c410efee24b057"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/plugin.yaml": {
+      "content_hash": "blake3:5ea1153ec4766eb5beeeab094c4df4b7fb9efb1beb2fa504d34f75de4cdbbba1"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/converting-html/SKILL.md": {
+      "content_hash": "blake3:a3ac9809f94e8799a4dea0f0bd7b52aeb358b3de882df5eea976506f62f98b1a"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/extracting-metadata/SKILL.md": {
+      "content_hash": "blake3:ae51acb06cdeff000766f2be8e3ad4fd789ea46c0b61c78d3158a3646842e276"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/extracting-tables/SKILL.md": {
+      "content_hash": "blake3:5597559a9133a3ac5068186a37ec61e7dcdac7881ee4a8077c8efd446e382be1"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/fetching-and-converting-urls/SKILL.md": {
+      "content_hash": "blake3:0ec0d1cfab92165c75146dc9c2cd55f3885f8b8e94c2ef4adf24d251263e8697"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/SKILL.md": {
+      "content_hash": "blake3:c60ca71925e3dec29b8b9dfc1e2775c899c932e93fca99e659fb0aac87ac79e4"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/cli-reference.md": {
+      "content_hash": "blake3:8ed4848ac660796356fab89003d9a449335bab39c241966b18f3685be730ecfd"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/configuration.md": {
+      "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/other-bindings.md": {
+      "content_hash": "blake3:69281dbfc69d0c6bb67f00339f1927fe7a1dd313348e645a0790c5b17dbae52f"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/python-api.md": {
+      "content_hash": "blake3:3a549d78cae90a733d9f61b66c421033718f873a073f90772da4476ed168e3f9"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/rust-api.md": {
+      "content_hash": "blake3:875289a052b7ca9e146876523bc0ece9c68256d7f11b63f03581b6f3b4462f15"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/typescript-api.md": {
+      "content_hash": "blake3:619164e67e4f15549b29ee0909dbd13112b27a64883ee5256a426c57357ee7a3"
+    },
+    ".hermes/package/src/html_to_markdown_hermes_plugin/skills/using-the-mcp-server/SKILL.md": {
+      "content_hash": "blake3:c6276d5c9515b3ea110d1f483a3c0ac259c4edb0b9e298431f5644d1c4103c66"
+    },
+    ".hermes/plugins/html-to-markdown/__init__.py": {
+      "content_hash": "blake3:0b0a4cd03db3e83805837b11d256bc16a927bc5f2e7d853a82ab924eeaa4486b"
+    },
+    ".hermes/plugins/html-to-markdown/hermes.py": {
+      "content_hash": "blake3:37afa818c3d0b98819c2cbb5a6b3bc7aecb66c6e37a8a1ffa2c410efee24b057"
+    },
+    ".hermes/plugins/html-to-markdown/plugin.yaml": {
+      "content_hash": "blake3:5ea1153ec4766eb5beeeab094c4df4b7fb9efb1beb2fa504d34f75de4cdbbba1"
+    },
+    ".hermes/plugins/html-to-markdown/skills/converting-html/SKILL.md": {
+      "content_hash": "blake3:a3ac9809f94e8799a4dea0f0bd7b52aeb358b3de882df5eea976506f62f98b1a"
+    },
+    ".hermes/plugins/html-to-markdown/skills/extracting-metadata/SKILL.md": {
+      "content_hash": "blake3:ae51acb06cdeff000766f2be8e3ad4fd789ea46c0b61c78d3158a3646842e276"
+    },
+    ".hermes/plugins/html-to-markdown/skills/extracting-tables/SKILL.md": {
+      "content_hash": "blake3:5597559a9133a3ac5068186a37ec61e7dcdac7881ee4a8077c8efd446e382be1"
+    },
+    ".hermes/plugins/html-to-markdown/skills/fetching-and-converting-urls/SKILL.md": {
+      "content_hash": "blake3:0ec0d1cfab92165c75146dc9c2cd55f3885f8b8e94c2ef4adf24d251263e8697"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/SKILL.md": {
+      "content_hash": "blake3:c60ca71925e3dec29b8b9dfc1e2775c899c932e93fca99e659fb0aac87ac79e4"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/cli-reference.md": {
+      "content_hash": "blake3:8ed4848ac660796356fab89003d9a449335bab39c241966b18f3685be730ecfd"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/configuration.md": {
+      "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/other-bindings.md": {
+      "content_hash": "blake3:69281dbfc69d0c6bb67f00339f1927fe7a1dd313348e645a0790c5b17dbae52f"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/python-api.md": {
+      "content_hash": "blake3:3a549d78cae90a733d9f61b66c421033718f873a073f90772da4476ed168e3f9"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/rust-api.md": {
+      "content_hash": "blake3:875289a052b7ca9e146876523bc0ece9c68256d7f11b63f03581b6f3b4462f15"
+    },
+    ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/typescript-api.md": {
+      "content_hash": "blake3:619164e67e4f15549b29ee0909dbd13112b27a64883ee5256a426c57357ee7a3"
+    },
+    ".hermes/plugins/html-to-markdown/skills/using-the-mcp-server/SKILL.md": {
+      "content_hash": "blake3:c6276d5c9515b3ea110d1f483a3c0ac259c4edb0b9e298431f5644d1c4103c66"
+    },
+    ".mcp.json": {
+      "content_hash": "blake3:ba2cfb09992530d0de88d6d1e29cb191d9c8b69d6c92f5b05e4e6bbe3e83336c"
+    },
+    ".opencode/plugins/html-to-markdown.js": {
+      "content_hash": "blake3:f2784bdf7c91876cbbef2210973be32dc22825d05b6d177b22c0580e0a605715"
+    },
+    "assets/icon.svg": {
+      "content_hash": "blake3:d0013bd7902f8dbe086e1ec21f3f4a38835de6940ba03b5d9d812862225ebdc4"
+    },
+    "assets/logo.svg": {
+      "content_hash": "blake3:edbce41f41812957f6f07afa54d73e3ebd3d57b4578384e74d4f8bdcb7d5483b"
+    },
+    "gemini-extension.json": {
+      "content_hash": "blake3:f8149d9ea1e0fe70a53e18cf85a41216b1d870238227dc3ebc68414c76476c22"
+    },
+    "kimi.plugin.json": {
+      "content_hash": "blake3:8fdca52898f5c8a2533ffec2b2cb4f3488ae4ef5147ff85753ca6f5c86ae97f6"
+    },
+    "package.json": {
+      "content_hash": "blake3:09ee7d0d046cc80fbdfc9ff3633f07b3bb308388acddbaa8c71b8e69d1da46c5"
+    },
+    "skills/converting-html/SKILL.md": {
+      "content_hash": "blake3:a3ac9809f94e8799a4dea0f0bd7b52aeb358b3de882df5eea976506f62f98b1a"
+    },
+    "skills/extracting-metadata/SKILL.md": {
+      "content_hash": "blake3:ae51acb06cdeff000766f2be8e3ad4fd789ea46c0b61c78d3158a3646842e276"
+    },
+    "skills/extracting-tables/SKILL.md": {
+      "content_hash": "blake3:5597559a9133a3ac5068186a37ec61e7dcdac7881ee4a8077c8efd446e382be1"
+    },
+    "skills/fetching-and-converting-urls/SKILL.md": {
+      "content_hash": "blake3:0ec0d1cfab92165c75146dc9c2cd55f3885f8b8e94c2ef4adf24d251263e8697"
+    },
+    "skills/html-to-markdown/SKILL.md": {
+      "content_hash": "blake3:c60ca71925e3dec29b8b9dfc1e2775c899c932e93fca99e659fb0aac87ac79e4"
+    },
+    "skills/html-to-markdown/references/cli-reference.md": {
+      "content_hash": "blake3:8ed4848ac660796356fab89003d9a449335bab39c241966b18f3685be730ecfd"
+    },
+    "skills/html-to-markdown/references/configuration.md": {
+      "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
+    },
+    "skills/html-to-markdown/references/other-bindings.md": {
+      "content_hash": "blake3:69281dbfc69d0c6bb67f00339f1927fe7a1dd313348e645a0790c5b17dbae52f"
+    },
+    "skills/html-to-markdown/references/python-api.md": {
+      "content_hash": "blake3:3a549d78cae90a733d9f61b66c421033718f873a073f90772da4476ed168e3f9"
+    },
+    "skills/html-to-markdown/references/rust-api.md": {
+      "content_hash": "blake3:875289a052b7ca9e146876523bc0ece9c68256d7f11b63f03581b6f3b4462f15"
+    },
+    "skills/html-to-markdown/references/typescript-api.md": {
+      "content_hash": "blake3:619164e67e4f15549b29ee0909dbd13112b27a64883ee5256a426c57357ee7a3"
+    },
+    "skills/using-the-mcp-server/SKILL.md": {
+      "content_hash": "blake3:c6276d5c9515b3ea110d1f483a3c0ac259c4edb0b9e298431f5644d1c4103c66"
+    }
+  }
+}

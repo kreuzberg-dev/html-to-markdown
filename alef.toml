@@ -141,6 +141,24 @@ exclude = [
   # Vendored wasm-bindgen artifact (docs live demo); hand-written script.js /
   # style.css / index.html in the same dir stay linted. ~keep
   "docs-site/public/demo/html_to_markdown_wasm*",
+  # ai-rulez-generated coding-agent plugin outputs: owned by `ai-rulez generate
+  # --plugin`, never reformatted by poly (would break BLAKE3 provenance). Sources
+  # under plugin/.ai-rulez/ + plugin/scripts/ stay poly-managed. ~keep
+  "plugin/.claude-plugin/**",
+  "plugin/.codex-plugin/**",
+  "plugin/.cursor-plugin/**",
+  "plugin/.factory-plugin/**",
+  "plugin/.opencode/**",
+  "plugin/.hermes/**",
+  "plugin/skills/**",
+  "plugin/.mcp.json",
+  "plugin/gemini-extension.json",
+  "plugin/kimi.plugin.json",
+  "plugin/package.json",
+  "plugin/.ai-rulez-generated.json",
+  ".claude-plugin/marketplace.json",
+  ".agents/plugins/marketplace.json",
+  ".ai-rulez-generated.json",
 ]
 
 # Opt-in comment-removal sweep. Preserve doc comments, TODO/FIXME, and

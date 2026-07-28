@@ -1,0 +1,20 @@
+{
+  "name": "html-to-markdown",
+  "interface": {
+    "displayName": "html-to-markdown"
+  },
+  "plugins": [
+    {
+      "name": "html-to-markdown",
+      "source": {
+        "source": "local",
+        "path": "./plugin"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "developer-tools"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "html-to-markdown",
+  "description": "Fast, lossless HTML→Markdown conversion for coding agents, by Kreuzberg, Inc.",
+  "owner": {
+    "name": "Kreuzberg, Inc.",
+    "email": "contact@xberg.io"
+  },
+  "plugins": [
+    {
+      "name": "html-to-markdown",
+      "description": "Fast, lossless HTML→Markdown conversion with structured metadata, tables, and document-structure extraction.",
+      "source": "./plugin"
+    }
+  ]
+}
