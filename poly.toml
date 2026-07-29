@@ -1,4 +1,6 @@
-extends = [{ path = "../alef", file = "poly-base.toml" }]
+extends = [
+  { id = "alef-poly-base", git = "https://github.com/xberg-io/alef.git", revision = "main", file = "poly-base.toml" },
+]
 
 [discovery]
 exclude = [
