@@ -35,11 +35,11 @@ impl HtmlVisitor for CustomVisitor {
     }
 
     fn visit_element_end(&mut self, ctx: &NodeContext, _output: &str) -> VisitResult {
-        if ctx.tag_name == "custom" {
-            if let Some(mut accum) = self.accum.take() {
-                accum.make_ascii_uppercase();
-                return VisitResult::Custom(format!(">>{accum}<<"));
-            }
+        if ctx.tag_name == "custom"
+            && let Some(mut accum) = self.accum.take()
+        {
+            accum.make_ascii_uppercase();
+            return VisitResult::Custom(format!(">>{accum}<<"));
         }
         VisitResult::Continue
     }

@@ -165,7 +165,7 @@ pub fn is_block_level_element(tag_name: &str) -> bool {
 /// If `index` is already a char boundary it is returned unchanged.
 /// Otherwise it walks backwards to find one.  Returns 0 if no boundary
 /// is found before `index`.
-pub fn floor_char_boundary(s: &str, index: usize) -> usize {
+pub const fn floor_char_boundary(s: &str, index: usize) -> usize {
     if index >= s.len() {
         s.len()
     } else {

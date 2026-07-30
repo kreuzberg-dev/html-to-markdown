@@ -92,7 +92,7 @@ Ship identical Markdown across every runtime while enjoying native performance w
 ## Installation
 
 ```bash
-Add {:html_to_markdown, "~> 3.9.2"} to mix.exs deps
+Add {:html_to_markdown, "~> 3.10.0"} to mix.exs deps
 ```
 
 Requires Elixir 1.19+ and OTP 28. Add to your `mix.exs`:
@@ -100,7 +100,7 @@ Requires Elixir 1.19+ and OTP 28. Add to your `mix.exs`:
 ```elixir
 def deps do
   [
-    {:html_to_markdown, "~> 3.9.2"}
+    {:html_to_markdown, "~> 3.10.0"}
   ]
 end
 ```
@@ -308,7 +308,7 @@ result.content
 
 ## Part of Xberg
 
-- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 98+ formats with optional OCR.
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.

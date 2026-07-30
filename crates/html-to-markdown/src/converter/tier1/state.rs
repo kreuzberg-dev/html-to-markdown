@@ -276,7 +276,7 @@ impl Tier1State {
     /// Whitespace and text-normalization paths use this — both wrap kinds
     /// share the same collection-mode semantics.
     #[must_use]
-    pub fn in_summary(&self) -> bool {
+    pub const fn in_summary(&self) -> bool {
         !self.summary_buf_stack.is_empty()
     }
 

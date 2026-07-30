@@ -6,12 +6,18 @@
 
 use rmcp::ErrorData as McpError;
 use rmcp::model::{
-    ArgumentInfo, CompleteResult, CompletionInfo, GetPromptResult, JsonObject, ListPromptsResult, ListResourcesResult,
-    Prompt, PromptArgument, PromptMessage, ReadResourceResult, Reference, Resource, ResourceContents, Role,
+    ArgumentInfo, CacheScope, CompleteResult, CompletionInfo, GetPromptResult, JsonObject, ListPromptsResult,
+    ListResourcesResult, Prompt, PromptArgument, PromptMessage, ReadResourceResult, Reference, Resource,
+    ResourceContents, Role,
 };
 use rmcp::schemars;
 
 use crate::options::validation::normalize_token;
+
+/// Cache TTL (SEP-2549) for the prompt/resource catalogs. They are derived
+/// entirely from compile-time constants and the options schema, so they are
+/// safe to cache publicly for a long window (one hour).
+const CATALOG_TTL_MS: u64 = 60 * 60 * 1000;
 
 /// Prompt that drives `convert_html`.
 const PROMPT_CONVERT: &str = "convert_to_markdown";
@@ -82,6 +88,8 @@ pub fn list_prompts() -> ListPromptsResult {
         ),
     ];
     ListPromptsResult::with_all_items(prompts)
+        .with_ttl_ms(CATALOG_TTL_MS)
+        .with_cache_scope(CacheScope::Public)
 }
 
 /// Resolve a prompt by name into its rendered messages.
@@ -137,6 +145,8 @@ pub fn list_resources() -> ListResourcesResult {
             .with_mime_type("text/markdown"),
     ];
     ListResourcesResult::with_all_items(resources)
+        .with_ttl_ms(CATALOG_TTL_MS)
+        .with_cache_scope(CacheScope::Public)
 }
 
 /// Read a resource by URI.
@@ -151,11 +161,15 @@ pub fn read_resource(uri: &str) -> Result<ReadResourceResult, McpError> {
             let json = serde_json::to_string_pretty(&schema).unwrap_or_default();
             Ok(ReadResourceResult::new(vec![
                 ResourceContents::text(json, uri).with_mime_type("application/json"),
-            ]))
+            ])
+            .with_ttl_ms(CATALOG_TTL_MS)
+            .with_cache_scope(CacheScope::Public))
         }
         RES_FORMATS => Ok(ReadResourceResult::new(vec![
             ResourceContents::text(OUTPUT_FORMATS_GUIDE, uri).with_mime_type("text/markdown"),
-        ])),
+        ])
+        .with_ttl_ms(CATALOG_TTL_MS)
+        .with_cache_scope(CacheScope::Public)),
         other => Err(McpError::invalid_params(format!("unknown resource: {other}"), None)),
     }
 }

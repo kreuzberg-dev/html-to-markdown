@@ -1375,7 +1375,7 @@ checksum = "46c1ff2d1cbf39efe5af0900ced8a069b5e61557a17544eb0c4a50239937389e"
 
 [[package]]
 name = "html-to-markdown-bench"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -1393,7 +1393,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-cli"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "assert_cmd",
  "base64 0.23.0",
@@ -1411,7 +1411,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-ffi"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "ahash",
  "async-trait",
@@ -1424,7 +1424,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-node"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "async-trait",
  "html-to-markdown-rs",
@@ -1438,7 +1438,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-php"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "async-trait",
  "ext-php-rs",
@@ -1450,7 +1450,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-py"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "async-trait",
  "html-to-markdown-rs",
@@ -1463,7 +1463,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-rs"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "ahash",
  "astral-tl",
@@ -1488,7 +1488,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-rs-dart"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "async-trait",
  "flutter_rust_bridge",
@@ -1499,10 +1499,10 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-rs-jni"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "async-trait",
- "base64 0.23.0",
+ "base64 0.22.1",
  "futures-util",
  "html-to-markdown-rs",
  "jni",
@@ -1512,10 +1512,11 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-rs-swift"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "ahash",
  "async-trait",
+ "html-to-markdown-ffi",
  "html-to-markdown-rs",
  "libc",
  "serde",
@@ -1527,7 +1528,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-wasm"
-version = "3.9.2"
+version = "3.10.0"
 dependencies = [
  "futures",
  "futures-util",
@@ -2914,12 +2915,12 @@ dependencies = [
 
 [[package]]
 name = "rmcp"
-version = "2.2.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "14db48ee17a9ba61810ab1a9c1beb7d06d8136ae39ac25a1137f10d357af01af"
+checksum = "3797d226787327b35b0b6f9e878fe55f3af2bb4daf916c0411079885454042f0"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
+ "base64 0.23.0",
  "bytes",
  "chrono",
  "futures",
@@ -2945,9 +2946,9 @@ dependencies = [
 
 [[package]]
 name = "rmcp-macros"
-version = "2.2.0"
+version = "3.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "783d787bf21813b285f13019adc49e11af501c658890c1e519f31f937c68b7e3"
+checksum = "a8f5bc0c6851a20cd627ef4b90defb79f39a261c467de52af5d38000d7979c52"
 dependencies = [
  "darling",
  "proc-macro2",
@@ -3547,7 +3548,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "32497e9a4c7b38532efcdebeef879707aa9f794296a4f0244f6f69e9bc8574bd"
 dependencies = [
  "fastrand",
- "getrandom 0.3.4",
+ "getrandom 0.4.3",
  "once_cell",
  "rustix",
  "windows-sys 0.61.2",

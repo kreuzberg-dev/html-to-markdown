@@ -133,11 +133,7 @@ export default defineConfig({
               items : [
                 {label : "Migration", slug : "migration"},
                 {label : "Contributing", slug : "contributing"},
-                {
-                  label : "Changelog",
-                  link :
-                      "https://github.com/xberg-io/html-to-markdown/blob/main/CHANGELOG.md",
-                },
+                {label : "Changelog", slug : "changelog"},
                 {label : "Ecosystem", slug : "ecosystem"},
               ],
             },

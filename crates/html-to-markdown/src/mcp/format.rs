@@ -2,11 +2,13 @@
 
 use crate::types::ConversionResult;
 
-/// Format a `ConversionResult` as pretty-printed JSON for MCP wire output.
+/// Build a `ConversionResult` as a `serde_json::Value` for MCP wire output.
 ///
 /// Mirrors the manual JSON construction in `html-to-markdown-cli/src/convert.rs`
 /// to handle the feature-gated `images` field (which does not derive `serde`).
-pub fn format_conversion_result(result: &ConversionResult) -> String {
+/// Shared by [`format_conversion_result`] (text content) and the tool's
+/// `structuredContent` (SEP-2106).
+pub fn conversion_result_value(result: &ConversionResult) -> serde_json::Value {
     let mut map = serde_json::Map::new();
 
     map.insert(
@@ -56,15 +58,28 @@ pub fn format_conversion_result(result: &ConversionResult) -> String {
     let warnings_val = serde_json::to_value(&result.warnings).unwrap_or(serde_json::Value::Array(Vec::new()));
     map.insert("warnings".into(), warnings_val);
 
-    serde_json::to_string_pretty(&serde_json::Value::Object(map)).unwrap_or_default()
+    serde_json::Value::Object(map)
+}
+
+/// Format a `ConversionResult` as pretty-printed JSON for MCP wire output.
+pub fn format_conversion_result(result: &ConversionResult) -> String {
+    serde_json::to_string_pretty(&conversion_result_value(result)).unwrap_or_default()
+}
+
+/// Build extracted [`HtmlMetadata`](crate::metadata::HtmlMetadata) as a `serde_json::Value`.
+///
+/// `HtmlMetadata` derives `Serialize`, so this is a direct serialisation (no
+/// feature-gated fields to special-case). Shared by [`format_metadata`] (text
+/// content) and the tool's `structuredContent` (SEP-2106).
+pub fn metadata_value(metadata: &crate::metadata::HtmlMetadata) -> serde_json::Value {
+    serde_json::to_value(metadata).unwrap_or(serde_json::Value::Null)
 }
 
 /// Format extracted [`HtmlMetadata`](crate::metadata::HtmlMetadata) as pretty-printed JSON.
 ///
-/// Used by the `extract_metadata` tool. `HtmlMetadata` derives `Serialize`, so this
-/// is a direct serialisation (no feature-gated fields to special-case).
+/// Used by the `extract_metadata` tool.
 pub fn format_metadata(metadata: &crate::metadata::HtmlMetadata) -> String {
-    serde_json::to_string_pretty(metadata).unwrap_or_default()
+    serde_json::to_string_pretty(&metadata_value(metadata)).unwrap_or_default()
 }
 
 #[cfg(test)]

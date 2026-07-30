@@ -5,6 +5,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
+    const smoke_step = b.step("smoke", "Run smoke tests only");
 
     // Fetch the published Zig package from the registry.
     const html_to_markdown_dep = b.dependency("html_to_markdown", .{
@@ -48,5 +49,8 @@ pub fn build(b: *std.Build) void {
     const smoke_run = b.addRunArtifact(smoke_tests);
     smoke_run.step.dependOn(&conversion_run.step);
     test_step.dependOn(&smoke_run.step);
+
+    const smoke_smoke_run = b.addRunArtifact(smoke_tests);
+    smoke_step.dependOn(&smoke_smoke_run.step);
 
 }

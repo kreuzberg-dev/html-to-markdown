@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.0] - 2026-07-30
+
+### Changed
+
+- Upgraded the MCP server to `rmcp` 3.0 (MCP `2026-07-28` specification). The server now advertises
+  protocol version `2026-07-28` and negotiates down for older clients, so existing integrations keep
+  working. Minimum supported Rust version is now 1.88.
+
+### Added
+
+- Structured tool output (SEP-2106): `convert_html` (with `json:true`) and `extract_metadata` now
+  return `structuredContent` alongside the text JSON, so clients can consume the result as data.
+- Cache hints (SEP-2549) on the static prompt/resource catalogs (`prompts/list`, `resources/list`,
+  `resources/read`): `ttlMs` of one hour with a `public` cache scope.
+
 ## [3.9.2] - 2026-07-27
 
 ### Fixed

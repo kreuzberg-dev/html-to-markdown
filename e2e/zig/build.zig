@@ -5,6 +5,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
     const test_step = b.step("test", "Run tests");
+    const smoke_step = b.step("smoke", "Run smoke tests only");
     const ffi_path = b.option([]const u8, "ffi_path", "Path to directory containing libhtml_to_markdown_ffi") orelse "../../target/release";
     const ffi_include = b.option([]const u8, "ffi_include_path", "Path to directory containing FFI header") orelse "../../crates/html-to-markdown-ffi/include";
     const ffi_path_abs = b.pathFromRoot(ffi_path);
@@ -137,6 +138,9 @@ pub fn build(b: *std.Build) void {
     const smoke_run = b.addRunArtifact(smoke_tests);
     smoke_run.step.dependOn(&result_run.step);
     test_step.dependOn(&smoke_run.step);
+
+    const smoke_smoke_run = b.addRunArtifact(smoke_tests);
+    smoke_step.dependOn(&smoke_smoke_run.step);
 
     const structure_module = b.createModule(.{
         .root_source_file = b.path("src/structure_test.zig"),

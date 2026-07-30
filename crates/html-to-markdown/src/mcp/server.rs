@@ -5,10 +5,10 @@ use rmcp::{
     ErrorData as McpError, RoleServer, ServerHandler, ServiceExt,
     handler::server::{router::tool::ToolRouter, wrapper::Parameters},
     model::{
-        CallToolResult, CompleteRequestParams, CompleteResult, ContentBlock, GetPromptRequestParams, GetPromptResult,
+        CallToolResult, CompleteRequestParams, CompleteResult, ContentBlock, GetPromptRequestParams, GetPromptResponse,
         Implementation, InitializeResult, JsonObject, ListPromptsResult, ListResourcesResult, PaginatedRequestParams,
-        PromptsCapability, ReadResourceRequestParams, ReadResourceResult, ResourcesCapability, ServerCapabilities,
-        ServerInfo, ToolsCapability,
+        PromptsCapability, ProtocolVersion, ReadResourceRequestParams, ReadResourceResponse, ResourcesCapability,
+        ServerCapabilities, ServerInfo, ToolsCapability,
     },
     service::RequestContext,
     tool, tool_handler, tool_router,
@@ -61,7 +61,7 @@ impl HtmlToMarkdownMcp {
         Parameters(params): Parameters<super::params::ConvertHtmlParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
         use super::errors::map_conversion_error_to_mcp;
-        use super::format::format_conversion_result;
+        use super::format::{conversion_result_value, format_conversion_result};
 
         let opts: ConversionOptions = params.config.map(Into::into).unwrap_or_default();
 
@@ -73,13 +73,18 @@ impl HtmlToMarkdownMcp {
             .map_err(|e| rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None))?
             .map_err(map_conversion_error_to_mcp)?;
 
-        let text = if want_json {
-            format_conversion_result(&result)
+        if want_json {
+            // SEP-2106: return the full ConversionResult as structuredContent (a JSON value),
+            // with the pretty-printed JSON mirrored into text content for clients that ignore it.
+            let text = format_conversion_result(&result);
+            let mut tool_result = CallToolResult::success(vec![ContentBlock::text(text)]);
+            tool_result.structured_content = Some(conversion_result_value(&result));
+            Ok(tool_result)
         } else {
-            result.content.unwrap_or_default()
-        };
-
-        Ok(CallToolResult::success(vec![ContentBlock::text(text)]))
+            Ok(CallToolResult::success(vec![ContentBlock::text(
+                result.content.unwrap_or_default(),
+            )]))
+        }
     }
 
     /// Extract structured metadata from HTML.
@@ -102,7 +107,7 @@ impl HtmlToMarkdownMcp {
         Parameters(params): Parameters<super::params::ExtractMetadataParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
         use super::errors::map_conversion_error_to_mcp;
-        use super::format::format_metadata;
+        use super::format::{format_metadata, metadata_value};
 
         let opts = ConversionOptions {
             extract_metadata: true,
@@ -115,9 +120,10 @@ impl HtmlToMarkdownMcp {
             .map_err(|e| rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None))?
             .map_err(map_conversion_error_to_mcp)?;
 
-        Ok(CallToolResult::success(vec![ContentBlock::text(format_metadata(
-            &result.metadata,
-        ))]))
+        // SEP-2106: metadata is already structured JSON — expose it as structuredContent too.
+        let mut tool_result = CallToolResult::success(vec![ContentBlock::text(format_metadata(&result.metadata))]);
+        tool_result.structured_content = Some(metadata_value(&result.metadata));
+        Ok(tool_result)
     }
 }
 
@@ -140,6 +146,10 @@ impl ServerHandler for HtmlToMarkdownMcp {
             .with_website_url("https://github.com/xberg-io/html-to-markdown");
 
         InitializeResult::new(capabilities)
+            // Advertise the newest supported MCP revision; rmcp negotiates down for older
+            // clients. `ProtocolVersion::LATEST`/`default()` still resolves to 2025-11-25 in
+            // rmcp 3.0, so select 2026-07-28 explicitly.
+            .with_protocol_version(ProtocolVersion::V_2026_07_28)
             .with_server_info(server_info)
             .with_instructions(
                 "Two tools are available. convert_html converts an HTML string to Markdown \
@@ -166,8 +176,8 @@ impl ServerHandler for HtmlToMarkdownMcp {
         &self,
         request: GetPromptRequestParams,
         _context: RequestContext<RoleServer>,
-    ) -> Result<GetPromptResult, McpError> {
-        super::catalog::get_prompt(&request.name, request.arguments.as_ref())
+    ) -> Result<GetPromptResponse, McpError> {
+        super::catalog::get_prompt(&request.name, request.arguments.as_ref()).map(Into::into)
     }
 
     async fn list_resources(
@@ -182,8 +192,8 @@ impl ServerHandler for HtmlToMarkdownMcp {
         &self,
         request: ReadResourceRequestParams,
         _context: RequestContext<RoleServer>,
-    ) -> Result<ReadResourceResult, McpError> {
-        super::catalog::read_resource(&request.uri)
+    ) -> Result<ReadResourceResponse, McpError> {
+        super::catalog::read_resource(&request.uri).map(Into::into)
     }
 
     async fn complete(
@@ -351,7 +361,7 @@ mod tests {
     fn test_server_info_protocol_version() {
         let server = HtmlToMarkdownMcp::new();
         let info = server.get_info();
-        assert_eq!(info.protocol_version, ProtocolVersion::default());
+        assert_eq!(info.protocol_version, ProtocolVersion::V_2026_07_28);
     }
 
     #[tokio::test]
@@ -388,6 +398,17 @@ mod tests {
         let text = text_of(&result);
         let parsed: serde_json::Value = serde_json::from_str(&text).expect("json output must be valid JSON");
         assert!(parsed.get("content").is_some(), "JSON must have content field");
+
+        // SEP-2106: the json path must also carry structuredContent matching the text.
+        let structured = result
+            .structured_content
+            .as_ref()
+            .expect("json output must populate structured_content");
+        assert_eq!(
+            structured.get("content"),
+            parsed.get("content"),
+            "structured_content must mirror the text JSON"
+        );
     }
 
     #[tokio::test]

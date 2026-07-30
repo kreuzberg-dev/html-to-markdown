@@ -54,10 +54,10 @@ impl Loader {
 
         let mut fixtures = Vec::new();
         for entry in parsed.fixtures {
-            if let Some(f) = filter {
-                if entry.group != f {
-                    continue;
-                }
+            if let Some(f) = filter
+                && entry.group != f
+            {
+                continue;
             }
             let abs = self.fixtures_dir.join(&entry.path);
             if !abs.exists() {

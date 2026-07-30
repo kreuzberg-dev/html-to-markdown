@@ -95,7 +95,7 @@ Uses Foreign Function & Memory API for zero-dependency, thread-safe conversion w
 <dependency>
     <groupId>io.xberg</groupId>
     <artifactId>html-to-markdown</artifactId>
-    <version>3.9.2</version>
+    <version>3.10.0</version>
 </dependency>
 ```
 
@@ -107,14 +107,14 @@ Requires Java 25+ with Panama FFI support.
 <dependency>
     <groupId>io.xberg</groupId>
     <artifactId>html-to-markdown</artifactId>
-    <version>3.9.2</version>
+    <version>3.10.0</version>
 </dependency>
 ```
 
 **Gradle (Kotlin DSL):**
 
 ```kotlin
-implementation("io.xberg:html-to-markdown:3.9.2")
+implementation("io.xberg:html-to-markdown:3.10.0")
 ```
 
 ## Performance Snapshot
@@ -272,7 +272,7 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 
 ## Part of Xberg
 
-- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 91+ formats with optional OCR.
+- [Xberg](https://github.com/xberg-io/xberg) — document intelligence: text, tables, metadata from 98+ formats with optional OCR.
 - [Xberg Enterprise](https://github.com/xberg-io/xberg-enterprise) — managed extraction API with SDKs, dashboards, and observability.
 - [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
 - [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.

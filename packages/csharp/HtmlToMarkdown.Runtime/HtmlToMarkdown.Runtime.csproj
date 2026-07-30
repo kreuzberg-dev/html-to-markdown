@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <!-- Native-only per-RID runtime package: the native half of the meta+runtime
+         split. Packed once per RID via `dotnet pack -p:PublishedRID=<rid>`; CI loops
+         the enabled RIDs. The meta package's runtime.json RID-fallback graph pulls in
+         the matching XbergIo.HtmlToMarkdown.runtime.<rid> at the consumer's restore. -->
+    <PublishedRID Condition="'$(PublishedRID)' == ''">win-x64</PublishedRID>
+    <PackageId>XbergIo.HtmlToMarkdown.runtime.$(PublishedRID)</PackageId>
+    <Version>3.10.0</Version>
+    <AssemblyVersion>3.10.0.0</AssemblyVersion>
+    <FileVersion>3.10.0.0</FileVersion>
+    <InformationalVersion>3.10.0</InformationalVersion>
+    <Description>High-performance HTML to Markdown converter — native runtime assets for $(PublishedRID).</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <RepositoryUrl>https://github.com/xberg-io/html-to-markdown</RepositoryUrl>
+    <Authors>Na&apos;aman Hirschfeld &lt;naaman@xberg.io&gt;</Authors>
+    <Company>Alef Team</Company>
+    <Product>HtmlToMarkdown</Product>
+    <!-- No managed assembly ships: this package carries only the RID's native
+         payload under runtimes/<rid>/native/. Suppress the build output, its
+         transitive dependencies, and the NU5128 "no lib/ref assembly for TFM"
+         warning that a native-only package legitimately trips. -->
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IncludeSymbols>false</IncludeSymbols>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../../LICENSE" Pack="true" PackagePath="/" />
+    <None Include="../HtmlToMarkdown/runtimes/$(PublishedRID)/native/**" Pack="true" PackagePath="runtimes/$(PublishedRID)/native/" />
+  </ItemGroup>
+
+  <Target Name="RequireRuntimeAssets" BeforeTargets="Pack">
+    <ItemGroup>
+      <_StagedNative Include="../HtmlToMarkdown/runtimes/$(PublishedRID)/native/**" />
+    </ItemGroup>
+    <Error Condition="'@(_StagedNative)' == ''"
+           Text="No native assets under packages/csharp/HtmlToMarkdown/runtimes/$(PublishedRID)/native/; stage the FFI library for $(PublishedRID) before packing HtmlToMarkdown.Runtime." />
+  </Target>
+</Project>

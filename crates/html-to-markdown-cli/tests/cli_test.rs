@@ -421,12 +421,14 @@ fn test_keep_inline_images_in() {
 
 #[test]
 fn test_br_in_tables() {
+    // With --br-in-tables the <br> is preserved literally inside the cell (a real
+    // newline would break the GFM row), per the flag's documented behaviour.
     cli()
         .arg("--br-in-tables")
         .write_stdin("<table><tr><td>Line 1<br>Line 2</td></tr></table>")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Line 1  \n"));
+        .stdout(predicate::str::contains("Line 1<br>Line 2"));
 }
 
 #[test]

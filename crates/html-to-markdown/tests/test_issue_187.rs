@@ -92,10 +92,10 @@ impl HtmlVisitor for ContentFilter {
     }
 
     fn visit_link(&mut self, _ctx: &NodeContext, href: &str, text: &str, _title: Option<&str>) -> VisitResult {
-        if href.to_lowercase().contains("utm_") {
-            if let Some(base_url) = href.split('?').next() {
-                return VisitResult::Custom(format!("[{text}]({base_url})"));
-            }
+        if href.to_lowercase().contains("utm_")
+            && let Some(base_url) = href.split('?').next()
+        {
+            return VisitResult::Custom(format!("[{text}]({base_url})"));
         }
 
         VisitResult::Continue
