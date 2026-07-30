@@ -1,3 +1,6 @@
+// ~keep Rust inner attributes below are crate-level attributes, not a shell shebang.
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)] // ~keep: tests print by design
+
 //! Tier-1 byte-equality oracle against all benchmark fixtures.
 //!
 //! For each fixture the test runs conversion twice:

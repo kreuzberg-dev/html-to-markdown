@@ -10,12 +10,28 @@ mod validators;
 use args::{Cli, Shell};
 use clap::Parser;
 use convert::{build_conversion_options, perform_conversion};
-use output::{output_debug_info, write_output};
+use output::write_output;
 use std::fs;
 use std::io::{self, Read, Write as IoWrite};
 use std::panic;
 use std::path::PathBuf;
 use utils::{DEFAULT_USER_AGENT, decode_bytes, fetch_url};
+
+/// Initialize the process-wide `tracing` subscriber for CLI diagnostics.
+///
+/// The core library (`html-to-markdown-rs`) never installs a subscriber — it only emits spans
+/// and events; the CLI is a consumer and owns this responsibility. `RUST_LOG` always wins when
+/// set; otherwise `--debug` raises the default level from `warn` to `debug` so pipeline-stage
+/// diagnostics (parse/walk/render stage boundaries, tier routing) become visible.
+fn init_tracing(debug: bool) {
+    let default_level = if debug { "debug" } else { "warn" };
+    let filter = tracing_subscriber::EnvFilter::try_from_default_env()
+        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new(default_level));
+    tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(std::io::stderr)
+        .init();
+}
 
 /// Run the MCP server (stdio or http transport).
 ///
@@ -90,7 +106,7 @@ fn read_input(cli: &Cli) -> Result<String, Box<dyn std::error::Error>> {
                 user_agent,
                 &cli.encoding,
             )?;
-            output_debug_info(cli, &format!("Fetched {} bytes from URL", fetched.len()));
+            tracing::debug!(bytes = fetched.len(), "fetched HTML from URL");
             fetched
         }
         None | Some("-") => {
@@ -99,17 +115,14 @@ fn read_input(cli: &Cli) -> Result<String, Box<dyn std::error::Error>> {
                 .read_to_end(&mut buffer)
                 .map_err(|e| format!("Error reading from stdin: {e}"))?;
             let decoded = decode_bytes(&buffer, &cli.encoding)?;
-            output_debug_info(cli, &format!("Read {} bytes from stdin", decoded.len()));
+            tracing::debug!(bytes = decoded.len(), "read HTML from stdin");
             decoded
         }
         Some(path) => {
             let path = PathBuf::from(path);
             let bytes = fs::read(&path).map_err(|e| format!("Error reading file '{}': {}", path.display(), e))?;
             let decoded = decode_bytes(&bytes, &cli.encoding)?;
-            output_debug_info(
-                cli,
-                &format!("Read {} bytes from file '{}'", decoded.len(), path.display()),
-            );
+            tracing::debug!(bytes = decoded.len(), path = %path.display(), "read HTML from file");
             decoded
         }
     };
@@ -118,6 +131,7 @@ fn read_input(cli: &Cli) -> Result<String, Box<dyn std::error::Error>> {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Cli::parse();
+    init_tracing(cli.debug);
 
     #[cfg(feature = "mcp")]
     if let Some(args::Commands::Mcp { transport, host, port }) = &cli.command {

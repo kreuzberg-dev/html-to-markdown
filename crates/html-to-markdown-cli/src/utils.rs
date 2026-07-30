@@ -30,7 +30,7 @@ pub fn decode_bytes(bytes: &[u8], encoding_name: &str) -> Result<String, String>
 
     let (decoded, _, had_errors) = encoding.decode(bytes);
     if had_errors {
-        eprintln!("Warning: Some characters could not be decoded correctly");
+        tracing::warn!(encoding = %encoding_name, "some characters could not be decoded correctly");
     }
     Ok(decoded.into_owned())
 }

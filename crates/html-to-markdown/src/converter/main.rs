@@ -82,6 +82,10 @@ pub fn convert_html_impl(
 
     if has_custom_element_tags(&preprocessed) {
         if let Some(repaired_html) = repair_with_html5ever(&preprocessed) {
+            tracing::warn!(
+                target: "html_to_markdown::convert",
+                "custom element tags detected; re-parsed input with html5ever repair fallback"
+            );
             let stripped = strip_script_and_style_tags(&repaired_html);
             let stripped = strip_hidden_elements(&stripped);
             let stripped = normalize_bogus_comment_endings(&stripped);
@@ -89,6 +93,11 @@ pub fn convert_html_impl(
             let repaired = preprocess_html(&stripped).into_owned();
             preprocessed = repaired;
             preprocessed_len = preprocessed.len();
+        } else {
+            tracing::warn!(
+                target: "html_to_markdown::convert",
+                "custom element tags detected; html5ever repair failed, proceeding with unrepaired markup"
+            );
         }
     }
     let parser_options = tl::ParserOptions::default();
@@ -97,6 +106,10 @@ pub fn convert_html_impl(
             break dom;
         }
         if let Some(repaired_html) = repair_with_html5ever(&preprocessed) {
+            tracing::warn!(
+                target: "html_to_markdown::convert",
+                "primary HTML parser failed on preprocessed input; retrying with html5ever-repaired markup"
+            );
             let stripped = strip_script_and_style_tags(&repaired_html);
             let stripped = strip_hidden_elements(&stripped);
             let stripped = normalize_bogus_comment_endings(&stripped);
@@ -105,10 +118,20 @@ pub fn convert_html_impl(
             preprocessed_len = preprocessed.len();
             continue;
         }
+        tracing::error!(
+            target: "html_to_markdown::convert",
+            "failed to parse HTML; no repair strategy recovered a valid document"
+        );
         return Err(crate::error::ConversionError::ParseError(
             "Failed to parse HTML".to_string(),
         ));
     };
+    tracing::debug!(
+        target: "html_to_markdown::convert",
+        node_count = dom.nodes().len(),
+        input_len = preprocessed_len,
+        "html parse stage complete"
+    );
     let mut parser = dom.parser();
     let mut output = String::with_capacity(preprocessed_len.saturating_add(preprocessed_len / 4));
 
@@ -116,6 +139,10 @@ pub fn convert_html_impl(
 
     if has_inline_block_misnest(&dom_ctx, parser) {
         if let Some(repaired_html) = repair_with_html5ever(&preprocessed) {
+            tracing::warn!(
+                target: "html_to_markdown::convert",
+                "block-level element misnested under an inline ancestor; re-parsed with html5ever repair"
+            );
             drop(dom);
             let stripped = strip_script_and_style_tags(&repaired_html);
             let stripped = strip_hidden_elements(&stripped);
@@ -128,6 +155,11 @@ pub fn convert_html_impl(
             parser = dom.parser();
             dom_ctx = build_dom_context(&dom, parser, preprocessed_len);
             output = String::with_capacity(preprocessed_len.saturating_add(preprocessed_len / 4));
+        } else {
+            tracing::warn!(
+                target: "html_to_markdown::convert",
+                "block-level element misnested under an inline ancestor; html5ever repair failed, proceeding with original structure"
+            );
         }
     }
 
@@ -265,15 +297,35 @@ pub fn convert_html_impl(
         walk_node(child_handle, parser, &mut output, options, &ctx, 0, &dom_ctx);
     }
 
+    tracing::debug!(
+        target: "html_to_markdown::convert",
+        depth_limit_reached = ctx.depth_limit_reached.get(),
+        "dom walk stage complete"
+    );
+
     #[cfg(feature = "visitor")]
     if let Some(err) = ctx.visitor_error.borrow().as_ref() {
+        tracing::error!(
+            target: "html_to_markdown::convert",
+            error = %err,
+            "visitor callback returned an error; aborting conversion"
+        );
         return Err(crate::error::ConversionError::Visitor(err.clone()));
     }
 
     let max_depth = effective_max_depth(options);
-    let depth_warning = ctx.depth_limit_reached.get().then(|| crate::types::ProcessingWarning {
-        kind: crate::types::WarningKind::DepthLimitExceeded,
-        message: format!("DOM traversal reached the effective depth limit of {max_depth}; deeper nodes were skipped."),
+    let depth_warning = ctx.depth_limit_reached.get().then(|| {
+        tracing::warn!(
+            target: "html_to_markdown::convert",
+            max_depth,
+            "DOM traversal reached the effective depth limit; deeper nodes were skipped"
+        );
+        crate::types::ProcessingWarning {
+            kind: crate::types::WarningKind::DepthLimitExceeded,
+            message: format!(
+                "DOM traversal reached the effective depth limit of {max_depth}; deeper nodes were skipped."
+            ),
+        }
     });
 
     // ~keep Drop ctx before unwrapping the structure collector Rc — ctx holds a cloned Rc
@@ -300,6 +352,12 @@ pub fn convert_html_impl(
         output
     };
     let (document, tables) = finish_structure_collector(structure_collector);
+    tracing::debug!(
+        target: "html_to_markdown::convert",
+        output_len = output.len(),
+        table_count = tables.len(),
+        "render stage complete"
+    );
     Ok((output, document, tables, depth_warning))
 }
 

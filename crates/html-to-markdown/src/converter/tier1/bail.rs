@@ -1,9 +1,9 @@
 //! Bail reasons emitted by the Tier-1 scanner.
 //!
 //! When the scanner encounters a condition it cannot handle correctly it returns
-//! one of these variants. The dispatcher in `lib.rs::convert` catches the error,
-//! logs it at `tracing::info`, and falls back to the Tier-2 path with the
-//! original (pre-prescan) input.
+//! one of these variants. The dispatcher in `convert_api.rs::convert_inner` catches the
+//! error, logs it at `tracing::warn!` (a fallback was taken), and falls back to the
+//! Tier-2 path with the original (pre-prescan) input.
 
 use std::fmt;
 

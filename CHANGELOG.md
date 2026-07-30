@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The core library now emits structured `tracing` spans and events as a first-class observability
+  surface: an `html_to_markdown::convert` span (`input_len`, `output_format`, `wrap`,
+  `extract_metadata`, `extract_images`, `tier_strategy` fields) wraps every conversion, with
+  `DEBUG` events at parse/walk/render stage boundaries and `WARN`/`ERROR` events on recovered or
+  fatal failures. The library never installs a subscriber — attach one in your application to
+  observe it. The CLI now initializes a `tracing-subscriber` (respecting `RUST_LOG`, with
+  `--debug` raising the default level) and routes all diagnostics through `tracing` instead of raw
+  `stdout`/`stderr` writes.
+
 ## [3.10.0] - 2026-07-30
 
 ### Changed

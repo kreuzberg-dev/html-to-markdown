@@ -1,5 +1,6 @@
 // ~keep Rust inner attributes below are crate-level attributes, not a shell shebang.
 #![allow(missing_docs)]
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)] // ~keep: tests print by design
 fn convert(
     html: &str,
     opts: Option<html_to_markdown_rs::ConversionOptions>,

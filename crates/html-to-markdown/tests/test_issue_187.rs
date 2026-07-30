@@ -1,5 +1,6 @@
 // ~keep Rust inner attributes below are crate-level attributes, not a shell shebang.
 #![allow(clippy::significant_drop_tightening)]
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)] // ~keep: tests print by design
 
 //! Test to reproduce issue #187: `visit_div` is not executed
 //!

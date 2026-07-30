@@ -62,6 +62,7 @@ serde_json = { version = "1.0", optional = true }
 thiserror.workspace = true
 tl.workspace = true
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std"], optional = true }
+tracing.workspace = true
 
 [dev-dependencies]
 serde = { version = "1.0", features = ["derive"] }

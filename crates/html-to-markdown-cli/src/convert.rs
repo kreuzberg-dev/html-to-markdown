@@ -2,7 +2,6 @@
 #![allow(missing_docs)]
 
 use crate::args::Cli;
-use crate::output::output_debug_info;
 use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
 use html_to_markdown_rs::{ConversionOptions, OutputFormat, PreprocessingOptions, convert};
 use serde_json::json;
@@ -82,16 +81,13 @@ pub fn perform_conversion(
 
         if cli.show_warnings {
             for warning in &result.warnings {
-                eprintln!("Warning [{:?}]: {}", warning.kind, warning.message);
+                tracing::warn!(kind = ?warning.kind, detail = %warning.message, "conversion warning");
             }
         }
 
-        output_debug_info(
-            cli,
-            &format!(
-                "Generated {} bytes of markdown (JSON mode)",
-                result.content.as_deref().unwrap_or("").len()
-            ),
+        tracing::debug!(
+            bytes = result.content.as_deref().unwrap_or("").len(),
+            "generated markdown output (JSON mode)"
         );
 
         let mut json_output = serde_json::Map::new();
@@ -147,12 +143,12 @@ pub fn perform_conversion(
 
         if cli.show_warnings {
             for warning in &result.warnings {
-                eprintln!("Warning [{:?}]: {}", warning.kind, warning.message);
+                tracing::warn!(kind = ?warning.kind, detail = %warning.message, "conversion warning");
             }
         }
 
         let markdown = result.content.unwrap_or_default();
-        output_debug_info(cli, &format!("Generated {} bytes of markdown", markdown.len()));
+        tracing::debug!(bytes = markdown.len(), "generated markdown output");
         markdown
     };
 

@@ -1,3 +1,6 @@
+// ~keep Rust inner attributes below are crate-level attributes, not a shell shebang.
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)] // ~keep: examples print by design
+
 //! Example: Testing HTML list conversion (ordered and unordered lists)
 
 fn convert(

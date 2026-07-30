@@ -1,7 +1,6 @@
 // ~keep reason: CLI application modules do not expose docs to users; doc coverage not required
 #![allow(missing_docs)]
 
-use crate::args::Cli;
 use std::fs;
 use std::path::PathBuf;
 
@@ -12,14 +11,12 @@ pub fn write_output(output_path: Option<PathBuf>, content: &str) -> Result<(), B
                 .map_err(|e| format!("Error writing to file '{}': {}", path.display(), e))?;
         }
         None => {
-            print!("{content}");
+            // ~keep: converted Markdown is the CLI's machine-readable result output, not a diagnostic.
+            #[expect(clippy::print_stdout, reason = "primary result output of the CLI, not a diagnostic")]
+            {
+                print!("{content}");
+            }
         }
     }
     Ok(())
-}
-
-pub fn output_debug_info(cli: &Cli, msg: &str) {
-    if cli.debug {
-        eprintln!("{msg}");
-    }
 }

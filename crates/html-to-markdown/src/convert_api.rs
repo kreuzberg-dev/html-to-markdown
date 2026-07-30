@@ -47,11 +47,41 @@ use crate::{HtmlMetadata, MetadataConfig};
 /// # Errors
 ///
 /// Returns an error if HTML parsing fails or if the input contains invalid UTF-8.
+///
+/// # Observability
+///
+/// Emits an `html_to_markdown::convert` span at `INFO` level with fields `input_len`,
+/// `output_format`, `wrap`, `extract_metadata`, `extract_images`, and `tier_strategy`. These
+/// field names are part of the public observability contract and are kept stable across
+/// releases. This crate never installs a `tracing` subscriber — attach one in the consuming
+/// application to observe these spans and events.
+#[tracing::instrument(
+    level = "info",
+    name = "html_to_markdown::convert",
+    skip_all,
+    fields(
+        input_len = html.len(),
+        output_format = tracing::field::Empty,
+        wrap = tracing::field::Empty,
+        extract_metadata = tracing::field::Empty,
+        extract_images = tracing::field::Empty,
+        tier_strategy = tracing::field::Empty,
+    )
+)]
 pub fn convert(html: &str, options: impl Into<Option<ConversionOptions>>) -> Result<ConversionResult> {
+    let options = options.into().unwrap_or_default();
+
+    let span = tracing::Span::current();
+    span.record("output_format", tracing::field::debug(options.output_format));
+    span.record("wrap", options.wrap);
+    span.record("extract_metadata", options.extract_metadata);
+    span.record("extract_images", options.extract_images);
+    span.record("tier_strategy", tracing::field::debug(options.tier_strategy));
+
     // ~keep Thin generic wrapper. Delegates to the non-generic `convert_inner` so the
     // ~keep ~250-line body monomorphises exactly once instead of once per `Into` impl
     // ~keep the caller picks. See xberg-io/html-to-markdown#398.
-    convert_inner(html, options.into().unwrap_or_default())
+    convert_inner(html, options)
 }
 
 fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionResult> {
@@ -100,6 +130,11 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
             if decision == crate::converter::tier1::RouterDecision::Tier1 {
                 match crate::converter::tier1::run(normalized.as_ref(), &stub_report, &options) {
                     Ok(markdown) => {
+                        tracing::debug!(
+                            target: "html_to_markdown::convert",
+                            output_len = markdown.len(),
+                            "tier-1 fast-path conversion completed"
+                        );
                         return Ok(crate::types::ConversionResult {
                             content: Some(markdown),
                             document: None,
@@ -111,15 +146,21 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                             images: Vec::new(),
                         });
                     }
-                    Err(_bail) => {
+                    Err(bail) => {
                         // ~keep Tier-1 bailed — fall through to Tier-2 with the
                         // ~keep already-normalized input.  Tier-2 runs its own
                         // ~keep prescan internally via `convert_html_impl`.
+                        tracing::warn!(
+                            target: "html_to_markdown::convert",
+                            reason = %bail,
+                            "tier-1 conversion bailed; falling back to tier-2"
+                        );
                         precomputed_normalized = Some(normalized);
                     }
                 }
             } else {
                 // ~keep RouterDecision::Tier2: fall through with the already-normalized input.
+                tracing::debug!(target: "html_to_markdown::convert", "router selected tier-2 conversion path directly");
                 precomputed_normalized = Some(normalized);
             }
         }
@@ -133,6 +174,11 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
             let stub_report = crate::converter::prescan::PrescanReport::default();
             match crate::converter::tier1::run(normalized.as_ref(), &stub_report, &options) {
                 Ok(markdown) => {
+                    tracing::debug!(
+                        target: "html_to_markdown::convert",
+                        output_len = markdown.len(),
+                        "tier-1 fast-path conversion completed"
+                    );
                     return Ok(crate::types::ConversionResult {
                         content: Some(markdown),
                         document: None,
@@ -144,7 +190,12 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                         images: Vec::new(),
                     });
                 }
-                Err(_bail) => {
+                Err(bail) => {
+                    tracing::warn!(
+                        target: "html_to_markdown::convert",
+                        reason = %bail,
+                        "tier-1 conversion bailed; falling back to tier-2"
+                    );
                     precomputed_normalized = Some(normalized);
                 }
             }

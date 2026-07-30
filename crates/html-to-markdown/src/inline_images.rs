@@ -264,12 +264,26 @@ impl InlineImageCollector {
     }
 
     pub(crate) fn warn_skip(&mut self, index: usize, reason: impl Into<String>) {
-        let message = format!("Skipped inline image {}: {}", index, reason.into());
+        let reason = reason.into();
+        tracing::warn!(
+            target: "html_to_markdown::inline_images",
+            index,
+            reason = %reason,
+            "inline image skipped"
+        );
+        let message = format!("Skipped inline image {index}: {reason}");
         self.warnings.push(InlineImageWarning { index, message });
     }
 
     pub(crate) fn warn_info(&mut self, index: usize, reason: impl Into<String>) {
-        let message = format!("Inline image {}: {}", index, reason.into());
+        let reason = reason.into();
+        tracing::warn!(
+            target: "html_to_markdown::inline_images",
+            index,
+            reason = %reason,
+            "inline image extraction degraded"
+        );
+        let message = format!("Inline image {index}: {reason}");
         self.warnings.push(InlineImageWarning { index, message });
     }
 
