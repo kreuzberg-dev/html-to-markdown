@@ -10,7 +10,7 @@ categories = []
 
 # `ahash` and `futures-util` are conditionally included but not directly used in PHP code.
 [package.metadata.cargo-machete]
-ignored = ["tokio", "ahash", "async-trait"]
+ignored = ["tokio", "ahash", "async-trait", "tracing"]
 
 [lib]
 crate-type = ["cdylib"]
@@ -30,3 +30,4 @@ html-to-markdown-rs = { version = "3.10.0", path = "../html-to-markdown", featur
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+tracing = "0.1"

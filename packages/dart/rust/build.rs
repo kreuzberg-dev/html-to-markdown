@@ -64,28 +64,52 @@ const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library 
   /// location so the load works from any working directory and under hardened
   /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
   ///
-  /// Published pub.dev packages stage natives under `lib/src/native/<rid>/`
-  /// (e.g. `macos-arm64`, `linux-x64`). For local FRB-dev builds the dylib is
-  /// emitted into `lib/src/html_to_markdown_rs_bridge_generated/`; that
-  /// path is searched as a fallback.
+  /// Resolution order:
+  /// 1. `$nativeLibDirEnv` env var override (dev/test path, no network).
+  /// 2. Published pub.dev packages stage natives under `lib/src/native/<rid>/`
+  ///    (e.g. `macos-arm64`, `linux-x64`).
+  /// 3. For local FRB-dev builds the dylib is emitted into
+  ///    `lib/src/html_to_markdown_rs_bridge_generated/`; that path is searched next.
+  /// 4. The versioned user-cache directory (`nativeCachedLibPath()`); on a cache
+  ///    miss the native is downloaded and cached (`nativeDownloadAndCacheLibrary()`).
   static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
     try {
-      final packageRoot =
-          await Isolate.resolvePackageUri(Uri.parse('package:h2m/h2m.dart'));
-      if (packageRoot == null) return null;
-      final libNames = _alefHostLibNames();
-      final searchDirs = <Uri>[
-        if (_alefHostRid() != null) packageRoot.resolve('src/native/${_alefHostRid()}/'),
-        packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/'),
-      ];
-      for (final dir in searchDirs) {
-        for (final name in libNames) {
-          final libPath = dir.resolve(name).toFilePath();
+      final envDir = Platform.environment[nativeLibDirEnv];
+      if (envDir != null && envDir.isNotEmpty) {
+        final envUri = Uri.directory(envDir);
+        for (final name in _alefHostLibNames()) {
+          final libPath = envUri.resolve(name).toFilePath();
           if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
             return ExternalLibrary.open(libPath);
           }
         }
       }
+
+      final packageRoot =
+          await Isolate.resolvePackageUri(Uri.parse('package:h2m/h2m.dart'));
+      if (packageRoot != null) {
+        final libNames = _alefHostLibNames();
+        final searchDirs = <Uri>[
+          if (_alefHostRid() != null) packageRoot.resolve('src/native/${_alefHostRid()}/'),
+          packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/'),
+        ];
+        for (final dir in searchDirs) {
+          for (final name in libNames) {
+            final libPath = dir.resolve(name).toFilePath();
+            if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
+              return ExternalLibrary.open(libPath);
+            }
+          }
+        }
+      }
+
+      final cachedPath = nativeCachedLibPath();
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        return ExternalLibrary.open(cachedPath);
+      }
+
+      final downloadedPath = await nativeDownloadAndCacheLibrary();
+      return ExternalLibrary.open(downloadedPath);
     } catch (_) {
       // Fall through to the default loader on any resolution failure.
     }
@@ -152,11 +176,14 @@ fn patch_published_loader() {
 
     let mut patched = source.replacen(FRB_INIT_PROLOGUE, FRB_INIT_REPLACEMENT, 1);
 
-    // Ensure the helper's `File`/`Isolate`/`Abi` dependencies are imported.
+    // Ensure the helper's `File`/`Isolate`/`Abi` dependencies, and the cache-aware
+    // `native_loader.dart` helpers (`nativeCachedLibPath`, `nativeDownloadAndCacheLibrary`,
+    // `nativeLibDirEnv`), are imported.
     for (probe, line) in [
         ("import 'dart:io';", "import 'dart:io';\n"),
         ("import 'dart:isolate';", "import 'dart:isolate';\n"),
         ("import 'dart:ffi';", "import 'dart:ffi';\n"),
+        ("import '../native_loader.dart';", "import '../native_loader.dart';\n"),
     ] {
         if patched.contains(probe) {
             continue;

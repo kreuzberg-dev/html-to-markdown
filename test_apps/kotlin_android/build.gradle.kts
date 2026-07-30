@@ -59,7 +59,7 @@ dependencies {
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
 
     // jspecify for null-safety annotations on wrapped types
-    testImplementation("org.jspecify:jspecify:1.0.0")
+    testImplementation("org.jspecify:jspecify:1.0.1")
 
     // Kotlin coroutines for async test helpers
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")

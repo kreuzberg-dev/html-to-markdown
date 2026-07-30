@@ -9,7 +9,7 @@ keywords = ["converter", "html", "markdown"]
 categories = []
 
 [package.metadata.cargo-machete]
-ignored = ["async-trait"]
+ignored = ["async-trait", "tracing"]
 
 [lib]
 crate-type = ["staticlib", "lib"]
@@ -20,6 +20,7 @@ extendr-api = "0.9"
 html-to-markdown-rs = { version = "3.10.0", path = "../../../../crates/html-to-markdown", features = ["serde", "metadata", "visitor", "inline-images", "testkit"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+tracing = "0.1"
 
 [features]
 default = ["inline-images", "metadata", "testkit", "visitor"]

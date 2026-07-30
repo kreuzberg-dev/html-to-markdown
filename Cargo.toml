@@ -57,6 +57,7 @@ tempfile = "3.27"
 thiserror = "2.0"
 tl = { package = "astral-tl", version = "0.7.11" }
 toml = "1.1"
+tracing = "0.1"
 which = "8"
 
 [workspace.lints.rust]

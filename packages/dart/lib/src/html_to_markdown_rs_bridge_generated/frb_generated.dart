@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import '../native_loader.dart';
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:io';
@@ -25,30 +26,54 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   /// location so the load works from any working directory and under hardened
   /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
   ///
-  /// Published pub.dev packages stage natives under `lib/src/native/<rid>/`
-  /// (e.g. `macos-arm64`, `linux-x64`). For local FRB-dev builds the dylib is
-  /// emitted into `lib/src/html_to_markdown_rs_bridge_generated/`; that
-  /// path is searched as a fallback.
+  /// Resolution order:
+  /// 1. `$nativeLibDirEnv` env var override (dev/test path, no network).
+  /// 2. Published pub.dev packages stage natives under `lib/src/native/<rid>/`
+  ///    (e.g. `macos-arm64`, `linux-x64`).
+  /// 3. For local FRB-dev builds the dylib is emitted into
+  ///    `lib/src/html_to_markdown_rs_bridge_generated/`; that path is searched next.
+  /// 4. The versioned user-cache directory (`nativeCachedLibPath()`); on a cache
+  ///    miss the native is downloaded and cached (`nativeDownloadAndCacheLibrary()`).
   static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
     try {
-      final packageRoot = await Isolate.resolvePackageUri(
-        Uri.parse('package:h2m/h2m.dart'),
-      );
-      if (packageRoot == null) return null;
-      final libNames = _alefHostLibNames();
-      final searchDirs = <Uri>[
-        if (_alefHostRid() != null)
-          packageRoot.resolve('src/native/${_alefHostRid()}/'),
-        packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/'),
-      ];
-      for (final dir in searchDirs) {
-        for (final name in libNames) {
-          final libPath = dir.resolve(name).toFilePath();
+      final envDir = Platform.environment[nativeLibDirEnv];
+      if (envDir != null && envDir.isNotEmpty) {
+        final envUri = Uri.directory(envDir);
+        for (final name in _alefHostLibNames()) {
+          final libPath = envUri.resolve(name).toFilePath();
           if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
             return ExternalLibrary.open(libPath);
           }
         }
       }
+
+      final packageRoot = await Isolate.resolvePackageUri(
+        Uri.parse('package:h2m/h2m.dart'),
+      );
+      if (packageRoot != null) {
+        final libNames = _alefHostLibNames();
+        final searchDirs = <Uri>[
+          if (_alefHostRid() != null)
+            packageRoot.resolve('src/native/${_alefHostRid()}/'),
+          packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/'),
+        ];
+        for (final dir in searchDirs) {
+          for (final name in libNames) {
+            final libPath = dir.resolve(name).toFilePath();
+            if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
+              return ExternalLibrary.open(libPath);
+            }
+          }
+        }
+      }
+
+      final cachedPath = nativeCachedLibPath();
+      if (cachedPath != null && File(cachedPath).existsSync()) {
+        return ExternalLibrary.open(cachedPath);
+      }
+
+      final downloadedPath = await nativeDownloadAndCacheLibrary();
+      return ExternalLibrary.open(downloadedPath);
     } catch (_) {
       // Fall through to the default loader on any resolution failure.
     }
