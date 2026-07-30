@@ -70,6 +70,11 @@ all = { level = "deny", priority = -1 }
 cargo = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
+# Diagnostics belong in `tracing`, not raw stdout/stderr writes. CLI data output and
+# build-script `cargo:` directives opt back in locally with `#[expect(clippy::print_stdout)]`. ~keep
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
 multiple_crate_versions = { level = "allow", priority = 1 } # ~keep Large workspaces commonly carry duplicate transitive versions.
 cargo_common_metadata = { level = "allow", priority = 1 } # ~keep Internal binding crates do not need crates.io metadata.
 # ~keep Alef-generated binding glue uses these patterns by construction.
