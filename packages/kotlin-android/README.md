@@ -79,7 +79,7 @@
   </a>
 </div>
 
-High-performance HTML to Markdown converter for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a` and `x86_64`.
+High-performance HTML to Markdown converter for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a`, `x86_64`, `armeabi-v7a`, and `x86`.
 Server-side Kotlin/JVM consumers should use the `io.xberg:html-to-markdown` Java package directly — Kotlin/JVM treats Java classes as native, and Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
 
 ## What This Package Provides
@@ -92,7 +92,7 @@ Server-side Kotlin/JVM consumers should use the `io.xberg:html-to-markdown` Java
 ## Installation
 
 ```bash
-implementation("io.xberg:html-to-markdown-android:3.10.0")
+implementation("io.xberg:html-to-markdown-android:3.10.1")
 ```
 
 ## Performance Snapshot

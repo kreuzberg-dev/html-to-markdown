@@ -23,6 +23,14 @@ part 'lib.freezed.dart';
 /// **Errors:**
 ///
 /// Returns an error if HTML parsing fails or if the input contains invalid UTF-8.
+///
+/// # Observability
+///
+/// Emits an `html_to_markdown.convert` span at `INFO` level with fields `input_len`,
+/// `output_format`, `wrap`, `extract_metadata`, `extract_images`, and `tier_strategy`. These
+/// field names are part of the public observability contract and are kept stable across
+/// releases. This crate never installs a `tracing` subscriber — attach one in the consuming
+/// application to observe these spans and events.
 Future<ConversionResult> convert({
   required String html,
   ConversionOptions? options,
