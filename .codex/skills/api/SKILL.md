@@ -8,7 +8,6 @@
 Use this skill when working with html-to-markdown-rs generated language APIs, data types, configuration, or error surfaces.
 
 Generated reference pages:
-
 - docs-site/src/content/docs/reference/api-python.md
 - docs-site/src/content/docs/reference/api-typescript.md
 - docs-site/src/content/docs/reference/api-ruby.md
