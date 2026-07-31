@@ -1968,7 +1968,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: [arm64-v8a, x86_64]
+        abi: [arm64-v8a, x86_64, armeabi-v7a, x86]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -1977,20 +1977,26 @@ jobs:
 
       - uses: xberg-io/actions/setup-rust@v1
         with:
-          targets: aarch64-linux-android,x86_64-linux-android
+          targets: aarch64-linux-android,x86_64-linux-android,armv7-linux-androideabi,i686-linux-android
 
       - uses: android-actions/setup-android@v4.0.1
 
+      # ~keep Bundle the JNI crate (libhtm_jni.so) that the Kotlin bridge loads
+      # via System.loadLibrary("htm_jni") — NOT the plain C-FFI crate, whose
+      # lib*_ffi.so lacks the JNI entry points (html-to-markdown#446).
       - uses: xberg-io/actions/build-android-natives@v1
         with:
-          crate-name: html-to-markdown-ffi
-          lib-name: html_to_markdown_ffi
+          crate-name: html-to-markdown-rs-jni
+          lib-name: htm_jni
           abis: ${{ matrix.abi }}
 
       - uses: actions/upload-artifact@v7
         with:
           name: kotlin-android-${{ matrix.abi }}
-          path: target/android-libs/${{ matrix.abi }}/libhtml_to_markdown_ffi.so
+          # Upload the natives root so the ${{ matrix.abi }}/ subdir is preserved
+          # in the artifact and merges back per-ABI at staging time.
+          path: dist/android-natives
+          if-no-files-found: error
           retention-days: 7
 
   publish-kotlin-android:
@@ -2013,13 +2019,12 @@ jobs:
       - name: Stage Android natives into Kotlin Android module
         shell: bash
         run: |
-          for abi in arm64-v8a x86_64; do
+          for abi in arm64-v8a x86_64 armeabi-v7a x86; do
             dest="packages/kotlin-android/src/main/jniLibs/${abi}"
             mkdir -p "$dest"
-            src="kotlin-android-artifacts/${abi}/libhtml_to_markdown_ffi.so"
-            if [[ -f "$src" ]]; then
-              cp -v "$src" "$dest/"
-            fi
+            # ~keep cp fails the job if the lib is missing — a jni-less AAR must
+            # never publish (html-to-markdown#446). The gradle guard is the backstop.
+            cp -v "kotlin-android-artifacts/${abi}/libhtm_jni.so" "$dest/"
           done
 
       - uses: xberg-io/actions/publish-maven-gradle@v1
