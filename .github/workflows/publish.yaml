@@ -2663,6 +2663,9 @@ jobs:
           else
             echo "skip=false" >>"$GITHUB_OUTPUT"
           fi
+      # No NODE_AUTH_TOKEN: publish via OIDC trusted publishing (like every other
+      # npm job here). The classic NPM_TOKEN lacked write access to this package
+      # and returned E404; trusted publishing uses the job's id-token instead. ~keep
       - uses: xberg-io/actions/publish-npm@v1
         if: steps.guard.outputs.skip != 'true'
         with:
@@ -2671,8 +2674,6 @@ jobs:
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           provenance: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-plugin-hermes:
     name: Publish Hermes plugin to PyPI
