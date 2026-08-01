@@ -278,6 +278,11 @@ cargo install html-to-markdown-cli
 ```
 
 ```sh
+# Or install the prebuilt binary via cargo-binstall:
+cargo binstall html-to-markdown-cli
+```
+
+```sh
 brew install xberg-io/tap/html-to-markdown
 ```
 
