@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.2] - 2026-08-01
+
+### Added
+
+- `cargo binstall html-to-markdown-cli` support (#448) — prebuilt CLI binaries can now be
+  installed directly from GitHub Releases without compiling from source. Adds
+  `[package.metadata.binstall]` to the CLI crate plus a release-time `verify-binstall` CI
+  job that installs via `cargo binstall` and smoke-tests the binary.
+
+### Changed
+
+- Updated dependencies.
+
 ## [3.10.1] - 2026-07-31
 
 ### Fixed
