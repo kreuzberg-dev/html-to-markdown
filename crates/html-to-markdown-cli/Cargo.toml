@@ -13,16 +13,16 @@ description = "Command-line interface for html-to-markdown - high-performance HT
 keywords = ["html", "markdown", "cli", "converter", "html5ever"]
 categories = ["command-line-utilities", "text-processing"]
 
-[[bin]]
-name = "html-to-markdown"
-path = "src/main.rs"
-
 # cargo-binstall support: release assets use a `cli-` prefix that doesn't match
 # binstall's default naming, so pin the download URL and bin-dir explicitly.
 # See https://github.com/cargo-bins/cargo-binstall/blob/main/SUPPORT.md
 [package.metadata.binstall]
 pkg-url = "{ repo }/releases/download/v{ version }/cli-{ target }{ archive-suffix }"
 bin-dir = "cli-{ target }/{ bin }{ binary-ext }"
+
+[[bin]]
+name = "html-to-markdown"
+path = "src/main.rs"
 
 [features]
 default = ["mcp", "mcp-http"]
@@ -37,11 +37,11 @@ clap_mangen.workspace = true
 encoding_rs.workspace = true
 html-to-markdown-rs = { workspace = true, features = ["metadata", "inline-images", "visitor", "serde"] }
 reqwest = { version = "0.13.4", default-features = false, features = [
-  "blocking",
-  "rustls",
-  "gzip",
-  "deflate",
-  "charset",
+    "blocking",
+    "rustls",
+    "gzip",
+    "deflate",
+    "charset",
 ] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
