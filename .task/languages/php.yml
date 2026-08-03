@@ -7,7 +7,7 @@ tasks:
     silent: false
     cmds:
       - cmd: |
-          cd packages/php && composer update --with-dependencies
+          cd crates/html-to-markdown-php/src && composer update --with-dependencies
         ignore_error: false
 
   upgrade:
@@ -15,5 +15,5 @@ tasks:
     silent: false
     cmds:
       - cmd: |
-          cd packages/php && composer update --with-all-dependencies
+          cd crates/html-to-markdown-php/src && composer update --with-all-dependencies
         ignore_error: false

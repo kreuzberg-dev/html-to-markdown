@@ -7,6 +7,6 @@ if [[ -n "${EXTENSION_PATH:-}" ]]; then
   export PHPRC="${ini_file}"
 fi
 
-pushd packages/php >/dev/null
+pushd crates/html-to-markdown-php/src >/dev/null
 composer run test
 popd >/dev/null

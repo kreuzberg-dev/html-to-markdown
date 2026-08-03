@@ -8,7 +8,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Html\\To\\Markdown\\": "../../packages/php/src/"
+      "Html\\To\\Markdown\\": "../../crates/html-to-markdown-php/src/"
     }
   },
   "autoload-dev": {

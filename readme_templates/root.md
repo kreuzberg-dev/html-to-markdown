@@ -128,7 +128,7 @@ This is a native PHP extension (Rust `ext-php-rs`), so install it with [PIE](htt
 pie install xberg-io/html-to-markdown
 ```
 
-See [PHP README](https://github.com/xberg-io/html-to-markdown/tree/main/packages/php) for full documentation.
+See [PHP README](https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-php) for full documentation.
 
 </details>
 

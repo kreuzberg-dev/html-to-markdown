@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.49.0"
+alef_version = "0.51.0"
 languages = [
   "python",
   "node",
@@ -445,7 +445,7 @@ before = "cd packages/ruby && bundle install"
 
 [crates.lint.php]
 precondition = "command -v poly >/dev/null 2>&1"
-check = "poly lint packages/php"
+check = "poly lint crates/html-to-markdown-php"
 
 [crates.lint.go]
 precondition = "command -v gofmt >/dev/null 2>&1"
@@ -959,7 +959,7 @@ version = "v0.0.0"
 
 [crates.e2e.packages.php]
 name = "xberg-io/html-to-markdown"
-path = "../../packages/php"
+path = "../../crates/html-to-markdown-php"
 
 [crates.e2e.packages.java]
 name = "io.xberg:html-to-markdown"
