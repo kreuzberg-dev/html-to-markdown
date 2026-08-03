@@ -7,7 +7,9 @@ internal: true
 # repo-root marketplace index. Version tracks core via `task version:sync`. ~keep
 
 vars:
-  AI_RULEZ: "ai-rulez"
+  # Pinned to the same ai-rulez CI verifies with (ci-plugin.yaml) so local
+  # generate/verify is byte-identical to CI and bundles never drift. ~keep
+  AI_RULEZ: "uvx ai-rulez==4.11.0"
 
 tasks:
   generate:

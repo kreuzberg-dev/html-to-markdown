@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "html-to-markdown": {
+      "command": "./scripts/mcp-launch.sh",
+      "args": [
+        "mcp"
+      ]
+    }
+  }
+}
