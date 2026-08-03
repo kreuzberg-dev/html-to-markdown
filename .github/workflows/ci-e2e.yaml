@@ -139,7 +139,6 @@ jobs:
               - 'fixtures/**'
             node:
               - 'crates/html-to-markdown-node/**'
-              - 'packages/typescript/**'
               - 'e2e/node/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
@@ -153,7 +152,6 @@ jobs:
               - 'fixtures/**'
             php:
               - 'crates/html-to-markdown-php/**'
-              - 'packages/php/**'
               - 'packages/php-ext/**'
               - 'e2e/php/**'
               - 'composer.json'
@@ -405,16 +403,6 @@ jobs:
         run: bun run build
         shell: bash
 
-      - name: Build TypeScript package (Node.js)
-        if: matrix.runtime == 'node'
-        uses: ./.github/actions/build-typescript
-
-      - name: Build TypeScript package (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: packages/typescript
-        run: bun x tsc --project tsconfig.json
-        shell: bash
-
       - name: Cleanup Rust cache
         if: always() && steps.checkout.outcome == 'success'
         uses: xberg-io/actions/cleanup-rust-cache@v1
@@ -470,6 +458,10 @@ jobs:
 
       - name: Build Ruby extension
         uses: xberg-io/actions/build-ruby-gem@v1
+        with:
+          # Non-release e2e CI builds the gem against the local workspace path-dep;
+          # skip the registry rewrite that hard-fails until core is on crates.io. ~keep
+          rewrite-native-deps: "false"
 
       - name: Cleanup Rust cache
         if: always() && steps.checkout.outcome == 'success'
@@ -517,7 +509,7 @@ jobs:
         uses: ramsey/composer-install@4.0.0
         with:
           dependency-versions: locked
-          working-directory: packages/php
+          working-directory: crates/html-to-markdown-php/src
         env:
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
@@ -788,16 +780,6 @@ jobs:
         run: task rust:test
         shell: bash
 
-      - name: Build TypeScript package (Node.js)
-        if: matrix.runtime == 'node'
-        uses: ./.github/actions/build-typescript
-
-      - name: Build TypeScript package (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: packages/typescript
-        run: bun x tsc --project tsconfig.json
-        shell: bash
-
       - name: Install alef
         if: matrix.runtime == 'node'
         uses: xberg-io/actions/install-alef@v1
@@ -852,6 +834,10 @@ jobs:
 
       - name: Build Ruby extension
         uses: xberg-io/actions/build-ruby-gem@v1
+        with:
+          # Non-release e2e CI builds the gem against the local workspace path-dep;
+          # skip the registry rewrite that hard-fails until core is on crates.io. ~keep
+          rewrite-native-deps: "false"
 
       - name: Run Rubocop (Ubuntu/ruby-3.3 only)
         if: runner.os != 'Windows' && matrix.os == 'ubuntu-latest' && matrix.ruby == '3.3'
@@ -930,7 +916,7 @@ jobs:
         uses: ramsey/composer-install@4.0.0
         with:
           dependency-versions: locked
-          working-directory: packages/php
+          working-directory: crates/html-to-markdown-php/src
         env:
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
