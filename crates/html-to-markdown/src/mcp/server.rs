@@ -148,7 +148,7 @@ impl ServerHandler for HtmlToMarkdownMcp {
         InitializeResult::new(capabilities)
             // Advertise the newest supported MCP revision; rmcp negotiates down for older
             // clients. `ProtocolVersion::LATEST`/`default()` still resolves to 2025-11-25 in
-            // rmcp 3.0, so select 2026-07-28 explicitly.
+            // rmcp 3.0, so select 2026-07-28 explicitly. ~keep
             .with_protocol_version(ProtocolVersion::V_2026_07_28)
             .with_server_info(server_info)
             .with_instructions(
