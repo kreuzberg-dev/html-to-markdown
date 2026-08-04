@@ -1,6 +1,10 @@
 ```swift
 import HtmlToMarkdown
 
+let options = try conversionOptionsFromJson(
+    "{\"include_document_structure\":true}"
+)
+
 let html = """
 <table>
   <tr><th>Name</th><th>Age</th></tr>
@@ -9,15 +13,16 @@ let html = """
 </table>
 """
 
-let result = try convert(html, nil)
+let result = try convert(html: html, options: options)
 
 for table in result.tables() {
     print("Markdown:", table.markdown().toString())
     let grid = table.grid()
     print("Grid: \(grid.rows()) rows x \(grid.cols()) cols")
-    for cell in grid.cells() {
-        let kind = cell.is_header() ? "Header" : "Cell"
-        print("  \(kind) (r\(cell.row()),c\(cell.col())): \(cell.content().toString())")
+    for cellJson in grid.cells() {
+        let cell = try gridCellFromJson(cellJson.as_str().toString())
+        let kind = cell.isHeader ? "Header" : "Cell"
+        print("  \(kind) (r\(cell.row),c\(cell.col)): \(cell.content)")
     }
 }
 ```

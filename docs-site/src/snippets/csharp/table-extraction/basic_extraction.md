@@ -8,7 +8,8 @@ var html = @"
     <tr><td>Bob</td><td>25</td></tr>
 </table>";
 
-var result = HtmlToMarkdownRs.Convert(html);
+var options = new ConversionOptions { IncludeDocumentStructure = true };
+var result = HtmlToMarkdownConverter.Convert(html, options);
 
 foreach (var table in result.Tables)
 {

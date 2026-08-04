@@ -7,15 +7,18 @@ html = """
 </table>
 """
 
-opts = %HtmlToMarkdown.Options{extract_tables: true}
+opts = %HtmlToMarkdown.ConversionOptions{include_document_structure: true}
 {:ok, result} = HtmlToMarkdown.convert(html, opts)
 
-for %{cells: cells, is_header_row: is_header_row} <- result.tables do
-  cells
-  |> Enum.with_index()
-  |> Enum.each(fn {row, i} ->
-    prefix = if Enum.at(is_header_row, i), do: "Header", else: "Row"
-    IO.puts("  #{prefix}: #{Enum.join(row, ", ")}")
+for %HtmlToMarkdown.TableData{grid: grid} <- result.tables do
+  grid.cells
+  |> Enum.group_by(& &1.row)
+  |> Enum.sort_by(fn {row, _cells} -> row end)
+  |> Enum.each(fn {_row, cells} ->
+    cells = Enum.sort_by(cells, & &1.col)
+    prefix = if hd(cells).is_header, do: "Header", else: "Row"
+    values = Enum.map(cells, & &1.content)
+    IO.puts("  #{prefix}: #{Enum.join(values, ", ")}")
   end)
 end
 ```

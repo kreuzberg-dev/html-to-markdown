@@ -111,11 +111,23 @@ Requires Ruby 3.2+ with Magnus native extension bindings. Published for Linux, m
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```ruby
+require 'html_to_markdown'
+
+html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>"
+result = HtmlToMarkdown.convert(html)
+markdown = result.content
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```ruby
+require 'html_to_markdown'
+
+html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>"
+result = HtmlToMarkdown.convert(html, heading_style: :atx, code_block_style: :fenced)
+markdown = result.content
+```
 
 ## Architecture
 
@@ -140,20 +152,19 @@ The dispatcher is invisible to the caller. Output is byte-identical across tiers
 
 ### Core Function
 
-**`convert(html, options: nil, visitor: nil) -> ConversionResult`**
+**`convert(html, options_or_visitor = nil) -> ConversionResult`**
 
-Converts HTML to Markdown. Returns a `ConversionResult` hash with all results in a single call.
+Converts HTML to Markdown. Returns a `ConversionResult` object with accessor methods for all results in a single call. The second positional argument accepts either an options `Hash`/`ConversionOptions` or a visitor object — not both.
 
 ```ruby
 require 'html_to_markdown'
 
 result = HtmlToMarkdown.convert(html)
-markdown = result[:content]       # Converted Markdown string
-metadata = result[:metadata]      # Metadata (when extract_metadata: true)
-tables   = result[:tables]        # Structured table data
-document = result[:document]      # Document-level info
-images   = result[:images]        # Extracted images
-warnings = result[:warnings]      # Any conversion warnings
+markdown = result.content       # Converted Markdown string
+metadata = result.metadata      # Metadata (when extract_metadata: true)
+tables   = result.tables        # Structured table data (when include_document_structure: true)
+document = result.document      # Document-level info
+warnings = result.warnings      # Any conversion warnings
 ```
 
 ### Options
@@ -194,12 +205,12 @@ html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
 
 # Default Markdown output
 markdown_result = HtmlToMarkdown.convert(html)
-markdown = markdown_result[:content]
+markdown = markdown_result.content
 # Result: "This is **bold** and *italic* text."
 
 # Djot output
 djot_result = HtmlToMarkdown.convert(html, output_format: 'djot')
-djot = djot_result[:content]
+djot = djot_result.content
 # Result: "This is *bold* and _italic_ text."
 ```
 
@@ -215,7 +226,7 @@ require 'html_to_markdown'
 html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
 
 result = HtmlToMarkdown.convert(html, output_format: 'plain')
-plain = result[:content]
+plain = result.content
 # Result: "Title\n\nThis is bold and italic text."
 ```
 
@@ -243,12 +254,12 @@ require 'html_to_markdown'
 html = '<h1>Article</h1><img src="test.jpg" alt="test">'
 result = HtmlToMarkdown.convert(html, extract_metadata: true)
 
-puts result[:content]                             # Converted Markdown
-puts result[:metadata][:document][:title]         # Document title
-puts result[:metadata][:headers]                  # All h1-h6 elements
-puts result[:metadata][:links]                    # All hyperlinks
-puts result[:metadata][:images]                   # All images with alt text
-puts result[:metadata][:structured_data]          # JSON-LD, Microdata, RDFa
+puts result.content                             # Converted Markdown
+puts result.metadata.document.title             # Document title
+puts result.metadata.headers                    # All h1-h6 elements
+puts result.metadata.links                      # All hyperlinks
+puts result.metadata.images                     # All images with alt text
+puts result.metadata.structured_data             # JSON-LD, Microdata, RDFa
 ```
 
 ## Visitor Pattern
@@ -276,18 +287,21 @@ class MyVisitor
     if href.start_with?('https://old-cdn.com')
       href = href.sub('https://old-cdn.com', 'https://new-cdn.com')
     end
-    { type: :custom, output: "[#{text}](#{href})" }
+    # Directive keys/symbols are matched case-sensitively: :Custom, :Skip, :Continue.
+    { Custom: "[#{text}](#{href})" }
   end
 
   def visit_image(ctx, src, alt = nil, title = nil)
     # Skip tracking pixels
-    src.include?('tracking') ? { type: :skip } : { type: :continue }
+    src.include?('tracking') ? :Skip : :Continue
   end
 end
 
 html = '<a href="https://old-cdn.com/file.pdf">Download</a>'
-result = HtmlToMarkdown.convert(html, visitor: MyVisitor.new)
-markdown = result[:content]
+# The visitor is the second positional argument — it cannot be combined
+# with an options Hash in the same call.
+result = HtmlToMarkdown.convert(html, MyVisitor.new)
+markdown = result.content
 ```
 
 ## Examples

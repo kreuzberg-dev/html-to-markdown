@@ -1,12 +1,11 @@
 ```javascript
-import init, { convert } from "@xberg-io/html-to-markdown-wasm";
+import { convert, WasmConversionOptions, WasmHeadingStyle } from "@xberg-io/html-to-markdown-wasm";
 
-await init();
+const options = WasmConversionOptions.default();
+options.headingStyle = WasmHeadingStyle.Atx;
+options.skipImages = true;
 
-const result = convert('<h1>Hello</h1><img src="pic.jpg">', {
-  headingStyle: "atx",
-  skipImages: true,
-});
+const result = convert('<h1>Hello</h1><img src="pic.jpg">', options);
 const markdown = result.content;
 console.log(markdown);
 ```

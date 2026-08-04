@@ -10,9 +10,17 @@ int main(void) {
         "<tr><td>Bob</td><td>25</td></tr>"
         "</table>";
 
-    /* Tables are extracted by default. The simplest way to inspect them in
-     * C is to serialise the result to JSON and parse it with your JSON lib. */
-    HTMConversionResult *result = htm_convert(html, NULL);
+    /* include_document_structure must be enabled to populate result.tables;
+     * with the default options the "tables" array in the JSON is empty. */
+    HTMConversionOptions *options =
+        htm_conversion_options_from_json("{\"include_document_structure\":true}");
+    if (options == NULL) {
+        fprintf(stderr, "options failed: %s\n", htm_last_error_context());
+        return 1;
+    }
+
+    HTMConversionResult *result = htm_convert(html, options);
+    htm_conversion_options_free(options);
     if (result == NULL) {
         fprintf(stderr, "convert failed: %s\n", htm_last_error_context());
         return 1;
@@ -20,7 +28,7 @@ int main(void) {
 
     char *json = htm_conversion_result_to_json(result);
     if (json != NULL) {
-        printf("%s\n", json);  /* contains a "tables" array */
+        printf("%s\n", json);  /* contains a populated "tables" array */
         htm_free_string(json);
     }
 

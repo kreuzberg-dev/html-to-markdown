@@ -9,7 +9,8 @@ html = """
 </table>
 """
 
-result = convert(html, ConversionOptions())
+# `tables` is collected alongside the document tree, so it must be enabled.
+result = convert(html, ConversionOptions(include_document_structure=True))
 
 for table in result.tables:
     for cell in table.grid.cells:

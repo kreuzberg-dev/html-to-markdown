@@ -1,5 +1,6 @@
 ```php
 use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
 
 $html = <<<HTML
 <table>
@@ -9,10 +10,12 @@ $html = <<<HTML
 </table>
 HTML;
 
-$result = HtmlToMarkdownApi::convert($html);
+// tables are populated only when includeDocumentStructure is enabled.
+$options = ConversionOptions::from_json(json_encode(['includeDocumentStructure' => true]));
+$result = HtmlToMarkdownApi::convert($html, $options);
 
-foreach ($result->tables as $table) {
-    foreach ($table->grid->cells as $cell) {
+foreach ($result->getTables() as $table) {
+    foreach ($table->getGrid()->getCells() as $cell) {
         $kind = $cell->isHeader ? 'Header' : 'Cell';
         echo "  {$kind} (r{$cell->row},c{$cell->col}): {$cell->content}\n";
     }

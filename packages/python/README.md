@@ -114,11 +114,27 @@ Requires Python 3.10+. Wheels are published for Linux, macOS, and Windows on PyP
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```python
+from html_to_markdown import convert
+
+html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>"
+result = convert(html)
+markdown = result.content
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```python
+from html_to_markdown import ConversionOptions, convert
+
+html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>"
+options = ConversionOptions(
+    heading_style="atx",
+    list_indent_width=2,
+)
+result = convert(html, options)
+markdown = result.content
+```
 
 ## Architecture
 

@@ -16,736 +16,548 @@ namespace HtmlToMarkdown;
 /// </summary>
 public interface IHtmlVisitor {
 
-  /// <summary>visit_text</summary>
-  VisitResult VisitText(NodeContext Ctx, string Text);
+    /// <summary>visit_text</summary>
+    VisitResult VisitText(NodeContext Ctx, string Text);
 
-  /// <summary>visit_element_start</summary>
-  VisitResult VisitElementStart(NodeContext Ctx);
+    /// <summary>visit_element_start</summary>
+    VisitResult VisitElementStart(NodeContext Ctx);
 
-  /// <summary>visit_element_end</summary>
-  VisitResult VisitElementEnd(NodeContext Ctx, string Output);
+    /// <summary>visit_element_end</summary>
+    VisitResult VisitElementEnd(NodeContext Ctx, string Output);
 
-  /// <summary>visit_link</summary>
-  VisitResult VisitLink(NodeContext Ctx, string Href, string Text,
-                        string Title);
+    /// <summary>visit_link</summary>
+    VisitResult VisitLink(NodeContext Ctx, string Href, string Text, string Title);
 
-  /// <summary>visit_image</summary>
-  VisitResult VisitImage(NodeContext Ctx, string Src, string Alt, string Title);
+    /// <summary>visit_image</summary>
+    VisitResult VisitImage(NodeContext Ctx, string Src, string Alt, string Title);
 
-  /// <summary>visit_heading</summary>
-  VisitResult VisitHeading(NodeContext Ctx, uint Level, string Text, string Id);
+    /// <summary>visit_heading</summary>
+    VisitResult VisitHeading(NodeContext Ctx, uint Level, string Text, string Id);
 
-  /// <summary>visit_code_block</summary>
-  VisitResult VisitCodeBlock(NodeContext Ctx, string Lang, string Code);
+    /// <summary>visit_code_block</summary>
+    VisitResult VisitCodeBlock(NodeContext Ctx, string Lang, string Code);
 
-  /// <summary>visit_code_inline</summary>
-  VisitResult VisitCodeInline(NodeContext Ctx, string Code);
+    /// <summary>visit_code_inline</summary>
+    VisitResult VisitCodeInline(NodeContext Ctx, string Code);
 
-  /// <summary>visit_list_item</summary>
-  VisitResult VisitListItem(NodeContext Ctx, bool Ordered, string Marker,
-                            string Text);
+    /// <summary>visit_list_item</summary>
+    VisitResult VisitListItem(NodeContext Ctx, bool Ordered, string Marker, string Text);
 
-  /// <summary>visit_list_start</summary>
-  VisitResult VisitListStart(NodeContext Ctx, bool Ordered);
+    /// <summary>visit_list_start</summary>
+    VisitResult VisitListStart(NodeContext Ctx, bool Ordered);
 
-  /// <summary>visit_list_end</summary>
-  VisitResult VisitListEnd(NodeContext Ctx, bool Ordered, string Output);
+    /// <summary>visit_list_end</summary>
+    VisitResult VisitListEnd(NodeContext Ctx, bool Ordered, string Output);
 
-  /// <summary>visit_table_start</summary>
-  VisitResult VisitTableStart(NodeContext Ctx);
+    /// <summary>visit_table_start</summary>
+    VisitResult VisitTableStart(NodeContext Ctx);
 
-  /// <summary>visit_table_row</summary>
-  VisitResult VisitTableRow(NodeContext Ctx, List<string> Cells, bool IsHeader);
+    /// <summary>visit_table_row</summary>
+    VisitResult VisitTableRow(NodeContext Ctx, List<string> Cells, bool IsHeader);
 
-  /// <summary>visit_table_end</summary>
-  VisitResult VisitTableEnd(NodeContext Ctx, string Output);
+    /// <summary>visit_table_end</summary>
+    VisitResult VisitTableEnd(NodeContext Ctx, string Output);
 
-  /// <summary>visit_blockquote</summary>
-  VisitResult VisitBlockquote(NodeContext Ctx, string Content, ulong Depth);
+    /// <summary>visit_blockquote</summary>
+    VisitResult VisitBlockquote(NodeContext Ctx, string Content, ulong Depth);
 
-  /// <summary>visit_strong</summary>
-  VisitResult VisitStrong(NodeContext Ctx, string Text);
+    /// <summary>visit_strong</summary>
+    VisitResult VisitStrong(NodeContext Ctx, string Text);
 
-  /// <summary>visit_emphasis</summary>
-  VisitResult VisitEmphasis(NodeContext Ctx, string Text);
+    /// <summary>visit_emphasis</summary>
+    VisitResult VisitEmphasis(NodeContext Ctx, string Text);
 
-  /// <summary>visit_strikethrough</summary>
-  VisitResult VisitStrikethrough(NodeContext Ctx, string Text);
+    /// <summary>visit_strikethrough</summary>
+    VisitResult VisitStrikethrough(NodeContext Ctx, string Text);
 
-  /// <summary>visit_underline</summary>
-  VisitResult VisitUnderline(NodeContext Ctx, string Text);
+    /// <summary>visit_underline</summary>
+    VisitResult VisitUnderline(NodeContext Ctx, string Text);
 
-  /// <summary>visit_subscript</summary>
-  VisitResult VisitSubscript(NodeContext Ctx, string Text);
+    /// <summary>visit_subscript</summary>
+    VisitResult VisitSubscript(NodeContext Ctx, string Text);
 
-  /// <summary>visit_superscript</summary>
-  VisitResult VisitSuperscript(NodeContext Ctx, string Text);
+    /// <summary>visit_superscript</summary>
+    VisitResult VisitSuperscript(NodeContext Ctx, string Text);
 
-  /// <summary>visit_mark</summary>
-  VisitResult VisitMark(NodeContext Ctx, string Text);
+    /// <summary>visit_mark</summary>
+    VisitResult VisitMark(NodeContext Ctx, string Text);
 
-  /// <summary>visit_line_break</summary>
-  VisitResult VisitLineBreak(NodeContext Ctx);
+    /// <summary>visit_line_break</summary>
+    VisitResult VisitLineBreak(NodeContext Ctx);
 
-  /// <summary>visit_horizontal_rule</summary>
-  VisitResult VisitHorizontalRule(NodeContext Ctx);
+    /// <summary>visit_horizontal_rule</summary>
+    VisitResult VisitHorizontalRule(NodeContext Ctx);
 
-  /// <summary>visit_custom_element</summary>
-  VisitResult VisitCustomElement(NodeContext Ctx, string TagName, string Html);
+    /// <summary>visit_custom_element</summary>
+    VisitResult VisitCustomElement(NodeContext Ctx, string TagName, string Html);
 
-  /// <summary>visit_definition_list_start</summary>
-  VisitResult VisitDefinitionListStart(NodeContext Ctx);
+    /// <summary>visit_definition_list_start</summary>
+    VisitResult VisitDefinitionListStart(NodeContext Ctx);
 
-  /// <summary>visit_definition_term</summary>
-  VisitResult VisitDefinitionTerm(NodeContext Ctx, string Text);
+    /// <summary>visit_definition_term</summary>
+    VisitResult VisitDefinitionTerm(NodeContext Ctx, string Text);
 
-  /// <summary>visit_definition_description</summary>
-  VisitResult VisitDefinitionDescription(NodeContext Ctx, string Text);
+    /// <summary>visit_definition_description</summary>
+    VisitResult VisitDefinitionDescription(NodeContext Ctx, string Text);
 
-  /// <summary>visit_definition_list_end</summary>
-  VisitResult VisitDefinitionListEnd(NodeContext Ctx, string Output);
+    /// <summary>visit_definition_list_end</summary>
+    VisitResult VisitDefinitionListEnd(NodeContext Ctx, string Output);
 
-  /// <summary>visit_form</summary>
-  VisitResult VisitForm(NodeContext Ctx, string Action, string Method);
+    /// <summary>visit_form</summary>
+    VisitResult VisitForm(NodeContext Ctx, string Action, string Method);
 
-  /// <summary>visit_input</summary>
-  VisitResult VisitInput(NodeContext Ctx, string InputType, string Name,
-                         string Value);
+    /// <summary>visit_input</summary>
+    VisitResult VisitInput(NodeContext Ctx, string InputType, string Name, string Value);
 
-  /// <summary>visit_button</summary>
-  VisitResult VisitButton(NodeContext Ctx, string Text);
+    /// <summary>visit_button</summary>
+    VisitResult VisitButton(NodeContext Ctx, string Text);
 
-  /// <summary>visit_audio</summary>
-  VisitResult VisitAudio(NodeContext Ctx, string Src);
+    /// <summary>visit_audio</summary>
+    VisitResult VisitAudio(NodeContext Ctx, string Src);
 
-  /// <summary>visit_video</summary>
-  VisitResult VisitVideo(NodeContext Ctx, string Src);
+    /// <summary>visit_video</summary>
+    VisitResult VisitVideo(NodeContext Ctx, string Src);
 
-  /// <summary>visit_iframe</summary>
-  VisitResult VisitIframe(NodeContext Ctx, string Src);
+    /// <summary>visit_iframe</summary>
+    VisitResult VisitIframe(NodeContext Ctx, string Src);
 
-  /// <summary>visit_details</summary>
-  VisitResult VisitDetails(NodeContext Ctx, bool Open);
+    /// <summary>visit_details</summary>
+    VisitResult VisitDetails(NodeContext Ctx, bool Open);
 
-  /// <summary>visit_summary</summary>
-  VisitResult VisitSummary(NodeContext Ctx, string Text);
+    /// <summary>visit_summary</summary>
+    VisitResult VisitSummary(NodeContext Ctx, string Text);
 
-  /// <summary>visit_figure_start</summary>
-  VisitResult VisitFigureStart(NodeContext Ctx);
+    /// <summary>visit_figure_start</summary>
+    VisitResult VisitFigureStart(NodeContext Ctx);
 
-  /// <summary>visit_figcaption</summary>
-  VisitResult VisitFigcaption(NodeContext Ctx, string Text);
+    /// <summary>visit_figcaption</summary>
+    VisitResult VisitFigcaption(NodeContext Ctx, string Text);
 
-  /// <summary>visit_figure_end</summary>
-  VisitResult VisitFigureEnd(NodeContext Ctx, string Output);
+    /// <summary>visit_figure_end</summary>
+    VisitResult VisitFigureEnd(NodeContext Ctx, string Output);
 }
 
 /// <summary>
 /// Manages the native HtmVisitorCallbacks struct and managed delegates for an
 /// IHtmlVisitor implementation.
 ///
-/// ABI (Path 1, the canonical visitor callbacks struct shared with Go and
-/// Java): the unmanaged block is `user_data` followed by one function pointer
-/// per visit method. Each callback receives `(ctx, user_data, ...params...,
-/// out_custom, out_len)` and returns an i32 visit-result code (0=Continue,
-/// 1=Custom, 2=Skip, 3=PreserveHtml, 4=Error). For Custom/Error the callback
-/// writes a heap C string into *out_custom and its byte length into *out_len;
-/// the Rust side takes ownership and frees it.
+/// ABI (Path 1, the canonical visitor callbacks struct shared with Go and Java):
+/// the unmanaged block is `user_data` followed by one function pointer per visit
+/// method. Each callback receives `(ctx, user_data, ...params..., out_custom, out_len)`
+/// and returns an i32 visit-result code (0=Continue, 1=Custom, 2=Skip,
+/// 3=PreserveHtml, 4=Error). For Custom/Error the callback writes a heap C string
+/// into *out_custom and its byte length into *out_len; the Rust side takes ownership
+/// and frees it.
 /// </summary>
 public sealed class HtmlVisitorBridge : IDisposable {
 
-  internal readonly IHtmlVisitor _impl;
-  private readonly GCHandle _implHandle;
-  // Pointer to the unmanaged HtmVisitorCallbacks struct (user_data + 40 fn
-  // pointers).
-  internal IntPtr _vtable;
-  private bool _disposed;
-  // Keep all delegates alive for the lifetime of the bridge: Rust holds raw
-  // function pointers obtained via GetFunctionPointerForDelegate, which become
-  // invalid if the delegate is collected.
-  private readonly List<object> _delegateRoots;
-  internal readonly IntPtr _bridgeId;
-  private int _callbackRefCount = 0;
+    internal readonly IHtmlVisitor _impl;
+    private readonly GCHandle _implHandle;
+    // Pointer to the unmanaged HtmVisitorCallbacks struct (user_data + 40 fn pointers).
+    internal IntPtr _vtable;
+    private bool _disposed;
+    // Keep all delegates alive for the lifetime of the bridge: Rust holds raw function
+    // pointers obtained via GetFunctionPointerForDelegate, which become invalid if the
+    // delegate is collected.
+    private readonly List<object> _delegateRoots;
+    internal readonly IntPtr _bridgeId;
+    private int _callbackRefCount = 0;
 
-  // Static registry: maps bridge ID (used as the FFI user_data) to bridge
-  // instance, so callbacks can recover the managed impl and the bridge stays
-  // alive while Rust holds the ID.
-  internal static readonly Dictionary<IntPtr, HtmlVisitorBridge>
-      _bridgeRegistry = new();
-  internal static int _nextBridgeId = 1;
-  internal static readonly object _registryLock = new();
+    // Static registry: maps bridge ID (used as the FFI user_data) to bridge instance,
+    // so callbacks can recover the managed impl and the bridge stays alive while Rust
+    // holds the ID.
+    internal static readonly Dictionary<IntPtr, HtmlVisitorBridge> _bridgeRegistry = new();
+    internal static int _nextBridgeId = 1;
+    internal static readonly object _registryLock = new();
 
-  // Number of pointer-sized slots: user_data + 40 visit-method function
-  // pointers.
-  private const int CallbackSlotCount = 41;
+    // Number of pointer-sized slots: user_data + 40 visit-method function pointers.
+    private const int CallbackSlotCount = 41;
 
-  // Mirror of the FFI `HtmContext` repr(C) struct.
-  [StructLayout(LayoutKind.Sequential)]
-  private struct HtmContextNative {
-    public int NodeType;
-    public IntPtr TagName;
-    public UIntPtr Depth;
-    public UIntPtr IndexInParent;
-    public IntPtr ParentTag;
-    public int IsInline;
-  }
-
-  // --- Callback delegate signatures (ctx, user_data, ...params..., out_custom,
-  // out_len) ---
-
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitTextFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                   IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitElementStartFn(IntPtr ctx, IntPtr userData,
-                                           IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitElementEndFn(IntPtr ctx, IntPtr userData,
-                                         IntPtr output, IntPtr outCustom,
-                                         IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitLinkFn(IntPtr ctx, IntPtr userData, IntPtr href,
-                                   IntPtr text, IntPtr title, IntPtr outCustom,
-                                   IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitImageFn(IntPtr ctx, IntPtr userData, IntPtr src,
-                                    IntPtr alt, IntPtr title, IntPtr outCustom,
-                                    IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitHeadingFn(IntPtr ctx, IntPtr userData, uint level,
-                                      IntPtr text, IntPtr id, IntPtr outCustom,
-                                      IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitCodeBlockFn(IntPtr ctx, IntPtr userData,
-                                        IntPtr lang, IntPtr code,
-                                        IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitCodeInlineFn(IntPtr ctx, IntPtr userData,
-                                         IntPtr code, IntPtr outCustom,
-                                         IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitListItemFn(IntPtr ctx, IntPtr userData, int ordered,
-                                       IntPtr marker, IntPtr text,
-                                       IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitListStartFn(IntPtr ctx, IntPtr userData,
-                                        int ordered, IntPtr outCustom,
-                                        IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitListEndFn(IntPtr ctx, IntPtr userData, int ordered,
-                                      IntPtr output, IntPtr outCustom,
-                                      IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitTableStartFn(IntPtr ctx, IntPtr userData,
-                                         IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitTableRowFn(IntPtr ctx, IntPtr userData,
-                                       IntPtr cells, UIntPtr cellsCount,
-                                       int isHeader, IntPtr outCustom,
-                                       IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitTableEndFn(IntPtr ctx, IntPtr userData,
-                                       IntPtr output, IntPtr outCustom,
-                                       IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitBlockquoteFn(IntPtr ctx, IntPtr userData,
-                                         IntPtr content, UIntPtr depth,
-                                         IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitStrongFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                     IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitEmphasisFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                       IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitStrikethroughFn(IntPtr ctx, IntPtr userData,
-                                            IntPtr text, IntPtr outCustom,
-                                            IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitUnderlineFn(IntPtr ctx, IntPtr userData,
-                                        IntPtr text, IntPtr outCustom,
-                                        IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitSubscriptFn(IntPtr ctx, IntPtr userData,
-                                        IntPtr text, IntPtr outCustom,
-                                        IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitSuperscriptFn(IntPtr ctx, IntPtr userData,
-                                          IntPtr text, IntPtr outCustom,
-                                          IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitMarkFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                   IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitLineBreakFn(IntPtr ctx, IntPtr userData,
-                                        IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitHorizontalRuleFn(IntPtr ctx, IntPtr userData,
-                                             IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitCustomElementFn(IntPtr ctx, IntPtr userData,
-                                            IntPtr tagName, IntPtr html,
-                                            IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitDefinitionListStartFn(IntPtr ctx, IntPtr userData,
-                                                  IntPtr outCustom,
-                                                  IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitDefinitionTermFn(IntPtr ctx, IntPtr userData,
-                                             IntPtr text, IntPtr outCustom,
-                                             IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitDefinitionDescriptionFn(IntPtr ctx, IntPtr userData,
-                                                    IntPtr text,
-                                                    IntPtr outCustom,
-                                                    IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitDefinitionListEndFn(IntPtr ctx, IntPtr userData,
-                                                IntPtr output, IntPtr outCustom,
-                                                IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitFormFn(IntPtr ctx, IntPtr userData, IntPtr action,
-                                   IntPtr method, IntPtr outCustom,
-                                   IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitInputFn(IntPtr ctx, IntPtr userData,
-                                    IntPtr inputType, IntPtr name, IntPtr value,
-                                    IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitButtonFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                     IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitAudioFn(IntPtr ctx, IntPtr userData, IntPtr src,
-                                    IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitVideoFn(IntPtr ctx, IntPtr userData, IntPtr src,
-                                    IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitIframeFn(IntPtr ctx, IntPtr userData, IntPtr src,
-                                     IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitDetailsFn(IntPtr ctx, IntPtr userData, int open,
-                                      IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitSummaryFn(IntPtr ctx, IntPtr userData, IntPtr text,
-                                      IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitFigureStartFn(IntPtr ctx, IntPtr userData,
-                                          IntPtr outCustom, IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitFigcaptionFn(IntPtr ctx, IntPtr userData,
-                                         IntPtr text, IntPtr outCustom,
-                                         IntPtr outLen);
-  [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-  private delegate int VisitFigureEndFn(IntPtr ctx, IntPtr userData,
-                                        IntPtr output, IntPtr outCustom,
-                                        IntPtr outLen);
-
-  public HtmlVisitorBridge(IHtmlVisitor impl) {
-    _impl = impl ?? throw new ArgumentNullException(nameof(impl));
-    _implHandle = GCHandle.Alloc(impl, GCHandleType.Normal);
-    _delegateRoots = new List<object>(CallbackSlotCount);
-    _vtable = IntPtr.Zero;
-    _disposed = false;
-    lock (_registryLock) { _bridgeId = new IntPtr(_nextBridgeId++); }
-    BuildCallbacks();
-  }
-
-  private void WriteSlot(int slot, Delegate fn) {
-    _delegateRoots.Add(fn);
-    Marshal.WriteIntPtr(_vtable, IntPtr.Size * slot,
-                        Marshal.GetFunctionPointerForDelegate(fn));
-  }
-
-  private void BuildCallbacks() {
-    _vtable = Marshal.AllocHGlobal(IntPtr.Size * CallbackSlotCount);
-    // Slot 0: user_data — the registry id callbacks use to recover this bridge.
-    Marshal.WriteIntPtr(_vtable, 0, _bridgeId);
-    // Slots 1..40: function pointers, in HtmVisitorCallbacks field order.
-    WriteSlot(1, new VisitTextFn(VisitTextCallback));
-    WriteSlot(2, new VisitElementStartFn(VisitElementStartCallback));
-    WriteSlot(3, new VisitElementEndFn(VisitElementEndCallback));
-    WriteSlot(4, new VisitLinkFn(VisitLinkCallback));
-    WriteSlot(5, new VisitImageFn(VisitImageCallback));
-    WriteSlot(6, new VisitHeadingFn(VisitHeadingCallback));
-    WriteSlot(7, new VisitCodeBlockFn(VisitCodeBlockCallback));
-    WriteSlot(8, new VisitCodeInlineFn(VisitCodeInlineCallback));
-    WriteSlot(9, new VisitListItemFn(VisitListItemCallback));
-    WriteSlot(10, new VisitListStartFn(VisitListStartCallback));
-    WriteSlot(11, new VisitListEndFn(VisitListEndCallback));
-    WriteSlot(12, new VisitTableStartFn(VisitTableStartCallback));
-    WriteSlot(13, new VisitTableRowFn(VisitTableRowCallback));
-    WriteSlot(14, new VisitTableEndFn(VisitTableEndCallback));
-    WriteSlot(15, new VisitBlockquoteFn(VisitBlockquoteCallback));
-    WriteSlot(16, new VisitStrongFn(VisitStrongCallback));
-    WriteSlot(17, new VisitEmphasisFn(VisitEmphasisCallback));
-    WriteSlot(18, new VisitStrikethroughFn(VisitStrikethroughCallback));
-    WriteSlot(19, new VisitUnderlineFn(VisitUnderlineCallback));
-    WriteSlot(20, new VisitSubscriptFn(VisitSubscriptCallback));
-    WriteSlot(21, new VisitSuperscriptFn(VisitSuperscriptCallback));
-    WriteSlot(22, new VisitMarkFn(VisitMarkCallback));
-    WriteSlot(23, new VisitLineBreakFn(VisitLineBreakCallback));
-    WriteSlot(24, new VisitHorizontalRuleFn(VisitHorizontalRuleCallback));
-    WriteSlot(25, new VisitCustomElementFn(VisitCustomElementCallback));
-    WriteSlot(26,
-              new VisitDefinitionListStartFn(VisitDefinitionListStartCallback));
-    WriteSlot(27, new VisitDefinitionTermFn(VisitDefinitionTermCallback));
-    WriteSlot(28, new VisitDefinitionDescriptionFn(
-                      VisitDefinitionDescriptionCallback));
-    WriteSlot(29, new VisitDefinitionListEndFn(VisitDefinitionListEndCallback));
-    WriteSlot(30, new VisitFormFn(VisitFormCallback));
-    WriteSlot(31, new VisitInputFn(VisitInputCallback));
-    WriteSlot(32, new VisitButtonFn(VisitButtonCallback));
-    WriteSlot(33, new VisitAudioFn(VisitAudioCallback));
-    WriteSlot(34, new VisitVideoFn(VisitVideoCallback));
-    WriteSlot(35, new VisitIframeFn(VisitIframeCallback));
-    WriteSlot(36, new VisitDetailsFn(VisitDetailsCallback));
-    WriteSlot(37, new VisitSummaryFn(VisitSummaryCallback));
-    WriteSlot(38, new VisitFigureStartFn(VisitFigureStartCallback));
-    WriteSlot(39, new VisitFigcaptionFn(VisitFigcaptionCallback));
-    WriteSlot(40, new VisitFigureEndFn(VisitFigureEndCallback));
-  }
-
-  private void IncrementCallbackRef() {
-    lock (_registryLock) { _callbackRefCount++; }
-  }
-
-  private void DecrementCallbackRef() {
-    lock (_registryLock) {
-      if (_callbackRefCount > 0) {
-        _callbackRefCount--;
-      }
-      if (_callbackRefCount == 0 && _disposed) {
-        _bridgeRegistry.Remove(_bridgeId);
-      }
-    }
-  }
-
-  // --- Marshalling helpers ---
-
-  private static string Str(IntPtr p) => p == IntPtr.Zero
-                                             ? string.Empty
-                                             : (Marshal.PtrToStringUTF8(p) ??
-                                                string.Empty);
-
-  private static NodeContext DecodeContext(IntPtr ctx) {
-    if (ctx == IntPtr.Zero) {
-      return new NodeContext(default, string.Empty, 0, 0, null, false);
-    }
-    var native = Marshal.PtrToStructure<HtmContextNative>(ctx);
-    var parentTag = native.ParentTag == IntPtr.Zero
-                        ? null
-                        : Marshal.PtrToStringUTF8(native.ParentTag);
-    return new NodeContext((NodeType)native.NodeType, Str(native.TagName),
-                           (ulong)native.Depth, (ulong)native.IndexInParent,
-                           parentTag, native.IsInline != 0);
-  }
-
-  private static List<string> DecodeStringArray(IntPtr arr, UIntPtr count) {
-    var list = new List<string>();
-    if (arr == IntPtr.Zero) {
-      return list;
-    }
-    ulong n = (ulong)count;
-    for (ulong i = 0; i < n; i++) {
-      var p = Marshal.ReadIntPtr(arr, (int)(i * (ulong)IntPtr.Size));
-      list.Add(Str(p));
-    }
-    return list;
-  }
-
-  // Encodes a VisitResult into the FFI return code + out_custom/out_len
-  // protocol. For Custom/Error, allocates a heap C string via NativeMemory (CRT
-  // malloc) so the Rust side can take ownership and free it with the system
-  // allocator — matching Go's C.CString and Java's global-arena allocation.
-  private static unsafe int EncodeResult(VisitResult result, IntPtr outCustom,
-                                         IntPtr outLen) {
-    switch (result) {
-    case VisitResult.Continue:
-      return 0;
-    case VisitResult.Custom c:
-      WriteCustom(c.Value, outCustom, outLen);
-      return 1;
-    case VisitResult.Skip:
-      return 2;
-    case VisitResult.PreserveHtml:
-      return 3;
-    case VisitResult.Error e:
-      WriteCustom(e.Value, outCustom, outLen);
-      return 4;
-    default:
-      return 0;
-    }
-  }
-
-  private static unsafe void WriteCustom(string value, IntPtr outCustom,
-                                         IntPtr outLen) {
-    var bytes = Encoding.UTF8.GetBytes(value ?? string.Empty);
-    byte *buf = (byte *)NativeMemory.Alloc((nuint)(bytes.Length + 1));
-    for (int i = 0; i < bytes.Length; i++) {
-      buf[i] = bytes[i];
-    }
-    buf[bytes.Length] = 0;
-    if (outCustom != IntPtr.Zero) {
-      Marshal.WriteIntPtr(outCustom, (IntPtr)buf);
-    }
-    if (outLen != IntPtr.Zero) {
-      Marshal.WriteIntPtr(outLen, (IntPtr)bytes.Length);
-    }
-  }
-
-  // Shared dispatch: recover the bridge from the registry by user_data, invoke
-  // the user's visit method, and encode the result. Any exception falls back to
-  // Continue so a faulty visitor never unwinds across the FFI boundary or
-  // corrupts output.
-  private static int Dispatch(IntPtr userData, IntPtr outCustom, IntPtr outLen,
-                              Func<IHtmlVisitor, VisitResult> invoke) {
-    HtmlVisitorBridge? bridge = null;
-    lock (_registryLock) {
-      if (_bridgeRegistry.TryGetValue(userData, out var found)) {
-        bridge = found;
-        bridge.IncrementCallbackRef();
-      }
-    }
-    if (bridge == null) {
-      return 0;
-    }
-    try {
-      return EncodeResult(invoke(bridge._impl), outCustom, outLen);
-    } catch {
-      return 0;
-    } finally {
-      try {
-        bridge.DecrementCallbackRef();
-      } catch { /* bridge already removed */
-      }
-    }
-  }
-
-  // --- Callbacks ---
-
-  private int VisitTextCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitText(DecodeContext(ctx), Str(text)));
-  private int VisitElementStartCallback(IntPtr ctx, IntPtr userData,
-                                        IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitElementStart(DecodeContext(ctx)));
-  private int VisitElementEndCallback(IntPtr ctx, IntPtr userData,
-                                      IntPtr output, IntPtr outCustom,
-                                      IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitElementEnd(DecodeContext(ctx), Str(output)));
-  private int VisitLinkCallback(IntPtr ctx, IntPtr userData, IntPtr href,
-                                IntPtr text, IntPtr title, IntPtr outCustom,
-                                IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitLink(DecodeContext(ctx), Str(href), Str(text),
-                                Str(title)));
-  private int VisitImageCallback(IntPtr ctx, IntPtr userData, IntPtr src,
-                                 IntPtr alt, IntPtr title, IntPtr outCustom,
-                                 IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitImage(DecodeContext(ctx), Str(src), Str(alt),
-                                 Str(title)));
-  private int VisitHeadingCallback(IntPtr ctx, IntPtr userData, uint level,
-                                   IntPtr text, IntPtr id, IntPtr outCustom,
-                                   IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitHeading(DecodeContext(ctx), level, Str(text),
-                                   Str(id)));
-  private int VisitCodeBlockCallback(IntPtr ctx, IntPtr userData, IntPtr lang,
-                                     IntPtr code, IntPtr outCustom,
-                                     IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitCodeBlock(DecodeContext(ctx), Str(lang), Str(code)));
-  private int VisitCodeInlineCallback(IntPtr ctx, IntPtr userData, IntPtr code,
-                                      IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitCodeInline(DecodeContext(ctx), Str(code)));
-  private int VisitListItemCallback(IntPtr ctx, IntPtr userData, int ordered,
-                                    IntPtr marker, IntPtr text,
-                                    IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitListItem(DecodeContext(ctx), ordered != 0,
-                                    Str(marker), Str(text)));
-  private int VisitListStartCallback(IntPtr ctx, IntPtr userData, int ordered,
-                                     IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitListStart(DecodeContext(ctx), ordered != 0));
-  private int VisitListEndCallback(IntPtr ctx, IntPtr userData, int ordered,
-                                   IntPtr output, IntPtr outCustom,
-                                   IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitListEnd(DecodeContext(ctx), ordered != 0,
-                                   Str(output)));
-  private int VisitTableStartCallback(IntPtr ctx, IntPtr userData,
-                                      IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitTableStart(DecodeContext(ctx)));
-  private int VisitTableRowCallback(IntPtr ctx, IntPtr userData, IntPtr cells,
-                                    UIntPtr cellsCount, int isHeader,
-                                    IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitTableRow(DecodeContext(ctx),
-                                    DecodeStringArray(cells, cellsCount),
-                                    isHeader != 0));
-  private int VisitTableEndCallback(IntPtr ctx, IntPtr userData, IntPtr output,
-                                    IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitTableEnd(DecodeContext(ctx), Str(output)));
-  private int VisitBlockquoteCallback(IntPtr ctx, IntPtr userData,
-                                      IntPtr content, UIntPtr depth,
-                                      IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitBlockquote(DecodeContext(ctx), Str(content),
-                                      (ulong)depth));
-  private int VisitStrongCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                  IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitStrong(DecodeContext(ctx), Str(text)));
-  private int VisitEmphasisCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                    IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitEmphasis(DecodeContext(ctx), Str(text)));
-  private int VisitStrikethroughCallback(IntPtr ctx, IntPtr userData,
-                                         IntPtr text, IntPtr outCustom,
-                                         IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitStrikethrough(DecodeContext(ctx), Str(text)));
-  private int VisitUnderlineCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                     IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitUnderline(DecodeContext(ctx), Str(text)));
-  private int VisitSubscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                     IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitSubscript(DecodeContext(ctx), Str(text)));
-  private int VisitSuperscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                       IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitSuperscript(DecodeContext(ctx), Str(text)));
-  private int VisitMarkCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitMark(DecodeContext(ctx), Str(text)));
-  private int VisitLineBreakCallback(IntPtr ctx, IntPtr userData,
-                                     IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitLineBreak(DecodeContext(ctx)));
-  private int VisitHorizontalRuleCallback(IntPtr ctx, IntPtr userData,
-                                          IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitHorizontalRule(DecodeContext(ctx)));
-  private int VisitCustomElementCallback(IntPtr ctx, IntPtr userData,
-                                         IntPtr tagName, IntPtr html,
-                                         IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitCustomElement(DecodeContext(ctx), Str(tagName),
-                                         Str(html)));
-  private int VisitDefinitionListStartCallback(IntPtr ctx, IntPtr userData,
-                                               IntPtr outCustom,
-                                               IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitDefinitionListStart(DecodeContext(ctx)));
-  private int VisitDefinitionTermCallback(IntPtr ctx, IntPtr userData,
-                                          IntPtr text, IntPtr outCustom,
-                                          IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitDefinitionTerm(DecodeContext(ctx), Str(text)));
-  private int VisitDefinitionDescriptionCallback(IntPtr ctx, IntPtr userData,
-                                                 IntPtr text, IntPtr outCustom,
-                                                 IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitDefinitionDescription(DecodeContext(ctx),
-                                                 Str(text)));
-  private int VisitDefinitionListEndCallback(IntPtr ctx, IntPtr userData,
-                                             IntPtr output, IntPtr outCustom,
-                                             IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitDefinitionListEnd(DecodeContext(ctx), Str(output)));
-  private int VisitFormCallback(IntPtr ctx, IntPtr userData, IntPtr action,
-                                IntPtr method, IntPtr outCustom,
-                                IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitForm(DecodeContext(ctx), Str(action), Str(method)));
-  private int VisitInputCallback(IntPtr ctx, IntPtr userData, IntPtr inputType,
-                                 IntPtr name, IntPtr value, IntPtr outCustom,
-                                 IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitInput(DecodeContext(ctx), Str(inputType), Str(name),
-                                 Str(value)));
-  private int VisitButtonCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                  IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitButton(DecodeContext(ctx), Str(text)));
-  private int VisitAudioCallback(IntPtr ctx, IntPtr userData, IntPtr src,
-                                 IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitAudio(DecodeContext(ctx), Str(src)));
-  private int VisitVideoCallback(IntPtr ctx, IntPtr userData, IntPtr src,
-                                 IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitVideo(DecodeContext(ctx), Str(src)));
-  private int VisitIframeCallback(IntPtr ctx, IntPtr userData, IntPtr src,
-                                  IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitIframe(DecodeContext(ctx), Str(src)));
-  private int VisitDetailsCallback(IntPtr ctx, IntPtr userData, int open,
-                                   IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitDetails(DecodeContext(ctx), open != 0));
-  private int VisitSummaryCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                   IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitSummary(DecodeContext(ctx), Str(text)));
-  private int VisitFigureStartCallback(IntPtr ctx, IntPtr userData,
-                                       IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitFigureStart(DecodeContext(ctx)));
-  private int VisitFigcaptionCallback(IntPtr ctx, IntPtr userData, IntPtr text,
-                                      IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitFigcaption(DecodeContext(ctx), Str(text)));
-  private int VisitFigureEndCallback(IntPtr ctx, IntPtr userData, IntPtr output,
-                                     IntPtr outCustom, IntPtr outLen) =>
-      Dispatch(userData, outCustom, outLen,
-               v => v.VisitFigureEnd(DecodeContext(ctx), Str(output)));
-
-  public void Dispose() {
-    if (_disposed)
-      return;
-    _disposed = true;
-
-    if (_vtable != IntPtr.Zero) {
-      Marshal.FreeHGlobal(_vtable);
-      _vtable = IntPtr.Zero;
+    // Mirror of the FFI `HtmContext` repr(C) struct.
+    [StructLayout(LayoutKind.Sequential)]
+    private struct HtmContextNative {
+        public int NodeType;
+        public IntPtr TagName;
+        public UIntPtr Depth;
+        public UIntPtr IndexInParent;
+        public IntPtr ParentTag;
+        public int IsInline;
     }
 
-    if (_implHandle.IsAllocated) {
-      _implHandle.Free();
+    // --- Callback delegate signatures (ctx, user_data, ...params..., out_custom, out_len) ---
+
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitTextFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitElementStartFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitElementEndFn(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitLinkFn(IntPtr ctx, IntPtr userData, IntPtr href, IntPtr text, IntPtr title, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitImageFn(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr alt, IntPtr title, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitHeadingFn(IntPtr ctx, IntPtr userData, uint level, IntPtr text, IntPtr id, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitCodeBlockFn(IntPtr ctx, IntPtr userData, IntPtr lang, IntPtr code, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitCodeInlineFn(IntPtr ctx, IntPtr userData, IntPtr code, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitListItemFn(IntPtr ctx, IntPtr userData, int ordered, IntPtr marker, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitListStartFn(IntPtr ctx, IntPtr userData, int ordered, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitListEndFn(IntPtr ctx, IntPtr userData, int ordered, IntPtr output, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitTableStartFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitTableRowFn(IntPtr ctx, IntPtr userData, IntPtr cells, UIntPtr cellsCount, int isHeader, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitTableEndFn(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitBlockquoteFn(IntPtr ctx, IntPtr userData, IntPtr content, UIntPtr depth, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitStrongFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitEmphasisFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitStrikethroughFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitUnderlineFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitSubscriptFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitSuperscriptFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitMarkFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitLineBreakFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitHorizontalRuleFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitCustomElementFn(IntPtr ctx, IntPtr userData, IntPtr tagName, IntPtr html, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitDefinitionListStartFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitDefinitionTermFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitDefinitionDescriptionFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitDefinitionListEndFn(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitFormFn(IntPtr ctx, IntPtr userData, IntPtr action, IntPtr method, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitInputFn(IntPtr ctx, IntPtr userData, IntPtr inputType, IntPtr name, IntPtr value, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitButtonFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitAudioFn(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitVideoFn(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitIframeFn(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitDetailsFn(IntPtr ctx, IntPtr userData, int open, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitSummaryFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitFigureStartFn(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitFigcaptionFn(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int VisitFigureEndFn(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen);
+
+    public HtmlVisitorBridge(IHtmlVisitor impl) {
+        _impl = impl ?? throw new ArgumentNullException(nameof(impl));
+        _implHandle = GCHandle.Alloc(impl, GCHandleType.Normal);
+        _delegateRoots = new List<object>(CallbackSlotCount);
+        _vtable = IntPtr.Zero;
+        _disposed = false;
+        lock (_registryLock) {
+            _bridgeId = new IntPtr(_nextBridgeId++);
+        }
+        BuildCallbacks();
     }
-    // _delegateRoots is managed; the GC reclaims it once the bridge is
-    // unreachable.
-  }
+
+    private void WriteSlot(int slot, Delegate fn) {
+        _delegateRoots.Add(fn);
+        Marshal.WriteIntPtr(_vtable, IntPtr.Size * slot, Marshal.GetFunctionPointerForDelegate(fn));
+    }
+
+    private void BuildCallbacks() {
+        _vtable = Marshal.AllocHGlobal(IntPtr.Size * CallbackSlotCount);
+        // Slot 0: user_data — the registry id callbacks use to recover this bridge.
+        Marshal.WriteIntPtr(_vtable, 0, _bridgeId);
+        // Slots 1..40: function pointers, in HtmVisitorCallbacks field order.
+        WriteSlot(1, new VisitTextFn(VisitTextCallback));
+        WriteSlot(2, new VisitElementStartFn(VisitElementStartCallback));
+        WriteSlot(3, new VisitElementEndFn(VisitElementEndCallback));
+        WriteSlot(4, new VisitLinkFn(VisitLinkCallback));
+        WriteSlot(5, new VisitImageFn(VisitImageCallback));
+        WriteSlot(6, new VisitHeadingFn(VisitHeadingCallback));
+        WriteSlot(7, new VisitCodeBlockFn(VisitCodeBlockCallback));
+        WriteSlot(8, new VisitCodeInlineFn(VisitCodeInlineCallback));
+        WriteSlot(9, new VisitListItemFn(VisitListItemCallback));
+        WriteSlot(10, new VisitListStartFn(VisitListStartCallback));
+        WriteSlot(11, new VisitListEndFn(VisitListEndCallback));
+        WriteSlot(12, new VisitTableStartFn(VisitTableStartCallback));
+        WriteSlot(13, new VisitTableRowFn(VisitTableRowCallback));
+        WriteSlot(14, new VisitTableEndFn(VisitTableEndCallback));
+        WriteSlot(15, new VisitBlockquoteFn(VisitBlockquoteCallback));
+        WriteSlot(16, new VisitStrongFn(VisitStrongCallback));
+        WriteSlot(17, new VisitEmphasisFn(VisitEmphasisCallback));
+        WriteSlot(18, new VisitStrikethroughFn(VisitStrikethroughCallback));
+        WriteSlot(19, new VisitUnderlineFn(VisitUnderlineCallback));
+        WriteSlot(20, new VisitSubscriptFn(VisitSubscriptCallback));
+        WriteSlot(21, new VisitSuperscriptFn(VisitSuperscriptCallback));
+        WriteSlot(22, new VisitMarkFn(VisitMarkCallback));
+        WriteSlot(23, new VisitLineBreakFn(VisitLineBreakCallback));
+        WriteSlot(24, new VisitHorizontalRuleFn(VisitHorizontalRuleCallback));
+        WriteSlot(25, new VisitCustomElementFn(VisitCustomElementCallback));
+        WriteSlot(26, new VisitDefinitionListStartFn(VisitDefinitionListStartCallback));
+        WriteSlot(27, new VisitDefinitionTermFn(VisitDefinitionTermCallback));
+        WriteSlot(28, new VisitDefinitionDescriptionFn(VisitDefinitionDescriptionCallback));
+        WriteSlot(29, new VisitDefinitionListEndFn(VisitDefinitionListEndCallback));
+        WriteSlot(30, new VisitFormFn(VisitFormCallback));
+        WriteSlot(31, new VisitInputFn(VisitInputCallback));
+        WriteSlot(32, new VisitButtonFn(VisitButtonCallback));
+        WriteSlot(33, new VisitAudioFn(VisitAudioCallback));
+        WriteSlot(34, new VisitVideoFn(VisitVideoCallback));
+        WriteSlot(35, new VisitIframeFn(VisitIframeCallback));
+        WriteSlot(36, new VisitDetailsFn(VisitDetailsCallback));
+        WriteSlot(37, new VisitSummaryFn(VisitSummaryCallback));
+        WriteSlot(38, new VisitFigureStartFn(VisitFigureStartCallback));
+        WriteSlot(39, new VisitFigcaptionFn(VisitFigcaptionCallback));
+        WriteSlot(40, new VisitFigureEndFn(VisitFigureEndCallback));
+    }
+
+    private void IncrementCallbackRef() {
+        lock (_registryLock) {
+            _callbackRefCount++;
+        }
+    }
+
+    private void DecrementCallbackRef() {
+        lock (_registryLock) {
+            if (_callbackRefCount > 0) {
+                _callbackRefCount--;
+            }
+            if (_callbackRefCount == 0 && _disposed) {
+                _bridgeRegistry.Remove(_bridgeId);
+            }
+        }
+    }
+
+    // --- Marshalling helpers ---
+
+    private static string Str(IntPtr p) =>
+        p == IntPtr.Zero ? string.Empty : (Marshal.PtrToStringUTF8(p) ?? string.Empty);
+
+    private static NodeContext DecodeContext(IntPtr ctx) {
+        if (ctx == IntPtr.Zero) {
+            return new NodeContext(default, string.Empty, 0, 0, null, false);
+        }
+        var native = Marshal.PtrToStructure<HtmContextNative>(ctx);
+        var parentTag = native.ParentTag == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(native.ParentTag);
+        return new NodeContext(
+            (NodeType)native.NodeType,
+            Str(native.TagName),
+            (ulong)native.Depth,
+            (ulong)native.IndexInParent,
+            parentTag,
+            native.IsInline != 0);
+    }
+
+    private static List<string> DecodeStringArray(IntPtr arr, UIntPtr count) {
+        var list = new List<string>();
+        if (arr == IntPtr.Zero) {
+            return list;
+        }
+        ulong n = (ulong)count;
+        for (ulong i = 0; i < n; i++) {
+            var p = Marshal.ReadIntPtr(arr, (int)(i * (ulong)IntPtr.Size));
+            list.Add(Str(p));
+        }
+        return list;
+    }
+
+    // Encodes a VisitResult into the FFI return code + out_custom/out_len protocol.
+    // For Custom/Error, allocates a heap C string via NativeMemory (CRT malloc) so the
+    // Rust side can take ownership and free it with the system allocator — matching Go's
+    // C.CString and Java's global-arena allocation.
+    private static unsafe int EncodeResult(VisitResult result, IntPtr outCustom, IntPtr outLen) {
+        switch (result) {
+            case VisitResult.Continue:
+                return 0;
+            case VisitResult.Custom c:
+                WriteCustom(c.Value, outCustom, outLen);
+                return 1;
+            case VisitResult.Skip:
+                return 2;
+            case VisitResult.PreserveHtml:
+                return 3;
+            case VisitResult.Error e:
+                WriteCustom(e.Value, outCustom, outLen);
+                return 4;
+            default:
+                return 0;
+        }
+    }
+
+    private static unsafe void WriteCustom(string value, IntPtr outCustom, IntPtr outLen) {
+        var bytes = Encoding.UTF8.GetBytes(value ?? string.Empty);
+        byte* buf = (byte*)NativeMemory.Alloc((nuint)(bytes.Length + 1));
+        for (int i = 0; i < bytes.Length; i++) {
+            buf[i] = bytes[i];
+        }
+        buf[bytes.Length] = 0;
+        if (outCustom != IntPtr.Zero) {
+            Marshal.WriteIntPtr(outCustom, (IntPtr)buf);
+        }
+        if (outLen != IntPtr.Zero) {
+            Marshal.WriteIntPtr(outLen, (IntPtr)bytes.Length);
+        }
+    }
+
+    // Shared dispatch: recover the bridge from the registry by user_data, invoke the
+    // user's visit method, and encode the result. Any exception falls back to Continue
+    // so a faulty visitor never unwinds across the FFI boundary or corrupts output.
+    private static int Dispatch(IntPtr userData, IntPtr outCustom, IntPtr outLen, Func<IHtmlVisitor, VisitResult> invoke) {
+        HtmlVisitorBridge? bridge = null;
+        lock (_registryLock) {
+            if (_bridgeRegistry.TryGetValue(userData, out var found)) {
+                bridge = found;
+                bridge.IncrementCallbackRef();
+            }
+        }
+        if (bridge == null) {
+            return 0;
+        }
+        try {
+            return EncodeResult(invoke(bridge._impl), outCustom, outLen);
+        } catch {
+            return 0;
+        } finally {
+            try { bridge.DecrementCallbackRef(); } catch { /* bridge already removed */ }
+        }
+    }
+
+    // --- Callbacks ---
+
+    private int VisitTextCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitText(DecodeContext(ctx), Str(text)));
+    private int VisitElementStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitElementStart(DecodeContext(ctx)));
+    private int VisitElementEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitElementEnd(DecodeContext(ctx), Str(output)));
+    private int VisitLinkCallback(IntPtr ctx, IntPtr userData, IntPtr href, IntPtr text, IntPtr title, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitLink(DecodeContext(ctx), Str(href), Str(text), Str(title)));
+    private int VisitImageCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr alt, IntPtr title, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitImage(DecodeContext(ctx), Str(src), Str(alt), Str(title)));
+    private int VisitHeadingCallback(IntPtr ctx, IntPtr userData, uint level, IntPtr text, IntPtr id, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitHeading(DecodeContext(ctx), level, Str(text), Str(id)));
+    private int VisitCodeBlockCallback(IntPtr ctx, IntPtr userData, IntPtr lang, IntPtr code, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitCodeBlock(DecodeContext(ctx), Str(lang), Str(code)));
+    private int VisitCodeInlineCallback(IntPtr ctx, IntPtr userData, IntPtr code, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitCodeInline(DecodeContext(ctx), Str(code)));
+    private int VisitListItemCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr marker, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitListItem(DecodeContext(ctx), ordered != 0, Str(marker), Str(text)));
+    private int VisitListStartCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitListStart(DecodeContext(ctx), ordered != 0));
+    private int VisitListEndCallback(IntPtr ctx, IntPtr userData, int ordered, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitListEnd(DecodeContext(ctx), ordered != 0, Str(output)));
+    private int VisitTableStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableStart(DecodeContext(ctx)));
+    private int VisitTableRowCallback(IntPtr ctx, IntPtr userData, IntPtr cells, UIntPtr cellsCount, int isHeader, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableRow(DecodeContext(ctx), DecodeStringArray(cells, cellsCount), isHeader != 0));
+    private int VisitTableEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitTableEnd(DecodeContext(ctx), Str(output)));
+    private int VisitBlockquoteCallback(IntPtr ctx, IntPtr userData, IntPtr content, UIntPtr depth, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitBlockquote(DecodeContext(ctx), Str(content), (ulong)depth));
+    private int VisitStrongCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitStrong(DecodeContext(ctx), Str(text)));
+    private int VisitEmphasisCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitEmphasis(DecodeContext(ctx), Str(text)));
+    private int VisitStrikethroughCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitStrikethrough(DecodeContext(ctx), Str(text)));
+    private int VisitUnderlineCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitUnderline(DecodeContext(ctx), Str(text)));
+    private int VisitSubscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitSubscript(DecodeContext(ctx), Str(text)));
+    private int VisitSuperscriptCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitSuperscript(DecodeContext(ctx), Str(text)));
+    private int VisitMarkCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitMark(DecodeContext(ctx), Str(text)));
+    private int VisitLineBreakCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitLineBreak(DecodeContext(ctx)));
+    private int VisitHorizontalRuleCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitHorizontalRule(DecodeContext(ctx)));
+    private int VisitCustomElementCallback(IntPtr ctx, IntPtr userData, IntPtr tagName, IntPtr html, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitCustomElement(DecodeContext(ctx), Str(tagName), Str(html)));
+    private int VisitDefinitionListStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListStart(DecodeContext(ctx)));
+    private int VisitDefinitionTermCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionTerm(DecodeContext(ctx), Str(text)));
+    private int VisitDefinitionDescriptionCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionDescription(DecodeContext(ctx), Str(text)));
+    private int VisitDefinitionListEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitDefinitionListEnd(DecodeContext(ctx), Str(output)));
+    private int VisitFormCallback(IntPtr ctx, IntPtr userData, IntPtr action, IntPtr method, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitForm(DecodeContext(ctx), Str(action), Str(method)));
+    private int VisitInputCallback(IntPtr ctx, IntPtr userData, IntPtr inputType, IntPtr name, IntPtr value, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitInput(DecodeContext(ctx), Str(inputType), Str(name), Str(value)));
+    private int VisitButtonCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitButton(DecodeContext(ctx), Str(text)));
+    private int VisitAudioCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitAudio(DecodeContext(ctx), Str(src)));
+    private int VisitVideoCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitVideo(DecodeContext(ctx), Str(src)));
+    private int VisitIframeCallback(IntPtr ctx, IntPtr userData, IntPtr src, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitIframe(DecodeContext(ctx), Str(src)));
+    private int VisitDetailsCallback(IntPtr ctx, IntPtr userData, int open, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitDetails(DecodeContext(ctx), open != 0));
+    private int VisitSummaryCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitSummary(DecodeContext(ctx), Str(text)));
+    private int VisitFigureStartCallback(IntPtr ctx, IntPtr userData, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigureStart(DecodeContext(ctx)));
+    private int VisitFigcaptionCallback(IntPtr ctx, IntPtr userData, IntPtr text, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigcaption(DecodeContext(ctx), Str(text)));
+    private int VisitFigureEndCallback(IntPtr ctx, IntPtr userData, IntPtr output, IntPtr outCustom, IntPtr outLen) =>
+        Dispatch(userData, outCustom, outLen, v => v.VisitFigureEnd(DecodeContext(ctx), Str(output)));
+
+    public void Dispose() {
+        if (_disposed) return;
+        _disposed = true;
+
+        if (_vtable != IntPtr.Zero) {
+            Marshal.FreeHGlobal(_vtable);
+            _vtable = IntPtr.Zero;
+        }
+
+        if (_implHandle.IsAllocated) {
+            _implHandle.Free();
+        }
+        // _delegateRoots is managed; the GC reclaims it once the bridge is unreachable.
+    }
 }
+
 
 /// <summary>FFI JSON serialization extension methods and options</summary>
 internal static class FfiJsonExtensions {
 
-  /// <summary>Global JsonSerializerOptions for FFI marshalling with relaxed
-  /// numeric handling. Supports: enum-to-snake_case conversion, ignoring
-  /// default values, and reading numeric values from strings. Used by both
-  /// trait bridges and callback deserialization.</summary>
-  public static readonly JsonSerializerOptions FfiJsonOptions =
-      new() { Converters = { new JsonStringEnumConverter(
-                  JsonNamingPolicy.SnakeCaseLower) },
-              DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-              NumberHandling = JsonNumberHandling.AllowReadingFromString };
+    /// <summary>Global JsonSerializerOptions for FFI marshalling with relaxed numeric handling.
+    /// Supports: enum-to-snake_case conversion, ignoring default values, and reading numeric values from strings.
+    /// Used by both trait bridges and callback deserialization.</summary>
+    public static readonly JsonSerializerOptions FfiJsonOptions = new()
+    {
+        Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) },
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+        NumberHandling = JsonNumberHandling.AllowReadingFromString
+    };
 
-  /// <summary>Serialize any object to JSON for FFI marshalling</summary>
-  internal static string ToFfiJson<T>(this T value) {
-    return JsonSerializer.Serialize(value, FfiJsonOptions);
-  }
+    /// <summary>Serialize any object to JSON for FFI marshalling</summary>
+    internal static string ToFfiJson<T>(this T value) {
+        return JsonSerializer.Serialize(value, FfiJsonOptions);
+    }
+
 }

@@ -106,11 +106,29 @@ swift build --package-path packages/swift
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```swift
+import HtmlToMarkdown
+
+let html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>"
+let result = try convert(html: html)
+let markdown = result.content()?.toString() ?? ""
+print(markdown)
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```swift
+import HtmlToMarkdown
+
+let options = try conversionOptionsFromJson(
+    "{\"heading_style\":\"atx\",\"list_indent_width\":2,\"wrap\":true}"
+)
+
+let html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>"
+let result = try convert(html: html, options: options)
+let markdown = result.content()?.toString() ?? ""
+print(markdown)
+```
 
 ## Architecture
 

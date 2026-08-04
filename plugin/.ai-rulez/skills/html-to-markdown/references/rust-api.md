@@ -169,7 +169,7 @@ let result = convert(html, None)?;
 let meta = &result.metadata;
 println!("{:?}", meta.document.title);
 
-// Tables — always populated in the result
+// Tables — populated when include_document_structure is enabled
 for table in &result.tables {
     println!("{}", table.markdown);
     println!("{:?}", table.grid.cells);
@@ -205,12 +205,16 @@ let markdown: String = result.content.unwrap_or_default();
 
 ## JSON Configuration (requires `serde` or `metadata` feature)
 
+`ConversionOptions` derives `Serialize`/`Deserialize`, so deserialize it with `serde_json`
+directly — there are no `*_from_json` helper functions on the public surface.
+
 ```rust
-pub fn conversion_options_from_json(json: &str) -> Result<ConversionOptions>
-pub fn conversion_options_update_from_json(json: &str) -> Result<ConversionOptionsUpdate>
-pub fn metadata_config_from_json(json: &str) -> Result<MetadataConfig>  // metadata feature
-pub fn inline_image_config_from_json(json: &str) -> Result<InlineImageConfig>  // inline-images
+let options: ConversionOptions = serde_json::from_str(json)?;
+let result = convert(html, Some(options))?;
 ```
+
+Unknown fields are rejected (`deny_unknown_fields`), so a typo in the JSON is an error rather
+than a silently ignored key.
 
 ## DocumentStructure Types
 

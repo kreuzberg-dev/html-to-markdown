@@ -131,11 +131,45 @@ implementation("io.xberg:html-to-markdown:3.10.4")
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```java
+import io.xberg.htmltomarkdown.HtmlToMarkdown;
+import io.xberg.htmltomarkdown.ConversionResult;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
+
+public class Example {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<h1>Hello World</h1><p>This is a <strong>test</strong>.</p>";
+        ConversionResult result = HtmlToMarkdown.convert(html);
+        System.out.println(result.content());
+    }
+}
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```java
+import io.xberg.htmltomarkdown.HtmlToMarkdown;
+import io.xberg.htmltomarkdown.ConversionOptions;
+import io.xberg.htmltomarkdown.ConversionResult;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
+
+public class MetadataExample {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<html><head><title>My Page</title></head>"
+            + "<body><h1>Welcome</h1><a href=\"https://example.com\">Link</a></body></html>";
+
+        ConversionOptions options = ConversionOptions.builder()
+            .withExtractMetadata(true)
+            .build();
+        ConversionResult result = HtmlToMarkdown.convert(html, options);
+
+        System.out.println("Markdown: " + result.content());
+        System.out.println("Title: " + result.metadata().document().title());
+        System.out.println("Headers: " + result.metadata().headers().size());
+        System.out.println("Links: " + result.metadata().links().size());
+    }
+}
+```
 
 ## Architecture
 
@@ -207,20 +241,25 @@ The library supports converting HTML to [Djot](https://djot.net/), a lightweight
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.OutputFormat;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
-String html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
+public class DjotExample {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-// Default Markdown output
-String markdown = HtmlToMarkdown.convert(html).content();
-// Result: "This is **bold** and *italic* text."
+        // Default Markdown output
+        String markdown = HtmlToMarkdown.convert(html).content();
+        // Result: "This is **bold** and *italic* text."
 
-// Djot output
-String djot = HtmlToMarkdown.convert(html,
-    ConversionOptions.builder()
-        .withOutputFormat(OutputFormat.Djot)
-        .build()
-).content();
-// Result: "This is *bold* and _italic_ text."
+        // Djot output
+        String djot = HtmlToMarkdown.convert(html,
+            ConversionOptions.builder()
+                .withOutputFormat(OutputFormat.Djot)
+                .build()
+        ).content();
+        // Result: "This is *bold* and _italic_ text."
+    }
+}
 ```
 
 Djot's extended syntax allows you to express more semantic meaning in lightweight text, making it useful for documents that require strikethrough, insertion tracking, or mathematical notation.
@@ -233,15 +272,20 @@ Set `output_format` to `"plain"` to strip all markup and return only visible tex
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.OutputFormat;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
-String html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
+public class PlainTextExample {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-String plain = HtmlToMarkdown.convert(html,
-    ConversionOptions.builder()
-        .withOutputFormat(OutputFormat.Plain)
-        .build()
-).content();
-// Result: "Title\n\nThis is bold and italic text."
+        String plain = HtmlToMarkdown.convert(html,
+            ConversionOptions.builder()
+                .withOutputFormat(OutputFormat.Plain)
+                .build()
+        ).content();
+        // Result: "Title\n\nThis is bold and italic text."
+    }
+}
 ```
 
 Plain text mode is useful for search indexing, text extraction, and feeding content to LLMs.

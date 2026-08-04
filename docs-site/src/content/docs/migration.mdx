@@ -131,8 +131,8 @@ markdown, metadata = HtmlToMarkdown.convert_with_metadata(html)
 
 # v3
 result = HtmlToMarkdown.convert(html)
-markdown = result[:content]
-metadata = result[:metadata]
+markdown = result.content
+metadata = result.metadata
 ```
 
 ### PHP
@@ -143,9 +143,9 @@ $markdown = HtmlToMarkdown\convert($html);
 [$markdown, $metadata] = HtmlToMarkdown\convert_with_metadata($html);
 
 // v3
-$result = HtmlToMarkdown\convert($html);
+$result = HtmlToMarkdown\HtmlToMarkdownApi::convert($html);
 $markdown = $result->content;
-$metadata = $result->metadata;
+$metadata = $result->getMetadata();
 ```
 
 ### Java
@@ -157,11 +157,11 @@ ConversionPair pair = HtmlToMarkdown.convertWithMetadata(html);
 
 // v3
 ConversionResult result = HtmlToMarkdown.convert(html);
-String markdown = result.getContent();
-HtmlMetadata metadata = result.getMetadata();
+String markdown = result.content();
+HtmlMetadata metadata = result.metadata();
 ```
 
-### C
+### C# (.NET)
 
 ```csharp
 // v2
@@ -169,7 +169,7 @@ string markdown = HtmlToMarkdown.Convert(html);
 (string md, Metadata meta) = HtmlToMarkdown.ConvertWithMetadata(html);
 
 // v3
-ConversionResult result = HtmlToMarkdown.Convert(html);
+ConversionResult result = HtmlToMarkdownConverter.Convert(html, null);
 string markdown = result.Content;
 HtmlMetadata metadata = result.Metadata;
 ```
@@ -208,9 +208,10 @@ char *markdown = htm_convert(html, NULL);
 htm_free(markdown);
 
 /* v3 */
-HtmResult *result = htm_convert(html, NULL);
-const char *markdown = htm_result_content(result);
-htm_result_free(result);
+HTMConversionResult *result = htm_convert(html, NULL);
+char *markdown = htm_conversion_result_content(result);
+htm_free_string(markdown);
+htm_conversion_result_free(result);
 ```
 
 <Snip_feedback />

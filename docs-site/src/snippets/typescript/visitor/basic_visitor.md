@@ -1,20 +1,18 @@
 ```typescript
-import { convert, ConversionOptions } from "@xberg-io/html-to-markdown";
-import { Visitor, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
+import { convert, ConversionOptions, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
-const visitor: Visitor = {
-  visitLink(ctx: NodeContext, href: string, text: string): VisitResult {
+// `visitor` is a plain object of camelCase callbacks; there is no exported
+// `Visitor` type to annotate it with. Return `VisitResult.Continue` / `Skip` /
+// `PreserveHtml` for the built-in behaviors, or `{ Custom: "..." }` to replace
+// the node's output with custom markdown.
+const visitor = {
+  visitLink(ctx: NodeContext, href: string, text: string) {
     // Custom handling for links
-    return {
-      type: "custom",
-      output: `[${text}](${href})`,
-    };
+    return { Custom: `[${text}](${href})` };
   },
   visitHeading(ctx: NodeContext, level: number, text: string): VisitResult {
-    // Custom handling for headings
-    return {
-      type: "continue",
-    };
+    // Fall back to the default handling for headings
+    return VisitResult.Continue;
   },
 };
 

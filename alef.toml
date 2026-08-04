@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.51.1"
+alef_version = "0.53.1"
 languages = [
   "python",
   "node",
@@ -118,6 +118,12 @@ search = 'package = "html-to-markdown-rs", version = "[^"]*"'
 replace = 'package = "html-to-markdown-rs", version = "{version}"'
 
 [workspace.poly]
+# Skip poly's whole-project lint phase in `poly lint`: the shared CI validate job only installs
+# Rust/Python/Java, so the other whole-workspace linters (credo, dart-analyze, golangci-lint,
+# rubocop, steep, pyrefly) cannot run there. They run via the git pre-commit hooks and each
+# language's dedicated CI job. Equivalent to always passing `poly lint --no-workspace`. ~keep
+lint-workspace = false
+
 exclude = [
   "docs-site/src/snippets/**",
   "**/_generated/**",
@@ -142,6 +148,12 @@ exclude = [
   # C doc-comment reflow would diverge from the canonical generated form. ~keep
   "crates/html-to-markdown-ffi/include/html_to_markdown.h",
   "packages/go/include/html_to_markdown.h",
+  # Alef-generated C#/Java bindings: poly's formatters disagree with the generator's output, so
+  # `poly fmt` and the regeneration freshness check fight over every line. ~keep
+  "packages/csharp/**/*.cs",
+  "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
   # Vendored wasm-bindgen artifact (docs live demo); hand-written script.js /
   # style.css / index.html in the same dir stay linted. ~keep
   "docs-site/public/demo/html_to_markdown_wasm*",
@@ -1038,7 +1050,7 @@ keywords = ["html", "markdown", "converter"]
 
 [crates.readme]
 template_dir = "readme_templates"
-snippets_dir = "docs/snippets"
+snippets_dir = "docs-site/src/snippets"
 discord_url = "https://discord.gg/xt9WY3GnKR"
 
 [crates.readme.targets.root]
@@ -1551,7 +1563,10 @@ Server-side Kotlin/JVM consumers should use the `io.xberg:html-to-markdown` Java
 migration_version = ""
 
 [crates.readme.languages.kotlin_android.features]
-visitor_pattern = true
+# Visitor pattern is not yet bridged via JNI for Kotlin Android — NodeContext.attributes()
+# and intoOwned() both throw UnsupportedOperationException. Keep this false until the
+# visitor callback bridge ships; see docs-site/src/snippets/kotlin_android/visitor/basic_visitor.md. ~keep
+visitor_pattern = false
 metadata_extraction = false
 cli_proxy = false
 

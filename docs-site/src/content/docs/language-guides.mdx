@@ -46,9 +46,9 @@ npm install @xberg-io/html-to-markdown
 ```
 
 ```typescript
-import { convert } from "@xberg-io/html-to-markdown";
+import { convert, HeadingStyle } from "@xberg-io/html-to-markdown";
 
-const result = convert("<h1>Title</h1>", { headingStyle: "atx" });
+const result = convert("<h1>Title</h1>", { headingStyle: HeadingStyle.Atx });
 console.log(result.content);
 ```
 
@@ -64,13 +64,18 @@ go get github.com/xberg-io/html-to-markdown/packages/go/v3
 ```
 
 ```go
-import htmltomarkdown "github.com/xberg-io/html-to-markdown/packages/go/v3"
+import (
+    "fmt"
+    "log"
+
+    htmltomarkdown "github.com/xberg-io/html-to-markdown/packages/go/v3"
+)
 
 result, err := htmltomarkdown.Convert("<h1>Title</h1>", nil)
 if err != nil {
     log.Fatal(err)
 }
-fmt.Println(result.Content)
+fmt.Println(*result.Content)
 ```
 
 Options use Go struct field names (`PascalCase`). `Convert` returns `(*ConversionResult, error)`. Errors are standard Go errors. Use `errors.Is`/`errors.As` to inspect them.
@@ -88,10 +93,10 @@ gem install html-to-markdown
 require 'html_to_markdown'
 
 result = HtmlToMarkdown.convert('<h1>Title</h1>', heading_style: :atx)
-puts result[:content]
+puts result.content
 ```
 
-Options are keyword arguments with `snake_case` symbols. `result` is a hash. Errors raise `HtmlToMarkdown::ConversionError`.
+Options are keyword arguments with `snake_case` symbols. `result` is a `ConversionResult` object exposing accessor methods (`content`, `metadata`, `tables`, ...), not a hash. Errors raise `HtmlToMarkdown::ConversionError`.
 
 ## PHP
 
@@ -108,12 +113,12 @@ pie install xberg-io/html-to-markdown
 use HtmlToMarkdown\HtmlToMarkdownApi;
 use HtmlToMarkdown\ConversionOptions;
 
-$options = ConversionOptions::builder()->headingStyle('atx')->build();
+$options = ConversionOptions::from_json(json_encode(['headingStyle' => 'Atx']));
 $result = HtmlToMarkdownApi::convert('<h1>Title</h1>', $options);
 echo $result->content;
 ```
 
-Classes live in the flat `HtmlToMarkdown\` namespace. `HtmlToMarkdownApi::convert` returns a `ConversionResult` object (`$result->content`, `$result->metadata`, `$result->tables`). Conversion failures throw `HtmlToMarkdown\HtmlToMarkdownException`.
+Classes live in the flat `HtmlToMarkdown\` namespace. `HtmlToMarkdownApi::convert` returns a `ConversionResult` object: `$result->content` is a public property, while `$result->getMetadata()` and `$result->getTables()` are accessor methods. Conversion failures throw `HtmlToMarkdown\HtmlToMarkdownException`.
 
 ## Java
 
@@ -132,12 +137,18 @@ Classes live in the flat `HtmlToMarkdown\` namespace. `HtmlToMarkdownApi::conver
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.ConversionResult;
+import io.xberg.htmltomarkdown.HeadingStyle;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
-ConversionOptions options = ConversionOptions.builder()
-    .headingStyle("atx")
-    .build();
-ConversionResult result = HtmlToMarkdown.convert("<h1>Title</h1>", options);
-System.out.println(result.getContent());
+public class Main {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        ConversionOptions options = ConversionOptions.builder()
+            .withHeadingStyle(HeadingStyle.Atx)
+            .build();
+        ConversionResult result = HtmlToMarkdown.convert("<h1>Title</h1>", options);
+        System.out.println(result.content());
+    }
+}
 ```
 
 Uses a builder for options. Conversion failures throw `io.xberg.htmltomarkdown.HtmlToMarkdownRsException` and its subtypes (`ParseErrorException`, `ConfigErrorException`, `InvalidInputException`, `PanicException`, `OtherException`). Native binaries ship in the JAR for Linux x86_64, macOS arm64/x86_64, and Windows x86_64.
@@ -154,7 +165,7 @@ dotnet add package XbergIo.HtmlToMarkdown
 ```csharp
 using HtmlToMarkdown;
 
-var options = new ConversionOptions { HeadingStyle = "atx" };
+var options = new ConversionOptions { HeadingStyle = HeadingStyle.Atx };
 var result = HtmlToMarkdownConverter.Convert("<h1>Title</h1>", options);
 Console.WriteLine(result.Content);
 ```
@@ -171,13 +182,13 @@ Classes live in the `HtmlToMarkdown` namespace (the `XbergIo.HtmlToMarkdown` pre
 ```
 
 ```elixir
-case HtmlToMarkdown.convert("<h1>Title</h1>", heading_style: :atx) do
+case HtmlToMarkdown.convert("<h1>Title</h1>", %{heading_style: :atx}) do
   {:ok, result} -> IO.puts(result.content)
-  {:error, reason} -> IO.warn("failed: #{reason}")
+  {:error, _kind, reason} -> IO.warn("failed: #{reason}")
 end
 ```
 
-`convert/2` returns `{:ok, result}` or `{:error, reason}`. Options are a keyword list. The struct fields match the Rust names (`snake_case`).
+`convert/2` returns `{:ok, result}` or `{:error, kind, reason}`. Options are a map or a `%HtmlToMarkdown.ConversionOptions{}` struct. The struct fields match the Rust names (`snake_case`).
 
 ## R
 
@@ -229,14 +240,16 @@ npm install @xberg-io/html-to-markdown-wasm
 ```
 
 ```javascript
-import init, { convert } from "@xberg-io/html-to-markdown-wasm";
+import { convert, WasmConversionOptions, WasmHeadingStyle } from "@xberg-io/html-to-markdown-wasm";
 
-await init();
-const result = convert("<h1>Title</h1>", { headingStyle: "atx" });
+const options = WasmConversionOptions.default();
+options.headingStyle = WasmHeadingStyle.Atx;
+
+const result = convert("<h1>Title</h1>", options);
 console.log(result.content);
 ```
 
-`init()` loads and instantiates the `.wasm` file. Call it once before any conversion. After that, `convert` is synchronous. Options use `camelCase` and have the same shape as the TypeScript binding. The WASM build exposes inline image extraction when built with `inline-images`; generated native bindings may omit the Rust-only image payload.
+The package's default (Node.js) entry point loads the `.wasm` module synchronously — no `init()` call needed. Browser and bundler consumers import the `web`/`bundler` build instead, which exports an async `init()` function that must complete before the first `convert()` call. `convert()` takes a `WasmConversionOptions` instance built via `WasmConversionOptions.default()`, not a plain object literal — its fields use `camelCase` and have the same shape as the TypeScript binding. The WASM build exposes inline image extraction when built with `inline-images`; generated native bindings may omit the Rust-only image payload.
 
 ## Swift
 

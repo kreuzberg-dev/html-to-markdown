@@ -14,7 +14,10 @@ Future<void> main() async {
 </table>
 ''';
 
-  final result = await H2mBridge.convert(html);
+  final options = await createConversionOptionsFromJson(
+    json: '{"include_document_structure":true}',
+  );
+  final result = await H2mBridge.convert(html, options: options);
 
   for (final table in result.tables) {
     for (final cell in table.grid.cells) {

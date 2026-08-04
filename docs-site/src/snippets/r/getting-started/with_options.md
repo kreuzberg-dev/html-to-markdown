@@ -2,7 +2,7 @@
 library(htmltomarkdown)
 
 opts <- conversion_options(
-  heading_style = "atx",
+  heading_style = "Atx",
   wrap = TRUE,
   wrap_width = 80L
 )

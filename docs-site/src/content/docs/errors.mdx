@@ -35,162 +35,133 @@ Warnings are the right place to surface "this was weird but the conversion worke
 <Tabs syncKey="lang">
 <TabItem label="Rust">
 
-
-</TabItem>
-</Tabs>
-
-````rust
+```rust
 use html_to_markdown_rs::{convert, ConversionError};
 
-    match convert(html, None) {
-        Ok(result) => println!("{}", result.content.unwrap_or_default()),
-        Err(ConversionError::InvalidInput(msg)) => eprintln!("bad input: {msg}"),
-        Err(ConversionError::ParseError(msg)) => eprintln!("parse failed: {msg}"),
-        Err(e) => eprintln!("conversion failed: {e}"),
-    }
-    ```
-
-<Tabs syncKey="lang">
-<TabItem label="Python">
-
+match convert(html, None) {
+    Ok(result) => println!("{}", result.content.unwrap_or_default()),
+    Err(ConversionError::InvalidInput(msg)) => eprintln!("bad input: {msg}"),
+    Err(ConversionError::ParseError(msg)) => eprintln!("parse failed: {msg}"),
+    Err(e) => eprintln!("conversion failed: {e}"),
+}
+```
 
 </TabItem>
-</Tabs>
+<TabItem label="Python">
 
 ```python
 from html_to_markdown import convert, ConversionError
 
-    try:
-        result = convert(html)
-    except ConversionError as e:
-        print(f"conversion failed: {e}")
-    ```
+try:
+    result = convert(html)
+except ConversionError as e:
+    print(f"conversion failed: {e}")
+```
 
-<Tabs syncKey="lang">
+</TabItem>
 <TabItem label="TypeScript">
 
+```typescript
+import { convert } from '@xberg-io/html-to-markdown';
+
+// The Node binding has no ConversionError class — convert() throws a
+// plain Error on parse failure or invalid UTF-8.
+try {
+  const result = convert(html);
+} catch (e) {
+  if (e instanceof Error) {
+    console.error(`conversion failed: ${e.message}`);
+  } else {
+    throw e;
+  }
+}
+```
 
 </TabItem>
-</Tabs>
-
-```typescript
-import { convert, ConversionError } from '@xberg-io/html-to-markdown';
-
-    try {
-      const result = convert(html);
-    } catch (e) {
-      if (e instanceof ConversionError) {
-        console.error(`conversion failed: ${e.message}`);
-      } else {
-        throw e;
-      }
-    }
-    ```
-
-<Tabs syncKey="lang">
 <TabItem label="Go">
 
+```go
+result, err := htmltomarkdown.Convert(html, nil)
+if err != nil {
+    log.Fatalf("conversion failed: %v", err)
+}
+```
 
 </TabItem>
-</Tabs>
-
-`go
-    result, err := htmltomarkdown.Convert(html)
-    if err != nil {
-        log.Fatalf("conversion failed: %v", err)
-    }`
-
-<Tabs syncKey="lang">
 <TabItem label="Ruby">
 
+```ruby
+begin
+  result = HtmlToMarkdown.convert(html)
+rescue HtmlToMarkdown::ConversionError => e
+  warn "conversion failed: #{e.message}"
+end
+```
 
 </TabItem>
-</Tabs>
-
-`ruby
-    begin
-      result = HtmlToMarkdown.convert(html)
-    rescue HtmlToMarkdown::ConversionError => e
-      warn "conversion failed: #{e.message}"
-    end`
-
-<Tabs syncKey="lang">
 <TabItem label="PHP">
 
+```php
+try {
+    $result = $converter->convert($html);
+} catch (ConversionException $e) {
+    error_log("conversion failed: " . $e->getMessage());
+}
+```
 
 </TabItem>
-</Tabs>
-
-`php
-    try {
-        $result = $converter->convert($html);
-    } catch (ConversionException $e) {
-        error_log("conversion failed: " . $e->getMessage());
-    }`
-
-<Tabs syncKey="lang">
 <TabItem label="Java">
 
+```java
+try {
+    ConversionResult result = HtmlToMarkdown.convert(html);
+} catch (ConversionException e) {
+    System.err.println("conversion failed: " + e.getMessage());
+}
+```
 
 </TabItem>
-</Tabs>
-
-`java
-    try {
-        ConversionResult result = HtmlToMarkdown.convert(html);
-    } catch (ConversionException e) {
-        System.err.println("conversion failed: " + e.getMessage());
-    }`
-
-<Tabs syncKey="lang">
 <TabItem label="C#">
 
+```csharp
+try
+{
+    var result = HtmlToMarkdownConverter.Convert(html);
+}
+catch (ConversionException e)
+{
+    Console.Error.WriteLine($"conversion failed: {e.Message}");
+}
+```
 
 </TabItem>
-</Tabs>
-
-`csharp
-    try
-    {
-        var result = HtmlToMarkdownConverter.Convert(html);
-    }
-    catch (ConversionException e)
-    {
-        Console.Error.WriteLine($"conversion failed: {e.Message}");
-    }`
-
-<Tabs syncKey="lang">
 <TabItem label="Elixir">
 
+```elixir
+case HtmlToMarkdown.convert(html) do
+  {:ok, result} -> IO.puts(result.content)
+  {:error, reason} -> IO.warn("conversion failed: #{reason}")
+end
+```
 
 </TabItem>
-</Tabs>
-
-`elixir
-    case HtmlToMarkdown.convert(html) do
-      {:ok, result} -> IO.puts(result.content)
-      {:error, reason} -> IO.warn("conversion failed: #{reason}")
-    end`
-
-<Tabs syncKey="lang">
 <TabItem label="R">
 
+```r
+result <- tryCatch(
+  htmltomarkdown::convert(html),
+  error = function(e) {
+    message("conversion failed: ", conditionMessage(e))
+    NULL
+  }
+)
+```
 
 </TabItem>
 </Tabs>
-
-`r
-    result <- tryCatch(
-      htmltomarkdown::convert(html),
-      error = function(e) {
-        message("conversion failed: ", conditionMessage(e))
-        NULL
-      }
-    )`
 
 ## CLI Warnings
 
 The CLI hides warnings by default. Pass `--show-warnings` to print each one to stderr in the format `Warning [<kind>]: <message>`. The flag works with or without `--json`. See [CLI: JSON Output](/cli/#json-output).
 
 <Snip_feedback />
-````

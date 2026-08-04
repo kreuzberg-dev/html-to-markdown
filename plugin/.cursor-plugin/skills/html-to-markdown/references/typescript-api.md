@@ -1,7 +1,7 @@
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:619164e67e4f15549b29ee0909dbd13112b27a64883ee5256a426c57357ee7a3
-Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
+Content-Hash: blake3:c60799ba2fbb56a6419fc1ec9711b708e7f8b3f189226ae566fdc6aa5547a18e
+Source-Hash: blake3:bc2dee3415d5bf7b11644bed394538f69fd1e09522b938414384c27cbb38bf8a
 Schema-Version: v1
 -->
 
@@ -65,7 +65,9 @@ the note below.
 
 ```typescript
 interface ConversionOptions {
-  headingStyle?: "Atx" | "Underlined" | "AtxClosed";
+  // Enum-typed fields are nominal: pass the enum member (HeadingStyle.Atx),
+  // not the bare string "Atx", or tsc rejects it.
+  headingStyle?: HeadingStyle;
   listIndentType?: "Spaces" | "Tabs";
   listIndentWidth?: number;
   bullets?: string;
@@ -183,7 +185,7 @@ consult the generated `index.d.ts` (`HtmlVisitor`, `VisitorHandle`,
 ## Examples
 
 ```typescript
-import { convert } from "@xberg-io/html-to-markdown";
+import { convert, HeadingStyle } from "@xberg-io/html-to-markdown";
 
 // Simple conversion — result is an object
 const result = convert("<h1>Hello</h1>");
@@ -194,8 +196,8 @@ const result2 = convert(html, { extractMetadata: true });
 console.log(result2.metadata?.document?.title);
 console.log(result2.metadata?.headers?.length);
 
-// Tables — always in result.tables
-const result3 = convert(html);
+// Tables — in result.tables when includeDocumentStructure is enabled
+const result3 = convert(html, { includeDocumentStructure: true });
 for (const table of result3.tables ?? []) {
   console.log(table.markdown);
 }
@@ -207,6 +209,6 @@ console.log(result4.document);
 // Reading a file: read it yourself, then convert
 import { readFile } from "node:fs/promises";
 const html5 = await readFile("./page.html", "utf8");
-const result5 = convert(html5, { headingStyle: "Atx" });
+const result5 = convert(html5, { headingStyle: HeadingStyle.Atx });
 console.log(result5.content);
 ```

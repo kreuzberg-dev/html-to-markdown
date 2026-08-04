@@ -173,7 +173,7 @@ gem 'html-to-markdown', '~> 3.8'
 **Verify:**
 
 ```bash
-ruby -e "require 'html_to_markdown'; puts HtmlToMarkdown.convert('<h1>Hello</h1>')[:content]"
+ruby -e "require 'html_to_markdown'; puts HtmlToMarkdown.convert('<h1>Hello</h1>').content"
 # # Hello
 ```
 
@@ -192,12 +192,10 @@ pie install xberg-io/html-to-markdown
 
 ```php
 <?php
-require 'vendor/autoload.php';
+use HtmlToMarkdown\HtmlToMarkdownApi;
 
-use function HtmlToMarkdown\convert;
-
-$result = convert('<h1>Hello</h1>');
-echo $result['content'];
+$result = HtmlToMarkdownApi::convert('<h1>Hello</h1>');
+echo $result->content;
 // # Hello
 ```
 
@@ -232,9 +230,10 @@ implementation("io.xberg:html-to-markdown:3.6.8")
 
 ```java
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
         var result = HtmlToMarkdown.convert("<h1>Hello</h1>");
         System.out.println(result.content());
         // # Hello
@@ -258,7 +257,7 @@ Or via the NuGet Package Manager in Visual Studio — search for `XbergIo.HtmlTo
 ```csharp
 using HtmlToMarkdown;
 
-var result = HtmlToMarkdownConverter.Convert("<h1>Hello</h1>");
+var result = HtmlToMarkdownConverter.Convert("<h1>Hello</h1>", null);
 Console.WriteLine(result.Content);
 // # Hello
 ```
@@ -370,16 +369,14 @@ npm install @xberg-io/html-to-markdown-wasm
 **Verify:**
 
 ```javascript
-import init, { convert } from '@xberg-io/html-to-markdown-wasm';
-
-await init();  // load and instantiate the .wasm file — call once
+import { convert } from '@xberg-io/html-to-markdown-wasm';
 
 const result = convert('<h1>Hello</h1>');
 console.log(result.content);
 // # Hello
 ```
 
-`init()` must complete before any `convert()` call. After that, `convert` is synchronous. The WASM build exposes inline image extraction when built with `inline-images`; generated native bindings may omit the Rust-only image payload. Works in browsers, Cloudflare Workers, Deno, and Bun.
+The package's default (Node.js) entry point loads the `.wasm` module synchronously — no `init()` call needed. Browser and bundler consumers import the `web`/`bundler` build instead, which exports an async `init()` function that must complete before the first `convert()` call. Works in browsers, Cloudflare Workers, Deno, and Bun.
 
 </TabItem>
 <TabItem label="Swift">
@@ -395,7 +392,7 @@ https://github.com/xberg-io/html-to-markdown
 ```swift
 import HtmlToMarkdown
 
-let result = try convert("<h1>Hello</h1>", nil)
+let result = try convert(html: "<h1>Hello</h1>")
 print(result.content()?.toString() ?? "")
 ```
 
@@ -439,7 +436,7 @@ Requires Android minSdk 21. This is an Android AAR with bundled JNI libraries; K
 Use the Zig package `html_to_markdown_rs` from the release artifacts or the repository package metadata.
 
 ```zig
-const html_to_markdown = @import("html_to_markdown");
+const html_to_markdown = @import("html_to_markdown_rs");
 ```
 
 Requires Zig 0.16+. The package wraps the generated C FFI library.

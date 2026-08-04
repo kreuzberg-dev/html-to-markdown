@@ -9,7 +9,7 @@ final class CustomVisitor: HtmlVisitorProtocol {
 
     func visitHeading(_ ctx: NodeContext, _ level: UInt32, _ text: String, _ id: String?) -> VisitResult {
         // Keep default rendering for headings
-        return .continue_
+        return .continue
     }
 }
 
@@ -17,7 +17,7 @@ let visitorHandle = makeHtmlVisitorHandle(CustomVisitor())
 let options = try conversionOptionsFromJsonWithVisitor("{}", visitorHandle)
 
 let html = "<h1>Title</h1><p>See <a href=\"https://example.com\">example</a>.</p>"
-let result = try convert(html, options)
+let result = try convert(html: html, options: options)
 let markdown = result.content()?.toString() ?? ""
 print(markdown)
 ```

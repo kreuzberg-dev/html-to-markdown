@@ -14,7 +14,9 @@ html := `
 </table>
 `
 
-result, err := htmltomarkdown.Convert(html, nil)
+result, err := htmltomarkdown.Convert(html, &htmltomarkdown.ConversionOptions{
+    IncludeDocumentStructure: true,
+})
 if err != nil {
     log.Fatal(err)
 }

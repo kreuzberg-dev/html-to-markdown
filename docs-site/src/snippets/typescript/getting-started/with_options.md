@@ -1,8 +1,8 @@
 ```typescript
-import { convert, ConversionOptions } from "@xberg-io/html-to-markdown";
+import { convert, ConversionOptions, HeadingStyle } from "@xberg-io/html-to-markdown";
 
 const options: ConversionOptions = {
-  headingStyle: "atx",
+  headingStyle: HeadingStyle.Atx,
   listIndentWidth: 2,
   wrap: true,
 };

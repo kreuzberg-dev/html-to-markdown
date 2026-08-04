@@ -115,11 +115,31 @@ dotnet add package XbergIo.HtmlToMarkdown
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```csharp
+using HtmlToMarkdown;
+
+var html = "<h1>Hello World</h1><p>This is a paragraph.</p>";
+var result = HtmlToMarkdownConverter.Convert(html, null);
+Console.WriteLine(result.Content);
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```csharp
+using HtmlToMarkdown;
+
+var options = new ConversionOptions
+{
+    HeadingStyle = HeadingStyle.Atx,
+    Wrap = true,
+    WrapWidth = 80,
+    ListIndentWidth = 4,
+};
+
+var html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>";
+var result = HtmlToMarkdownConverter.Convert(html, options);
+Console.WriteLine(result.Content);
+```
 
 ## Architecture
 
@@ -144,15 +164,15 @@ The dispatcher is invisible to the caller. Output is byte-identical across tiers
 
 ### Core Function
 
-**`HtmlToMarkdownConverter.Convert(string html, ConversionOptions? options = null) : ConversionResult`**
+**`HtmlToMarkdownConverter.Convert(string html, ConversionOptions? options) : ConversionResult`**
 
 Converts HTML to Markdown. Returns a `ConversionResult` record with all results in a single call.
 
 ```csharp
-var result   = HtmlToMarkdownConverter.Convert(html);
+var result   = HtmlToMarkdownConverter.Convert(html, null);
 var markdown = result.Content;    // Converted Markdown string
 var metadata = result.Metadata;
-var tables   = result.Tables;
+var tables   = result.Tables;      // Populated when ConversionOptions.IncludeDocumentStructure is true
 ```
 
 ### Options
@@ -192,11 +212,11 @@ using HtmlToMarkdown;
 var html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
 // Default Markdown output
-var markdown = Converter.Convert(html).Content;
+var markdown = HtmlToMarkdownConverter.Convert(html, null).Content;
 // Result: "This is **bold** and *italic* text."
 
 // Djot output
-var djot = Converter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Djot }).Content;
+var djot = HtmlToMarkdownConverter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Djot }).Content;
 // Result: "This is *bold* and _italic_ text."
 ```
 
@@ -211,7 +231,7 @@ using HtmlToMarkdown;
 
 var html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-var plain = Converter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Plain }).Content;
+var plain = HtmlToMarkdownConverter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Plain }).Content;
 // Result: "Title\n\nThis is bold and italic text."
 ```
 
@@ -232,6 +252,72 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 **Supported Visitor Methods:** 40+ callbacks for text, inline elements, links, images, headings, lists, blocks, and tables.
 
 ### Example: Quick Start
+
+```csharp
+using HtmlToMarkdown;
+
+var html = "<a href=\"https://old-cdn.com/file.pdf\">Download</a>";
+var options = new ConversionOptions { Visitor = new MyVisitor() };
+var result = HtmlToMarkdownConverter.Convert(html, options);
+var markdown = result.Content;
+
+public sealed class MyVisitor : IHtmlVisitor
+{
+    public VisitResult VisitLink(NodeContext ctx, string href, string text, string title)
+    {
+        // Rewrite CDN URLs
+        if (href.StartsWith("https://old-cdn.com"))
+        {
+            href = href.Replace("https://old-cdn.com", "https://new-cdn.com");
+        }
+        return new VisitResult.Custom($"[{text}]({href})");
+    }
+
+    public VisitResult VisitImage(NodeContext ctx, string src, string alt, string title) =>
+        // Skip tracking pixels
+        src.Contains("tracking") ? new VisitResult.Skip() : new VisitResult.Continue();
+
+    // All other callbacks default to Continue; IHtmlVisitor requires all 37 to be implemented.
+    public VisitResult VisitText(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitElementStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitElementEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitHeading(NodeContext ctx, uint level, string text, string id) => new VisitResult.Continue();
+    public VisitResult VisitCodeBlock(NodeContext ctx, string lang, string code) => new VisitResult.Continue();
+    public VisitResult VisitCodeInline(NodeContext ctx, string code) => new VisitResult.Continue();
+    public VisitResult VisitListItem(NodeContext ctx, bool ordered, string marker, string text) => new VisitResult.Continue();
+    public VisitResult VisitListStart(NodeContext ctx, bool ordered) => new VisitResult.Continue();
+    public VisitResult VisitListEnd(NodeContext ctx, bool ordered, string output) => new VisitResult.Continue();
+    public VisitResult VisitTableStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitTableRow(NodeContext ctx, List<string> cells, bool isHeader) => new VisitResult.Continue();
+    public VisitResult VisitTableEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitBlockquote(NodeContext ctx, string content, ulong depth) => new VisitResult.Continue();
+    public VisitResult VisitStrong(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitEmphasis(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitStrikethrough(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitUnderline(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitSubscript(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitSuperscript(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitMark(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitLineBreak(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitHorizontalRule(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitCustomElement(NodeContext ctx, string tagName, string html) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionListStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionTerm(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionDescription(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionListEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitForm(NodeContext ctx, string action, string method) => new VisitResult.Continue();
+    public VisitResult VisitInput(NodeContext ctx, string inputType, string name, string value) => new VisitResult.Continue();
+    public VisitResult VisitButton(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitAudio(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitVideo(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitIframe(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitDetails(NodeContext ctx, bool open) => new VisitResult.Continue();
+    public VisitResult VisitSummary(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitFigureStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitFigcaption(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitFigureEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+}
+```
 
 ## Examples
 

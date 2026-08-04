@@ -7,10 +7,26 @@ import Foundation
 // Sources/RustBridge and Sources/RustBridgeC when the Cargo build output exists.
 // See README.md for the full workflow.
 
-// Absolute path to the Cargo target dir, resolved from this manifest's own location so the
-// runtime rpath is independent of the process working directory (`swift test` may chdir into
-// fixture dirs). `#filePath` is a compile-time literal, so this performs no filesystem access.
+// Absolute path to the Cargo target dir, resolved from this manifest's own location so
+// library resolution is independent of the process working directory (`swift test` may
+// chdir into fixture dirs). `#filePath` is a compile-time literal, so computing this string
+// performs no filesystem access.
 let rustTargetDir = (#filePath as NSString).deletingLastPathComponent.appending("/../../target")
+
+// Resolve the static archive for a Rust crate explicitly, preferring `release` over `debug`.
+// `crates/html-to-markdown-rs-swift` and the FFI crate both build `crate-type = ["cdylib", "staticlib"]`,
+// so `target/{release,debug}` holds both `lib<name>.a` and `lib<name>.dylib`. A bare
+// `.linkedLibrary("<name>")` / `-l<name>` lets the linker pick between them, and ld64 prefers
+// the `.dylib` when both sit in the same search directory — but that dylib was built with
+// `-undefined dynamic_lookup` and does not itself define the swift-bridge glue symbols (e.g.
+// `__swift_bridge__$<Type>$_free`), so the link silently succeeds while the resulting binary
+// fails to resolve those symbols at dlopen/runtime. Passing the archive's resolved absolute
+// path forces static linking unambiguously.
+func resolvedStaticLib(_ name: String) -> String {
+  let release = "\(rustTargetDir)/release/lib\(name).a"
+  let debug = "\(rustTargetDir)/debug/lib\(name).a"
+  return FileManager.default.fileExists(atPath: release) ? release : debug
+}
 
 let package = Package(
   name: "HtmlToMarkdown",
@@ -35,7 +51,8 @@ let package = Package(
     // linkerSettings wire the Rust staticlibs (libhtml_to_markdown_rs_swift.a and libhtml_to_markdown_ffi.a)
     // produced by `cargo build -p html-to-markdown-rs-swift` and the FFI crate so
     // `swift build` / `swift test` can resolve the `__swift_bridge__$*` and FFI C symbols.
-    // Both target/release and target/debug are searched so either cargo profile works.
+    // Explicit absolute paths (see `resolvedStaticLib` above) are used instead of
+    // `.linkedLibrary(...)` so the linker cannot substitute the sibling `.dylib` artifacts.
     // The FFI library is needed because the generated Swift service API code (App.swift)
     // calls FFI functions directly via @_silgen_name declarations.
     .target(
@@ -44,16 +61,9 @@ let package = Package(
       path: "Sources/RustBridge",
       linkerSettings: [
         .unsafeFlags([
-          "-L\(rustTargetDir)/release",
-          "-L\(rustTargetDir)/debug",
-          // Runtime search paths: the FFI dylib's install_name is @rpath/lib...dylib, so the
-          // consumer (and any test bundle linking this target) needs an LC_RPATH to dlopen it.
-          // swiftc rejects `-Wl,-rpath,<p>`; the driver-native spelling is `-Xlinker -rpath -Xlinker <p>`.
-          "-Xlinker", "-rpath", "-Xlinker", "\(rustTargetDir)/release",
-          "-Xlinker", "-rpath", "-Xlinker", "\(rustTargetDir)/debug",
+          resolvedStaticLib("html_to_markdown_rs_swift"),
+          resolvedStaticLib("html_to_markdown_ffi"),
         ]),
-        .linkedLibrary("html_to_markdown_rs_swift"),
-        .linkedLibrary("html_to_markdown_ffi"),
         // The Rust staticlib records native-library dependencies (e.g. `lzma-sys`
         // via the archive/`xz2` path emits `cargo:rustc-link-lib`) that cargo would
         // resolve when it drives the final link, but a `staticlib` `.a` does not

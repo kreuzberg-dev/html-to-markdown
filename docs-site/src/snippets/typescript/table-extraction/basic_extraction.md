@@ -9,7 +9,7 @@ const html = `
 </table>
 `;
 
-const result = convert(html);
+const result = convert(html, { includeDocumentStructure: true });
 
 for (const table of result.tables ?? []) {
   for (const cell of table.grid.cells ?? []) {

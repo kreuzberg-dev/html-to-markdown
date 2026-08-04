@@ -3,20 +3,21 @@
 #include <stdio.h>
 
 /* Each callback returns an int32 status code:
- *   HTM_VISIT_CONTINUE      — use default conversion
- *   HTM_VISIT_SKIP          — drop the element
- *   HTM_VISIT_PRESERVE_HTML — emit the raw HTML
- *   HTM_VISIT_CUSTOM        — replace with the string written to *out
- *   HTM_VISIT_ERROR         — abort conversion with the error in *out
+ *   HTMHTM_VISIT_CONTINUE      — use default conversion
+ *   HTMHTM_VISIT_SKIP          — drop the element
+ *   HTMHTM_VISIT_PRESERVE_HTML — emit the raw HTML
+ *   HTMHTM_VISIT_CUSTOM        — replace with the string written to *out_custom
+ *   HTMHTM_VISIT_ERROR         — abort conversion with the error in *out_custom
  */
-static int32_t visit_heading(const struct HTMNodeContext *ctx,
+static int32_t visit_heading(const struct HTMHtmContext *ctx,
+                             void *user_data,
                              uint32_t level,
                              const char *text,
-                             const char *title,
-                             char **out,
-                             void *user_data) {
-    (void)ctx; (void)level; (void)text; (void)title; (void)out; (void)user_data;
-    return HTM_VISIT_CONTINUE;
+                             const char *id,
+                             char **out_custom,
+                             uintptr_t *out_len) {
+    (void)ctx; (void)user_data; (void)level; (void)text; (void)id; (void)out_custom; (void)out_len;
+    return HTMHTM_VISIT_CONTINUE;
 }
 
 int main(void) {
@@ -25,7 +26,7 @@ int main(void) {
 
     HTMHtmVisitor *visitor = htm_visitor_create(&callbacks);
     HTMConversionOptions *options = htm_conversion_options_default();
-    htm_options_set_visitor(options, (struct HTMHtmHtmlVisitorBridge *)visitor);
+    htm_options_set_visitor(options, visitor);
 
     HTMConversionResult *result = htm_convert("<h1>Title</h1><p>Content</p>", options);
 

@@ -28,6 +28,7 @@ print(result.warnings)       # []
 print(result.metadata)       # HtmlMetadata or None
 
 # With options
+html = "<h1>Hello</h1><p>World</p>"
 result = convert(
     html,
     options=ConversionOptions(
@@ -42,6 +43,8 @@ print(result.content)
 ## ConversionResult (dataclass)
 
 ```python
+from dataclasses import dataclass, field
+from typing import Any
 from html_to_markdown import ConversionResult
 
 @dataclass
@@ -58,6 +61,8 @@ class ConversionResult:
 ## ConversionOptions (dataclass)
 
 ```python
+from dataclasses import dataclass, field
+from typing import Any
 from html_to_markdown import ConversionOptions
 
 @dataclass
@@ -142,6 +147,7 @@ class ConversionOptions:
 ## PreprocessingOptions (dataclass)
 
 ```python
+from dataclasses import dataclass
 from html_to_markdown import PreprocessingOptions
 
 @dataclass
@@ -166,7 +172,7 @@ from html_to_markdown import (
     HtmlMetadata,          # Dataclass: full metadata extraction result
     LinkStyle,             # Enum: INLINE, REFERENCE
     ListIndentType,        # Enum: SPACES, TABS
-    MetadataConfig,        # Dataclass: metadata extraction configuration
+    MetadataEntry,         # Dataclass: a single metadata_block document-structure entry
     NewlineStyle,          # Enum: SPACES, BACKSLASH
     OutputFormat,          # Enum: MARKDOWN, DJOT, PLAIN
     PreprocessingPreset,   # Enum: MINIMAL, STANDARD, AGGRESSIVE
@@ -183,6 +189,8 @@ All structured data is in the `ConversionResult` dataclass returned by `convert(
 ```python
 from html_to_markdown import convert, ConversionOptions
 
+html = "<h1>Title</h1><table><tr><th>A</th></tr><tr><td>1</td></tr></table>"
+
 # Metadata — enabled by default
 result = convert(html)
 meta = result.metadata
@@ -190,31 +198,31 @@ print(meta.document.title)
 print(meta.headers)
 print(meta.links)
 
-# Tables — always present in result
+# Tables and document structure — both require include_document_structure=True
+result = convert(html, ConversionOptions(include_document_structure=True))
 for table in result.tables:
     print(table.markdown)
-
-# Document structure — set include_document_structure=True
-result = convert(html, ConversionOptions(include_document_structure=True))
 doc = result.document
 
 # Plain string output
 markdown: str = result.content
 ```
 
-## MetadataConfig
+## Metadata extraction toggle
+
+There is no per-field metadata config — `ConversionOptions.extract_metadata` is a
+single on/off switch that populates all of `result.metadata` at once (`document`,
+`headers`, `links`, `images`, `structured_data`).
 
 ```python
-from html_to_markdown import MetadataConfig
+from html_to_markdown import convert, ConversionOptions
 
-config = MetadataConfig(
-    extract_document=True,
-    extract_headers=True,
-    extract_links=True,
-    extract_images=True,
-    extract_structured_data=True,
-    max_structured_data_size=0,   # 0 = unlimited
-)
+html = "<h1>Title</h1>"
+result = convert(html, ConversionOptions(extract_metadata=False))
+print(result.metadata.headers)  # []
+
+result = convert(html, ConversionOptions(extract_metadata=True))
+print([h.text for h in result.metadata.headers])  # ["Title"]
 ```
 
 ## Error Handling
@@ -232,6 +240,7 @@ from html_to_markdown.exceptions import (
     OtherError,            # Generic conversion error
 )
 
+html = "<h1>Title</h1>"
 try:
     result = convert(html)
 except InvalidInputError as e:

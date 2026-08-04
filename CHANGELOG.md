@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ruby: the gem no longer publishes its generated types into the global `Object` namespace, which
   collided with unrelated libraries (notably the `parser` gem's `Parser` constant). Generated types
   now stay namespaced under `HtmlToMarkdown` (tree-sitter-language-pack issue #173).
+- Documentation: every code snippet in the READMEs, the docs site, and the coding-agent plugin
+  references was executed against the real API and corrected. The Rust README's metadata and custom
+  visitor examples did not compile, the Rust API reference showed `Result<_, Error>` instead of
+  `Result<_, ConversionError>`, the docs site shipped 102 empty language tabs across five pages, and
+  several bindings' snippets referenced helpers that no longer exist.
 
 ## [3.10.4] - 2026-08-04
 

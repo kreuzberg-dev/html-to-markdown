@@ -59,9 +59,11 @@ html-to-markdown input.html --br-in-tables
 ## Programmatic access
 
 ```python
-from html_to_markdown import convert
+from html_to_markdown import convert, ConversionOptions
 
-result = convert(html)
+html = "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td></tr></table>"
+# result.tables is only populated when include_document_structure=True
+result = convert(html, ConversionOptions(include_document_structure=True))
 for table in result.tables:
     print(table.markdown)            # rendered GFM markdown
     print(table.grid.cells[0].content)  # first cell (grid is a TableGrid)

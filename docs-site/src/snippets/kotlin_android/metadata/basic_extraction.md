@@ -3,7 +3,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.xberg.android.ConversionOptions
-import io.xberg.android.HtmlToMarkdownRs
+import io.xberg.android.HtmlToMarkdown
 
 val mapper = ObjectMapper()
     .registerKotlinModule()
@@ -23,7 +23,7 @@ val html = """
     </html>
 """.trimIndent()
 
-val result = HtmlToMarkdownRs.convert(html, options)
+val result = HtmlToMarkdown.convert(html, options)
 println("Markdown: ${result.content}")
 println("Title: ${result.metadata.document.title}")
 println("Description: ${result.metadata.document.description}")

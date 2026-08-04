@@ -123,11 +123,27 @@ composer require xberg-io/html-to-markdown
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```php
+use HtmlToMarkdown\HtmlToMarkdownApi;
+
+$result = HtmlToMarkdownApi::convert('<h1>Hello</h1><p>This is <strong>fast</strong>!</p>');
+echo $result->content;
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```php
+use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
+
+$options = ConversionOptions::from_json(json_encode([
+    'headingStyle' => 'Atx',
+    'listIndentWidth' => 2,
+]));
+
+$result = HtmlToMarkdownApi::convert('<h1>Hello</h1>', $options);
+echo $result->content;
+```
 
 ## Architecture
 
@@ -161,12 +177,11 @@ Converts HTML to Markdown. Returns a `ConversionResult` object with all results 
 use HtmlToMarkdown\HtmlToMarkdownApi;
 
 $result   = HtmlToMarkdownApi::convert($html);
-$markdown = $result->content;    // Converted Markdown string
-$metadata = $result->metadata;   // Metadata
-$tables   = $result->tables;     // Structured table data
-$document = $result->document;   // Document-level info
-$images   = $result->images;     // Extracted images
-$warnings = $result->warnings;   // Any conversion warnings
+$markdown = $result->content;           // Converted Markdown string
+$metadata = $result->getMetadata();     // Metadata
+$tables   = $result->getTables();       // Structured table data (needs includeDocumentStructure: true)
+$document = $result->getDocument();     // Document-level info (needs includeDocumentStructure: true)
+$warnings = $result->getWarnings();     // Any conversion warnings
 ```
 
 ### Options
@@ -232,21 +247,19 @@ The metadata extraction feature enables comprehensive document analysis during c
 
 ```php
 <?php
-use HtmlToMarkdown\Config\ConversionOptions;
-use HtmlToMarkdown\Service\Converter;
+use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
 
 $html = '<h1>Article</h1><img src="test.jpg" alt="test">';
-$result = Converter::create()->convert(
-    $html,
-    new ConversionOptions(extractMetadata: true)
-);
+$options = ConversionOptions::from_json(json_encode(['extractMetadata' => true]));
+$result = HtmlToMarkdownApi::convert($html, $options);
 
-echo $result['content'];                          // Converted Markdown
-echo $result['metadata']->document->title;        // Document title
-print_r($result['metadata']->headers);            // All h1-h6 elements
-print_r($result['metadata']->links);              // All hyperlinks
-print_r($result['metadata']->images);             // All images with alt text
-print_r($result['metadata']->structured_data);    // JSON-LD, Microdata, RDFa
+echo $result->content;                                // Converted Markdown
+echo $result->getMetadata()->getDocument()->title;     // Document title
+print_r($result->getMetadata()->getHeaders());         // All h1-h6 elements
+print_r($result->getMetadata()->getLinks());           // All hyperlinks
+print_r($result->getMetadata()->getImages());          // All images with alt text
+print_r($result->getMetadata()->getStructuredData());  // JSON-LD, Microdata, RDFa
 ```
 
 ## Visitor Pattern
@@ -267,36 +280,31 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 
 ```php
 <?php
-use HtmlToMarkdown\Config\ConversionOptions;
-use HtmlToMarkdown\Service\Converter;
-use HtmlToMarkdown\Visitor\AbstractVisitor;
-use HtmlToMarkdown\Visitor\NodeContext;
-use HtmlToMarkdown\Visitor\VisitResult;
+use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
+use HtmlToMarkdown\VisitorHandle;
 
-class MyVisitor extends AbstractVisitor
-{
-    public function visitLink(NodeContext $ctx, string $href, string $text, ?string $title): array
-    {
+// Visitors are duck-typed: define any subset of visit_* methods.
+$visitor = new class {
+    public function visit_link($ctx, $href, $text, $title) {
         // Rewrite CDN URLs
         if (str_starts_with($href, 'https://old-cdn.com')) {
             $href = str_replace('https://old-cdn.com', 'https://new-cdn.com', $href);
         }
-        return VisitResult::custom("[{$text}]({$href})");
+        return ['Custom' => "[{$text}]({$href})"];
     }
 
-    public function visitImage(NodeContext $ctx, string $src, ?string $alt, ?string $title): array
-    {
+    public function visit_image($ctx, $src, $alt, $title) {
         // Skip tracking pixels
-        return str_contains($src, 'tracking') ? VisitResult::skip() : VisitResult::continue();
+        return str_contains($src, 'tracking') ? 'Skip' : 'Continue';
     }
-}
+};
 
 $html = '<a href="https://old-cdn.com/file.pdf">Download</a>';
-$result = Converter::create()->convert(
-    $html,
-    new ConversionOptions(visitor: new MyVisitor())
-);
-$markdown = $result['content'];
+$visitorHandle = VisitorHandle::from_php_object($visitor);
+$options = ConversionOptions::from_json('{}')->withVisitor($visitorHandle);
+$result = HtmlToMarkdownApi::convert($html, $options);
+$markdown = $result->content;
 ```
 
 ## Examples

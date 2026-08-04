@@ -52,33 +52,31 @@ require 'html_to_markdown'
 html = '<h1>Article</h1><img src="test.jpg" alt="test">'
 result = HtmlToMarkdown.convert(html, extract_metadata: true)
 
-puts result[:content]                             # Converted Markdown
-puts result[:metadata][:document][:title]         # Document title
-puts result[:metadata][:headers]                  # All h1-h6 elements
-puts result[:metadata][:links]                    # All hyperlinks
-puts result[:metadata][:images]                   # All images with alt text
-puts result[:metadata][:structured_data]          # JSON-LD, Microdata, RDFa
+puts result.content                             # Converted Markdown
+puts result.metadata.document.title             # Document title
+puts result.metadata.headers                    # All h1-h6 elements
+puts result.metadata.links                      # All hyperlinks
+puts result.metadata.images                     # All images with alt text
+puts result.metadata.structured_data             # JSON-LD, Microdata, RDFa
 ```
 
 {% elif language == 'php' %}
 
 ```php
 <?php
-use HtmlToMarkdown\Config\ConversionOptions;
-use HtmlToMarkdown\Service\Converter;
+use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
 
 $html = '<h1>Article</h1><img src="test.jpg" alt="test">';
-$result = Converter::create()->convert(
-    $html,
-    new ConversionOptions(extractMetadata: true)
-);
+$options = ConversionOptions::from_json(json_encode(['extractMetadata' => true]));
+$result = HtmlToMarkdownApi::convert($html, $options);
 
-echo $result['content'];                          // Converted Markdown
-echo $result['metadata']->document->title;        // Document title
-print_r($result['metadata']->headers);            // All h1-h6 elements
-print_r($result['metadata']->links);              // All hyperlinks
-print_r($result['metadata']->images);             // All images with alt text
-print_r($result['metadata']->structured_data);    // JSON-LD, Microdata, RDFa
+echo $result->content;                                // Converted Markdown
+echo $result->getMetadata()->getDocument()->title;     // Document title
+print_r($result->getMetadata()->getHeaders());         // All h1-h6 elements
+print_r($result->getMetadata()->getLinks());           // All hyperlinks
+print_r($result->getMetadata()->getImages());          // All images with alt text
+print_r($result->getMetadata()->getStructuredData());  // JSON-LD, Microdata, RDFa
 ```
 
 {% elif language == 'go' %}
@@ -114,20 +112,21 @@ func main() {
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.ConversionResult;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
         String html = "<h1>Article</h1><img src=\"test.jpg\" alt=\"test\">";
         ConversionOptions options = ConversionOptions.builder()
-            .extractMetadata(true)
+            .withExtractMetadata(true)
             .build();
         ConversionResult result = HtmlToMarkdown.convert(html, options);
 
-        System.out.println(result.content());                          // Converted Markdown
-        System.out.println(result.metadata().getDocument().getTitle()); // Document title
-        System.out.println(result.metadata().getHeaders());            // All h1-h6 elements
-        System.out.println(result.metadata().getLinks());              // All hyperlinks
-        System.out.println(result.metadata().getImages());             // All images with alt text
+        System.out.println(result.content());                     // Converted Markdown
+        System.out.println(result.metadata().document().title()); // Document title
+        System.out.println(result.metadata().headers());          // All h1-h6 elements
+        System.out.println(result.metadata().links());            // All hyperlinks
+        System.out.println(result.metadata().images());           // All images with alt text
     }
 }
 ```
@@ -151,15 +150,15 @@ Console.WriteLine(string.Join(", ", result.Metadata?.Images ?? []));  // All ima
 
 ```elixir
 html = "<h1>Article</h1><img src=\"test.jpg\" alt=\"test\">"
-opts = %HtmlToMarkdown.Options{extract_metadata: true}
+opts = %HtmlToMarkdown.ConversionOptions{extract_metadata: true}
 {:ok, result} = HtmlToMarkdown.convert(html, opts)
 
-IO.puts(result.content)                           # Converted Markdown
-IO.inspect(result.metadata["document"]["title"])  # Document title
-IO.inspect(result.metadata["headers"])            # All h1-h6 elements
-IO.inspect(result.metadata["links"])              # All hyperlinks
-IO.inspect(result.metadata["images"])             # All images with alt text
-IO.inspect(result.metadata["structured_data"])    # JSON-LD, Microdata, RDFa
+IO.puts(result.content)                    # Converted Markdown
+IO.inspect(result.metadata.document.title) # Document title
+IO.inspect(result.metadata.headers)        # All h1-h6 elements
+IO.inspect(result.metadata.links)          # All hyperlinks
+IO.inspect(result.metadata.images)         # All images with alt text
+IO.inspect(result.metadata.structured_data) # JSON-LD, Microdata, RDFa
 ```
 
 {% elif language == 'r' %}

@@ -78,6 +78,16 @@ html-to-markdown --json --extract-metadata input.html | jq '.metadata.structured
 ```python
 from html_to_markdown import convert
 
+html = """
+<html lang="en">
+<head><title>My Article</title></head>
+<body>
+<h1>Main Heading</h1>
+<a href="https://example.com">External link</a>
+<img src="photo.jpg" alt="A photo">
+</body>
+</html>
+"""
 result = convert(html)
 meta = result.metadata
 print(meta.document.title)        # "My Article"

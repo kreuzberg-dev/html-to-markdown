@@ -1,17 +1,15 @@
 ```javascript
-import init, { convert } from "@xberg-io/html-to-markdown-wasm";
-
-await init();
+import { convert, WasmConversionOptions, WasmVisitorHandle } from "@xberg-io/html-to-markdown-wasm";
 
 const visitor = {
-  visit_link(ctx, href, text, title) {
-    return { type: "continue" };
-  },
-  visit_image(ctx, src, alt, title) {
-    return { type: "continue" };
+  visitLink(ctx, href, text, title) {
+    return { Custom: `[${text}](${href} "external")` };
   },
 };
 
-const result = convert('<h1>Hello</h1><a href="https://example.com">link</a>', undefined, visitor);
+const options = WasmConversionOptions.default();
+options.visitor = new WasmVisitorHandle(visitor);
+
+const result = convert('<h1>Hello</h1><a href="https://example.com">link</a>', options);
 console.log(result.content);
 ```

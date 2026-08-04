@@ -7,20 +7,21 @@ require 'html_to_markdown'
 class MyVisitor
   # `ctx` is a Hash: { node_type:, tag_name:, depth:, index_in_parent:, ... }
   def visit_link(ctx, href, text, title = nil)
-    # Return a custom output by wrapping it in `{ custom: ... }`. Any
-    # other Hash without :custom is treated as `:continue`.
-    { custom: "[#{text}](#{href})" }
+    # Return a custom output by wrapping it in `{ Custom: ... }`. The key
+    # is matched case-sensitively, so it must be `:Custom` (not `:custom`).
+    { Custom: "[#{text}](#{href})" }
   end
 
   def visit_image(ctx, src, alt, title = nil)
-    # Return :skip (or the string "skip") to drop the element.
-    # Other accepted directives: :continue, :preserve_html.
-    :skip
+    # Return :Skip to drop the element. The directive symbols/strings are
+    # matched case-sensitively: :Continue, :Skip, :PreserveHtml. Anything
+    # else (including :skip or "skip") is treated as literal custom output.
+    :Skip
   end
 
   # `visit_text` is invoked ~100+ times per document — keep it cheap.
   def visit_text(ctx, text)
-    :continue
+    :Continue
   end
 end
 

@@ -2,7 +2,7 @@
 import HtmlToMarkdown
 
 do {
-    let result = try convert("<h1>Hello</h1>", nil)
+    let result = try convert(html: "<h1>Hello</h1>")
     print(result.content()?.toString() ?? "")
 } catch let ConversionError.parseError(message, _) {
     print("Parse failed: \(message)")

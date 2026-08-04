@@ -5,8 +5,8 @@ description: Use when converting HTML to Markdown, Djot, or plain text. Covers o
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:f1b6e5eedc9f268752e34b2c9ad6ecab9ae40c23a8373b1a97838f95a96945d1
-Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
+Content-Hash: blake3:9ae746bfad4d48e2ca2d8cad6d45b6496e9988e866458cd09bed203625411ed0
+Source-Hash: blake3:bc2dee3415d5bf7b11644bed394538f69fd1e09522b938414384c27cbb38bf8a
 Schema-Version: v1
 -->
 
@@ -105,6 +105,7 @@ Presets: `minimal`, `standard` (default), `aggressive`. `--preset`,
 ```python
 from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
+html = "<h1>Title</h1><p>Body text.</p>"
 result = convert(
     html,
     ConversionOptions(

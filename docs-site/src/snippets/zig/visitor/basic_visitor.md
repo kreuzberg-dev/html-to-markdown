@@ -5,12 +5,12 @@ const c = html_to_markdown.c;
 
 // Visitor callbacks return an int32 status code:
 //   0 (HTM_VISIT_CONTINUE)      use default conversion
-//   1 (HTM_VISIT_SKIP)          drop the element
-//   2 (HTM_VISIT_PRESERVE_HTML) emit the raw HTML
-//   3 (HTM_VISIT_CUSTOM)        replace with the string written via out_custom/out_len
+//   1 (HTM_VISIT_CUSTOM)        replace with the string written via out_custom/out_len
+//   2 (HTM_VISIT_SKIP)          drop the element
+//   3 (HTM_VISIT_PRESERVE_HTML) emit the raw HTML
 //   4 (HTM_VISIT_ERROR)         abort conversion with the error in out_custom
 fn visit_heading(
-    _ctx: [*c]const c.HTMHtmNodeContext,
+    _ctx: [*c]const c.HTMHtmContext,
     _user_data: ?*anyopaque,
     _level: u32,
     _text: [*c]const u8,
@@ -30,11 +30,11 @@ fn visit_heading(
     ) catch return 0;
     if (out_custom != null) out_custom.* = buf.ptr;
     if (out_len != null) out_len.* = buf.len;
-    return 3; // HTM_VISIT_CUSTOM
+    return 1; // HTM_VISIT_CUSTOM
 }
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -48,7 +48,7 @@ pub fn main() !void {
     defer std.heap.c_allocator.free(options_z);
     const options = c.htm_conversion_options_from_json(options_z.ptr);
     defer c.htm_conversion_options_free(options);
-    c.htm_options_set_visitor_handle(options, visitor);
+    c.htm_options_set_visitor(options, visitor);
 
     const html_z = try std.heap.c_allocator.dupeZ(u8, "<h1>Title</h1><p>Body.</p>");
     defer std.heap.c_allocator.free(html_z);

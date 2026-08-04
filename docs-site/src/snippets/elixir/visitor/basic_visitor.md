@@ -3,7 +3,7 @@
 Customize HTML to Markdown conversion by passing a visitor map under
 the `:visitor` key of `HtmlToMarkdown.convert/2`'s options. Each entry
 maps a callback **atom** (e.g. `:handle_link`) to a one-arity function
-that receives the JSON-decoded arguments map.
+that receives a native, string-keyed arguments map built on the Rust side.
 
 The bridge spawns a system thread for the conversion, then sends
 `{:visitor_callback, ref_id, callback_name, args_json}` messages back
@@ -58,15 +58,16 @@ Omit a callback to fall through to the default Rust implementation.
 
 ## Node Context
 
-The `"ctx"` value in every callback arg map is a JSON-decoded map:
+The `"ctx"` value in every callback arg map is a `%HtmlToMarkdown.NodeContext{}` struct:
 
 ```elixir
-%{
-  "node_type" => "Link",
-  "tag_name" => "a",
-  "depth" => 2,
-  "index_in_parent" => 0,
-  "parent_tag" => "p"
+%HtmlToMarkdown.NodeContext{
+  node_type: :link,
+  tag_name: "a",
+  depth: 2,
+  index_in_parent: 0,
+  parent_tag: "p",
+  is_inline: true
 }
 ```
 

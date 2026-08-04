@@ -116,6 +116,7 @@ e2e/kotlin_android/src/test/jniLibs/
 e2e/dart/libhtml_to_markdown_rs_dart.dylib
 e2e/dart/libhtml_to_markdown_rs_dart.so
 e2e/dart/html_to_markdown_rs_dart.dll
+packages/dart/lib/src/native/
 
 # Java test_app native libraries (built/downloaded per platform at test time)
 test_apps/java/src/main/resources/natives/

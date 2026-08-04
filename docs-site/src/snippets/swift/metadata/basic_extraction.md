@@ -19,7 +19,7 @@ let html = """
 </html>
 """
 
-let result = try convert(html, options)
+let result = try convert(html: html, options: options)
 let markdown = result.content()?.toString() ?? ""
 
 let metadata = result.metadata()

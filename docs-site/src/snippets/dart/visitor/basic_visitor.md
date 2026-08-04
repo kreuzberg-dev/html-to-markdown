@@ -1,4 +1,6 @@
 ```dart
+import 'dart:io';
+
 import 'package:h2m/h2m.dart';
 import 'package:h2m/src/html_to_markdown_rs_bridge_generated/frb_generated.dart'
     show RustLib;
@@ -62,5 +64,9 @@ Future<void> main() async {
     options: options,
   );
   print(result.content);
+
+  // The visitor callback keeps a native SendPort alive, which would
+  // otherwise hold the process open indefinitely.
+  exit(0);
 }
 ```

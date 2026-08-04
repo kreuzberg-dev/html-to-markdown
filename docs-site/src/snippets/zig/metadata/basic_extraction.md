@@ -3,7 +3,7 @@ const std = @import("std");
 const html_to_markdown = @import("html_to_markdown_rs");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 

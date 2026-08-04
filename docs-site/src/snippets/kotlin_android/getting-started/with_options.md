@@ -3,7 +3,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import io.xberg.android.ConversionOptions
-import io.xberg.android.HtmlToMarkdownRs
+import io.xberg.android.HtmlToMarkdown
 
 val mapper = ObjectMapper()
     .registerKotlinModule()
@@ -14,6 +14,6 @@ val options = mapper.readValue(
 )
 
 val html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>"
-val result = HtmlToMarkdownRs.convert(html, options)
+val result = HtmlToMarkdown.convert(html, options)
 val markdown: String? = result.content
 ```

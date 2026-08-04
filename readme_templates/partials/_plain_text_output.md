@@ -34,7 +34,7 @@ require 'html_to_markdown'
 html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
 
 result = HtmlToMarkdown.convert(html, output_format: 'plain')
-plain = result[:content]
+plain = result.content
 # Result: "Title\n\nThis is bold and italic text."
 ```
 
@@ -63,15 +63,20 @@ plain := *result.Content
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.OutputFormat;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
-String html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
+public class PlainTextExample {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-String plain = HtmlToMarkdown.convert(html,
-    ConversionOptions.builder()
-        .withOutputFormat(OutputFormat.Plain)
-        .build()
-).content();
-// Result: "Title\n\nThis is bold and italic text."
+        String plain = HtmlToMarkdown.convert(html,
+            ConversionOptions.builder()
+                .withOutputFormat(OutputFormat.Plain)
+                .build()
+        ).content();
+        // Result: "Title\n\nThis is bold and italic text."
+    }
+}
 ```
 
 {% elif language == 'csharp' %}
@@ -81,7 +86,7 @@ using HtmlToMarkdown;
 
 var html = "<h1>Title</h1><p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-var plain = Converter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Plain }).Content;
+var plain = {{ csharp_wrapper_class }}.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Plain }).Content;
 // Result: "Title\n\nThis is bold and italic text."
 ```
 

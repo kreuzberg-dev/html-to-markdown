@@ -238,6 +238,10 @@ tasks:
     desc: "Regenerate all Alef-managed outputs without building"
     cmds:
       - alef all --clean
+      # napi's index.js ends at `module.exports = nativeBinding`, which cjs-module-lexer cannot
+      # analyze, so named ESM imports break (#450). Regeneration drops the re-exports every time,
+      # so re-append them here as well as in the publish workflow. ~keep
+      - node crates/html-to-markdown-node/scripts/fix-cjs-named-exports.mjs
 
   alef:verify:
     desc: "Check Alef-generated files are up to date"

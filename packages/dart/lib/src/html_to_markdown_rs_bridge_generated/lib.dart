@@ -999,6 +999,11 @@ class ConversionResult {
   final HtmlMetadata metadata;
 
   /// Extracted tables with structured cell data and markdown representation.
+  ///
+  /// Table data is collected by the same pass that builds [`Self::document`], so it is
+  /// populated only when `ConversionOptions::include_document_structure` is `true`. With the
+  /// default options this is an empty vec even for input that contains tables — the tables
+  /// still appear in [`Self::content`] as rendered Markdown.
   final List<TableData> tables;
 
   /// Non-fatal processing warnings.

@@ -1,6 +1,6 @@
 ```kotlin
 import io.xberg.android.ConversionOptions
-import io.xberg.android.HtmlToMarkdownRs
+import io.xberg.android.HtmlToMarkdown
 
 val html = """
     <table>
@@ -10,7 +10,10 @@ val html = """
     </table>
 """.trimIndent()
 
-val result = HtmlToMarkdownRs.convert(html, ConversionOptions.builder().build())
+// Table extraction requires `includeDocumentStructure = true` — without it,
+// `result.tables` is always empty even for table-heavy HTML.
+val options = ConversionOptions(includeDocumentStructure = true)
+val result = HtmlToMarkdown.convert(html, options)
 
 for (table in result.tables) {
     println(table.markdown)

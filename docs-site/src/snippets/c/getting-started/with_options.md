@@ -3,12 +3,12 @@
 #include <stdio.h>
 
 int main(void) {
-    /* Build an options update from JSON, apply onto defaults. */
-    HTMConversionOptionsUpdate *update =
-        htm_conversion_options_update_from_json("{\"heading_style\":\"atx\",\"wrap\":true}");
-    HTMConversionOptions *options = htm_conversion_options_default();
-    htm_conversion_options_apply_update(options, update);
-    htm_conversion_options_update_free(update);
+    HTMConversionOptions *options =
+        htm_conversion_options_from_json("{\"heading_style\":\"atx\",\"wrap\":true}");
+    if (options == NULL) {
+        fprintf(stderr, "options failed: %s\n", htm_last_error_context());
+        return 1;
+    }
 
     HTMConversionResult *result = htm_convert("<h1>Title</h1><p>Paragraph</p>", options);
     htm_conversion_options_free(options);

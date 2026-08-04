@@ -1,7 +1,5 @@
 ```javascript
-import init, { convert } from "@xberg-io/html-to-markdown-wasm";
-
-await init();
+import { convert, WasmConversionOptions } from "@xberg-io/html-to-markdown-wasm";
 
 const html = `
 <table>
@@ -11,10 +9,13 @@ const html = `
 </table>
 `;
 
-const result = convert(html);
+const options = WasmConversionOptions.default();
+options.includeDocumentStructure = true;
 
-for (const table of result.tables ?? []) {
-  for (const cell of table.grid.cells ?? []) {
+const result = convert(html, options);
+
+for (const table of result.tables) {
+  for (const cell of table.grid.cells) {
     const kind = cell.isHeader ? "Header" : "Cell";
     console.log(`  ${kind} (r${cell.row},c${cell.col}): ${cell.content}`);
   }

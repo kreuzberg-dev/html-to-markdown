@@ -1,13 +1,11 @@
 ```kotlin
-import io.xberg.android.ConversionError
-import io.xberg.android.HtmlToMarkdownRs
+import io.xberg.android.HtmlToMarkdown
+import io.xberg.android.HtmlToMarkdownRsBridgeException
 
 try {
-    val result = HtmlToMarkdownRs.convert("<h1>Hello</h1>")
+    val result = HtmlToMarkdown.convert("<h1>Hello</h1>")
     println(result.content)
-} catch (error: ConversionError.ParseError) {
-    System.err.println("Parse failed: ${error.field0}")
-} catch (error: ConversionError) {
+} catch (error: HtmlToMarkdownRsBridgeException) {
     System.err.println("Conversion failed: ${error.message}")
 }
 ```

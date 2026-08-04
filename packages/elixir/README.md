@@ -95,7 +95,7 @@ Ship identical Markdown across every runtime while enjoying native performance w
 Add {:html_to_markdown, "~> 3.10.4"} to mix.exs deps
 ```
 
-Requires Elixir 1.19+ and OTP 28. Add to your `mix.exs`:
+Requires Elixir 1.14+. Add to your `mix.exs`:
 
 ```elixir
 def deps do
@@ -121,11 +121,18 @@ end
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```elixir
+{:ok, result} = HtmlToMarkdown.convert("<h1>Hello</h1><p>This is <strong>fast</strong>!</p>")
+IO.puts(result.content)
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```elixir
+opts = %HtmlToMarkdown.ConversionOptions{wrap: true, wrap_width: 40}
+{:ok, result} = HtmlToMarkdown.convert("<h1>Hello</h1><p>World</p>", opts)
+IO.puts(result.content)
+```
 
 ## Architecture
 
@@ -150,18 +157,18 @@ The dispatcher is invisible to the caller. Output is byte-identical across tiers
 
 ### Core Function
 
-**`HtmlToMarkdown.convert(html, options \\ nil) :: {:ok, ConversionResult.t()} | {:error, term()}`**
+**`HtmlToMarkdown.convert(html, options \\ nil) :: {:ok, ConversionResult.t()} | {:error, atom(), String.t()}`**
 
 Converts HTML to Markdown. Returns `{:ok, result}` where result is a struct with all results in a single call.
 
 ```elixir
 {:ok, result} = HtmlToMarkdown.convert(html)
-result.content    # Converted Markdown string
-result.metadata   # Metadata map (when extract_metadata: true)
-result.tables     # Table data list
-result.document   # Document-level info
-result.images     # Extracted images
-result.warnings   # Any conversion warnings
+result.content          # Converted Markdown string
+result.metadata         # HtmlMetadata struct (always present; extract_metadata defaults to true)
+result.metadata.images  # Extracted images
+result.tables           # Table data list (empty unless include_document_structure: true)
+result.document         # Document-level structure (nil unless include_document_structure: true)
+result.warnings         # Any conversion warnings
 ```
 
 ### Options
@@ -243,15 +250,15 @@ The metadata extraction feature enables comprehensive document analysis during c
 
 ```elixir
 html = "<h1>Article</h1><img src=\"test.jpg\" alt=\"test\">"
-opts = %HtmlToMarkdown.Options{extract_metadata: true}
+opts = %HtmlToMarkdown.ConversionOptions{extract_metadata: true}
 {:ok, result} = HtmlToMarkdown.convert(html, opts)
 
-IO.puts(result.content)                           # Converted Markdown
-IO.inspect(result.metadata["document"]["title"])  # Document title
-IO.inspect(result.metadata["headers"])            # All h1-h6 elements
-IO.inspect(result.metadata["links"])              # All hyperlinks
-IO.inspect(result.metadata["images"])             # All images with alt text
-IO.inspect(result.metadata["structured_data"])    # JSON-LD, Microdata, RDFa
+IO.puts(result.content)                    # Converted Markdown
+IO.inspect(result.metadata.document.title) # Document title
+IO.inspect(result.metadata.headers)        # All h1-h6 elements
+IO.inspect(result.metadata.links)          # All hyperlinks
+IO.inspect(result.metadata.images)         # All images with alt text
+IO.inspect(result.metadata.structured_data) # JSON-LD, Microdata, RDFa
 ```
 
 ## Visitor Pattern
@@ -271,30 +278,26 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 ### Example: Quick Start
 
 ```elixir
-defmodule MyVisitor do
-  use HtmlToMarkdown.Visitor
-
-  @impl true
-  def handle_link(_ctx, href, text, _title) do
+visitor = %{
+  handle_link: fn %{"href" => href, "text" => text} ->
     # Rewrite CDN URLs
-    href = if String.starts_with?(href, "https://old-cdn.com") do
-      String.replace(href, "https://old-cdn.com", "https://new-cdn.com")
-    else
-      href
-    end
-    {:custom, "[#{text}](#{href})"}
-  end
+    href =
+      if String.starts_with?(href, "https://old-cdn.com") do
+        String.replace(href, "https://old-cdn.com", "https://new-cdn.com")
+      else
+        href
+      end
 
-  @impl true
-  def handle_image(_ctx, src, _alt, _title) do
+    {:custom, "[#{text}](#{href})"}
+  end,
+  handle_image: fn %{"src" => src} ->
     # Skip tracking pixels
     if String.contains?(src, "tracking"), do: :skip, else: :continue
   end
-end
+}
 
 html = "<a href=\"https://old-cdn.com/file.pdf\">Download</a>"
-opts = %HtmlToMarkdown.Options{visitor: MyVisitor}
-{:ok, result} = HtmlToMarkdown.convert(html, opts)
+{:ok, result} = HtmlToMarkdown.convert(html, %{visitor: visitor})
 result.content
 ```
 

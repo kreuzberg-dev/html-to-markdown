@@ -61,12 +61,12 @@ html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>"
 
 # Default Markdown output
 markdown_result = HtmlToMarkdown.convert(html)
-markdown = markdown_result[:content]
+markdown = markdown_result.content
 # Result: "This is **bold** and *italic* text."
 
 # Djot output
 djot_result = HtmlToMarkdown.convert(html, output_format: 'djot')
-djot = djot_result[:content]
+djot = djot_result.content
 # Result: "This is *bold* and _italic_ text."
 ```
 
@@ -101,20 +101,25 @@ djot := *djotResult.Content
 import io.xberg.htmltomarkdown.HtmlToMarkdown;
 import io.xberg.htmltomarkdown.ConversionOptions;
 import io.xberg.htmltomarkdown.OutputFormat;
+import io.xberg.htmltomarkdown.HtmlToMarkdownRsException;
 
-String html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
+public class DjotExample {
+    public static void main(String[] args) throws HtmlToMarkdownRsException {
+        String html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
-// Default Markdown output
-String markdown = HtmlToMarkdown.convert(html).content();
-// Result: "This is **bold** and *italic* text."
+        // Default Markdown output
+        String markdown = HtmlToMarkdown.convert(html).content();
+        // Result: "This is **bold** and *italic* text."
 
-// Djot output
-String djot = HtmlToMarkdown.convert(html,
-    ConversionOptions.builder()
-        .withOutputFormat(OutputFormat.Djot)
-        .build()
-).content();
-// Result: "This is *bold* and _italic_ text."
+        // Djot output
+        String djot = HtmlToMarkdown.convert(html,
+            ConversionOptions.builder()
+                .withOutputFormat(OutputFormat.Djot)
+                .build()
+        ).content();
+        // Result: "This is *bold* and _italic_ text."
+    }
+}
 ```
 
 {% elif language == 'csharp' %}
@@ -125,11 +130,11 @@ using HtmlToMarkdown;
 var html = "<p>This is <strong>bold</strong> and <em>italic</em> text.</p>";
 
 // Default Markdown output
-var markdown = Converter.Convert(html).Content;
+var markdown = {{ csharp_wrapper_class }}.Convert(html, null).Content;
 // Result: "This is **bold** and *italic* text."
 
 // Djot output
-var djot = Converter.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Djot }).Content;
+var djot = {{ csharp_wrapper_class }}.Convert(html, new ConversionOptions { OutputFormat = OutputFormat.Djot }).Content;
 // Result: "This is *bold* and _italic_ text."
 ```
 

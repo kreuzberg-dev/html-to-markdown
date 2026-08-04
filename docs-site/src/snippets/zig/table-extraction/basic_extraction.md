@@ -3,7 +3,7 @@ const std = @import("std");
 const html_to_markdown = @import("html_to_markdown_rs");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
 
@@ -15,8 +15,9 @@ pub fn main() !void {
         \\</table>
     ;
 
-    // Tables are always extracted into the `tables` array of ConversionResult.
-    const result_json = try html_to_markdown.convert(html, null);
+    // Tables are only populated in `result.tables` when
+    // `include_document_structure` is enabled.
+    const result_json = try html_to_markdown.convert(html, "{\"include_document_structure\":true}");
     defer std.heap.c_allocator.free(result_json);
 
     var parsed = try std.json.parseFromSlice(std.json.Value, allocator, result_json, .{});

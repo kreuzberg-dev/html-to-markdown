@@ -1,7 +1,7 @@
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:875289a052b7ca9e146876523bc0ece9c68256d7f11b63f03581b6f3b4462f15
-Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
+Content-Hash: blake3:ed74a06eb192ee55eb76442853a19ac6f060548eef1b356d3cdf5c40d2bbe13e
+Source-Hash: blake3:bc2dee3415d5bf7b11644bed394538f69fd1e09522b938414384c27cbb38bf8a
 Schema-Version: v1
 -->
 
@@ -176,7 +176,7 @@ let result = convert(html, None)?;
 let meta = &result.metadata;
 println!("{:?}", meta.document.title);
 
-// Tables — always populated in the result
+// Tables — populated when include_document_structure is enabled
 for table in &result.tables {
     println!("{}", table.markdown);
     println!("{:?}", table.grid.cells);
@@ -212,12 +212,16 @@ let markdown: String = result.content.unwrap_or_default();
 
 ## JSON Configuration (requires `serde` or `metadata` feature)
 
+`ConversionOptions` derives `Serialize`/`Deserialize`, so deserialize it with `serde_json`
+directly — there are no `*_from_json` helper functions on the public surface.
+
 ```rust
-pub fn conversion_options_from_json(json: &str) -> Result<ConversionOptions>
-pub fn conversion_options_update_from_json(json: &str) -> Result<ConversionOptionsUpdate>
-pub fn metadata_config_from_json(json: &str) -> Result<MetadataConfig>  // metadata feature
-pub fn inline_image_config_from_json(json: &str) -> Result<InlineImageConfig>  // inline-images
+let options: ConversionOptions = serde_json::from_str(json)?;
+let result = convert(html, Some(options))?;
 ```
+
+Unknown fields are rejected (`deny_unknown_fields`), so a typo in the JSON is an error rather
+than a silently ignored key.
 
 ## DocumentStructure Types
 

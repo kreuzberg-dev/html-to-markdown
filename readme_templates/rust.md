@@ -157,29 +157,21 @@ println!("{}", result.content.unwrap_or_default());
 
 ## Metadata Extraction
 
-Metadata is automatically included in the result. Configure which fields to extract via `MetadataConfig`:
+Metadata extraction is on by default; `result.metadata` is always populated (set `.extract_metadata(false)` to skip the pass):
 
 ```rust
-use html_to_markdown_rs::{convert, ConversionOptions, MetadataConfig};
+use html_to_markdown_rs::{convert, ConversionOptions};
 
-let options = ConversionOptions::builder()
-    .metadata_config(MetadataConfig {
-        extract_headers: true,
-        extract_links: true,
-        extract_images: false,
-        ..Default::default()
-    })
-    .build();
+let options = ConversionOptions::builder().extract_metadata(true).build();
 
 let result = convert(html, Some(options))?;
-if let Some(metadata) = &result.metadata {
-    println!("Title: {:?}", metadata.document.title);
-    for header in &metadata.headers {
-        println!("H{}: {}", header.level, header.text);
-    }
-    for link in &metadata.links {
-        println!("Link: {} -> {}", link.text, link.href);
-    }
+let metadata = &result.metadata;
+println!("Title: {:?}", metadata.document.title);
+for header in &metadata.headers {
+    println!("H{}: {}", header.level, header.text);
+}
+for link in &metadata.links {
+    println!("Link: {} -> {}", link.text, link.href);
 }
 ```
 
@@ -197,7 +189,12 @@ let options = ConversionOptions::builder()
 let result = convert(html, Some(options))?;
 println!("{}", result.content.unwrap_or_default());
 for img in &result.images {
-    println!("Image: {} ({} bytes)", img.src, img.data.as_ref().map_or(0, |d| d.len()));
+    println!(
+        "Image: {:?} ({:?}, {} bytes)",
+        img.filename,
+        img.format,
+        img.data.len()
+    );
 }
 ```
 
@@ -237,9 +234,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## Custom Visitors
 
 ```rust
+use std::sync::{Arc, Mutex};
+
 use html_to_markdown_rs::{convert, ConversionOptions};
 use html_to_markdown_rs::visitor::{HtmlVisitor, NodeContext, VisitResult};
 
+#[derive(Debug)]
 struct NoImagesVisitor;
 
 impl HtmlVisitor for NoImagesVisitor {
@@ -255,7 +255,7 @@ impl HtmlVisitor for NoImagesVisitor {
 }
 
 let options = ConversionOptions::builder()
-    .visitor(Box::new(NoImagesVisitor))
+    .visitor(Some(Arc::new(Mutex::new(NoImagesVisitor))))
     .build();
 
 let result = convert(html, Some(options))?;

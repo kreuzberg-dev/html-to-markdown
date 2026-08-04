@@ -101,11 +101,35 @@ implementation("io.xberg:html-to-markdown-android:3.10.4")
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```kotlin
+import io.xberg.android.HtmlToMarkdown
+
+val html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>"
+val result = HtmlToMarkdown.convert(html)
+val markdown: String? = result.content
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```kotlin
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.PropertyNamingStrategies
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import io.xberg.android.ConversionOptions
+import io.xberg.android.HtmlToMarkdown
+
+val mapper = ObjectMapper()
+    .registerKotlinModule()
+    .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+val options = mapper.readValue(
+    "{\"heading_style\":\"Atx\",\"list_indent_width\":2,\"wrap\":true}",
+    ConversionOptions::class.java,
+)
+
+val html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>"
+val result = HtmlToMarkdown.convert(html, options)
+val markdown: String? = result.content
+```
 
 ## Architecture
 
@@ -168,22 +192,6 @@ Djot's extended syntax allows you to express more semantic meaning in lightweigh
 Set `output_format` to `"plain"` to strip all markup and return only visible text. This bypasses the Markdown conversion pipeline entirely for maximum speed.
 
 Plain text mode is useful for search indexing, text extraction, and feeding content to LLMs.
-
-## Visitor Pattern
-
-The visitor pattern enables custom HTML→Markdown conversion logic by providing callbacks for specific HTML elements during traversal. Pass a visitor as the third argument to `convert()`.
-
-**Use Cases:**
-
-- **Custom Markdown dialects** – Convert to Obsidian, Notion, or other flavors
-- **Content filtering** – Remove tracking pixels, ads, or unwanted elements
-- **URL rewriting** – Rewrite CDN URLs, add query parameters, validate links
-- **Accessibility validation** – Check alt text, heading hierarchy, link text
-- **Analytics** – Track element usage, link destinations, image sources
-
-**Supported Visitor Methods:** 40+ callbacks for text, inline elements, links, images, headings, lists, blocks, and tables.
-
-### Example: Quick Start
 
 ## Examples
 

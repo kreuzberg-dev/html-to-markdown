@@ -5,8 +5,8 @@ description: Use when extracting metadata from HTML — title, description, lang
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:92b8609da6942758954515f37da247e2b944e4fa7b5c88f878cfbc58ae3e94cc
-Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
+Content-Hash: blake3:8620ccb945d88b6cf30e696110f10e50028b858f01d0f86bb2b090531f1f71b9
+Source-Hash: blake3:bc2dee3415d5bf7b11644bed394538f69fd1e09522b938414384c27cbb38bf8a
 Schema-Version: v1
 -->
 
@@ -85,6 +85,16 @@ html-to-markdown --json --extract-metadata input.html | jq '.metadata.structured
 ```python
 from html_to_markdown import convert
 
+html = """
+<html lang="en">
+<head><title>My Article</title></head>
+<body>
+<h1>Main Heading</h1>
+<a href="https://example.com">External link</a>
+<img src="photo.jpg" alt="A photo">
+</body>
+</html>
+"""
 result = convert(html)
 meta = result.metadata
 print(meta.document.title)        # "My Article"

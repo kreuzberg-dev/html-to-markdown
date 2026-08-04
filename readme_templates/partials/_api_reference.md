@@ -18,7 +18,7 @@ warnings = result.warnings          # Any conversion warnings
 ```
 
 {% elif language == 'typescript' %}
-**`convert(html: string, options?: ConversionOptions, visitor?: Visitor): ConversionResult`**
+**`convert(html: string, options?: ConversionOptions): ConversionResult`**
 
 Converts HTML to Markdown. Returns a `ConversionResult` object with all results in a single call.
 
@@ -28,27 +28,25 @@ import { convert, ConversionOptions } from "@xberg-io/html-to-markdown";
 const result = convert(html);
 const markdown = result.content; // Converted Markdown string
 const metadata = result.metadata; // Metadata (when extractMetadata: true)
-const tables = result.tables; // Structured table data
-const document = result.document; // Document-level info
-const images = result.images; // Extracted images
+const tables = result.tables; // Structured table data (needs includeDocumentStructure: true)
+const document = result.document; // Document-level info (needs includeDocumentStructure: true)
 const warnings = result.warnings; // Any conversion warnings
 ```
 
 {% elif language == 'ruby' %}
-**`convert(html, options: nil, visitor: nil) -> ConversionResult`**
+**`convert(html, options_or_visitor = nil) -> ConversionResult`**
 
-Converts HTML to Markdown. Returns a `ConversionResult` hash with all results in a single call.
+Converts HTML to Markdown. Returns a `ConversionResult` object with accessor methods for all results in a single call. The second positional argument accepts either an options `Hash`/`ConversionOptions` or a visitor object — not both.
 
 ```ruby
 require 'html_to_markdown'
 
 result = HtmlToMarkdown.convert(html)
-markdown = result[:content]       # Converted Markdown string
-metadata = result[:metadata]      # Metadata (when extract_metadata: true)
-tables   = result[:tables]        # Structured table data
-document = result[:document]      # Document-level info
-images   = result[:images]        # Extracted images
-warnings = result[:warnings]      # Any conversion warnings
+markdown = result.content       # Converted Markdown string
+metadata = result.metadata      # Metadata (when extract_metadata: true)
+tables   = result.tables        # Structured table data (when include_document_structure: true)
+document = result.document      # Document-level info
+warnings = result.warnings      # Any conversion warnings
 ```
 
 {% elif language == 'php' %}
@@ -61,12 +59,11 @@ Converts HTML to Markdown. Returns a `ConversionResult` object with all results 
 use HtmlToMarkdown\HtmlToMarkdownApi;
 
 $result   = HtmlToMarkdownApi::convert($html);
-$markdown = $result->content;    // Converted Markdown string
-$metadata = $result->metadata;   // Metadata
-$tables   = $result->tables;     // Structured table data
-$document = $result->document;   // Document-level info
-$images   = $result->images;     // Extracted images
-$warnings = $result->warnings;   // Any conversion warnings
+$markdown = $result->content;           // Converted Markdown string
+$metadata = $result->getMetadata();     // Metadata
+$tables   = $result->getTables();       // Structured table data (needs includeDocumentStructure: true)
+$document = $result->getDocument();     // Document-level info (needs includeDocumentStructure: true)
+$warnings = $result->getWarnings();     // Any conversion warnings
 ```
 
 {% elif language == 'go' %}
@@ -77,7 +74,7 @@ Converts HTML to Markdown. Returns a `ConversionResult` struct with all results 
 ```go
 result, err := htmltomarkdown.Convert(html, nil)
 markdown := result.Content  // *string - converted Markdown
-metadata := result.Metadata // *HtmlMetadata
+metadata := result.Metadata // HTMLMetadata
 tables   := result.Tables   // []TableData
 ```
 
@@ -95,30 +92,30 @@ List<TableData> tables = result.tables();
 ```
 
 {% elif language == 'csharp' %}
-**`{{ csharp_wrapper_class }}.Convert(string html, ConversionOptions? options = null) : ConversionResult`**
+**`{{ csharp_wrapper_class }}.Convert(string html, ConversionOptions? options) : ConversionResult`**
 
 Converts HTML to Markdown. Returns a `ConversionResult` record with all results in a single call.
 
 ```csharp
-var result   = {{ csharp_wrapper_class }}.Convert(html);
+var result   = {{ csharp_wrapper_class }}.Convert(html, null);
 var markdown = result.Content;    // Converted Markdown string
 var metadata = result.Metadata;
-var tables   = result.Tables;
+var tables   = result.Tables;      // Populated when ConversionOptions.IncludeDocumentStructure is true
 ```
 
 {% elif language == 'elixir' %}
-**`HtmlToMarkdown.convert(html, options \\ nil) :: {:ok, ConversionResult.t()} | {:error, term()}`**
+**`HtmlToMarkdown.convert(html, options \\ nil) :: {:ok, ConversionResult.t()} | {:error, atom(), String.t()}`**
 
 Converts HTML to Markdown. Returns `{:ok, result}` where result is a struct with all results in a single call.
 
 ```elixir
 {:ok, result} = HtmlToMarkdown.convert(html)
-result.content    # Converted Markdown string
-result.metadata   # Metadata map (when extract_metadata: true)
-result.tables     # Table data list
-result.document   # Document-level info
-result.images     # Extracted images
-result.warnings   # Any conversion warnings
+result.content          # Converted Markdown string
+result.metadata         # HtmlMetadata struct (always present; extract_metadata defaults to true)
+result.metadata.images  # Extracted images
+result.tables           # Table data list (empty unless include_document_structure: true)
+result.document         # Document-level structure (nil unless include_document_structure: true)
+result.warnings         # Any conversion warnings
 ```
 
 {% elif language == 'r' %}
@@ -140,6 +137,17 @@ tables   <- result$tables     # Table data
 
 **`ConversionOptions`** – Key configuration fields:
 
+{% if language == 'typescript' %}
+
+- `headingStyle`: Heading format (`"Underlined"` | `"Atx"` | `"AtxClosed"`) — default: `"Atx"`
+- `listIndentWidth`: Spaces per indent level — default: `2`
+- `bullets`: Bullet characters cycle — default: `"-*+"`
+- `wrap`: Enable text wrapping — default: `false`
+- `wrapWidth`: Wrap at column — default: `80`
+- `codeLanguage`: Default fenced code block language — default: none
+- `extractMetadata`: Enable metadata extraction into `result.metadata` — default: `true`
+- `outputFormat`: Output markup format (`"Markdown"` | `"Djot"` | `"Plain"`) — default: `"Markdown"`
+{% else %}
 - `heading_style`: Heading format (`"underlined"` | `"atx"` | `"atx_closed"`) — default: `"atx"`
 - `list_indent_width`: Spaces per indent level — default: `2`
 - `bullets`: Bullet characters cycle — default: `"-*+"`
@@ -148,3 +156,4 @@ tables   <- result$tables     # Table data
 - `code_language`: Default fenced code block language — default: none
 - `extract_metadata`: Enable metadata extraction into `result.metadata` — default: `true`
 - `output_format`: Output markup format (`"markdown"` | `"djot"` | `"plain"`) — default: `"markdown"`
+{% endif %}

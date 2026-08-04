@@ -20,12 +20,12 @@ html = """
 </html>
 """
 
-opts = %HtmlToMarkdown.Options{extract_metadata: true}
+opts = %HtmlToMarkdown.ConversionOptions{extract_metadata: true}
 {:ok, result} = HtmlToMarkdown.convert(html, opts)
 
-result.metadata["document"]["title"]        # "Example"
-result.metadata["headers"] |> hd() |> Map.get("text") # "Welcome"
-result.metadata["links"]   |> hd() |> Map.get("link_type") # "external"
+IO.inspect(result.metadata.document.title)                  # "Example"
+IO.inspect(result.metadata.headers |> hd() |> Map.get(:text))     # "Welcome"
+IO.inspect(result.metadata.links   |> hd() |> Map.get(:link_type)) # :external
 ```
 
 ## Extracted Metadata Structure

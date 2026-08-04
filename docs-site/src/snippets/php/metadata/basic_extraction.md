@@ -7,8 +7,8 @@ $html = '<html><head><title>Example</title></head><body><h1>Welcome</h1><a href=
 $result = HtmlToMarkdownApi::convert($html);
 
 echo $result->content;
-echo $result->metadata->document->title;
-foreach ($result->metadata->links as $link) {
+echo $result->getMetadata()->getDocument()->title;
+foreach ($result->getMetadata()->getLinks() as $link) {
     echo $link->href . ': ' . $link->text;
 }
 ```

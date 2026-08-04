@@ -98,7 +98,7 @@ dotnet add package XbergIo.HtmlToMarkdown
 
 {% elif language == 'elixir' %}
 
-Requires Elixir 1.19+ and OTP 28. Add to your `mix.exs`:
+Requires Elixir 1.14+. Add to your `mix.exs`:
 
 ```elixir
 def deps do

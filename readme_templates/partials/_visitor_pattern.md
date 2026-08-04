@@ -38,33 +38,28 @@ markdown = result.content
 {% elif language == 'typescript' %}
 
 ```typescript
-import {
-  convert,
-  type Visitor,
-  type NodeContext,
-  type VisitResult,
-} from "@xberg-io/html-to-markdown";
+import { convert, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
-const visitor: Visitor = {
-  visitLink(ctx: NodeContext, href: string, text: string, title?: string): VisitResult {
+// `visitor` is a plain object of camelCase callbacks — there is no exported
+// `Visitor` type. Return `VisitResult.Continue` / `Skip` / `PreserveHtml` for
+// the built-in behaviors, or `{ Custom: "..." }` to replace a node's output.
+const visitor = {
+  visitLink(ctx: NodeContext, href: string, text: string, title?: string) {
     // Rewrite CDN URLs
     if (href.startsWith("https://old-cdn.com")) {
       href = href.replace("https://old-cdn.com", "https://new-cdn.com");
     }
-    return { type: "custom", output: `[${text}](${href})` };
+    return { Custom: `[${text}](${href})` };
   },
 
   visitImage(ctx: NodeContext, src: string, alt?: string, title?: string): VisitResult {
     // Skip tracking pixels
-    if (src.includes("tracking")) {
-      return { type: "skip" };
-    }
-    return { type: "continue" };
+    return src.includes("tracking") ? VisitResult.Skip : VisitResult.Continue;
   },
 };
 
 const html = '<a href="https://old-cdn.com/file.pdf">Download</a>';
-const result = convert(html, {}, visitor);
+const result = convert(html, { visitor });
 const markdown = result.content;
 ```
 
@@ -79,83 +74,145 @@ class MyVisitor
     if href.start_with?('https://old-cdn.com')
       href = href.sub('https://old-cdn.com', 'https://new-cdn.com')
     end
-    { type: :custom, output: "[#{text}](#{href})" }
+    # Directive keys/symbols are matched case-sensitively: :Custom, :Skip, :Continue.
+    { Custom: "[#{text}](#{href})" }
   end
 
   def visit_image(ctx, src, alt = nil, title = nil)
     # Skip tracking pixels
-    src.include?('tracking') ? { type: :skip } : { type: :continue }
+    src.include?('tracking') ? :Skip : :Continue
   end
 end
 
 html = '<a href="https://old-cdn.com/file.pdf">Download</a>'
-result = HtmlToMarkdown.convert(html, visitor: MyVisitor.new)
-markdown = result[:content]
+# The visitor is the second positional argument — it cannot be combined
+# with an options Hash in the same call.
+result = HtmlToMarkdown.convert(html, MyVisitor.new)
+markdown = result.content
 ```
 
 {% elif language == 'php' %}
 
 ```php
 <?php
-use HtmlToMarkdown\Config\ConversionOptions;
-use HtmlToMarkdown\Service\Converter;
-use HtmlToMarkdown\Visitor\AbstractVisitor;
-use HtmlToMarkdown\Visitor\NodeContext;
-use HtmlToMarkdown\Visitor\VisitResult;
+use HtmlToMarkdown\HtmlToMarkdownApi;
+use HtmlToMarkdown\ConversionOptions;
+use HtmlToMarkdown\VisitorHandle;
 
-class MyVisitor extends AbstractVisitor
-{
-    public function visitLink(NodeContext $ctx, string $href, string $text, ?string $title): array
-    {
+// Visitors are duck-typed: define any subset of visit_* methods.
+$visitor = new class {
+    public function visit_link($ctx, $href, $text, $title) {
         // Rewrite CDN URLs
         if (str_starts_with($href, 'https://old-cdn.com')) {
             $href = str_replace('https://old-cdn.com', 'https://new-cdn.com', $href);
         }
-        return VisitResult::custom("[{$text}]({$href})");
+        return ['Custom' => "[{$text}]({$href})"];
     }
 
-    public function visitImage(NodeContext $ctx, string $src, ?string $alt, ?string $title): array
-    {
+    public function visit_image($ctx, $src, $alt, $title) {
         // Skip tracking pixels
-        return str_contains($src, 'tracking') ? VisitResult::skip() : VisitResult::continue();
+        return str_contains($src, 'tracking') ? 'Skip' : 'Continue';
     }
-}
+};
 
 $html = '<a href="https://old-cdn.com/file.pdf">Download</a>';
-$result = Converter::create()->convert(
-    $html,
-    new ConversionOptions(visitor: new MyVisitor())
-);
-$markdown = $result['content'];
+$visitorHandle = VisitorHandle::from_php_object($visitor);
+$options = ConversionOptions::from_json('{}')->withVisitor($visitorHandle);
+$result = HtmlToMarkdownApi::convert($html, $options);
+$markdown = $result->content;
+```
+
+{% elif language == 'csharp' %}
+
+```csharp
+using HtmlToMarkdown;
+
+var html = "<a href=\"https://old-cdn.com/file.pdf\">Download</a>";
+var options = new ConversionOptions { Visitor = new MyVisitor() };
+var result = {{ csharp_wrapper_class }}.Convert(html, options);
+var markdown = result.Content;
+
+public sealed class MyVisitor : IHtmlVisitor
+{
+    public VisitResult VisitLink(NodeContext ctx, string href, string text, string title)
+    {
+        // Rewrite CDN URLs
+        if (href.StartsWith("https://old-cdn.com"))
+        {
+            href = href.Replace("https://old-cdn.com", "https://new-cdn.com");
+        }
+        return new VisitResult.Custom($"[{text}]({href})");
+    }
+
+    public VisitResult VisitImage(NodeContext ctx, string src, string alt, string title) =>
+        // Skip tracking pixels
+        src.Contains("tracking") ? new VisitResult.Skip() : new VisitResult.Continue();
+
+    // All other callbacks default to Continue; IHtmlVisitor requires all 37 to be implemented.
+    public VisitResult VisitText(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitElementStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitElementEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitHeading(NodeContext ctx, uint level, string text, string id) => new VisitResult.Continue();
+    public VisitResult VisitCodeBlock(NodeContext ctx, string lang, string code) => new VisitResult.Continue();
+    public VisitResult VisitCodeInline(NodeContext ctx, string code) => new VisitResult.Continue();
+    public VisitResult VisitListItem(NodeContext ctx, bool ordered, string marker, string text) => new VisitResult.Continue();
+    public VisitResult VisitListStart(NodeContext ctx, bool ordered) => new VisitResult.Continue();
+    public VisitResult VisitListEnd(NodeContext ctx, bool ordered, string output) => new VisitResult.Continue();
+    public VisitResult VisitTableStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitTableRow(NodeContext ctx, List<string> cells, bool isHeader) => new VisitResult.Continue();
+    public VisitResult VisitTableEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitBlockquote(NodeContext ctx, string content, ulong depth) => new VisitResult.Continue();
+    public VisitResult VisitStrong(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitEmphasis(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitStrikethrough(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitUnderline(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitSubscript(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitSuperscript(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitMark(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitLineBreak(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitHorizontalRule(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitCustomElement(NodeContext ctx, string tagName, string html) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionListStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionTerm(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionDescription(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitDefinitionListEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+    public VisitResult VisitForm(NodeContext ctx, string action, string method) => new VisitResult.Continue();
+    public VisitResult VisitInput(NodeContext ctx, string inputType, string name, string value) => new VisitResult.Continue();
+    public VisitResult VisitButton(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitAudio(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitVideo(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitIframe(NodeContext ctx, string src) => new VisitResult.Continue();
+    public VisitResult VisitDetails(NodeContext ctx, bool open) => new VisitResult.Continue();
+    public VisitResult VisitSummary(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitFigureStart(NodeContext ctx) => new VisitResult.Continue();
+    public VisitResult VisitFigcaption(NodeContext ctx, string text) => new VisitResult.Continue();
+    public VisitResult VisitFigureEnd(NodeContext ctx, string output) => new VisitResult.Continue();
+}
 ```
 
 {% elif language == 'elixir' %}
 
 ```elixir
-defmodule MyVisitor do
-  use HtmlToMarkdown.Visitor
-
-  @impl true
-  def handle_link(_ctx, href, text, _title) do
+visitor = %{
+  handle_link: fn %{"href" => href, "text" => text} ->
     # Rewrite CDN URLs
-    href = if String.starts_with?(href, "https://old-cdn.com") do
-      String.replace(href, "https://old-cdn.com", "https://new-cdn.com")
-    else
-      href
-    end
-    {:custom, "[#{text}](#{href})"}
-  end
+    href =
+      if String.starts_with?(href, "https://old-cdn.com") do
+        String.replace(href, "https://old-cdn.com", "https://new-cdn.com")
+      else
+        href
+      end
 
-  @impl true
-  def handle_image(_ctx, src, _alt, _title) do
+    {:custom, "[#{text}](#{href})"}
+  end,
+  handle_image: fn %{"src" => src} ->
     # Skip tracking pixels
     if String.contains?(src, "tracking"), do: :skip, else: :continue
   end
-end
+}
 
 html = "<a href=\"https://old-cdn.com/file.pdf\">Download</a>"
-opts = %HtmlToMarkdown.Options{visitor: MyVisitor}
-{:ok, result} = HtmlToMarkdown.convert(html, opts)
+{:ok, result} = HtmlToMarkdown.convert(html, %{visitor: visitor})
 result.content
 ```
 

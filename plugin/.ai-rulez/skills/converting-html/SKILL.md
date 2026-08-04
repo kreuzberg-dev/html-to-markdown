@@ -98,6 +98,7 @@ Presets: `minimal`, `standard` (default), `aggressive`. `--preset`,
 ```python
 from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
+html = "<h1>Title</h1><p>Body text.</p>"
 result = convert(
     html,
     ConversionOptions(

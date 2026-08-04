@@ -44,6 +44,8 @@ exclude = [
   "packages/go/include/html_to_markdown.h",
   "packages/csharp/**/*.cs",
   "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
   "docs-site/public/demo/html_to_markdown_wasm*",
   "plugin/.claude-plugin/**",
   "plugin/.codex-plugin/**",
@@ -61,6 +63,9 @@ exclude = [
   ".agents/plugins/marketplace.json",
   ".ai-rulez-generated.json",
 ]
+
+[lint]
+workspace = false
 
 [lint.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
@@ -376,14 +381,6 @@ enabled = true
 "scripts/**/*.py" = ["INP001", "S607", "T201", "D103", "D212"]
 "test_apps/**" = ["comment", "doc-comment"]
 
-# Skip poly's whole-project lint phase in `poly lint`: the shared CI validate job
-# only installs Rust/Python/Java, so the other whole-workspace linters (credo,
-# dart-analyze, golangci-lint, rubocop, steep, pyrefly) cannot run there. They run
-# via the git pre-commit hooks and each language's dedicated CI job. Equivalent to
-# always passing `poly lint --no-workspace`. ~keep
-[lint]
-workspace = false
-
 [hooks]
 stages = ["pre-commit"]
 
@@ -433,6 +430,8 @@ lint = { exclude = [
   "packages/go/include/html_to_markdown.h",
   "packages/csharp/**/*.cs",
   "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
   "docs-site/public/demo/html_to_markdown_wasm*",
   "plugin/.claude-plugin/**",
   "plugin/.codex-plugin/**",
@@ -495,6 +494,8 @@ fmt = { exclude = [
   "packages/go/include/html_to_markdown.h",
   "packages/csharp/**/*.cs",
   "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
   "docs-site/public/demo/html_to_markdown_wasm*",
   "plugin/.claude-plugin/**",
   "plugin/.codex-plugin/**",
@@ -557,6 +558,8 @@ file_safety = { exclude = [
   "packages/go/include/html_to_markdown.h",
   "packages/csharp/**/*.cs",
   "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
   "docs-site/public/demo/html_to_markdown_wasm*",
   "plugin/.claude-plugin/**",
   "plugin/.codex-plugin/**",

@@ -119,11 +119,61 @@ Alternatively, you can manually set `CGO_CFLAGS` and `CGO_LDFLAGS` environment v
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    htmltomarkdown "github.com/xberg-io/html-to-markdown/packages/go/v3"
+)
+
+func main() {
+    html := "<h1>Hello World</h1><p>This is a paragraph.</p>"
+
+    result, err := htmltomarkdown.Convert(html, nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    if result.Content != nil {
+        fmt.Println(*result.Content)
+    }
+}
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    htmltomarkdown "github.com/xberg-io/html-to-markdown/packages/go/v3"
+)
+
+func main() {
+    html := "<h1>Hello</h1><p>Welcome</p>"
+
+    width := uint(80)
+    opts := htmltomarkdown.ConversionOptions{
+        Wrap:      true,
+        WrapWidth: &width,
+    }
+
+    result, err := htmltomarkdown.Convert(html, &opts)
+    if err != nil {
+        log.Fatalf("Conversion failed: %v", err)
+    }
+
+    if result.Content != nil {
+        fmt.Println(*result.Content)
+    }
+}
+```
 
 ## Architecture
 
@@ -155,7 +205,7 @@ Converts HTML to Markdown. Returns a `ConversionResult` struct with all results 
 ```go
 result, err := htmltomarkdown.Convert(html, nil)
 markdown := result.Content  // *string - converted Markdown
-metadata := result.Metadata // *HtmlMetadata
+metadata := result.Metadata // HTMLMetadata
 tables   := result.Tables   // []TableData
 ```
 

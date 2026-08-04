@@ -13,7 +13,7 @@ Brief reference for Go, Ruby, PHP, Java, C#, Elixir, R, WASM, and C FFI.
 Uses cgo with the C FFI layer. Options are passed as JSON strings internally.
 
 ```go
-import "github.com/xberg-io/html-to-markdown/packages/go/v3/htmltomarkdown"
+import htmltomarkdown "github.com/xberg-io/html-to-markdown/packages/go/v3"
 
 // Primary function — func Convert(html string, options *ConversionOptions) (*ConversionResult, error)
 // Pass nil for defaults.
@@ -33,7 +33,7 @@ result, err = htmltomarkdown.Convert(html, &htmltomarkdown.ConversionOptions{
 // Metadata is in result.Metadata when metadata extraction is enabled
 fmt.Println(result.Metadata)
 
-// Tables are always in result.Tables
+// Tables — in result.Tables when IncludeDocumentStructure is enabled
 for _, table := range result.Tables {
     fmt.Println(table.Markdown)
 }
@@ -71,7 +71,8 @@ result = HtmlToMarkdownRs.convert(html, {
     autolinks: true,
 })
 
-# Tables — always in result.tables; each is a TableData with .markdown and .grid
+# Tables — in result.tables when include_document_structure is enabled; each is a
+# TableData with .markdown and .grid
 result.tables.each { |t| puts t.markdown }
 ```
 
@@ -117,7 +118,7 @@ $result = HtmlToMarkdown::convert('<h1>Hello</h1>', $options);
 $metadata = $result->metadata;
 echo $metadata->document->title;
 
-// Tables — always in $result->tables
+// Tables — in $result->tables when includeDocumentStructure is enabled
 foreach ($result->tables as $table) {
     echo $table->markdown;
 }
@@ -163,7 +164,7 @@ ConversionOptions options = new ConversionOptions();
 options.setHeadingStyle("atx");
 ConversionResult result = HtmlToMarkdown.convert("<h1>Hello</h1>", options);
 
-// Tables — always in result.tables()
+// Tables — in result.tables() when includeDocumentStructure is enabled
 for (var table : result.tables()) {
     System.out.println(table.markdown());
 }
@@ -196,7 +197,7 @@ Console.WriteLine(result.Metadata?.Document?.Title);  // metadata (when enabled)
 var options = new ConversionOptions { HeadingStyle = HeadingStyle.Atx };
 var result2 = HtmlToMarkdownConverter.Convert(html, options);
 
-// Tables — always in result.Tables
+// Tables — in result.Tables when IncludeDocumentStructure is enabled
 foreach (var table in result.Tables) {
     Console.WriteLine(table.Markdown);
 }
@@ -240,7 +241,7 @@ IO.inspect result.metadata  # metadata map (when enabled)
     code_block_style: "backticks",
 })
 
-# Tables — always in result.tables
+# Tables — in result.tables when include_document_structure is enabled
 Enum.each(result.tables, fn table -> IO.puts table.markdown end)
 ```
 
@@ -272,7 +273,7 @@ result <- convert("<h1>Hello</h1>", opts)
 # Metadata — in result$metadata
 metadata <- result$metadata
 
-# Tables — always in result$tables
+# Tables — in result$tables when include_document_structure is enabled
 for (table in result$tables) {
     cat(table$markdown)
 }
@@ -299,12 +300,15 @@ import init, { convert } from "@xberg-io/html-to-markdown-wasm";
 await init();
 
 // convert(html, options?) — returns a WasmConversionResult object
-const result = convert("<h1>Hello</h1>", { headingStyle: "Atx" });
+// convert() takes a WasmConversionOptions instance — a plain object literal is not accepted.
+const options = new WasmConversionOptions();
+options.headingStyle = WasmHeadingStyle.Atx;
+const result = convert("<h1>Hello</h1>", options);
 console.log(result.content); // markdown string
 console.log(result.tables); // extracted tables
 console.log(result.metadata); // metadata (when enabled)
 
-// Tables — always in result.tables
+// Tables — in result.tables when includeDocumentStructure is enabled
 for (const table of result.tables) {
   console.log(table.markdown);
 }
@@ -353,7 +357,8 @@ Used internally by Go, Java, and C# bindings. All exported symbols use the `htm_
 #include "html_to_markdown.h"
 
 // htm_convert() — returns an opaque HTMConversionResult handle
-HTMConversionOptions *opts = htm_conversion_options_from_json("{\"headingStyle\":\"atx\"}");
+// JSON keys are the snake_case Rust field names; unknown keys are rejected.
+HTMConversionOptions *opts = htm_conversion_options_from_json("{\"heading_style\":\"atx\"}");
 HTMConversionResult *result = htm_convert(html_cstr, opts);
 htm_conversion_options_free(opts);
 

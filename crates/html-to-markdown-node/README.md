@@ -141,11 +141,28 @@ npm install @xberg-io/html-to-markdown-wasm
 
 Basic conversion:
 
-<!-- snippet not found: getting-started/basic_usage.md -->
+```typescript
+import { convert } from "@xberg-io/html-to-markdown";
+
+const result = convert("<h1>Hello World</h1>");
+const markdown = result.content ?? "";
+console.log(markdown); // # Hello World
+```
 
 With conversion options:
 
-<!-- snippet not found: getting-started/with_options.md -->
+```typescript
+import { convert, ConversionOptions, HeadingStyle } from "@xberg-io/html-to-markdown";
+
+const options: ConversionOptions = {
+  headingStyle: HeadingStyle.Atx,
+  listIndentWidth: 2,
+  wrap: true,
+};
+
+const result = convert("<h1>Title</h1><p>Content</p>", options);
+const markdown = result.content;
+```
 
 ## Architecture
 
@@ -170,7 +187,7 @@ The dispatcher is invisible to the caller. Output is byte-identical across tiers
 
 ### Core Function
 
-**`convert(html: string, options?: ConversionOptions, visitor?: Visitor): ConversionResult`**
+**`convert(html: string, options?: ConversionOptions): ConversionResult`**
 
 Converts HTML to Markdown. Returns a `ConversionResult` object with all results in a single call.
 
@@ -180,9 +197,8 @@ import { convert, ConversionOptions } from "@xberg-io/html-to-markdown";
 const result = convert(html);
 const markdown = result.content; // Converted Markdown string
 const metadata = result.metadata; // Metadata (when extractMetadata: true)
-const tables = result.tables; // Structured table data
-const document = result.document; // Document-level info
-const images = result.images; // Extracted images
+const tables = result.tables; // Structured table data (needs includeDocumentStructure: true)
+const document = result.document; // Document-level info (needs includeDocumentStructure: true)
 const warnings = result.warnings; // Any conversion warnings
 ```
 
@@ -190,14 +206,14 @@ const warnings = result.warnings; // Any conversion warnings
 
 **`ConversionOptions`** – Key configuration fields:
 
-- `heading_style`: Heading format (`"underlined"` | `"atx"` | `"atx_closed"`) — default: `"atx"`
-- `list_indent_width`: Spaces per indent level — default: `2`
+- `headingStyle`: Heading format (`"Underlined"` | `"Atx"` | `"AtxClosed"`) — default: `"Atx"`
+- `listIndentWidth`: Spaces per indent level — default: `2`
 - `bullets`: Bullet characters cycle — default: `"-*+"`
 - `wrap`: Enable text wrapping — default: `false`
-- `wrap_width`: Wrap at column — default: `80`
-- `code_language`: Default fenced code block language — default: none
-- `extract_metadata`: Enable metadata extraction into `result.metadata` — default: `true`
-- `output_format`: Output markup format (`"markdown"` | `"djot"` | `"plain"`) — default: `"markdown"`
+- `wrapWidth`: Wrap at column — default: `80`
+- `codeLanguage`: Default fenced code block language — default: none
+- `extractMetadata`: Enable metadata extraction into `result.metadata` — default: `true`
+- `outputFormat`: Output markup format (`"Markdown"` | `"Djot"` | `"Plain"`) — default: `"Markdown"`
 
 ## Djot Output Format
 
@@ -298,33 +314,28 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 ### Example: Quick Start
 
 ```typescript
-import {
-  convert,
-  type Visitor,
-  type NodeContext,
-  type VisitResult,
-} from "@xberg-io/html-to-markdown";
+import { convert, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
-const visitor: Visitor = {
-  visitLink(ctx: NodeContext, href: string, text: string, title?: string): VisitResult {
+// `visitor` is a plain object of camelCase callbacks — there is no exported
+// `Visitor` type. Return `VisitResult.Continue` / `Skip` / `PreserveHtml` for
+// the built-in behaviors, or `{ Custom: "..." }` to replace a node's output.
+const visitor = {
+  visitLink(ctx: NodeContext, href: string, text: string, title?: string) {
     // Rewrite CDN URLs
     if (href.startsWith("https://old-cdn.com")) {
       href = href.replace("https://old-cdn.com", "https://new-cdn.com");
     }
-    return { type: "custom", output: `[${text}](${href})` };
+    return { Custom: `[${text}](${href})` };
   },
 
   visitImage(ctx: NodeContext, src: string, alt?: string, title?: string): VisitResult {
     // Skip tracking pixels
-    if (src.includes("tracking")) {
-      return { type: "skip" };
-    }
-    return { type: "continue" };
+    return src.includes("tracking") ? VisitResult.Skip : VisitResult.Continue;
   },
 };
 
 const html = '<a href="https://old-cdn.com/file.pdf">Download</a>';
-const result = convert(html, {}, visitor);
+const result = convert(html, { visitor });
 const markdown = result.content;
 ```
 

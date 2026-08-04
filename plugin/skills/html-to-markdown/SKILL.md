@@ -15,8 +15,8 @@ metadata:
 
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:c58547fe180379b7493a0be88e1f2c24e324f11f81386340513172310b155888
-Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
+Content-Hash: blake3:e3c81b07830ab6fbd6130642dfa934baf49b44e831645bd445f722ca1577356f
+Source-Hash: blake3:bc2dee3415d5bf7b11644bed394538f69fd1e09522b938414384c27cbb38bf8a
 Schema-Version: v1
 -->
 
@@ -202,6 +202,7 @@ let result = convert(html, Some(options))?;
 ```python
 from html_to_markdown import convert, ConversionOptions, PreprocessingOptions
 
+html = "<h1>Title</h1><p>Body text.</p>"
 result = convert(
     html,
     ConversionOptions(
