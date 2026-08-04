@@ -7,6 +7,73 @@ All notable changes to html-to-markdown will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.4] - 2026-08-04
+
+### Fixed
+
+- Node.js: named ESM imports such as `import { convert } from "@xberg-io/html-to-markdown"` now
+  resolve. The napi-generated `index.js` ended with `module.exports = nativeBinding`, which Node's
+  ESM↔CJS interop (`cjs-module-lexer`) cannot statically analyze, so named imports threw
+  `SyntaxError: The requested module ... does not provide an export named 'convert'`. The build now
+  appends explicit `module.exports.<name> = nativeBinding.<name>` re-exports for every public
+  runtime export; `require()` is unaffected ([#450](https://github.com/xberg-io/html-to-markdown/issues/450)).
+
+## [3.10.3] - 2026-08-04
+
+### Fixed
+
+- The Swift package now builds under Xcode/XCBuild, not just `swift build`. The `RustBridgeC`
+  target was header-only, so XCBuild failed to link (`RustBridgeC.o` was never emitted) for every
+  iOS/macOS consumer of the published SwiftPM package. It now ships a translation unit with an
+  anchor symbol so the object is always produced ([#449](https://github.com/xberg-io/html-to-markdown/issues/449)).
+
+### Changed
+
+- The PHP binding sources now live in the `html-to-markdown-php` crate alongside the other
+  in-crate bindings; the standalone `packages/php` layout has been removed. Composer consumers are
+  unaffected.
+
+## [3.10.2] - 2026-08-01
+
+### Added
+
+- `cargo binstall html-to-markdown-cli` support (#448) — prebuilt CLI binaries can now be
+  installed directly from GitHub Releases without compiling from source. Adds
+  `[package.metadata.binstall]` to the CLI crate plus a release-time `verify-binstall` CI
+  job that installs via `cargo binstall` and smoke-tests the binary.
+
+### Changed
+
+- Updated dependencies.
+
+## [3.10.1] - 2026-07-31
+
+### Fixed
+
+- The Android AAR (`io.xberg:html-to-markdown-android`) now bundles its JNI native libraries.
+  Previously the published AAR contained no `.so` files, so every consumer crashed at runtime with
+  `UnsatisfiedLinkError: library "libhtm_jni.so" not found` ([#446](https://github.com/xberg-io/html-to-markdown/issues/446)). The publish workflow built
+  the wrong crate (the C-FFI `html-to-markdown-ffi`) and uploaded it from a path the build action
+  never wrote, staging nothing. It now builds the JNI crate (`html-to-markdown-rs-jni` →
+  `libhtm_jni.so`) and stages it for every ABI, and a regenerated Gradle guard (alef 0.48.16) fails
+  the build if a correctly-named `lib*_jni.so` is ever missing.
+
+### Added
+
+- The core library now emits structured `tracing` spans and events as a first-class observability
+  surface: an `html_to_markdown::convert` span (`input_len`, `output_format`, `wrap`,
+  `extract_metadata`, `extract_images`, `tier_strategy` fields) wraps every conversion, with
+  `DEBUG` events at parse/walk/render stage boundaries and `WARN`/`ERROR` events on recovered or
+  fatal failures. The library never installs a subscriber — attach one in your application to
+  observe it. The CLI now initializes a `tracing-subscriber` (respecting `RUST_LOG`, with
+  `--debug` raising the default level) and routes all diagnostics through `tracing` instead of raw
+  `stdout`/`stderr` writes.
+
+### Changed
+
+- Android AAR now ships four ABIs (`arm64-v8a`, `x86_64`, `armeabi-v7a`, `x86`).
+- Upgraded dependencies to latest, including `base64` 0.23 and `rmcp` 3.0.1.
+
 ## [3.10.0] - 2026-07-30
 
 ### Changed
