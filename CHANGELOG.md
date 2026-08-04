@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Ruby: the gem no longer publishes its generated types into the global `Object` namespace, which
+  collided with unrelated libraries (notably the `parser` gem's `Parser` constant). Generated types
+  now stay namespaced under `HtmlToMarkdown` (tree-sitter-language-pack issue #173).
+
 ## [3.10.4] - 2026-08-04
 
 ### Fixed

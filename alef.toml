@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.51.0"
+alef_version = "0.51.1"
 languages = [
   "python",
   "node",
@@ -138,6 +138,10 @@ exclude = [
   "**/*_bridge_generated/**",
   "crates/html-to-markdown-node/index.js",
   "test_apps/wasm/tests/**",
+  # cbindgen-generated FFI headers: keep byte-identical to cbindgen output; poly's
+  # C doc-comment reflow would diverge from the canonical generated form. ~keep
+  "crates/html-to-markdown-ffi/include/html_to_markdown.h",
+  "packages/go/include/html_to_markdown.h",
   # Vendored wasm-bindgen artifact (docs live demo); hand-written script.js /
   # style.css / index.html in the same dir stay linted. ~keep
   "docs-site/public/demo/html_to_markdown_wasm*",
