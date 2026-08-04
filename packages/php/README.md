@@ -79,23 +79,45 @@
   </a>
 </div>
 
-High-performance HTML to Markdown converter for Android, packaged as an AAR with bundled JNI libraries for `arm64-v8a`, `x86_64`, `armeabi-v7a`, and `x86`.
-Server-side Kotlin/JVM consumers should use the `io.xberg:html-to-markdown` Java package directly — Kotlin/JVM treats Java classes as native, and Panama FFM is unavailable on Android, which is why Android ships as its own artifact.
+High-performance HTML to Markdown converter with typed PHP bindings powered by a Rust core.
+Provides a type-safe API with full PHPStan level 9 support, modern PHP 8.2+ features, and comprehensive metadata extraction.
+
+Note: The package was previously published as `goldziher/html-to-markdown`, which still works for backward compatibility.
 
 ## What This Package Provides
 
 - **Same renderer as every binding** — output matches Rust, Python, Node.js, Ruby, PHP, Go, Java, .NET, Elixir, R, Dart, Swift, Zig, C FFI, and WASM.
 - **Structured conversion result** — Markdown plus metadata, links, headings, images, tables, and warnings where the binding exposes them.
 - **Production defaults** — HTML is parsed with the Rust core, sanitized by default, and rendered without runtime-specific Markdown drift.
-- **Android AAR** — bundled JNI libraries for Android targets; server-side Kotlin should use the Java package.
+- **PHP extension** — typed PHP 8.2+ API with stubs suitable for PHPStan and production Composer projects.
 
 ## Installation
 
 ```bash
-implementation("io.xberg:html-to-markdown-android:3.10.3")
+pie install xberg-io/html-to-markdown
+```
+
+Requires PHP 8.2+. Install the native extension via PIE:
+
+```bash
+pie install xberg-io/html-to-markdown
+```
+
+Or use Composer (requires ext-html_to_markdown):
+
+```bash
+composer require xberg-io/html-to-markdown
 ```
 
 ## Performance Snapshot
+
+**Apple M4** · `convert()` · Real Wikipedia documents
+
+| Document | Size | Ops/sec |
+|----------|------|---------|
+| Lists (Timeline) | 129KB | 3346 |
+| Tables (Countries) | 360KB | 973 |
+| Medium (Python) | 657KB | 485 |
 
 ## Quick Start
 
@@ -130,6 +152,23 @@ The dispatcher is invisible to the caller. Output is byte-identical across tiers
 
 ### Core Function
 
+**`HtmlToMarkdownApi::convert(string $html, ?ConversionOptions $options = null): ConversionResult`**
+
+Converts HTML to Markdown. Returns a `ConversionResult` object with all results in a single call.
+
+```php
+<?php
+use HtmlToMarkdown\HtmlToMarkdownApi;
+
+$result   = HtmlToMarkdownApi::convert($html);
+$markdown = $result->content;    // Converted Markdown string
+$metadata = $result->metadata;   // Metadata
+$tables   = $result->tables;     // Structured table data
+$document = $result->document;   // Document-level info
+$images   = $result->images;     // Extracted images
+$warnings = $result->warnings;   // Any conversion warnings
+```
+
 ### Options
 
 **`ConversionOptions`** – Key configuration fields:
@@ -161,13 +200,54 @@ The library supports converting HTML to [Djot](https://djot.net/), a lightweight
 
 ### Example Usage
 
+Set `ConversionOptions.outputFormat` to `OutputFormat::Djot` and pass the options object to
+`HtmlToMarkdownApi::convert($html, $options)`. The PHP API reference lists the full options constructor.
+
 Djot's extended syntax allows you to express more semantic meaning in lightweight text, making it useful for documents that require strikethrough, insertion tracking, or mathematical notation.
 
 ## Plain Text Output
 
 Set `output_format` to `"plain"` to strip all markup and return only visible text. This bypasses the Markdown conversion pipeline entirely for maximum speed.
 
+Set `ConversionOptions.outputFormat` to `OutputFormat::Plain` and pass the options object to
+`HtmlToMarkdownApi::convert($html, $options)`. The PHP API reference lists the full options constructor.
+
 Plain text mode is useful for search indexing, text extraction, and feeding content to LLMs.
+
+## Metadata Extraction
+
+The metadata extraction feature enables comprehensive document analysis during conversion. Extract document properties, headers, links, images, and structured data in a single pass — all via the standard `convert()` function.
+
+**Use Cases:**
+
+- **SEO analysis** – Extract title, description, Open Graph tags, Twitter cards
+- **Table of contents generation** – Build structured outlines from heading hierarchy
+- **Content migration** – Document all external links and resources
+- **Accessibility audits** – Check for images without alt text, empty links, invalid heading hierarchy
+- **Link validation** – Classify and validate anchor, internal, external, email, and phone links
+
+**Zero Overhead When Disabled:** Metadata extraction adds negligible overhead and happens during the HTML parsing pass. Pass `extract_metadata: true` in `ConversionOptions` to enable it; the result is available at `result.metadata`.
+
+### Example: Quick Start
+
+```php
+<?php
+use HtmlToMarkdown\Config\ConversionOptions;
+use HtmlToMarkdown\Service\Converter;
+
+$html = '<h1>Article</h1><img src="test.jpg" alt="test">';
+$result = Converter::create()->convert(
+    $html,
+    new ConversionOptions(extractMetadata: true)
+);
+
+echo $result['content'];                          // Converted Markdown
+echo $result['metadata']->document->title;        // Document title
+print_r($result['metadata']->headers);            // All h1-h6 elements
+print_r($result['metadata']->links);              // All hyperlinks
+print_r($result['metadata']->images);             // All images with alt text
+print_r($result['metadata']->structured_data);    // JSON-LD, Microdata, RDFa
+```
 
 ## Visitor Pattern
 
@@ -185,11 +265,46 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 
 ### Example: Quick Start
 
+```php
+<?php
+use HtmlToMarkdown\Config\ConversionOptions;
+use HtmlToMarkdown\Service\Converter;
+use HtmlToMarkdown\Visitor\AbstractVisitor;
+use HtmlToMarkdown\Visitor\NodeContext;
+use HtmlToMarkdown\Visitor\VisitResult;
+
+class MyVisitor extends AbstractVisitor
+{
+    public function visitLink(NodeContext $ctx, string $href, string $text, ?string $title): array
+    {
+        // Rewrite CDN URLs
+        if (str_starts_with($href, 'https://old-cdn.com')) {
+            $href = str_replace('https://old-cdn.com', 'https://new-cdn.com', $href);
+        }
+        return VisitResult::custom("[{$text}]({$href})");
+    }
+
+    public function visitImage(NodeContext $ctx, string $src, ?string $alt, ?string $title): array
+    {
+        // Skip tracking pixels
+        return str_contains($src, 'tracking') ? VisitResult::skip() : VisitResult::continue();
+    }
+}
+
+$html = '<a href="https://old-cdn.com/file.pdf">Download</a>';
+$result = Converter::create()->convert(
+    $html,
+    new ConversionOptions(visitor: new MyVisitor())
+);
+$markdown = $result['content'];
+```
+
 ## Examples
 
 ## Links
 
 - **GitHub:** [github.com/xberg-io/html-to-markdown](https://github.com/xberg-io/html-to-markdown)
+- **Packagist:** [packagist.org/packages/xberg-io/html-to-markdown](https://packagist.org/packages/xberg-io/html-to-markdown)
 - **Discord:** [discord.gg/xt9WY3GnKR](https://discord.gg/xt9WY3GnKR)
 
 ## Part of Xberg.io

@@ -41,7 +41,7 @@ import (
 )
 
 const (
-	moduleVersion     = "3.10.2"
+	moduleVersion     = "3.10.3"
 	repoURL           = "https://github.com/xberg-io/html-to-markdown"
 	assetPrefix       = "html-to-markdown-rs"
 	ffiLibName        = "html_to_markdown_ffi"

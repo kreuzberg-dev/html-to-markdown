@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.3] - 2026-08-04
+
+### Fixed
+
+- The Swift package now builds under Xcode/XCBuild, not just `swift build`. The `RustBridgeC`
+  target was header-only, so XCBuild failed to link (`RustBridgeC.o` was never emitted) for every
+  iOS/macOS consumer of the published SwiftPM package. It now ships a translation unit with an
+  anchor symbol so the object is always produced ([#449]).
+
+### Changed
+
+- The PHP binding sources now live in the `html-to-markdown-php` crate alongside the other
+  in-crate bindings; the standalone `packages/php` layout has been removed. Composer consumers are
+  unaffected.
+
+[#449]: https://github.com/xberg-io/html-to-markdown/issues/449
+
 ## [3.10.2] - 2026-08-01
 
 ### Added
