@@ -58,3 +58,6 @@ jobs:
     with:
       setup-rust: true
       setup-python: true
+      # poly's checkstyle whole-project check runs `mvn checkstyle:check`;
+      # checkstyle 13+ requires JDK 21+ (defaulted by java-version).
+      setup-java: true
