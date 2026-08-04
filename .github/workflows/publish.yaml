@@ -689,6 +689,7 @@ jobs:
         run: |
           pnpm --filter ./crates/html-to-markdown-node exec napi build --release
           git checkout HEAD -- crates/html-to-markdown-node/index.d.ts
+          node crates/html-to-markdown-node/scripts/fix-cjs-named-exports.mjs
           mkdir -p typescript-defs
           cp crates/html-to-markdown-node/index.js crates/html-to-markdown-node/index.d.ts typescript-defs/
 

@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.4] - 2026-08-04
+
+### Fixed
+
+- Node.js: named ESM imports such as `import { convert } from "@xberg-io/html-to-markdown"` now
+  resolve. The napi-generated `index.js` ended with `module.exports = nativeBinding`, which Node's
+  ESM↔CJS interop (`cjs-module-lexer`) cannot statically analyze, so named imports threw
+  `SyntaxError: The requested module ... does not provide an export named 'convert'`. The build now
+  appends explicit `module.exports.<name> = nativeBinding.<name>` re-exports for every public
+  runtime export; `require()` is unaffected ([#450]).
+
+[#450]: https://github.com/xberg-io/html-to-markdown/issues/450
+
 ## [3.10.3] - 2026-08-04
 
 ### Fixed

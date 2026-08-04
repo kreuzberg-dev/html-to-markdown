@@ -6,7 +6,7 @@ description: Use when converting HTML to Markdown, Djot, or plain text. Covers o
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:f1b6e5eedc9f268752e34b2c9ad6ecab9ae40c23a8373b1a97838f95a96945d1
-Source-Hash: blake3:de2fa4089fd5b5b1c7dfc1064e05c7b8cf76dc6209df05af9d067a71b443789d
+Source-Hash: blake3:9c89265344cf7d55b7a045c98605b65291c91c996dcc47ed9a09c07cd9f27ac0
 Schema-Version: v1
 -->
 
