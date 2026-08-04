@@ -55,14 +55,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = convert(html, None)?;
     println!("{}", result.content.unwrap_or_default());
 
-    if let Some(metadata) = &result.metadata {
-        println!("Title: {:?}", metadata.document.title);
-        println!("Headers: {:?}", metadata.headers);
-    }
-
-    for table in &result.tables {
-        println!("Table with {} rows", table.cells.len());
-    }
+    // `extract_metadata` is on by default, so `metadata` is always populated.
+    println!("Title: {:?}", result.metadata.document.title);
+    println!("Headers: {:?}", result.metadata.headers);
 
     Ok(())
 }
@@ -208,28 +203,34 @@ for img in &result.images {
 
 ## Table Extraction
 
-Structured table data is always included in `ConversionResult.tables`:
+Structured table data is exposed on `ConversionResult.tables`. It is collected alongside the
+document tree, so it requires `include_document_structure(true)`:
 
 ```rust
-use html_to_markdown_rs::convert;
+use html_to_markdown_rs::{convert, ConversionOptions};
 
-let html = r#"
-<table>
-    <tr><th>Name</th><th>Age</th></tr>
-    <tr><td>Alice</td><td>30</td></tr>
-    <tr><td>Bob</td><td>25</td></tr>
-</table>
-"#;
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let html = r#"
+    <table>
+        <tr><th>Name</th><th>Age</th></tr>
+        <tr><td>Alice</td><td>30</td></tr>
+        <tr><td>Bob</td><td>25</td></tr>
+    </table>
+    "#;
 
-let result = convert(html, None)?;
+    let options = ConversionOptions::builder().include_document_structure(true).build();
+    let result = convert(html, Some(options))?;
 
-println!("{}", result.content.unwrap_or_default());
-for table in &result.tables {
-    println!("Table with {} rows:", table.cells.len());
-    for (i, row) in table.cells.iter().enumerate() {
-        let prefix = if table.is_header_row[i] { "Header" } else { "Row" };
-        println!("  {}: {:?}", prefix, row);
+    println!("{}", result.content.clone().unwrap_or_default());
+    for table in &result.tables {
+        println!("Table {}x{}:", table.grid.rows, table.grid.cols);
+        for cell in &table.grid.cells {
+            let kind = if cell.is_header { "Header" } else { "Cell" };
+            println!("  {kind} (r{},c{}): {}", cell.row, cell.col, cell.content);
+        }
     }
+
+    Ok(())
 }
 ```
 

@@ -9,10 +9,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .extract_metadata(true)
         .build();
     let result = convert(html, Some(options))?;
-    let markdown = result.content.unwrap_or_default();
-    println!("Markdown: {}", markdown);
-    println!("Title: {:?}", result.metadata.as_ref().and_then(|m| m.title.as_deref()));
-    println!("Links: {:?}", result.metadata.as_ref().map(|m| &m.links));
+    let markdown = result.content.clone().unwrap_or_default();
+    println!("Markdown: {markdown}");
+    println!("Title: {:?}", result.metadata.document.title);
+    println!("Links: {:?}", result.metadata.links);
     Ok(())
 }
 ```

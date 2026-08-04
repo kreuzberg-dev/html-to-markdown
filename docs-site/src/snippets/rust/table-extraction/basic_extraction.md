@@ -10,7 +10,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 </table>
 "#;
 
-    let result = convert(html, Some(ConversionOptions::default()))?;
+    // `tables` is collected alongside the document tree, so it must be enabled.
+    let options = ConversionOptions::builder().include_document_structure(true).build();
+    let result = convert(html, Some(options))?;
 
     for table in &result.tables {
         for cell in &table.grid.cells {
