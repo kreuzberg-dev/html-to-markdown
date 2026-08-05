@@ -709,21 +709,61 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: macos-latest, target: aarch64-apple-darwin, rust_target: "", use_napi_cross: false }
-          - { os: macos-15-intel, target: x86_64-apple-darwin, rust_target: "", use_napi_cross: false }
-          - { os: ubuntu-latest, target: x86_64-unknown-linux-gnu, rust_target: "", use_napi_cross: false }
+          - {
+              os: macos-latest,
+              target: aarch64-apple-darwin,
+              rust_target: "",
+              use_napi_cross: false,
+              use_zig_cross: false,
+            }
+          - {
+              os: macos-15-intel,
+              target: x86_64-apple-darwin,
+              rust_target: "",
+              use_napi_cross: false,
+              use_zig_cross: false,
+            }
+          - {
+              os: ubuntu-latest,
+              target: x86_64-unknown-linux-gnu,
+              rust_target: "",
+              use_napi_cross: false,
+              use_zig_cross: false,
+            }
           - {
               os: ubuntu-latest,
               target: aarch64-unknown-linux-gnu,
               rust_target: aarch64-unknown-linux-gnu,
               use_napi_cross: true,
+              use_zig_cross: false,
             }
-          - { os: windows-latest, target: x86_64-pc-windows-msvc, rust_target: "", use_napi_cross: false }
+          - {
+              os: ubuntu-latest,
+              target: x86_64-unknown-linux-musl,
+              rust_target: x86_64-unknown-linux-musl,
+              use_napi_cross: false,
+              use_zig_cross: true,
+            }
+          - {
+              os: ubuntu-latest,
+              target: aarch64-unknown-linux-musl,
+              rust_target: aarch64-unknown-linux-musl,
+              use_napi_cross: false,
+              use_zig_cross: true,
+            }
+          - {
+              os: windows-latest,
+              target: x86_64-pc-windows-msvc,
+              rust_target: "",
+              use_napi_cross: false,
+              use_zig_cross: false,
+            }
           - {
               os: windows-latest,
               target: aarch64-pc-windows-msvc,
               rust_target: aarch64-pc-windows-msvc,
               use_napi_cross: false,
+              use_zig_cross: false,
             }
     steps:
       - uses: actions/checkout@v6
@@ -745,7 +785,23 @@ jobs:
         with:
           node-version: "24"
 
+      # napi-rs cross-compiles musl targets via `napi build -x`, which shells
+      # out to cargo-zigbuild — unlike the gnu targets' --use-napi-cross
+      # (docker-based @napi-rs/cross-toolchain), so it needs zig on PATH and
+      # is not something the shared build-node-napi action supports.
+      - name: Setup Zig (musl cross-compile)
+        if: matrix.use_zig_cross
+        uses: xberg-io/actions/setup-zig@v1
+        with:
+          version: "0.16.0"
+
+      - name: Install cargo-zigbuild (musl cross-compile)
+        if: matrix.use_zig_cross
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+
       - name: Build native module
+        if: ${{ !matrix.use_zig_cross }}
         uses: xberg-io/actions/build-node-napi@v1
         with:
           crate-dir: crates/html-to-markdown-node
@@ -753,6 +809,31 @@ jobs:
           use-napi-cross: ${{ matrix.use_napi_cross }}
           pack-target-tarball: node-bindings-${{ matrix.target }}.tar.gz
           install-deps: "false"
+
+      - name: Build native module (musl, zig cross-compile)
+        if: matrix.use_zig_cross
+        shell: bash
+        working-directory: crates/html-to-markdown-node
+        run: |
+          set -euo pipefail
+          rm -rf npm
+          pnpm exec napi create-npm-dirs
+          pnpm exec napi build --platform --release --target "${{ matrix.target }}" -x \
+            --js index.js --dts index.d.ts
+          pnpm exec napi artifacts --output-dir . --npm-dir npm
+
+          node_file=$(find npm -maxdepth 2 -name "*.node" -type f | head -1)
+          if [ -z "${node_file}" ]; then
+            echo "::error::No .node file found under npm/ for ${{ matrix.target }}"
+            find npm -maxdepth 2 -type f
+            exit 1
+          fi
+          echo "Verified: $(basename "$(dirname "${node_file}")") platform package contains $(basename "${node_file}")"
+
+          tar_members=(npm)
+          [ -f index.js ] && tar_members+=(index.js)
+          [ -f index.d.ts ] && tar_members+=(index.d.ts)
+          tar -czf "${GITHUB_WORKSPACE}/node-bindings-${{ matrix.target }}.tar.gz" "${tar_members[@]}"
 
       - uses: actions/upload-artifact@v7
         with:
