@@ -3,7 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-import 'package:html_to_markdown_rs/src/native_loader.dart';
+import 'package:h2m/src/native_loader.dart';
 import 'dart:ffi';
 import 'dart:isolate';
 import 'dart:io';
@@ -34,8 +34,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   ///    (for published pub.dev packages with platform-specific bundled native libraries)
   /// 3. Package-installed location (lib/src/html_to_markdown_rs_bridge_generated/)
   ///    (legacy fallback for development or packages without per-platform binaries)
-  /// 4. Versioned user cache populated by `dart run html_to_markdown_rs:download_libs`
-  ///    (`<cache>/html_to_markdown_rs/<version>/<rid>/`), shared with the download script
+  /// 4. Versioned user cache populated by `dart run h2m:download_libs`
+  ///    (`<cache>/h2m/<version>/<rid>/`), shared with the download script
   ///    via `nativeCachedLibPath()` in `native_loader.dart`.
   /// 5. Throws a StateError naming the expected release asset URL, the
   ///    download command, and the env-var override (never a silent null miss).
@@ -111,7 +111,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
       final rid = computeRid();
       if (rid != null) {
         final packageRoot =
-            await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:html_to_markdown_rs/html_to_markdown_rs.dart'));
+            await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:h2m/h2m.dart'));
         if (packageRoot != null) {
           final ridDir = packageRoot.resolve('src/native/$rid/');
           for (final candidate in candidates) {
@@ -126,7 +126,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
       // Check legacy package-installed location as fallback.
       final packageRoot =
-          await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:html_to_markdown_rs/html_to_markdown_rs.dart'));
+          await Isolate.resolvePackageUri(_DartCore.Uri.parse('package:h2m/h2m.dart'));
       if (packageRoot != null) {
         final libDir = packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/');
         for (final candidate in candidates) {
@@ -179,7 +179,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
         // fall through to default loader
       }
 
-      // Versioned user cache populated by `dart run html_to_markdown_rs:download_libs`.
+      // Versioned user cache populated by `dart run h2m:download_libs`.
       // Shares its cache-path logic with the download script via
       // `nativeCachedLibPath()` so the two can never disagree on the location.
       final cachedLibPath = nativeCachedLibPath();
@@ -197,10 +197,10 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
     // consumer can recover.
     final rid = nativeComputeRid() ?? Platform.operatingSystem;
     throw StateError(
-      'Native library for html_to_markdown_rs ($rid) was not found. '
+      'Native library for h2m ($rid) was not found. '
       'Expected it in the versioned cache (${nativeCacheDir() ?? '<unresolved cache dir>'}) '
       'or bundled with the package. Download it with '
-      '`dart run html_to_markdown_rs:download_libs`, which fetches '
+      '`dart run h2m:download_libs`, which fetches '
       '${nativeAssetUrlBase()}.tar.gz and verifies its SHA-256, '
       'or point \$nativeLibDirEnv at a directory containing the native library.',
     );

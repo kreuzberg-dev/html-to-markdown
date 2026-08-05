@@ -11,7 +11,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Html\\To\\Markdown\\": "../../crates/html-to-markdown-php/src/"
+      "HtmlToMarkdown\\": "../../crates/html-to-markdown-php/src/"
     }
   },
   "autoload-dev": {

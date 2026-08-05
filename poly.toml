@@ -616,7 +616,7 @@ workspace = true
 files = "packages/dart/**/*.dart"
 
 [hooks.pre-commit.commands.credo]
-run = "mix credo --strict"
+run = "mix deps.get && mix credo --strict"
 root = "packages/elixir"
 workspace = true
 files = "packages/elixir/**/*.{ex,exs}"
