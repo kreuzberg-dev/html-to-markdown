@@ -92,7 +92,7 @@ Server-side Kotlin/JVM consumers should use the `io.xberg:html-to-markdown` Java
 ## Installation
 
 ```bash
-implementation("io.xberg:html-to-markdown-android:3.10.4")
+implementation("io.xberg:html-to-markdown-android:3.10.5")
 ```
 
 ## Performance Snapshot

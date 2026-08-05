@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.5] - 2026-08-05
+
 ### Fixed
 
+- Node.js: the `linux-x64-musl` and `linux-arm64-musl` packages are now built and published. They
+  were advertised in the main package's `optionalDependencies` but never produced, so Alpine and
+  other musl installs silently fell back to no native binding, and `pnpm install --frozen-lockfile`
+  could not resolve them.
 - Ruby: the gem no longer publishes its generated types into the global `Object` namespace, which
   collided with unrelated libraries (notably the `parser` gem's `Parser` constant). Generated types
   now stay namespaced under `HtmlToMarkdown` (tree-sitter-language-pack issue #173).

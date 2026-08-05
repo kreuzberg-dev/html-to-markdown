@@ -6,7 +6,7 @@
 set -euo pipefail
 
 REPO_URL="https://github.com/xberg-io/html-to-markdown"
-VERSION="3.10.4"
+VERSION="3.10.5"
 FFI_PKG_NAME="html_to_markdown_ffi"
 FFI_DIR="ffi"
 
