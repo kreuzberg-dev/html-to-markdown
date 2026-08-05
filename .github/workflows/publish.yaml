@@ -1657,7 +1657,6 @@ jobs:
           pattern: php-package-*
           path: dist/php-package
           merge-multiple: true
-          if-no-files-found: error
 
       - uses: xberg-io/actions/upload-release-assets@v1
         with:
