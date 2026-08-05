@@ -80,7 +80,7 @@ replace = '"@xberg-io/html-to-markdown-wasm": "^{version}"'
 [[workspace.sync.text_replacements]]
 path = "test_apps/java/pom.xml"
 search = "<artifactId>html-to-markdown</artifactId>\\s*<version>[^<]*</version>"
-replace = "<artifactId>html-to-markdown</artifactId>\n            <version>{version}</version>"
+replace = "<artifactId>html-to-markdown</artifactId>\n      <version>{version}</version>"
 
 [[workspace.sync.text_replacements]]
 path = "test_apps/csharp/XbergIo.HtmlToMarkdown.E2eTests.csproj"
