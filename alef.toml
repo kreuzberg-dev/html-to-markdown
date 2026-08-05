@@ -118,12 +118,6 @@ search = 'package = "html-to-markdown-rs", version = "[^"]*"'
 replace = 'package = "html-to-markdown-rs", version = "{version}"'
 
 [workspace.poly]
-# Skip poly's whole-project lint phase in `poly lint`: the shared CI validate job only installs
-# Rust/Python/Java, so the other whole-workspace linters (credo, dart-analyze, golangci-lint,
-# rubocop, steep, pyrefly) cannot run there. They run via the git pre-commit hooks and each
-# language's dedicated CI job. Equivalent to always passing `poly lint --no-workspace`. ~keep
-lint-workspace = false
-
 exclude = [
   "docs-site/src/snippets/**",
   "**/_generated/**",

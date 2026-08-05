@@ -61,3 +61,11 @@ jobs:
       # poly's checkstyle whole-project check runs `mvn checkstyle:check`;
       # checkstyle 13+ requires JDK 21+ (defaulted by java-version).
       setup-java: true
+      # The remaining whole-project checks poly runs (golangci-lint, rubocop, steep,
+      # dart-analyze, credo) each need their own toolchain. Without them this job
+      # skipped poly's workspace phase entirely, so those five linters ran only in
+      # the git hooks and CI never saw them. ~keep
+      setup-go: true
+      setup-ruby: true
+      setup-dart: true
+      setup-elixir: true

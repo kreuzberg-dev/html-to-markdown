@@ -64,9 +64,6 @@ exclude = [
   ".ai-rulez-generated.json",
 ]
 
-[lint]
-workspace = false
-
 [lint.markdown.rumdl]
 disable = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
 
