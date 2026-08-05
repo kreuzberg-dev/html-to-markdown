@@ -2,6 +2,6 @@
 
 All notable changes to this package will be documented in this file.
 
-## 3.10.4
+## 3.10.6
 
 - Initial release.

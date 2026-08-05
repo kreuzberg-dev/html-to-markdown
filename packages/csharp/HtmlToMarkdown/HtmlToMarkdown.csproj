@@ -4,8 +4,8 @@
     <RootNamespace>HtmlToMarkdown</RootNamespace>
     <PackageId>XbergIo.HtmlToMarkdown</PackageId>
     <Version>3.10.6</Version>
-    <AssemblyVersion>3.10.4.0</AssemblyVersion>
-    <FileVersion>3.10.4.0</FileVersion>
+    <AssemblyVersion>3.10.6.0</AssemblyVersion>
+    <FileVersion>3.10.6.0</FileVersion>
     <InformationalVersion>3.10.6</InformationalVersion>
     <Description>High-performance HTML to Markdown converter</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

@@ -1,6 +1,6 @@
 [package]
 name = "html-to-markdown-rb"
-version = "3.10.4"
+version = "3.10.6"
 edition = "2024"
 license = "MIT"
 description = "High-performance HTML to Markdown converter"
