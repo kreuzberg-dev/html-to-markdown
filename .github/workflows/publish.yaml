@@ -780,6 +780,11 @@ jobs:
         with:
           target: ${{ matrix.rust_target || matrix.target }}
           cache-key-prefix: publish-node-${{ matrix.target }}
+          # setup-rust otherwise exports CC/CARGO_TARGET_*_LINKER=musl-gcc for musl targets,
+          # and cargo-zigbuild only sets those when unset — so the zig cross-compile below
+          # silently linked with musl-gcc instead, which cannot produce a musl cdylib
+          # (`cannot find libgcc_s.so.1`) or target another architecture at all. ~keep
+          configure-musl-cc: ${{ matrix.use_zig_cross && 'false' || 'true' }}
 
       - uses: xberg-io/actions/setup-node-workspace@v1
         with:

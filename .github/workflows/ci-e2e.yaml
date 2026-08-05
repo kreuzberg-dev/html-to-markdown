@@ -407,6 +407,77 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         uses: xberg-io/actions/cleanup-rust-cache@v1
 
+  # ~keep The musl platform packages are cross-compiled through zig and were only ever built at
+  # publish time, where both legs failed and skipped the whole npm publish. This mirrors the
+  # publish job's steps so a broken cross-compile surfaces on the commit that causes it.
+  build-node-musl:
+    needs: [changes]
+    name: "Build: Node (${{ matrix.target }}, zig cross-compile)"
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [x86_64-unknown-linux-musl, aarch64-unknown-linux-musl]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        id: checkout
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          target: ${{ matrix.target }}
+          cache-key-prefix: node-musl-${{ matrix.target }}
+          configure-musl-cc: "false"
+
+      - name: Setup Node.js workspace
+        uses: xberg-io/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+
+      - name: Setup Zig
+        uses: xberg-io/actions/setup-zig@v1
+        with:
+          version: "0.16.0"
+
+      - name: Install cargo-zigbuild
+        shell: bash
+        run: command -v cargo-zigbuild || cargo install --locked cargo-zigbuild
+
+      - name: Build native module
+        shell: bash
+        working-directory: crates/html-to-markdown-node
+        run: |
+          set -euo pipefail
+          rm -rf npm
+          pnpm exec napi create-npm-dirs
+          pnpm exec napi build --platform --release --target "${{ matrix.target }}" -x \
+            --js index.js --dts index.d.ts
+          pnpm exec napi artifacts --output-dir . --npm-dir npm
+
+      - name: Verify the platform package holds a native module
+        shell: bash
+        working-directory: crates/html-to-markdown-node
+        run: |
+          set -euo pipefail
+          node_file=$(find npm -maxdepth 2 -name "*.node" -type f | head -1)
+          if [ -z "${node_file}" ]; then
+            echo "::error::No .node file found under npm/ for ${{ matrix.target }}"
+            find npm -maxdepth 2 -type f
+            exit 1
+          fi
+          file "${node_file}"
+          echo "Verified: $(basename "$(dirname "${node_file}")") contains $(basename "${node_file}")"
+
+      - name: Cleanup Rust cache
+        if: always() && steps.checkout.outcome == 'success'
+        uses: xberg-io/actions/cleanup-rust-cache@v1
+
   build-ruby:
     needs: [changes]
     name: "Build: Ruby (${{ matrix.os }}, ruby-${{ matrix.ruby }})"
