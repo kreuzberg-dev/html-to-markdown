@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.10.6] - 2026-08-05
+
+### Fixed
+
+- Node.js: the `linux-x64-musl` and `linux-arm64-musl` packages really are published now. 3.10.5
+  added them, but both cross-compiles failed to link (`cannot find libgcc_s.so.1`) and, because the
+  npm publish job requires every matrix leg, no Node package reached the registry at all. The build
+  action exported `CC`/`CARGO_TARGET_*_LINKER` pointing at `musl-gcc`, and cargo-zigbuild only sets
+  those when they are unset, so the zig cross-compile was silently replaced by a host-arch musl-gcc
+  that cannot produce a musl cdylib. The musl legs now opt out of that export.
+
+### Added
+
+- CI: the musl Node cross-compiles are built on every core/node change instead of only at publish
+  time, and the job fails if a platform package ends up without a native module.
+
 ## [3.10.5] - 2026-08-05
 
 ### Fixed

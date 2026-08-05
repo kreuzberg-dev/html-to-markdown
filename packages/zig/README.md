@@ -92,7 +92,7 @@ Distributed via GitHub Releases — pin a tag in `build.zig.zon` and `zig fetch`
 ## Installation
 
 ```bash
-zig fetch --save https://github.com/xberg-io/html-to-markdown/releases/download/v3.10.5/zig.tar.gz
+zig fetch --save https://github.com/xberg-io/html-to-markdown/releases/download/v3.10.6/zig.tar.gz
 ```
 
 ## Performance Snapshot

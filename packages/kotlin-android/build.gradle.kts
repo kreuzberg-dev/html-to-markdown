@@ -196,7 +196,7 @@ mavenPublishing {
     coordinates(
         groupId = "io.xberg",
         artifactId = "html-to-markdown-android",
-        version = "3.10.5",
+        version = "3.10.6",
     )
 
     pom {
