@@ -11,10 +11,10 @@ defmodule HtmlToMarkdown.DocumentStructure do
 
   @typedoc "A structured document tree representing the semantic content of an HTML document."
   @type t :: %__MODULE__{
-  nodes: [HtmlToMarkdown.DocumentNode.t()],
-  source_format: String.t() | nil
-  }
+          nodes: [HtmlToMarkdown.DocumentNode.t()],
+          source_format: String.t() | nil
+        }
 
   defstruct nodes: [],
-  source_format: nil
+            source_format: nil
 end

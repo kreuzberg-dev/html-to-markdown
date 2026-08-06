@@ -18,11 +18,11 @@ defmodule HtmlToMarkdown do
 
     if is_map(visitor) do
       {:ok, _} =
-      HtmlToMarkdown.Native.convert_with_visitor(
-      html,
-      if(map_size(clean_opts) == 0, do: nil, else: Jason.encode!(clean_opts)),
-      visitor
-      )
+        HtmlToMarkdown.Native.convert_with_visitor(
+          html,
+          if(map_size(clean_opts) == 0, do: nil, else: Jason.encode!(clean_opts)),
+          visitor
+        )
 
       do_visitor_receive_loop(visitor)
     else
@@ -38,23 +38,23 @@ defmodule HtmlToMarkdown do
   defp do_visitor_receive_loop(visitor) do
     receive do
       {:visitor_callback, ref_id, callback_name, args} ->
-      result =
-      case Map.get(visitor, callback_name) do
-        nil -> "Continue"
-        fun -> apply_visitor_callback(fun, args)
-      end
+        result =
+          case Map.get(visitor, callback_name) do
+            nil -> "Continue"
+            fun -> apply_visitor_callback(fun, args)
+          end
 
-      HtmlToMarkdown.Native.visitor_reply(ref_id, result)
-      do_visitor_receive_loop(visitor)
+        HtmlToMarkdown.Native.visitor_reply(ref_id, result)
+        do_visitor_receive_loop(visitor)
 
       {:ok, result} ->
-      {:ok, result}
+        {:ok, result}
 
       {:error, reason} ->
-      {:error, reason}
+        {:error, reason}
     after
       30_000 ->
-      {:error, "visitor callback timeout after 30s"}
+        {:error, "visitor callback timeout after 30s"}
     end
   end
 

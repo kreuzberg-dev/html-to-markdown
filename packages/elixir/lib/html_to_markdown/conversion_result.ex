@@ -22,25 +22,25 @@ defmodule HtmlToMarkdown.ConversionResult do
 
   @typedoc "The primary result of HTML conversion and extraction."
   @type t :: %__MODULE__{
-  content: String.t() | nil,
-  document: HtmlToMarkdown.DocumentStructure.t() | nil,
-  metadata: HtmlToMarkdown.HtmlMetadata.t(),
-  tables: [HtmlToMarkdown.TableData.t()],
-  warnings: [HtmlToMarkdown.ProcessingWarning.t()]
-  }
+          content: String.t() | nil,
+          document: HtmlToMarkdown.DocumentStructure.t() | nil,
+          metadata: HtmlToMarkdown.HtmlMetadata.t(),
+          tables: [HtmlToMarkdown.TableData.t()],
+          warnings: [HtmlToMarkdown.ProcessingWarning.t()]
+        }
 
   defstruct content: nil,
-  document: nil,
-  metadata: nil,
-  tables: [],
-  warnings: []
+            document: nil,
+            metadata: nil,
+            tables: [],
+            warnings: []
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

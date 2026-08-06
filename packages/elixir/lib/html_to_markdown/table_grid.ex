@@ -7,21 +7,21 @@ defmodule HtmlToMarkdown.TableGrid do
 
   @typedoc "A structured table grid with cell-level data including spans."
   @type t :: %__MODULE__{
-  rows: non_neg_integer(),
-  cols: non_neg_integer(),
-  cells: [HtmlToMarkdown.GridCell.t()]
-  }
+          rows: non_neg_integer(),
+          cols: non_neg_integer(),
+          cells: [HtmlToMarkdown.GridCell.t()]
+        }
 
   defstruct rows: 0,
-  cols: 0,
-  cells: []
+            cols: 0,
+            cells: []
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

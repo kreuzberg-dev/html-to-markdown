@@ -6,18 +6,18 @@ defmodule HtmlToMarkdown.Native do
   @moduledoc false
 
   use RustlerPrecompiled,
-  otp_app: :html_to_markdown,
-  crate: "html_to_markdown_nif",
-  base_url: "https://github.com/xberg-io/html-to-markdown/releases/download/v#{Mix.Project.config()[:version]}",
-  version: Mix.Project.config()[:version],
-  targets: [
-  "aarch64-apple-darwin",
-  "aarch64-unknown-linux-gnu",
-  "x86_64-unknown-linux-gnu",
-  "x86_64-pc-windows-gnu"
-  ],
-  nif_versions: ["2.16", "2.17"],
-  force_build: System.get_env("HTML_TO_MARKDOWN_BUILD") in ["1", "true"] or Mix.env() in [:dev]
+    otp_app: :html_to_markdown,
+    crate: "html_to_markdown_nif",
+    base_url: "https://github.com/xberg-io/html-to-markdown/releases/download/v#{Mix.Project.config()[:version]}",
+    version: Mix.Project.config()[:version],
+    targets: [
+      "aarch64-apple-darwin",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-unknown-linux-gnu",
+      "x86_64-pc-windows-gnu"
+    ],
+    nif_versions: ["2.16", "2.17"],
+    force_build: System.get_env("HTML_TO_MARKDOWN_BUILD") in ["1", "true"] or Mix.env() in [:dev]
 
   @doc false
   def set_env(_key, _value), do: :erlang.nif_error(:nif_not_loaded)
@@ -118,7 +118,7 @@ defmodule HtmlToMarkdown.Native do
   Use this when the caller already has materialized attributes.
   """
   def nodecontext_with_owned_attributes(_node_type, _tag_name, _attributes, _depth, _index_in_parent, _parent_tag, _is_inline),
-  do: :erlang.nif_error(:nif_not_loaded)
+    do: :erlang.nif_error(:nif_not_loaded)
 
   @doc "Promote any borrowed fields into owned storage so the context can outlive `'a`."
   def nodecontext_into_owned(_obj), do: :erlang.nif_error(:nif_not_loaded)

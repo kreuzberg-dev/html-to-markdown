@@ -25,37 +25,37 @@ defmodule HtmlToMarkdown.DocumentMetadata do
 
   @typedoc "Document-level metadata extracted from `<head>` and top-level elements."
   @type t :: %__MODULE__{
-  title: String.t() | nil,
-  description: String.t() | nil,
-  keywords: [String.t()],
-  author: String.t() | nil,
-  canonical_url: String.t() | nil,
-  base_href: String.t() | nil,
-  language: String.t() | nil,
-  text_direction: String.t() | nil | nil,
-  open_graph: map(),
-  twitter_card: map(),
-  meta_tags: map()
-  }
+          title: String.t() | nil,
+          description: String.t() | nil,
+          keywords: [String.t()],
+          author: String.t() | nil,
+          canonical_url: String.t() | nil,
+          base_href: String.t() | nil,
+          language: String.t() | nil,
+          text_direction: String.t() | nil | nil,
+          open_graph: map(),
+          twitter_card: map(),
+          meta_tags: map()
+        }
 
   defstruct title: nil,
-  description: nil,
-  keywords: [],
-  author: nil,
-  canonical_url: nil,
-  base_href: nil,
-  language: nil,
-  text_direction: nil,
-  open_graph: %{},
-  twitter_card: %{},
-  meta_tags: %{}
+            description: nil,
+            keywords: [],
+            author: nil,
+            canonical_url: nil,
+            base_href: nil,
+            language: nil,
+            text_direction: nil,
+            open_graph: %{},
+            twitter_card: %{},
+            meta_tags: %{}
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

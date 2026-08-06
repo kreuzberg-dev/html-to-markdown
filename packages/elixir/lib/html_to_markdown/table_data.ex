@@ -7,10 +7,10 @@ defmodule HtmlToMarkdown.TableData do
 
   @typedoc "A top-level extracted table with both structured data and markdown representation."
   @type t :: %__MODULE__{
-  grid: HtmlToMarkdown.TableGrid.t(),
-  markdown: String.t() | nil
-  }
+          grid: HtmlToMarkdown.TableGrid.t(),
+          markdown: String.t() | nil
+        }
 
   defstruct grid: nil,
-  markdown: nil
+            markdown: nil
 end

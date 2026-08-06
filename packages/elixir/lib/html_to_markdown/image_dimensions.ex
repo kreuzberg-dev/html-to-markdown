@@ -14,10 +14,10 @@ defmodule HtmlToMarkdown.ImageDimensions do
 
   @typedoc "Image dimensions in pixels."
   @type t :: %__MODULE__{
-  width: non_neg_integer(),
-  height: non_neg_integer()
-  }
+          width: non_neg_integer(),
+          height: non_neg_integer()
+        }
 
   defstruct width: 0,
-  height: 0
+            height: 0
 end

@@ -27,18 +27,18 @@ defmodule HtmlToMarkdown.ImageMetadata do
 
   @typedoc "Image metadata with source and dimensions."
   @type t :: %__MODULE__{
-  src: String.t() | nil,
-  alt: String.t() | nil,
-  title: String.t() | nil,
-  dimensions: HtmlToMarkdown.ImageDimensions.t() | nil,
-  image_type: String.t() | nil,
-  attributes: map()
-  }
+          src: String.t() | nil,
+          alt: String.t() | nil,
+          title: String.t() | nil,
+          dimensions: HtmlToMarkdown.ImageDimensions.t() | nil,
+          image_type: String.t() | nil,
+          attributes: map()
+        }
 
   defstruct src: nil,
-  alt: nil,
-  title: nil,
-  dimensions: nil,
-  image_type: :data_uri,
-  attributes: %{}
+            alt: nil,
+            title: nil,
+            dimensions: nil,
+            image_type: :data_uri,
+            attributes: %{}
 end

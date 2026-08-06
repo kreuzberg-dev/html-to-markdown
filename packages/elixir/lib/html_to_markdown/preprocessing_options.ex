@@ -7,23 +7,23 @@ defmodule HtmlToMarkdown.PreprocessingOptions do
 
   @typedoc "HTML preprocessing options for document cleanup before conversion."
   @type t :: %__MODULE__{
-  enabled: boolean(),
-  preset: String.t() | nil,
-  remove_navigation: boolean(),
-  remove_forms: boolean()
-  }
+          enabled: boolean(),
+          preset: String.t() | nil,
+          remove_navigation: boolean(),
+          remove_forms: boolean()
+        }
 
   defstruct enabled: true,
-  preset: :standard,
-  remove_navigation: true,
-  remove_forms: true
+            preset: :standard,
+            remove_navigation: true,
+            remove_forms: true
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

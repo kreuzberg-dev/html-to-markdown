@@ -26,25 +26,25 @@ defmodule HtmlToMarkdown.HtmlMetadata do
 
   @typedoc "Comprehensive metadata extraction result from HTML document."
   @type t :: %__MODULE__{
-  document: HtmlToMarkdown.DocumentMetadata.t(),
-  headers: [HtmlToMarkdown.HeaderMetadata.t()],
-  links: [HtmlToMarkdown.LinkMetadata.t()],
-  images: [HtmlToMarkdown.ImageMetadata.t()],
-  structured_data: [HtmlToMarkdown.StructuredData.t()]
-  }
+          document: HtmlToMarkdown.DocumentMetadata.t(),
+          headers: [HtmlToMarkdown.HeaderMetadata.t()],
+          links: [HtmlToMarkdown.LinkMetadata.t()],
+          images: [HtmlToMarkdown.ImageMetadata.t()],
+          structured_data: [HtmlToMarkdown.StructuredData.t()]
+        }
 
   defstruct document: nil,
-  headers: [],
-  links: [],
-  images: [],
-  structured_data: []
+            headers: [],
+            links: [],
+            images: [],
+            structured_data: []
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

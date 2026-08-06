@@ -27,18 +27,18 @@ defmodule HtmlToMarkdown.LinkMetadata do
 
   @typedoc "Hyperlink metadata with categorization and attributes."
   @type t :: %__MODULE__{
-  href: String.t() | nil,
-  text: String.t() | nil,
-  title: String.t() | nil,
-  link_type: String.t() | nil,
-  rel: [String.t()],
-  attributes: map()
-  }
+          href: String.t() | nil,
+          text: String.t() | nil,
+          title: String.t() | nil,
+          link_type: String.t() | nil,
+          rel: [String.t()],
+          attributes: map()
+        }
 
   defstruct href: nil,
-  text: nil,
-  title: nil,
-  link_type: :anchor,
-  rel: [],
-  attributes: %{}
+            text: nil,
+            title: nil,
+            link_type: :anchor,
+            rel: [],
+            attributes: %{}
 end

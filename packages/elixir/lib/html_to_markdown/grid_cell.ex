@@ -7,18 +7,18 @@ defmodule HtmlToMarkdown.GridCell do
 
   @typedoc "A single cell in a table grid."
   @type t :: %__MODULE__{
-  content: String.t() | nil,
-  row: non_neg_integer(),
-  col: non_neg_integer(),
-  row_span: non_neg_integer(),
-  col_span: non_neg_integer(),
-  is_header: boolean()
-  }
+          content: String.t() | nil,
+          row: non_neg_integer(),
+          col: non_neg_integer(),
+          row_span: non_neg_integer(),
+          col_span: non_neg_integer(),
+          is_header: boolean()
+        }
 
   defstruct content: nil,
-  row: 0,
-  col: 0,
-  row_span: 0,
-  col_span: 0,
-  is_header: false
+            row: 0,
+            col: 0,
+            row_span: 0,
+            col_span: 0,
+            is_header: false
 end

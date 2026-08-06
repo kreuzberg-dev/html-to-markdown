@@ -26,18 +26,18 @@ defmodule HtmlToMarkdown.NodeContext do
 
   @typedoc "Context information passed to all visitor methods."
   @type t :: %__MODULE__{
-  node_type: String.t() | nil,
-  tag_name: String.t() | nil,
-  depth: non_neg_integer(),
-  index_in_parent: non_neg_integer(),
-  parent_tag: String.t() | nil,
-  is_inline: boolean()
-  }
+          node_type: String.t() | nil,
+          tag_name: String.t() | nil,
+          depth: non_neg_integer(),
+          index_in_parent: non_neg_integer(),
+          parent_tag: String.t() | nil,
+          is_inline: boolean()
+        }
 
   defstruct node_type: :text,
-  tag_name: nil,
-  depth: 0,
-  index_in_parent: 0,
-  parent_tag: nil,
-  is_inline: false
+            tag_name: nil,
+            depth: 0,
+            index_in_parent: 0,
+            parent_tag: nil,
+            is_inline: false
 end

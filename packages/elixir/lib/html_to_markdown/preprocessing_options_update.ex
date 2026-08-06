@@ -13,23 +13,23 @@ defmodule HtmlToMarkdown.PreprocessingOptionsUpdate do
 
   @typedoc "Partial update for `PreprocessingOptions`."
   @type t :: %__MODULE__{
-  enabled: boolean() | nil,
-  preset: String.t() | nil | nil,
-  remove_navigation: boolean() | nil,
-  remove_forms: boolean() | nil
-  }
+          enabled: boolean() | nil,
+          preset: String.t() | nil | nil,
+          remove_navigation: boolean() | nil,
+          remove_forms: boolean() | nil
+        }
 
   defstruct enabled: nil,
-  preset: nil,
-  remove_navigation: nil,
-  remove_forms: nil
+            preset: nil,
+            remove_navigation: nil,
+            remove_forms: nil
 
   defimpl Jason.Encoder do
     @doc false
     def encode(value, opts) do
       value
       |> Map.from_struct()
-    |> Enum.reject(fn {_k, v} -> v == nil end)
+      |> Enum.reject(fn {_k, v} -> v == nil end)
       |> Enum.into(%{})
       |> Jason.Encoder.encode(opts)
     end

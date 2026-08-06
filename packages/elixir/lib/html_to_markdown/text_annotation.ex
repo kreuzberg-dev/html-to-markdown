@@ -21,12 +21,12 @@ defmodule HtmlToMarkdown.TextAnnotation do
 
   @typedoc "A styling or semantic annotation that applies to a byte range within a node's text."
   @type t :: %__MODULE__{
-  start: non_neg_integer(),
-  end: non_neg_integer(),
-  kind: String.t() | nil
-  }
+          start: non_neg_integer(),
+          end: non_neg_integer(),
+          kind: String.t() | nil
+        }
 
   defstruct start: 0,
-  end: 0,
-  kind: :bold
+            end: 0,
+            kind: :bold
 end

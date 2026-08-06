@@ -27,18 +27,18 @@ defmodule HtmlToMarkdown.HeaderMetadata do
 
   @typedoc "Header element metadata with hierarchy tracking."
   @type t :: %__MODULE__{
-  level: non_neg_integer(),
-  text: String.t() | nil,
-  id: String.t() | nil,
-  depth: non_neg_integer(),
-  html_offset: non_neg_integer()
-  }
+          level: non_neg_integer(),
+          text: String.t() | nil,
+          id: String.t() | nil,
+          depth: non_neg_integer(),
+          html_offset: non_neg_integer()
+        }
 
   defstruct level: 0,
-  text: nil,
-  id: nil,
-  depth: 0,
-  html_offset: 0
+            text: nil,
+            id: nil,
+            depth: 0,
+            html_offset: 0
 
   @doc "Validate that the header level is within valid range (1-6)."
   @spec valid?(t()) :: boolean()

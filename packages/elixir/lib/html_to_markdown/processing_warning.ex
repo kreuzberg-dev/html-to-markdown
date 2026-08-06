@@ -23,10 +23,10 @@ defmodule HtmlToMarkdown.ProcessingWarning do
 
   @typedoc "A non-fatal diagnostic produced during HTML conversion."
   @type t :: %__MODULE__{
-  message: String.t() | nil,
-  kind: String.t() | nil
-  }
+          message: String.t() | nil,
+          kind: String.t() | nil
+        }
 
   defstruct message: nil,
-  kind: :image_extraction_failed
+            kind: :image_extraction_failed
 end

@@ -7,18 +7,18 @@ defmodule HtmlToMarkdown.DocumentNode do
 
   @typedoc "A single node in the document tree."
   @type t :: %__MODULE__{
-  id: String.t() | nil,
-  content: String.t() | nil,
-  parent: non_neg_integer() | nil,
-  children: [non_neg_integer()],
-  annotations: [HtmlToMarkdown.TextAnnotation.t()],
-  attributes: map() | nil
-  }
+          id: String.t() | nil,
+          content: String.t() | nil,
+          parent: non_neg_integer() | nil,
+          children: [non_neg_integer()],
+          annotations: [HtmlToMarkdown.TextAnnotation.t()],
+          attributes: map() | nil
+        }
 
   defstruct id: nil,
-  content: :heading,
-  parent: nil,
-  children: [],
-  annotations: [],
-  attributes: nil
+            content: :heading,
+            parent: nil,
+            children: [],
+            annotations: [],
+            attributes: nil
 end

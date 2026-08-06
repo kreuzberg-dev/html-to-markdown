@@ -24,12 +24,12 @@ defmodule HtmlToMarkdown.StructuredData do
 
   @typedoc "Structured data block (JSON-LD, Microdata, or `RDFa`)."
   @type t :: %__MODULE__{
-  data_type: String.t() | nil,
-  raw_json: String.t() | nil,
-  schema_type: String.t() | nil
-  }
+          data_type: String.t() | nil,
+          raw_json: String.t() | nil,
+          schema_type: String.t() | nil
+        }
 
   defstruct data_type: :json_ld,
-  raw_json: nil,
-  schema_type: nil
+            raw_json: nil,
+            schema_type: nil
 end

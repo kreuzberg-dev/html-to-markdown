@@ -223,6 +223,10 @@ preserve_patterns = ["SAFETY", "SPDX", "Copyright", "License", "licensed under"]
 [tools.clang-format]
 enabled = true
 
+[tools.mix]
+enabled = true
+root = "packages/elixir"
+
 [per-file-ignores]
 "**/api.py" = ["F401", "I001", "TC006", "UP035"]
 "**/*.pyi" = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]

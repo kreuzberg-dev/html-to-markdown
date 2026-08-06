@@ -13,10 +13,10 @@ defmodule HtmlToMarkdown.MetadataEntry do
 
   @typedoc "A single key-value metadata entry from `<head>` meta tags."
   @type t :: %__MODULE__{
-  key: String.t() | nil,
-  value: String.t() | nil
-  }
+          key: String.t() | nil,
+          value: String.t() | nil
+        }
 
   defstruct key: nil,
-  value: nil
+            value: nil
 end

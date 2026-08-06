@@ -108,7 +108,9 @@ defmodule E2e.ConversionTest do
 
   describe "conversion_autolink_mixed_filename_and_url" do
     test "conversion_autolink_mixed_filename_and_url" do
-      {:ok, result} = HtmlToMarkdown.convert("<a href=\"foobar.png\">foobar.png</a> <a href=\"https://www.heise.de\">https://www.heise.de</a>")
+      {:ok, result} =
+        HtmlToMarkdown.convert("<a href=\"foobar.png\">foobar.png</a> <a href=\"https://www.heise.de\">https://www.heise.de</a>")
+
       assert String.trim(result.content) == "[foobar.png](foobar.png) <https://www.heise.de>"
     end
   end
@@ -169,7 +171,13 @@ defmodule E2e.ConversionTest do
   describe "form_input_elements" do
     test "form_input_elements" do
       options_value = %HtmlToMarkdown.ConversionOptions{preprocessing: %{"remove_forms" => false}}
-      {:ok, result} = HtmlToMarkdown.convert("<form><label for=\"name\">Name:</label><input type=\"text\" id=\"name\" placeholder=\"Enter name\"></form>", options_value)
+
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<form><label for=\"name\">Name:</label><input type=\"text\" id=\"name\" placeholder=\"Enter name\"></form>",
+          options_value
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Name")
     end
@@ -178,7 +186,13 @@ defmodule E2e.ConversionTest do
   describe "form_select_options" do
     test "form_select_options" do
       options_value = %HtmlToMarkdown.ConversionOptions{preprocessing: %{"remove_forms" => false}}
-      {:ok, result} = HtmlToMarkdown.convert("<form><label>Color:</label><select><option value=\"red\">Red</option><option value=\"blue\" selected>Blue</option><option value=\"green\">Green</option></select></form>", options_value)
+
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<form><label>Color:</label><select><option value=\"red\">Red</option><option value=\"blue\" selected>Blue</option><option value=\"green\">Green</option></select></form>",
+          options_value
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Color")
     end
@@ -237,7 +251,11 @@ defmodule E2e.ConversionTest do
 
   describe "image_figure_figcaption" do
     test "image_figure_figcaption" do
-      {:ok, result} = HtmlToMarkdown.convert("<figure><img src=\"sunset.jpg\" alt=\"A sunset\"><figcaption>Beautiful sunset over the ocean</figcaption></figure>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<figure><img src=\"sunset.jpg\" alt=\"A sunset\"><figcaption>Beautiful sunset over the ocean</figcaption></figure>"
+        )
+
       assert String.contains?(to_string(result.content), "![A sunset](sunset.jpg)")
       assert String.contains?(to_string(result.content), "Beautiful sunset over the ocean")
     end
@@ -367,7 +385,11 @@ defmodule E2e.ConversionTest do
 
   describe "list_definition_dl" do
     test "list_definition_dl" do
-      {:ok, result} = HtmlToMarkdown.convert("<dl><dt>Term One</dt><dd>Definition of term one.</dd><dt>Term Two</dt><dd>Definition of term two.</dd></dl>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<dl><dt>Term One</dt><dd>Definition of term one.</dd><dt>Term Two</dt><dd>Definition of term two.</dd></dl>"
+        )
+
       assert String.contains?(to_string(result.content), "Term One")
       assert String.contains?(to_string(result.content), "Definition of term one.")
       assert String.contains?(to_string(result.content), "Term Two")
@@ -377,7 +399,9 @@ defmodule E2e.ConversionTest do
 
   describe "list_item_multiple_paragraphs" do
     test "list_item_multiple_paragraphs" do
-      {:ok, result} = HtmlToMarkdown.convert("<ul><li><p>First paragraph in item.</p><p>Second paragraph in item.</p></li><li>Simple item</li></ul>")
+      {:ok, result} =
+        HtmlToMarkdown.convert("<ul><li><p>First paragraph in item.</p><p>Second paragraph in item.</p></li><li>Simple item</li></ul>")
+
       assert String.contains?(to_string(result.content), "First paragraph in item.")
       assert String.contains?(to_string(result.content), "Second paragraph in item.")
       assert String.contains?(to_string(result.content), "Simple item")
@@ -416,7 +440,11 @@ defmodule E2e.ConversionTest do
 
   describe "list_task_checkboxes" do
     test "list_task_checkboxes" do
-      {:ok, result} = HtmlToMarkdown.convert("<ul><li><input type=\"checkbox\" checked> Done task</li><li><input type=\"checkbox\"> Pending task</li></ul>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<ul><li><input type=\"checkbox\" checked> Done task</li><li><input type=\"checkbox\"> Pending task</li></ul>"
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Done task")
       assert String.contains?(to_string(result.content), "Pending task")
@@ -456,7 +484,9 @@ defmodule E2e.ConversionTest do
 
   describe "paragraph_with_inline_formatting" do
     test "paragraph_with_inline_formatting" do
-      {:ok, result} = HtmlToMarkdown.convert("<p>This has <strong>bold</strong>, <em>italic</em>, and a <a href=\"https://example.com\">link</a>.</p>")
+      {:ok, result} =
+        HtmlToMarkdown.convert("<p>This has <strong>bold</strong>, <em>italic</em>, and a <a href=\"https://example.com\">link</a>.</p>")
+
       assert String.contains?(to_string(result.content), "**bold**")
       assert String.contains?(to_string(result.content), "*italic*")
       assert String.contains?(to_string(result.content), "[link](https://example.com)")
@@ -490,7 +520,9 @@ defmodule E2e.ConversionTest do
 
   describe "semantic_definition_list" do
     test "semantic_definition_list" do
-      {:ok, result} = HtmlToMarkdown.convert("<dl><dt>HTML</dt><dd>HyperText Markup Language</dd><dt>CSS</dt><dd>Cascading Style Sheets</dd></dl>")
+      {:ok, result} =
+        HtmlToMarkdown.convert("<dl><dt>HTML</dt><dd>HyperText Markup Language</dd><dt>CSS</dt><dd>Cascading Style Sheets</dd></dl>")
+
       assert String.contains?(to_string(result.content), "HTML")
       assert String.contains?(to_string(result.content), "HyperText Markup Language")
       assert String.contains?(to_string(result.content), "CSS")
@@ -544,7 +576,11 @@ defmodule E2e.ConversionTest do
 
   describe "simple_table" do
     test "simple_table" do
-      {:ok, result} = HtmlToMarkdown.convert("<table><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr></tbody></table>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<table><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr><td>Alice</td><td>30</td></tr></tbody></table>"
+        )
+
       assert String.contains?(to_string(result.content), "Name")
       assert String.contains?(to_string(result.content), "Age")
       assert String.contains?(to_string(result.content), "Alice")
@@ -575,7 +611,11 @@ defmodule E2e.ConversionTest do
 
   describe "table_pipe_chars_in_content" do
     test "table_pipe_chars_in_content" do
-      {:ok, result} = HtmlToMarkdown.convert("<table><thead><tr><th>Expression</th><th>Result</th></tr></thead><tbody><tr><td>a | b</td><td>true</td></tr></tbody></table>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<table><thead><tr><th>Expression</th><th>Result</th></tr></thead><tbody><tr><td>a | b</td><td>true</td></tr></tbody></table>"
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Expression")
       assert String.contains?(to_string(result.content), "Result")
@@ -585,7 +625,11 @@ defmodule E2e.ConversionTest do
 
   describe "table_with_alignment" do
     test "table_with_alignment" do
-      {:ok, result} = HtmlToMarkdown.convert("<table><thead><tr><th align=\"left\">Left</th><th align=\"center\">Center</th><th align=\"right\">Right</th></tr></thead><tbody><tr><td>L</td><td>C</td><td>R</td></tr></tbody></table>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<table><thead><tr><th align=\"left\">Left</th><th align=\"center\">Center</th><th align=\"right\">Right</th></tr></thead><tbody><tr><td>L</td><td>C</td><td>R</td></tr></tbody></table>"
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Left")
       assert String.contains?(to_string(result.content), "Center")
@@ -599,7 +643,11 @@ defmodule E2e.ConversionTest do
 
   describe "table_with_colspan" do
     test "table_with_colspan" do
-      {:ok, result} = HtmlToMarkdown.convert("<table><thead><tr><th colspan=\"2\">Full Name</th></tr></thead><tbody><tr><td>John</td><td>Doe</td></tr></tbody></table>")
+      {:ok, result} =
+        HtmlToMarkdown.convert(
+          "<table><thead><tr><th colspan=\"2\">Full Name</th></tr></thead><tbody><tr><td>John</td><td>Doe</td></tr></tbody></table>"
+        )
+
       assert result.content != ""
       assert String.contains?(to_string(result.content), "Full Name")
       assert String.contains?(to_string(result.content), "John")
