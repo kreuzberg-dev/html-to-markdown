@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- CI: the Node e2e job no longer runs the Rust test suite. It invoked `task rust:test`
+  (`cargo test --release --no-default-features --workspace`), a full release-mode build that took
+  3047s of the job's 60-minute budget on `windows-latest` and left `Install alef` to be cancelled
+  mid-step — the Windows Node e2e job had never once completed. `CI Rust` already runs the suite on
+  ubuntu, windows and macos via `task rust:test:ci` and compile-checks `--no-default-features`
+  separately, and no other language's e2e job ran it. The job now passes in 925s.
+
 ## [3.10.6] - 2026-08-05
 
 ### Fixed
