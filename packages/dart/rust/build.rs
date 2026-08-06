@@ -60,88 +60,205 @@ const FRB_GENERATED_DART: &str = "../lib/src/html_to_markdown_rs_bridge_generate
 const FRB_HANDLER_EXECUTOR_MARKER: &str = "handler.executeSync(";
 const LOADER_MARKER: &str = "_alefResolveExternalLibrary";
 const FRB_INIT_PROLOGUE: &str = "  /// Initialize flutter_rust_bridge\n  static Future<void> init({\n    RustLibApi? api,\n    BaseHandler? handler,\n    ExternalLibrary? externalLibrary,\n    bool forceSameCodegenVersion = true,\n  }) async {\n";
-const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from this package's own installed
-  /// location so the load works from any working directory and under hardened
-  /// runtimes. Returns `null` to defer to flutter_rust_bridge's default loader.
+const FRB_INIT_REPLACEMENT: &str = r#"  /// Resolve the prebuilt native library from the environment, the package's bundled
+  /// natives, or the versioned user cache — downloading it if the cache is cold.
   ///
-  /// Resolution order:
-  /// 1. `$nativeLibDirEnv` env var override (dev/test path, no network).
-  /// 2. Published pub.dev packages stage natives under `lib/src/native/<rid>/`
-  ///    (e.g. `macos-arm64`, `linux-x64`).
-  /// 3. For local FRB-dev builds the dylib is emitted into
-  ///    `lib/src/html_to_markdown_rs_bridge_generated/`; that path is searched next.
-  /// 4. The versioned user-cache directory (`nativeCachedLibPath()`); on a cache
-  ///    miss the native is downloaded and cached (`nativeDownloadAndCacheLibrary()`).
+  /// Never returns `null`. The return type stays nullable to match flutter_rust_bridge's
+  /// `init` signature, but an unresolvable native throws a descriptive `StateError`
+  /// instead of deferring to FRB's default loader, whose relative-path dlopen would fail
+  /// anyway under a hardened runtime.
+  ///
+  /// Checks in order:
+  /// 1. The `nativeLibDirEnv` environment variable
+  ///    (allows test harnesses to point to development build paths)
+  /// 2. Package-installed location with RID subdirectory (lib/src/native/<rid>/)
+  ///    (for published pub.dev packages with platform-specific bundled native libraries)
+  /// 3. Package-installed location (lib/src/html_to_markdown_rs_bridge_generated/)
+  ///    (legacy fallback for development or packages without per-platform binaries)
+  /// 4. Versioned user cache populated by `dart run h2m:download_libs`
+  ///    (`<cache>/h2m/<version>/<rid>/`), shared with the download script
+  ///    via `nativeCachedLibPath()` in `native_loader.dart`.
+  /// 5. On a cache miss, downloads and caches the release asset via
+  ///    `nativeDownloadAndCacheLibrary()` and opens the result.
+  /// 6. Throws a StateError naming the expected release asset URL, the
+  ///    download command, and the env-var override (never a silent null miss).
   static Future<ExternalLibrary?> _alefResolveExternalLibrary() async {
     try {
-      final envDir = Platform.environment[nativeLibDirEnv];
-      if (envDir != null && envDir.isNotEmpty) {
-        final envUri = Uri.directory(envDir);
-        for (final name in _alefHostLibNames()) {
-          final libPath = envUri.resolve(name).toFilePath();
-          if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
-            return ExternalLibrary.open(libPath);
-          }
+      const candidates = <String>[
+        // macOS: framework bundle (preferred modern packaging)
+        'html_to_markdown_rs_dart.framework',
+        // macOS: bare dylib fallback
+        'libhtml_to_markdown_rs_dart.dylib',
+        // Linux
+        'libhtml_to_markdown_rs_dart.so',
+        // Windows
+        'html_to_markdown_rs_dart.dll',
+      ];
+
+      // Helper to open a native library by absolute path.
+      // Normalizes path to absolute to avoid hardened-runtime "relative path rejected" errors.
+      ExternalLibrary? tryOpenAbsolute(String libPath) {
+        try {
+          final absPath = File(libPath).absolute.path;
+          return ExternalLibrary.open(absPath);
+        } catch (_) {
+          return null;
         }
       }
 
-      final packageRoot =
-          await Isolate.resolvePackageUri(Uri.parse('package:h2m/h2m.dart'));
-      if (packageRoot != null) {
-        final libNames = _alefHostLibNames();
-        final searchDirs = <Uri>[
-          if (_alefHostRid() != null) packageRoot.resolve('src/native/${_alefHostRid()}/'),
-          packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/'),
-        ];
-        for (final dir in searchDirs) {
-          for (final name in libNames) {
-            final libPath = dir.resolve(name).toFilePath();
-            if (File(libPath).existsSync() || Directory(libPath).existsSync()) {
-              return ExternalLibrary.open(libPath);
+      bool candidateExists(String libPath) {
+        return File(libPath).existsSync() || Directory(libPath).existsSync();
+      }
+
+      // Check the env-var override first, so test harnesses can point at a development
+      // build path. Read through `nativeLibDirEnv` rather than repeating the literal, so
+      // this and the error message below can never name different variables.
+      final envDir = Platform.environment[nativeLibDirEnv];
+      if (envDir != null && envDir.isNotEmpty) {
+        final absEnvDir = Directory(envDir).absolute.path;
+        final libDir = Directory(absEnvDir);
+        if (libDir.existsSync()) {
+          for (final candidate in candidates) {
+            final libPath = '$absEnvDir/$candidate';
+            if (candidateExists(libPath)) {
+              final result = tryOpenAbsolute(libPath);
+              if (result != null) return result;
             }
           }
         }
       }
 
-      final cachedPath = nativeCachedLibPath();
-      if (cachedPath != null && File(cachedPath).existsSync()) {
-        return ExternalLibrary.open(cachedPath);
+      // Compute RID (runtime identifier) from platform and architecture using Abi.current().
+      // This is more reliable than parsing Platform.version.
+      String? computeRid() {
+        final abi = Abi.current();
+        final os = Platform.operatingSystem;
+
+        // Map from (os, Abi) to RID string.
+        String? ridFromAbi() {
+          if (os == 'linux') {
+            if (abi == Abi.linuxX64) return 'linux-x64';
+            if (abi == Abi.linuxArm64) return 'linux-arm64';
+          } else if (os == 'macos') {
+            if (abi == Abi.macosX64) return 'macos-x64';
+            if (abi == Abi.macosArm64) return 'macos-arm64';
+          } else if (os == 'windows') {
+            if (abi == Abi.windowsX64) return 'windows-x64';
+            if (abi == Abi.windowsArm64) return 'windows-arm64';
+          }
+          return null;
+        }
+
+        return ridFromAbi();
       }
 
-      final downloadedPath = await nativeDownloadAndCacheLibrary();
-      return ExternalLibrary.open(downloadedPath);
+      final rid = computeRid();
+      if (rid != null) {
+        final packageRoot =
+            await Isolate.resolvePackageUri(Uri.parse('package:h2m/h2m.dart'));
+        if (packageRoot != null) {
+          final ridDir = packageRoot.resolve('src/native/$rid/');
+          for (final candidate in candidates) {
+            final libPath = ridDir.resolve(candidate).toFilePath();
+            if (candidateExists(libPath)) {
+              final result = tryOpenAbsolute(libPath);
+              if (result != null) return result;
+            }
+          }
+        }
+      }
+
+      // Check legacy package-installed location as fallback.
+      final packageRoot =
+          await Isolate.resolvePackageUri(Uri.parse('package:h2m/h2m.dart'));
+      if (packageRoot != null) {
+        final libDir = packageRoot.resolve('src/html_to_markdown_rs_bridge_generated/');
+        for (final candidate in candidates) {
+          final libPath = libDir.resolve(candidate).toFilePath();
+          if (candidateExists(libPath)) {
+            final result = tryOpenAbsolute(libPath);
+            if (result != null) return result;
+          }
+        }
+      }
+
+      // As a last resort, resolve the running test/script's package root via
+      // `Platform.script` and search standard RID-relative locations there.
+      // Critical on macOS: `Directory.current` under hardened-runtime `dart` is
+      // the dart binary's own bin dir (relative-path dlopen rejected), whereas
+      // `Platform.script` resolves to the running .dart file's absolute URI,
+      // from which we can walk up to find the package root (the dir containing
+      // `pubspec.yaml`) and look for the bundled native library at standard
+      // paths. This handles the case where `Isolate.resolvePackageUri`
+      // resolution did not yield the actual staging location (e.g., a path
+      // dependency in local development, or a test_app whose host package
+      // contains the native lib directly rather than via the bridged package).
+      try {
+        final scriptPath = Platform.script.toFilePath();
+        var dir = File(scriptPath).absolute.parent;
+        while (dir.parent.path != dir.path
+            && !File('${dir.path}/pubspec.yaml').existsSync()) {
+          dir = dir.parent;
+        }
+        if (File('${dir.path}/pubspec.yaml').existsSync()) {
+          final rid = computeRid();
+          final absRootPath = dir.absolute.path;
+          final searchRoots = <String>[
+            if (rid != null) '$absRootPath/lib/src/native/$rid',
+            '$absRootPath/lib',
+            absRootPath,
+          ];
+          for (final root in searchRoots) {
+            final absRoot = Directory(root).absolute.path;
+            for (final candidate in candidates) {
+              final libPath = '$absRoot/$candidate';
+              if (candidateExists(libPath)) {
+                final result = tryOpenAbsolute(libPath);
+                if (result != null) return result;
+              }
+            }
+          }
+        }
+      } catch (_) {
+        // fall through to the versioned-cache lookup below
+      }
+
+      // Versioned user cache populated by `dart run h2m:download_libs`.
+      // Shares its cache-path logic with the download script via
+      // `nativeCachedLibPath()` so the two can never disagree on the location.
+      final cachedLibPath = nativeCachedLibPath();
+      if (cachedLibPath != null && candidateExists(cachedLibPath)) {
+        final result = tryOpenAbsolute(cachedLibPath);
+        if (result != null) return result;
+      }
+
+      // Cache miss: download and cache the release asset, then open it. Any
+      // failure here (network, checksum mismatch) falls through to the loud
+      // StateError below rather than propagating a raw download exception.
+      try {
+        final downloadedPath = await nativeDownloadAndCacheLibrary();
+        final result = tryOpenAbsolute(downloadedPath);
+        if (result != null) return result;
+      } catch (_) {
+        // fall through to the descriptive miss below
+      }
     } catch (_) {
-      // Fall through to the default loader on any resolution failure.
+      // Fall through to the descriptive miss below on any resolution failure.
     }
-    return null;
-  }
 
-  /// Map the host platform to the pub.dev native staging RID. Returns `null`
-  /// for unrecognized host triples so the FRB-dev fallback path runs instead.
-  static String? _alefHostRid() {
-    final abi = Abi.current();
-    if (abi == Abi.macosArm64) return 'macos-arm64';
-    if (abi == Abi.macosX64) return 'macos-x64';
-    if (abi == Abi.linuxArm64) return 'linux-arm64';
-    if (abi == Abi.linuxX64) return 'linux-x64';
-    if (abi == Abi.windowsArm64) return 'windows-arm64';
-    if (abi == Abi.windowsX64) return 'windows-x64';
-    return null;
-  }
-
-  static List<String> _alefHostLibNames() {
-    // The Dart-binding Rust crate is `{stem}-dart` (per the cargo manifest
-    // template), which produces a cdylib named `lib{stem}_dart.{ext}` on Unix
-    // and `{stem}_dart.dll` on Windows. On macOS, pub.dev-published packages
-    // may ship the binary as a Framework bundle (preferred modern packaging)
-    // — list that first so the loader finds it before the bare dylib.
-    if (Platform.isMacOS)
-      return const [
-        'html_to_markdown_rs_dart.framework',
-        'libhtml_to_markdown_rs_dart.dylib',
-      ];
-    if (Platform.isWindows) return const ['html_to_markdown_rs_dart.dll'];
-    return const ['libhtml_to_markdown_rs_dart.so'];
+    // Nothing bundled and nothing staged in the cache: fail loudly rather than
+    // let flutter_rust_bridge attempt a doomed relative-path dlopen. Name the
+    // exact release asset, the fetch command, and the env-var override so the
+    // consumer can recover.
+    final rid = nativeComputeRid() ?? Platform.operatingSystem;
+    throw StateError(
+      'Native library for h2m ($rid) was not found. '
+      'Expected it in the versioned cache (${nativeCacheDir() ?? '<unresolved cache dir>'}) '
+      'or bundled with the package. Download it with '
+      '`dart run h2m:download_libs`, which fetches '
+      '${nativeAssetUrlBase()}.tar.gz and verifies its SHA-256, '
+      'or point $nativeLibDirEnv at a directory containing the native library.',
+    );
   }
 
   /// Initialize flutter_rust_bridge
