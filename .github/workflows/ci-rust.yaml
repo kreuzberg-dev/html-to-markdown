@@ -79,6 +79,14 @@ jobs:
           cargo check -p html-to-markdown-rs --no-default-features --features metadata
           cargo check -p html-to-markdown-rs --no-default-features --features inline-images
 
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+
+      # ~keep `alef verify` prints "Stale bindings detected" but exits 0 without --exit-code,
+      # so no workflow noticed the 371 generated files that had drifted from alef.toml.
+      - name: Verify binding freshness
+        run: alef verify --exit-code
+
   rust-tests:
     name: "Test: Rust (${{ matrix.os }})"
     runs-on: ${{ matrix.os }}
