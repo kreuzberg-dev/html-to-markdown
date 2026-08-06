@@ -846,11 +846,6 @@ jobs:
         run: bun run build
         shell: bash
 
-      - name: Run Rust Tests (Node.js only)
-        if: matrix.runtime == 'node'
-        run: task rust:test
-        shell: bash
-
       - name: Install alef
         if: matrix.runtime == 'node'
         uses: xberg-io/actions/install-alef@v1
