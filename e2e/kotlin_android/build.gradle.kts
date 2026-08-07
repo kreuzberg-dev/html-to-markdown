@@ -73,9 +73,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
 
     // JUnit 5 API and engine
-    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.2")
-    testImplementation("org.junit.platform:junit-platform-launcher:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:6.1.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-engine:6.1.3")
+    testImplementation("org.junit.platform:junit-platform-launcher:6.1.3")
 
     // Kotlin stdlib test helpers
     testImplementation(kotlin("test"))

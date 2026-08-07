@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.55.8"
+alef_version = "0.57.1"
 languages = [
   "python",
   "node",
@@ -18,9 +18,6 @@ languages = [
   "dart",
   "zig",
 ]
-
-[workspace.format]
-enabled = true
 
 [workspace.docs]
 reference_output = "docs-site/src/content/docs/reference"
