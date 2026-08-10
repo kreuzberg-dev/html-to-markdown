@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Python visitor callbacks now honor the documented `type`/`output` action dictionaries for
+  custom link output and image `skip`/`continue` actions ([#452]).
+
 - Dart: the native loader downloads and caches the library again on a cold cache. It only read
   the versioned cache and then threw a `StateError`, even though `nativeDownloadAndCacheLibrary()`
   was defined and exported for exactly that case — so a machine that had never run
@@ -74,6 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   runtime export; `require()` is unaffected ([#450]).
 
 [#450]: https://github.com/xberg-io/html-to-markdown/issues/450
+[#452]: https://github.com/xberg-io/html-to-markdown/issues/452
 
 ## [3.10.3] - 2026-08-04
 

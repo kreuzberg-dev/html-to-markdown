@@ -557,6 +557,10 @@ impl<'a> NodeContext<'a> {
 /// preserving HTML, or signaling errors.
 #[derive(Debug, Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    serde(tag = "type", content = "output", rename_all = "snake_case")
+)]
 pub enum VisitResult {
     #[default]
     /// Continue with default conversion behavior
@@ -587,6 +591,31 @@ pub enum VisitResult {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn visit_result_uses_public_tagged_action_schema() {
+        let cases = [
+            (VisitResult::Continue, serde_json::json!({"type": "continue"})),
+            (
+                VisitResult::Custom("replacement".to_string()),
+                serde_json::json!({"type": "custom", "output": "replacement"}),
+            ),
+            (VisitResult::Skip, serde_json::json!({"type": "skip"})),
+            (VisitResult::PreserveHtml, serde_json::json!({"type": "preserve_html"})),
+            (
+                VisitResult::Error("failure".to_string()),
+                serde_json::json!({"type": "error", "output": "failure"}),
+            ),
+        ];
+
+        for (action, expected) in cases {
+            assert_eq!(
+                serde_json::to_value(action).expect("visitor action should serialize"),
+                expected
+            );
+        }
+    }
 
     #[test]
     fn test_node_type_equality() {
