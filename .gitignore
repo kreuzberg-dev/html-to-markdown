@@ -285,6 +285,10 @@ docs-site/node_modules/
 e2e/java/src/main/resources/natives/
 poly.local.toml
 
+# Alef snippet validator scratch workspaces and caches ~keep
+**/.alef-snippet-*/
+**/.alef-cache/
+
 # BEGIN ai-rulez (DO NOT EDIT - managed by ai-rulez)
 .ai-rulez/.generated-manifest.json
 .mcp.json
