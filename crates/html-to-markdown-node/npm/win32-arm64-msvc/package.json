@@ -7,19 +7,9 @@
     "url": "git+https://github.com/xberg-io/html-to-markdown.git"
   },
   "main": "html-to-markdown-node.win32-arm64-msvc.node",
-  "files": [
-    "html-to-markdown-node.win32-arm64-msvc.node"
-  ],
-  "os": [
-    "win32"
-  ],
-  "cpu": [
-    "arm64"
-  ],
-  "engines": {
-    "node": ">= 22"
-  },
-  "publishConfig": {
-    "access": "public"
-  }
+  "files": ["html-to-markdown-node.win32-arm64-msvc.node"],
+  "os": ["win32"],
+  "cpu": ["arm64"],
+  "engines": { "node": ">= 22" },
+  "publishConfig": { "access": "public" }
 }

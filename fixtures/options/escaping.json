@@ -22,7 +22,12 @@
           "6"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_escape_asterisks",
+      "title": "escape_asterisks option escapes asterisks in plain text"
+    }
   },
   {
     "id": "options_escape_underscores",
@@ -47,7 +52,12 @@
           "defined."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_escape_underscores",
+      "title": "escape_underscores option escapes underscores in plain text"
+    }
   },
   {
     "id": "options_escape_misc",
@@ -72,6 +82,11 @@
           "in text."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_escape_misc",
+      "title": "escape_misc option escapes miscellaneous markdown characters"
+    }
   }
 ]

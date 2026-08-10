@@ -18,6 +18,11 @@
         "field": "warnings",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_warning_kind_image_extraction_failed",
+      "title": "A malformed data URI with extract_images enabled produces an ImageExtractionFailed warning"
+    }
   }
 ]

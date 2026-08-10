@@ -34,6 +34,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_underline_skip",
+      "title": "Visitor skips underline elements from output"
     }
   },
   {
@@ -67,6 +72,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_underline_custom",
+      "title": "Visitor replaces underline with custom markup"
     }
   },
   {
@@ -100,6 +110,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_subscript_custom",
+      "title": "Visitor replaces subscript with custom template"
     }
   },
   {
@@ -127,6 +142,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_subscript_skip",
+      "title": "Visitor skips subscript elements entirely"
     }
   },
   {
@@ -160,6 +180,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_superscript_custom",
+      "title": "Visitor replaces superscript with custom template"
     }
   },
   {
@@ -187,6 +212,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_superscript_skip",
+      "title": "Visitor skips superscript from output"
     }
   },
   {
@@ -220,6 +250,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_mark_custom",
+      "title": "Visitor replaces highlight/mark with custom template"
     }
   },
   {
@@ -257,6 +292,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_mark_skip",
+      "title": "Visitor skips mark elements entirely"
     }
   },
   {
@@ -290,6 +330,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_line_break_custom",
+      "title": "Visitor replaces line break with custom output"
     }
   },
   {
@@ -317,6 +362,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_line_break_skip",
+      "title": "Visitor removes all line breaks"
     }
   },
   {
@@ -360,6 +410,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_horizontal_rule_custom",
+      "title": "Visitor replaces horizontal rule with custom output"
     }
   },
   {
@@ -402,6 +457,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_horizontal_rule_skip",
+      "title": "Visitor removes all horizontal rules"
     }
   }
 ]

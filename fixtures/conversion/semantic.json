@@ -14,7 +14,12 @@
           "Article body."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_article",
+      "title": "Article element wrapping content preserves inner content"
+    }
   },
   {
     "id": "semantic_section_with_heading",
@@ -31,7 +36,12 @@
           "Section content."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_section_with_heading",
+      "title": "Section element with heading preserves structure"
+    }
   },
   {
     "id": "semantic_details_summary",
@@ -51,7 +61,12 @@
           "Click to expand"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_details_summary",
+      "title": "Details and summary elements produce readable output"
+    }
   },
   {
     "id": "semantic_definition_list",
@@ -70,7 +85,12 @@
           "Cascading Style Sheets"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_definition_list",
+      "title": "Definition list with term and description"
+    }
   },
   {
     "id": "semantic_mark_highlight",
@@ -90,7 +110,12 @@
           "highlighted text"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_mark_highlight",
+      "title": "Mark tag produces highlighted output"
+    }
   },
   {
     "id": "semantic_sub_superscript",
@@ -113,7 +138,12 @@
           "E=mc"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_sub_superscript",
+      "title": "Subscript and superscript elements are preserved in output"
+    }
   },
   {
     "id": "semantic_abbr",
@@ -129,7 +159,12 @@
           "WWW"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_abbr",
+      "title": "Abbreviation element text is preserved"
+    }
   },
   {
     "id": "semantic_hr",
@@ -150,6 +185,11 @@
           "Below"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "semantic_hr",
+      "title": "Horizontal rule produces a separator in output"
+    }
   }
 ]

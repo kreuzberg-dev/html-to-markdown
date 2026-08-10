@@ -16,11 +16,7 @@
       "default": "./index.js"
     }
   },
-  "files": [
-    "index.js",
-    "index.d.ts",
-    "*.node"
-  ],
+  "files": ["index.js", "index.d.ts", "*.node"],
   "optionalDependencies": {
     "@xberg-io/html-to-markdown-linux-x64-gnu": "3.10.6",
     "@xberg-io/html-to-markdown-linux-arm64-gnu": "3.10.6",
@@ -50,13 +46,7 @@
     "artifacts": "npx --yes -p @napi-rs/cli@^3.7.3 napi artifacts",
     "prepublishOnly": "npx --yes -p @napi-rs/cli@^3.7.3 napi prepublish -t npm --skip-optional-publish"
   },
-  "engines": {
-    "node": ">= 22"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "devDependencies": {
-    "@napi-rs/cli": "^3.7.3"
-  }
+  "engines": { "node": ">= 22" },
+  "publishConfig": { "access": "public" },
+  "devDependencies": { "@napi-rs/cli": "^3.7.3" }
 }

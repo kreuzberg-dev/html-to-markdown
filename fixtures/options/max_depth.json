@@ -11,7 +11,12 @@
         "field": "content",
         "value": "Deep content"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_max_depth_default_unlimited",
+      "title": "Default max_depth (null) converts deeply nested content fully"
+    }
   },
   {
     "id": "options_max_depth_truncates",
@@ -33,7 +38,12 @@
         "field": "content",
         "value": "Too deep"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_max_depth_truncates",
+      "title": "max_depth truncates content beyond the specified depth"
+    }
   },
   {
     "id": "options_max_depth_zero_empty",
@@ -50,6 +60,11 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_max_depth_zero_empty",
+      "title": "max_depth of 0 produces empty output"
+    }
   }
 ]

@@ -26,7 +26,12 @@
           "schema.org"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "structured_data_json_ld",
+      "title": "JSON-LD script tag is stripped from output (security) but metadata may be extracted"
+    }
   },
   {
     "id": "structured_data_multiple_json_ld",
@@ -55,6 +60,11 @@
           "ListItem"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "structured_data_multiple_json_ld",
+      "title": "Multiple JSON-LD blocks are all stripped from output"
+    }
   }
 ]

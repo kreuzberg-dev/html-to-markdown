@@ -30,6 +30,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_audio_custom",
+      "title": "Visitor replaces audio element with custom output"
     }
   },
   {
@@ -67,6 +72,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_audio_skip",
+      "title": "Visitor removes audio elements from output"
     }
   },
   {
@@ -105,6 +115,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_video_custom",
+      "title": "Visitor replaces video with custom link"
     }
   },
   {
@@ -142,6 +157,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_video_skip",
+      "title": "Visitor removes video elements entirely"
     }
   },
   {
@@ -180,6 +200,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_iframe_custom",
+      "title": "Visitor replaces embedded iframe with custom text"
     }
   },
   {
@@ -217,6 +242,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_iframe_skip",
+      "title": "Visitor removes embedded iframes"
     }
   }
 ]

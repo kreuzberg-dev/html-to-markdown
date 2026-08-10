@@ -17,7 +17,12 @@
           "Second paragraph."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_strip_newlines",
+      "title": "Strip newlines produces single-line paragraphs"
+    }
   },
   {
     "id": "options_convert_as_inline",
@@ -37,6 +42,11 @@
           "Two"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_convert_as_inline",
+      "title": "Block elements treated as inline"
+    }
   }
 ]

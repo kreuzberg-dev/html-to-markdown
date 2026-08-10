@@ -13,7 +13,12 @@
           "**bold**"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "bold_strong",
+      "title": "Strong tag converts to bold"
+    }
   },
   {
     "id": "italic_em",
@@ -29,7 +34,12 @@
           "*italic*"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "italic_em",
+      "title": "Em tag converts to italic"
+    }
   },
   {
     "id": "bold_and_italic",
@@ -45,7 +55,12 @@
           "***both***"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "bold_and_italic",
+      "title": "Nested bold and italic"
+    }
   },
   {
     "id": "emphasis_strikethrough_s",
@@ -61,7 +76,12 @@
           "~~strikethrough~~"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_strikethrough_s",
+      "title": "s tag converts to GFM strikethrough"
+    }
   },
   {
     "id": "emphasis_strikethrough_del",
@@ -77,7 +97,12 @@
           "~~deleted text~~"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_strikethrough_del",
+      "title": "del tag converts to GFM strikethrough"
+    }
   },
   {
     "id": "emphasis_underline_u",
@@ -93,7 +118,12 @@
           "underlined"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_underline_u",
+      "title": "u tag content is preserved in output"
+    }
   },
   {
     "id": "emphasis_mark_highlight",
@@ -113,7 +143,12 @@
           "highlighted"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_mark_highlight",
+      "title": "mark tag produces highlighted output"
+    }
   },
   {
     "id": "emphasis_subscript",
@@ -131,7 +166,12 @@
           "O"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_subscript",
+      "title": "sub tag content is preserved"
+    }
   },
   {
     "id": "emphasis_superscript",
@@ -148,6 +188,11 @@
           "2"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "emphasis_superscript",
+      "title": "sup tag content is preserved"
+    }
   }
 ]

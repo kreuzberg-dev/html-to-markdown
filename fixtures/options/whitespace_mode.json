@@ -23,7 +23,12 @@
           "spaces."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_whitespace_normalized",
+      "title": "Normalized whitespace mode collapses multiple spaces"
+    }
   },
   {
     "id": "options_whitespace_strict",
@@ -47,6 +52,11 @@
           "spacing."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_whitespace_strict",
+      "title": "Strict whitespace mode preserves whitespace as-is"
+    }
   }
 ]

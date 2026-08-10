@@ -20,7 +20,12 @@
           "Footer"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preprocessing_minimal",
+      "title": "Minimal preset preserves nav, footer, aside"
+    }
   },
   {
     "id": "options_preprocessing_aggressive",
@@ -47,7 +52,12 @@
         "field": "content",
         "value": "Menu"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preprocessing_aggressive",
+      "title": "Aggressive preset removes nav, footer, aside unconditionally"
+    }
   },
   {
     "id": "options_preprocessing_remove_forms",
@@ -74,7 +84,12 @@
         "field": "content",
         "value": "Submit"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preprocessing_remove_forms",
+      "title": "Forms are removed when remove_forms is true"
+    }
   },
   {
     "id": "options_preprocessing_remove_navigation_false_keeps_nav",
@@ -97,7 +112,12 @@
           "SidebarText"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preprocessing_remove_navigation_false_keeps_nav",
+      "title": "Setting remove_navigation to false preserves nav and aside elements"
+    }
   },
   {
     "id": "options_preprocessing_enabled_false_skips_cleanup",
@@ -119,6 +139,11 @@
           "Paragraph"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preprocessing_enabled_false_skips_cleanup",
+      "title": "Disabling preprocessing entirely preserves elements the standard preset would remove"
+    }
   }
 ]

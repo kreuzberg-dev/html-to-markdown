@@ -1,0 +1,17 @@
+```php title="PHP"
+<?php
+
+use HtmlToMarkdown\HtmlToMarkdown;
+use HtmlToMarkdown\ConversionOptions;
+use HtmlToMarkdown\VisitorHandle;
+$visitor = new class {
+    public function visit_superscript(...$args) {
+        return 'Skip';
+    }
+};
+$options = \HtmlToMarkdown\ConversionOptions::from_json('{}');
+$visitorHandle = \HtmlToMarkdown\VisitorHandle::from_php_object($visitor);
+$options = $options->withVisitor($visitorHandle);
+$result = HtmlToMarkdown::convert("<p>The equation x<sup>3</sup> + y<sup>3</sup> = z<sup>3</sup> has no solutions.</p>", $options);
+
+```

@@ -17,7 +17,12 @@
           "console.log('hi');"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_code_block_backticks",
+      "title": "Backticks code block style uses triple backtick fences"
+    }
   },
   {
     "id": "options_code_block_tildes_style",
@@ -37,6 +42,11 @@
           "some code"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_code_block_tildes_style",
+      "title": "Tildes code block style uses triple tilde fences"
+    }
   }
 ]

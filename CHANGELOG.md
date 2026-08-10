@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.0 and checked for
+  fixture-by-language coverage parity in local tasks and CI; strict validation is scoped to the generated root so
+  the 85 maintained examples remain independently audited.
+
 ### Fixed
 
 - Python visitor callbacks now honor the documented `type`/`output` action dictionaries for

@@ -11,7 +11,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "empty_html",
+      "title": "Empty HTML document"
+    }
   },
   {
     "id": "whitespace_only",
@@ -25,7 +30,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "whitespace_only",
+      "title": "Whitespace-only content"
+    }
   },
   {
     "id": "just_whitespace_input",
@@ -39,7 +49,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "just_whitespace_input",
+      "title": "Input that is only whitespace characters (spaces, tabs, newlines) produces empty output"
+    }
   },
   {
     "id": "html_comments_only",
@@ -53,7 +68,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "html_comments_only",
+      "title": "Document containing only HTML comments produces empty output"
+    }
   },
   {
     "id": "script_tags_only",
@@ -67,7 +87,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "script_tags_only",
+      "title": "Document with only script tags produces empty output (scripts are stripped)"
+    }
   },
   {
     "id": "style_tags_only",
@@ -81,6 +106,11 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "style_tags_only",
+      "title": "Document with only style tags produces empty output (styles are stripped)"
+    }
   }
 ]

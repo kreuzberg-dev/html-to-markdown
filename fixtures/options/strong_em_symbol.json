@@ -17,6 +17,11 @@
           "_italic_"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_strong_em_underscore",
+      "title": "Strong and em tags use underscore symbol instead of asterisk"
+    }
   }
 ]

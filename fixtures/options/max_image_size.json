@@ -19,7 +19,12 @@
         "field": "content",
         "value": "Image"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_max_image_size_generous_limit",
+      "title": "A generous max_image_size accommodates a small data-URI image without warnings"
+    }
   },
   {
     "id": "options_max_image_size_tiny_limit_safe",
@@ -41,6 +46,11 @@
         "field": "content",
         "value": "Tiny limit"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_max_image_size_tiny_limit_safe",
+      "title": "A tiny max_image_size does not crash conversion even when the image exceeds the limit"
+    }
   }
 ]

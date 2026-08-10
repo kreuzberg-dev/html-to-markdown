@@ -36,6 +36,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_image_bare_string_preserves_case",
+      "title": "Visitor returns bare-string image replacement; mixed-case alt/src preserved (regression guard for issue #350)"
     }
   },
   {
@@ -78,6 +83,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_skip_images",
+      "title": "Visitor skips all images from output"
     }
   },
   {
@@ -111,6 +121,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_image",
+      "title": "Visitor replaces image with custom output using template"
     }
   }
 ]

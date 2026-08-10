@@ -22,7 +22,12 @@
         "field": "document.nodes",
         "value": 3
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_h1_h2_nested_group",
+      "title": "H1 followed by H2 creates a nested group under the H1"
+    }
   },
   {
     "id": "structure_sibling_h1_groups",
@@ -47,7 +52,12 @@
         "field": "document.nodes",
         "value": 4
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_sibling_h1_groups",
+      "title": "H1, H2, then another H1 creates two sibling top-level groups"
+    }
   },
   {
     "id": "structure_deep_nesting_h1_h2_h3",
@@ -72,6 +82,11 @@
         "field": "document.nodes",
         "value": 5
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_deep_nesting_h1_h2_h3",
+      "title": "H1 > H2 > H3 creates three levels of heading nesting"
+    }
   }
 ]

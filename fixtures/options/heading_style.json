@@ -17,7 +17,12 @@
           "## Subtitle"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_heading_style_atx",
+      "title": "ATX heading style produces hash-prefixed headings"
+    }
   },
   {
     "id": "options_heading_style_underlined",
@@ -40,7 +45,12 @@
           "Main Title"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_heading_style_underlined",
+      "title": "Underlined heading style produces setext-style headings for h1 and h2"
+    }
   },
   {
     "id": "options_heading_style_atx_closed",
@@ -59,6 +69,11 @@
           "# Closed Heading #"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_heading_style_atx_closed",
+      "title": "ATX closed heading style adds closing hashes"
+    }
   }
 ]

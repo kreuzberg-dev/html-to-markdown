@@ -34,6 +34,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_skip_code_blocks",
+      "title": "Visitor skips code blocks from output"
     }
   },
   {
@@ -67,6 +72,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_emphasis",
+      "title": "Visitor replaces emphasis with custom output"
     }
   },
   {
@@ -100,6 +110,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_blockquote",
+      "title": "Visitor replaces blockquote with custom format"
     }
   },
   {
@@ -132,6 +147,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_skip_strong",
+      "title": "Visitor skips bold/strong elements"
     }
   }
 ]

@@ -1,0 +1,12 @@
+```rust title="Rust"
+use html_to_markdown_rs::convert;
+use html_to_markdown_rs::ConversionOptions;
+
+fn main() {
+    let html = r#"<p>Below SVG:</p><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="red"/></svg>"#;
+    let options_json: serde_json::Value = serde_json::from_str(r#"{"capture_svg":true,"extract_images":true}"#).unwrap();
+    let options: ConversionOptions = serde_json::from_value(options_json).unwrap();
+    let _ = convert(html, Some(options.clone()));
+}
+
+```

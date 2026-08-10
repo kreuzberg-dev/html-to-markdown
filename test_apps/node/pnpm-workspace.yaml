@@ -3,4 +3,4 @@ allowBuilds:
   esbuild: true
   tree-sitter: true
 minimumReleaseAgeExclude:
-  - "@xberg-io/*"
+  - '@xberg-io/*'

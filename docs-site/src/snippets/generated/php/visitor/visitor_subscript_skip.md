@@ -1,0 +1,17 @@
+```php title="PHP"
+<?php
+
+use HtmlToMarkdown\HtmlToMarkdown;
+use HtmlToMarkdown\ConversionOptions;
+use HtmlToMarkdown\VisitorHandle;
+$visitor = new class {
+    public function visit_subscript(...$args) {
+        return 'Skip';
+    }
+};
+$options = \HtmlToMarkdown\ConversionOptions::from_json('{}');
+$visitorHandle = \HtmlToMarkdown\VisitorHandle::from_php_object($visitor);
+$options = $options->withVisitor($visitorHandle);
+$result = HtmlToMarkdown::convert("<p>The formula C<sub>12</sub>H<sub>22</sub>O<sub>11</sub> is sugar.</p>", $options);
+
+```

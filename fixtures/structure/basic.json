@@ -22,7 +22,12 @@
         "field": "document.nodes",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_heading_paragraph",
+      "title": "Simple heading followed by paragraph produces Heading and Paragraph nodes"
+    }
   },
   {
     "id": "structure_multiple_headings",
@@ -47,7 +52,12 @@
         "field": "document.nodes",
         "value": 4
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_multiple_headings",
+      "title": "Multiple headings create multiple Heading nodes with correct levels"
+    }
   },
   {
     "id": "structure_list",
@@ -72,7 +82,12 @@
         "field": "document.nodes",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_list",
+      "title": "Unordered list produces List and ListItem nodes"
+    }
   },
   {
     "id": "structure_code_block",
@@ -97,6 +112,11 @@
         "field": "document.nodes",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "structure",
+      "stem": "structure_code_block",
+      "title": "Fenced code block produces Code node"
+    }
   }
 ]

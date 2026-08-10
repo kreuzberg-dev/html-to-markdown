@@ -11,7 +11,12 @@
         "field": "content",
         "value": "[foobar.png](foobar.png)"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "conversion_autolink_filename_not_autolinked",
+      "title": "Bare filename href (no URI scheme) renders as inline link, not autolink (#397)"
+    }
   },
   {
     "id": "conversion_autolink_relative_path_not_autolinked",
@@ -25,7 +30,12 @@
         "field": "content",
         "value": "[/docs/intro.html](/docs/intro.html)"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "conversion_autolink_relative_path_not_autolinked",
+      "title": "Relative path href renders as inline link (#397)"
+    }
   },
   {
     "id": "conversion_autolink_https_url",
@@ -39,7 +49,12 @@
         "field": "content",
         "value": "<https://example.com>"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "conversion_autolink_https_url",
+      "title": "Absolute https URL with matching text renders as autolink (#397)"
+    }
   },
   {
     "id": "conversion_autolink_mailto",
@@ -53,7 +68,12 @@
         "field": "content",
         "value": "<a@b.com>"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "conversion_autolink_mailto",
+      "title": "mailto: link with matching email text renders as autolink (#397)"
+    }
   },
   {
     "id": "conversion_autolink_mixed_filename_and_url",
@@ -67,6 +87,11 @@
         "field": "content",
         "value": "[foobar.png](foobar.png) <https://www.heise.de>"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "conversion_autolink_mixed_filename_and_url",
+      "title": "Mixed filename + URL: only the URL becomes an autolink (#397)"
+    }
   }
 ]

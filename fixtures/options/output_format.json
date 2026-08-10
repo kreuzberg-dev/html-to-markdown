@@ -18,7 +18,12 @@
           "Some text."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_output_format_markdown",
+      "title": "Default markdown output format produces standard markdown"
+    }
   },
   {
     "id": "options_output_format_plain",
@@ -47,7 +52,12 @@
           "# Title"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_output_format_plain",
+      "title": "Plain text output format strips markdown syntax"
+    }
   },
   {
     "id": "options_output_format_djot",
@@ -70,6 +80,11 @@
           "Simple paragraph."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_output_format_djot",
+      "title": "Djot output format produces djot-compatible markup"
+    }
   }
 ]

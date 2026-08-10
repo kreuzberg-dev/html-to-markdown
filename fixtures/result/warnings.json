@@ -15,7 +15,12 @@
         "field": "warnings",
         "value": 0
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_warnings_empty_for_clean_input",
+      "title": "Warnings array is empty for well-formed HTML without problematic content"
+    }
   },
   {
     "id": "result_warnings_empty_for_complex_input",
@@ -33,7 +38,12 @@
         "field": "warnings",
         "value": 0
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_warnings_empty_for_complex_input",
+      "title": "Warnings array is empty for complex but valid HTML"
+    }
   },
   {
     "id": "result_warnings_empty_for_malformed_html",
@@ -51,6 +61,11 @@
         "field": "warnings",
         "value": 0
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_warnings_empty_for_malformed_html",
+      "title": "Warnings array is empty even for malformed HTML (parser is lenient)"
+    }
   }
 ]

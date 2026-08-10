@@ -29,6 +29,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_skip_heading",
+      "title": "Visitor skip action omits all headings from output"
     }
   },
   {
@@ -62,6 +67,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_output",
+      "title": "Visitor custom action replaces element output"
     }
   },
   {
@@ -89,6 +99,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_preserve_html",
+      "title": "Visitor preserve_html action includes raw HTML in output"
     }
   },
   {
@@ -116,6 +131,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_continue_default",
+      "title": "Visitor continue action preserves default conversion"
     }
   }
 ]

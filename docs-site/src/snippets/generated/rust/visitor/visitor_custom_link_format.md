@@ -1,0 +1,21 @@
+```rust title="Rust"
+use html_to_markdown_rs::convert;
+use html_to_markdown_rs::ConversionOptions;
+use html_to_markdown_rs::visitor::{HtmlVisitor, NodeContext, VisitResult};
+
+fn main() {
+    let html = r#"<p>Visit <a href="https://example.com">Example</a> for more info.</p>"#;
+    let mut options: ConversionOptions = Default::default();
+    #[derive(Debug)]
+    struct _TestVisitor;
+    impl HtmlVisitor for _TestVisitor {
+        fn visit_link(&mut self, _ctx: &NodeContext, href: &str, text: &str, _title: Option<&str>) -> VisitResult {
+            VisitResult::Custom(format!("{text} ({href})"))
+        }
+    }
+    let visitor = std::sync::Arc::new(std::sync::Mutex::new(_TestVisitor));
+    options.visitor = Some(visitor);
+    let _ = convert(html, Some(options));
+}
+
+```

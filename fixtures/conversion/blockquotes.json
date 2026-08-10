@@ -13,7 +13,12 @@
           "> Quote text"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_simple",
+      "title": "Simple blockquote"
+    }
   },
   {
     "id": "blockquote_nested",
@@ -34,7 +39,12 @@
           "Inner quote."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_nested",
+      "title": "Nested blockquote produces double-prefixed lines"
+    }
   },
   {
     "id": "blockquote_multiple_paragraphs",
@@ -51,7 +61,12 @@
           "> Second paragraph."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_multiple_paragraphs",
+      "title": "Blockquote with multiple paragraphs has each paragraph prefixed"
+    }
   },
   {
     "id": "blockquote_with_list",
@@ -73,6 +88,11 @@
           "Point two"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_with_list",
+      "title": "Blockquote containing a list preserves list items inside quote"
+    }
   }
 ]

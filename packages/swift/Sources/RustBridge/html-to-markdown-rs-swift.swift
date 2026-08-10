@@ -452,11 +452,6 @@ public class DocumentMetadata: DocumentMetadataRefMut {
         }
     }
 }
-extension DocumentMetadata {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ title: Optional<GenericIntoRustString>, _ description: Optional<GenericIntoRustString>, _ keywords: RustVec<GenericIntoRustString>, _ author: Optional<GenericIntoRustString>, _ canonical_url: Optional<GenericIntoRustString>, _ base_href: Optional<GenericIntoRustString>, _ language: Optional<GenericIntoRustString>, _ text_direction: Optional<TextDirection>, _ open_graph: GenericIntoRustString, _ twitter_card: GenericIntoRustString, _ meta_tags: GenericIntoRustString) {
-        self.init(ptr: __swift_bridge__$DocumentMetadata$new({ if let rustString = optionalStringIntoRustString(title) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(description) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { let val = keywords; val.isOwned = false; return val.ptr }(), { if let rustString = optionalStringIntoRustString(author) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(canonical_url) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(base_href) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(language) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = text_direction { val.isOwned = false; return val.ptr } else { return nil } }(), { let rustString = open_graph.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = twitter_card.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { let rustString = meta_tags.intoRustString(); rustString.isOwned = false; return rustString.ptr }()))
-    }
-}
 public class DocumentMetadataRefMut: DocumentMetadataRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1319,11 +1314,6 @@ public class ConversionOptionsUpdate: ConversionOptionsUpdateRefMut {
         }
     }
 }
-extension ConversionOptionsUpdate {
-    public convenience init<GenericIntoRustString: IntoRustString>(_ heading_style: Optional<HeadingStyle>, _ list_indent_type: Optional<ListIndentType>, _ list_indent_width: Optional<UInt>, _ bullets: Optional<GenericIntoRustString>, _ strong_em_symbol: Optional<GenericIntoRustString>, _ escape_asterisks: Optional<Bool>, _ escape_underscores: Optional<Bool>, _ escape_misc: Optional<Bool>, _ escape_ascii: Optional<Bool>, _ code_language: Optional<GenericIntoRustString>, _ autolinks: Optional<Bool>, _ default_title: Optional<Bool>, _ br_in_tables: Optional<Bool>, _ compact_tables: Optional<Bool>, _ highlight_style: Optional<HighlightStyle>, _ extract_metadata: Optional<Bool>, _ whitespace_mode: Optional<WhitespaceMode>, _ strip_newlines: Optional<Bool>, _ wrap: Optional<Bool>, _ wrap_width: Optional<UInt>, _ convert_as_inline: Optional<Bool>, _ sub_symbol: Optional<GenericIntoRustString>, _ sup_symbol: Optional<GenericIntoRustString>, _ newline_style: Optional<NewlineStyle>, _ code_block_style: Optional<CodeBlockStyle>, _ keep_inline_images_in: Optional<RustVec<GenericIntoRustString>>, _ preprocessing: Optional<PreprocessingOptionsUpdate>, _ encoding: Optional<GenericIntoRustString>, _ debug: Optional<Bool>, _ strip_tags: Optional<RustVec<GenericIntoRustString>>, _ preserve_tags: Optional<RustVec<GenericIntoRustString>>, _ skip_images: Optional<Bool>, _ url_escape_style: Optional<UrlEscapeStyle>, _ link_style: Optional<LinkStyle>, _ output_format: Optional<OutputFormat>, _ include_document_structure: Optional<Bool>, _ extract_images: Optional<Bool>, _ max_image_size: Optional<UInt64>, _ capture_svg: Optional<Bool>, _ infer_dimensions: Optional<Bool>, _ max_depth: GenericIntoRustString, _ exclude_selectors: Optional<RustVec<GenericIntoRustString>>, _ tier_strategy: Optional<TierStrategy>, _ visitor: Optional<VisitorHandle>) {
-        self.init(ptr: __swift_bridge__$ConversionOptionsUpdate$new({ if let val = heading_style { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = list_indent_type { val.isOwned = false; return val.ptr } else { return nil } }(), list_indent_width.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(bullets) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(strong_em_symbol) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), escape_asterisks.intoFfiRepr(), escape_underscores.intoFfiRepr(), escape_misc.intoFfiRepr(), escape_ascii.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(code_language) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), autolinks.intoFfiRepr(), default_title.intoFfiRepr(), br_in_tables.intoFfiRepr(), compact_tables.intoFfiRepr(), { if let val = highlight_style { val.isOwned = false; return val.ptr } else { return nil } }(), extract_metadata.intoFfiRepr(), { if let val = whitespace_mode { val.isOwned = false; return val.ptr } else { return nil } }(), strip_newlines.intoFfiRepr(), wrap.intoFfiRepr(), wrap_width.intoFfiRepr(), convert_as_inline.intoFfiRepr(), { if let rustString = optionalStringIntoRustString(sub_symbol) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(sup_symbol) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), { if let val = newline_style { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = code_block_style { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = keep_inline_images_in { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = preprocessing { val.isOwned = false; return val.ptr } else { return nil } }(), { if let rustString = optionalStringIntoRustString(encoding) { rustString.isOwned = false; return rustString.ptr } else { return nil } }(), debug.intoFfiRepr(), { if let val = strip_tags { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = preserve_tags { val.isOwned = false; return val.ptr } else { return nil } }(), skip_images.intoFfiRepr(), { if let val = url_escape_style { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = link_style { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = output_format { val.isOwned = false; return val.ptr } else { return nil } }(), include_document_structure.intoFfiRepr(), extract_images.intoFfiRepr(), max_image_size.intoFfiRepr(), capture_svg.intoFfiRepr(), infer_dimensions.intoFfiRepr(), { let rustString = max_depth.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let val = exclude_selectors { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = tier_strategy { val.isOwned = false; return val.ptr } else { return nil } }(), { if let val = visitor { val.isOwned = false; return val.ptr } else { return nil } }()))
-    }
-}
 public class ConversionOptionsUpdateRefMut: ConversionOptionsUpdateRef {
     public override init(ptr: UnsafeMutableRawPointer) {
         super.init(ptr: ptr)
@@ -1437,8 +1427,8 @@ extension ConversionOptionsUpdateRef {
         { let val = __swift_bridge__$ConversionOptionsUpdate$code_block_style(ptr); if val != nil { return RustString(ptr: val!) } else { return nil } }()
     }
 
-    public func keepInlineImagesIn() -> Optional<RustVec<RustString>> {
-        { let val = __swift_bridge__$ConversionOptionsUpdate$keep_inline_images_in(ptr); if val != nil { return RustVec(ptr: val!) } else { return nil } }()
+    public func keepInlineImagesIn() -> RustString {
+        RustString(ptr: __swift_bridge__$ConversionOptionsUpdate$keep_inline_images_in(ptr))
     }
 
     public func preprocessing() -> Optional<PreprocessingOptionsUpdate> {
@@ -1453,12 +1443,12 @@ extension ConversionOptionsUpdateRef {
         __swift_bridge__$ConversionOptionsUpdate$debug(ptr).intoSwiftRepr()
     }
 
-    public func stripTags() -> Optional<RustVec<RustString>> {
-        { let val = __swift_bridge__$ConversionOptionsUpdate$strip_tags(ptr); if val != nil { return RustVec(ptr: val!) } else { return nil } }()
+    public func stripTags() -> RustString {
+        RustString(ptr: __swift_bridge__$ConversionOptionsUpdate$strip_tags(ptr))
     }
 
-    public func preserveTags() -> Optional<RustVec<RustString>> {
-        { let val = __swift_bridge__$ConversionOptionsUpdate$preserve_tags(ptr); if val != nil { return RustVec(ptr: val!) } else { return nil } }()
+    public func preserveTags() -> RustString {
+        RustString(ptr: __swift_bridge__$ConversionOptionsUpdate$preserve_tags(ptr))
     }
 
     public func skipImages() -> Optional<Bool> {
@@ -1501,8 +1491,8 @@ extension ConversionOptionsUpdateRef {
         RustString(ptr: __swift_bridge__$ConversionOptionsUpdate$max_depth(ptr))
     }
 
-    public func excludeSelectors() -> Optional<RustVec<RustString>> {
-        { let val = __swift_bridge__$ConversionOptionsUpdate$exclude_selectors(ptr); if val != nil { return RustVec(ptr: val!) } else { return nil } }()
+    public func excludeSelectors() -> RustString {
+        RustString(ptr: __swift_bridge__$ConversionOptionsUpdate$exclude_selectors(ptr))
     }
 
     public func tierStrategy() -> Optional<RustString> {

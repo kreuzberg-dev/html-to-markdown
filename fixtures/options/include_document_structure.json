@@ -18,7 +18,12 @@
         "field": "content",
         "value": "Heading"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_include_document_structure_true",
+      "title": "Setting include_document_structure populates the structured document tree on the result"
+    }
   },
   {
     "id": "options_include_document_structure_false",
@@ -39,6 +44,11 @@
         "field": "content",
         "value": "Heading"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_include_document_structure_false",
+      "title": "Disabling include_document_structure still produces content without the document tree overhead"
+    }
   }
 ]

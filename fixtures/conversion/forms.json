@@ -22,7 +22,12 @@
           "Name"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "form_input_elements",
+      "title": "Form input elements produce readable output without form mechanics"
+    }
   },
   {
     "id": "form_textarea",
@@ -47,7 +52,12 @@
           "Message"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "form_textarea",
+      "title": "Textarea element produces readable output"
+    }
   },
   {
     "id": "form_select_options",
@@ -72,6 +82,11 @@
           "Color"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "form_select_options",
+      "title": "Select element with options produces readable output"
+    }
   }
 ]

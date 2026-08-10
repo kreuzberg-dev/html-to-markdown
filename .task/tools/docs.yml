@@ -41,9 +41,9 @@ tasks:
       - npx textlint 'docs-site/src/content/docs/**/*.{md,mdx}'
 
   snippets:validate:
-    desc: Validate all snippets via `alef snippets` (syntax level)
+    desc: Validate all documentation snippets with fixture coverage parity
     cmds:
-      - alef snippets validate --snippets docs-site/src/snippets --level syntax --timeout 120 -j 4
+      - alef snippets check --strict --cache off
 
   snippets:validate:lang:
     desc: "Validate snippets for one language (set LANG=dart|kotlin|swift|...)"
@@ -61,6 +61,12 @@ tasks:
     desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
     cmds:
       - alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,r,c,swift,dart,kotlin,zig
+
+  snippets:check:
+    desc: Generate and strictly validate fixture-driven documentation snippets
+    cmds:
+      - alef e2e generate
+      - alef snippets check --strict --cache off
 
   snippets:audit:
     desc: Run structural audit (frontmatter, fences, includes)

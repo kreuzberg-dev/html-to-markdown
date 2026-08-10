@@ -1,0 +1,8 @@
+```kotlin title="Kotlin (Android)"
+import io.xberg.android.*
+
+fun main() = kotlinx.coroutines.runBlocking {
+    val result = IoXbergAndroidHtmlToMarkdownRs.convert("<p>中文内容</p><p>日本語テキスト</p><p>한국어 텍스트</p>", ConversionOptions())
+}
+
+```

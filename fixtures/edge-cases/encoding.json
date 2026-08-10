@@ -19,7 +19,12 @@
           ">"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "encoding_html_entities",
+      "title": "Common HTML entities are decoded in output"
+    }
   },
   {
     "id": "encoding_unicode_emoji",
@@ -41,7 +46,12 @@
           "⭐"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "encoding_unicode_emoji",
+      "title": "Emoji and Unicode characters are preserved"
+    }
   },
   {
     "id": "encoding_cjk_characters",
@@ -63,7 +73,12 @@
           "한국어 텍스트"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "encoding_cjk_characters",
+      "title": "CJK (Chinese, Japanese, Korean) characters are preserved"
+    }
   },
   {
     "id": "encoding_numeric_entities",
@@ -85,7 +100,12 @@
           "€"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "encoding_numeric_entities",
+      "title": "Numeric HTML entities (decimal and hex) are decoded"
+    }
   },
   {
     "id": "encoding_named_entities",
@@ -106,6 +126,11 @@
           "…"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "encoding_named_entities",
+      "title": "Named HTML entities like &mdash; and &hellip; are decoded"
+    }
   }
 ]

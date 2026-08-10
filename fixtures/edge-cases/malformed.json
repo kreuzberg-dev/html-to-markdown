@@ -17,7 +17,12 @@
           "This paragraph is never closed"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "malformed_unclosed_paragraph",
+      "title": "Unclosed <p> tag is recovered gracefully and content is preserved"
+    }
   },
   {
     "id": "malformed_overlapping_tags",
@@ -37,7 +42,12 @@
           "bold and italic"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "malformed_overlapping_tags",
+      "title": "Overlapping bold/italic tags are recovered by the HTML parser without panic"
+    }
   },
   {
     "id": "malformed_missing_block_closing_tags",
@@ -59,7 +69,12 @@
           "Second paragraph"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "malformed_missing_block_closing_tags",
+      "title": "Missing closing tags on block elements are auto-closed by parser"
+    }
   },
   {
     "id": "malformed_bogus_comment_triple_dash",
@@ -76,7 +91,12 @@
           "Two"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "malformed_bogus_comment_triple_dash",
+      "title": "HTML comment ending with ---> (three dashes) must not drop content that follows (issue #339)"
+    }
   },
   {
     "id": "malformed_deeply_nested_elements",
@@ -96,6 +116,11 @@
           "Deeply nested content"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "malformed_deeply_nested_elements",
+      "title": "Deeply nested elements (100 levels) are handled without stack overflow"
+    }
   }
 ]

@@ -18,7 +18,12 @@
         "field": "metadata.links",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_extract_all_links",
+      "title": "Extract all links from a document into metadata"
+    }
   },
   {
     "id": "metadata_extract_all_images",
@@ -39,7 +44,12 @@
         "field": "metadata.images",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_extract_all_images",
+      "title": "Extract all images from a document into metadata"
+    }
   },
   {
     "id": "metadata_headers_hierarchy",
@@ -60,6 +70,11 @@
         "field": "metadata.headings",
         "value": 5
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_headers_hierarchy",
+      "title": "Extract heading hierarchy from document into metadata"
+    }
   }
 ]

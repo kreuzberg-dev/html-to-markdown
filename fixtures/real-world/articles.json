@@ -23,7 +23,12 @@
           "- Ownership and borrowing"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "real-world",
+      "stem": "real_world_blog_post",
+      "title": "Blog post with headings, paragraphs, code blocks, and links converts to readable Markdown"
+    }
   },
   {
     "id": "real_world_product_page",
@@ -52,7 +57,12 @@
           "---"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "real-world",
+      "stem": "real_world_product_page",
+      "title": "Product page with table, images, and lists converts correctly"
+    }
   },
   {
     "id": "real_world_documentation_page",
@@ -81,6 +91,11 @@
           "ConversionOptions"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "real-world",
+      "stem": "real_world_documentation_page",
+      "title": "Documentation page with nested lists, code examples, and blockquotes converts correctly"
+    }
   }
 ]

@@ -11,7 +11,12 @@
         "field": "content",
         "value": "Hello World"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "paragraph_simple",
+      "title": "Simple paragraph converts to plain text"
+    }
   },
   {
     "id": "paragraph_multiple",
@@ -28,7 +33,12 @@
           "Second paragraph."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "paragraph_multiple",
+      "title": "Multiple paragraphs are separated by a blank line"
+    }
   },
   {
     "id": "paragraph_with_inline_formatting",
@@ -46,7 +56,12 @@
           "[link](https://example.com)"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "paragraph_with_inline_formatting",
+      "title": "Paragraph with bold, italic, and a link"
+    }
   },
   {
     "id": "paragraph_with_line_breaks",
@@ -68,7 +83,12 @@
           "Line three."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "paragraph_with_line_breaks",
+      "title": "Paragraph with br tags produces line breaks in output"
+    }
   },
   {
     "id": "paragraph_nested_divs",
@@ -84,6 +104,11 @@
           "Nested text"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "paragraph_nested_divs",
+      "title": "Text nested inside divs is extracted correctly"
+    }
   }
 ]

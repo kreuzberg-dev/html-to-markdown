@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.57.1"
+alef_version = "0.60.0"
 languages = [
   "python",
   "node",
@@ -34,8 +34,75 @@ template_dir = "templates/docs/skills"
 outputs = [".codex/skills", ".agents/skills", ".github/skills", ".claude/skills"]
 
 [workspace.docs.snippets]
-dirs = ["docs-site/src/snippets"]
+dirs = ["docs-site/src/snippets/generated"]
+validation_level = "compile"
+timeout_secs = 120
+strict = true
+deny_unclassified = true
 
+[workspace.docs.snippets.sessions.python]
+cwd = "packages/python"
+manifest = "packages/python/pyproject.toml"
+
+[workspace.docs.snippets.sessions.node]
+cwd = "crates/html-to-markdown-node"
+manifest = "crates/html-to-markdown-node/package.json"
+
+[workspace.docs.snippets.sessions.wasm]
+cwd = "crates/html-to-markdown-wasm"
+manifest = "crates/html-to-markdown-wasm/package.json"
+
+[workspace.docs.snippets.sessions.ruby]
+cwd = "packages/ruby"
+
+[workspace.docs.snippets.sessions.php]
+cwd = "."
+manifest = "composer.json"
+
+[workspace.docs.snippets.sessions.go]
+cwd = "packages/go"
+manifest = "packages/go/go.mod"
+
+[workspace.docs.snippets.sessions.java]
+cwd = "packages/java"
+manifest = "packages/java/pom.xml"
+
+[workspace.docs.snippets.sessions.csharp]
+cwd = "packages/csharp"
+
+[workspace.docs.snippets.sessions.elixir]
+cwd = "packages/elixir"
+manifest = "packages/elixir/mix.exs"
+
+[workspace.docs.snippets.sessions.rust]
+cwd = "crates/html-to-markdown"
+manifest = "crates/html-to-markdown/Cargo.toml"
+
+[workspace.docs.snippets.sessions.kotlin_android]
+cwd = "packages/kotlin-android"
+manifest = "packages/kotlin-android/build.gradle.kts"
+
+[workspace.docs.snippets.sessions.swift]
+cwd = "packages/swift"
+manifest = "packages/swift/Package.swift"
+before = ["swift build"]
+
+[workspace.docs.snippets.sessions.dart]
+cwd = "packages/dart"
+manifest = "packages/dart/pubspec.yaml"
+
+[workspace.docs.snippets.sessions.zig]
+cwd = "packages/zig"
+manifest = "packages/zig/build.zig"
+env = { ZIG_GLOBAL_CACHE_DIR = ".zig-global-cache", ZIG_LOCAL_CACHE_DIR = ".zig-cache" }
+
+[workspace.docs.snippets.sessions.c]
+cwd = "."
+manifest = "crates/html-to-markdown-ffi/include/html_to_markdown.h"
+
+[workspace.docs.snippets.sessions.r]
+cwd = "packages/r"
+manifest = "packages/r/DESCRIPTION"
 [workspace.sync]
 extra_paths = [
   "packages/ruby/lib/html_to_markdown/version.rb",
@@ -633,8 +700,8 @@ languages = [
   "swift",
   "dart",
   "zig",
-  "homebrew",
 ]
+
 result_fields = ["content", "document", "metadata", "tables", "warnings"]
 fields_optional = [
   "content",
@@ -652,6 +719,27 @@ fields_optional = [
   "metadata.document.twitter_card[card]",
   "metadata.document.twitter_card[title]",
   "metadata.document.twitter_card[description]",
+]
+
+[crates.e2e.snippets]
+output = "docs-site/src/snippets/generated"
+languages = [
+  "python",
+  "node",
+  "ruby",
+  "php",
+  "c",
+  "go",
+  "java",
+  "csharp",
+  "elixir",
+  "wasm",
+  "r",
+  "rust",
+  "kotlin_android",
+  "swift",
+  "dart",
+  "zig",
 ]
 
 [crates.e2e.call]

@@ -21,7 +21,12 @@
           "After"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_extract_images_true_data_uri",
+      "title": "Enabling extract_images processes a data-URI image without crashing"
+    }
   },
   {
     "id": "options_extract_images_false",
@@ -37,6 +42,11 @@
         "type": "not_empty",
         "field": "content"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_extract_images_false",
+      "title": "When extract_images is false, conversion still succeeds and inline images are not extracted"
+    }
   }
 ]

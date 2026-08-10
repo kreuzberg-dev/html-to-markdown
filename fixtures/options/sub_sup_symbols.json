@@ -16,7 +16,12 @@
           "~2~"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_sub_symbol_tilde",
+      "title": "Subscript rendered with tilde symbol"
+    }
   },
   {
     "id": "options_sup_symbol_caret",
@@ -35,6 +40,11 @@
           "^2^"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_sup_symbol_caret",
+      "title": "Superscript rendered with caret symbol"
+    }
   }
 ]

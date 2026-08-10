@@ -14,7 +14,12 @@
           "Second line."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "line_break_br_tag",
+      "title": "Single br tag produces a line break in output"
+    }
   },
   {
     "id": "line_break_hr_tag",
@@ -35,7 +40,12 @@
           "After rule."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "line_break_hr_tag",
+      "title": "hr tag produces a horizontal separator between content"
+    }
   },
   {
     "id": "line_break_multiple_br",
@@ -52,6 +62,11 @@
           "End."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "line_break_multiple_br",
+      "title": "Multiple consecutive br tags in sequence"
+    }
   }
 ]

@@ -18,7 +18,12 @@
         "field": "content",
         "value": "left-to-right text"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_text_direction_ltr",
+      "title": "Extract text direction from lang attribute on html element"
+    }
   },
   {
     "id": "metadata_text_direction_rtl",
@@ -39,7 +44,12 @@
         "field": "content",
         "value": "right-to-left text"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_text_direction_rtl",
+      "title": "Extract right-to-left text direction"
+    }
   },
   {
     "id": "metadata_lang_attribute",
@@ -60,7 +70,12 @@
         "field": "content",
         "value": "Hola Mundo"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_lang_attribute",
+      "title": "Extract language from html lang attribute"
+    }
   },
   {
     "id": "metadata_microdata_schema_person",
@@ -86,7 +101,12 @@
         "field": "content",
         "value": "john@example.com"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_microdata_schema_person",
+      "title": "Extract schema.org microdata for Person"
+    }
   },
   {
     "id": "metadata_microdata_schema_organization",
@@ -112,7 +132,12 @@
         "field": "content",
         "value": "2020"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_microdata_schema_organization",
+      "title": "Extract schema.org microdata for Organization"
+    }
   },
   {
     "id": "metadata_microdata_schema_article",
@@ -143,7 +168,12 @@
         "field": "content",
         "value": "important information"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_microdata_schema_article",
+      "title": "Extract schema.org microdata for Article"
+    }
   },
   {
     "id": "metadata_microdata_schema_breadcrumb",
@@ -177,7 +207,12 @@
         "field": "content",
         "value": "Current Page"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_microdata_schema_breadcrumb",
+      "title": "Extract schema.org breadcrumb navigation microdata"
+    }
   },
   {
     "id": "metadata_microdata_schema_product",
@@ -208,7 +243,12 @@
         "field": "content",
         "value": "29.99"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_microdata_schema_product",
+      "title": "Extract schema.org microdata for Product"
+    }
   },
   {
     "id": "metadata_dublin_core",
@@ -229,6 +269,11 @@
         "field": "content",
         "value": "scholarly article"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_dublin_core",
+      "title": "Extract Dublin Core metadata tags"
+    }
   }
 ]

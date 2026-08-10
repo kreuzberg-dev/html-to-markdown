@@ -13,7 +13,12 @@
           "[Example](https://example.com)"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_simple",
+      "title": "Simple link"
+    }
   },
   {
     "id": "link_with_title",
@@ -30,7 +35,12 @@
           "Example Site"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_with_title",
+      "title": "Link with title attribute"
+    }
   },
   {
     "id": "link_mailto",
@@ -46,7 +56,12 @@
           "mailto:user@example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_mailto",
+      "title": "Mailto link is preserved with mailto: scheme"
+    }
   },
   {
     "id": "link_anchor_fragment",
@@ -62,7 +77,12 @@
           "[Jump to section](#section)"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_anchor_fragment",
+      "title": "Fragment-only anchor link is preserved"
+    }
   },
   {
     "id": "link_with_bold_text",
@@ -79,7 +99,12 @@
           "https://example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_with_bold_text",
+      "title": "Link containing bold text preserves formatting"
+    }
   },
   {
     "id": "link_empty_href",
@@ -95,7 +120,12 @@
           "No destination"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_empty_href",
+      "title": "Link with empty href produces output with the link text"
+    }
   },
   {
     "id": "link_image_inside",
@@ -112,6 +142,11 @@
           "https://example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "link_image_inside",
+      "title": "Image inside a link produces a linked image"
+    }
   }
 ]

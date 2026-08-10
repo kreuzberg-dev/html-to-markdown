@@ -20,7 +20,12 @@
           "<iframe"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_preserve_tags_iframe",
+      "title": "Iframe tags preserved as raw HTML in output"
+    }
   },
   {
     "id": "options_strip_tags_div_span",
@@ -43,7 +48,12 @@
           "span text"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_strip_tags_div_span",
+      "title": "Div and span tags stripped but content preserved"
+    }
   },
   {
     "id": "options_default_title_true",
@@ -63,7 +73,12 @@
           "https://example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_default_title_true",
+      "title": "Links without title get empty title attribute when defaultTitle is true"
+    }
   },
   {
     "id": "options_autolinks_false",
@@ -82,7 +97,12 @@
           "example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_autolinks_false",
+      "title": "Bare URL links rendered as regular markdown links when autolinks disabled"
+    }
   },
   {
     "id": "options_link_style_reference",
@@ -103,6 +123,11 @@
           "example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_link_style_reference",
+      "title": "Links use reference-style formatting"
+    }
   }
 ]

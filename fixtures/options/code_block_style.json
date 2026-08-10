@@ -17,7 +17,12 @@
           "let x = 1;"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_code_block_tildes",
+      "title": "Code blocks use tilde fences"
+    }
   },
   {
     "id": "options_code_block_indented",
@@ -41,7 +46,12 @@
         "field": "content",
         "value": "```"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_code_block_indented",
+      "title": "Code blocks use 4-space indentation"
+    }
   },
   {
     "id": "issue_396_backticks_blank_line_after_fence",
@@ -58,7 +68,12 @@
         "field": "content",
         "value": "Foo\n\n```\n1\n2\n```\n\nBar"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "issue_396_backticks_blank_line_after_fence",
+      "title": "Backticks code block trims trailing newline inside fence and adds blank line after closing fence (issue #396)"
+    }
   },
   {
     "id": "options_code_language_python",
@@ -78,6 +93,11 @@
           "def hello"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_code_language_python",
+      "title": "Default code language annotation on blocks without lang attribute"
+    }
   }
 ]

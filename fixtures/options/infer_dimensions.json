@@ -19,7 +19,12 @@
         "field": "content",
         "value": "With dims"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_infer_dimensions_true",
+      "title": "Enabling infer_dimensions decodes image bytes to populate dimension metadata when extract_images is on"
+    }
   },
   {
     "id": "options_infer_dimensions_false",
@@ -41,6 +46,11 @@
         "field": "content",
         "value": "No dims"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_infer_dimensions_false",
+      "title": "Disabling infer_dimensions skips the decode step and still produces content"
+    }
   }
 ]

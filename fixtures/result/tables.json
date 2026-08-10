@@ -18,7 +18,12 @@
         "field": "tables",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_tables_simple",
+      "title": "Simple table populates the tables array in result"
+    }
   },
   {
     "id": "result_tables_multiple",
@@ -35,7 +40,12 @@
         "field": "tables",
         "value": 2
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_tables_multiple",
+      "title": "Multiple tables each appear in the tables array"
+    }
   },
   {
     "id": "result_tables_empty_when_no_tables",
@@ -56,7 +66,12 @@
         "field": "tables",
         "value": 0
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_tables_empty_when_no_tables",
+      "title": "Result tables array is empty when input has no tables"
+    }
   },
   {
     "id": "result_tables_without_structure_flag",
@@ -74,6 +89,11 @@
         "field": "tables",
         "value": 0
       }
-    ]
+    ],
+    "docs": {
+      "topic": "result",
+      "stem": "result_tables_without_structure_flag",
+      "title": "Tables array is empty when includeDocumentStructure is false"
+    }
   }
 ]

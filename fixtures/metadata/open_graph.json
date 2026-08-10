@@ -25,7 +25,12 @@
         "field": "metadata.open_graph.image",
         "value": "https://example.com/image.jpg"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "og_basic_tags",
+      "title": "Extract og:title, og:description, and og:image from Open Graph meta tags"
+    }
   },
   {
     "id": "og_multiple_tags",
@@ -58,7 +63,12 @@
         "field": "metadata.open_graph.site_name",
         "value": "Example Site"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "og_multiple_tags",
+      "title": "Extract multiple Open Graph tags including type, url, and site_name"
+    }
   },
   {
     "id": "twitter_card_tags",
@@ -86,6 +96,11 @@
         "field": "metadata.twitter.description",
         "value": "Twitter card description."
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "twitter_card_tags",
+      "title": "Extract Twitter card meta tags"
+    }
   }
 ]

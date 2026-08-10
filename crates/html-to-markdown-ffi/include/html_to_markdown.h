@@ -1380,7 +1380,7 @@ void htm_free_string(char *ptr);
  * or the call must pass `ptr = null` (in which case it is a no-op).
  * # Safety
  * Pointer must have been returned by this library (via out_ptr / out_len / out_cap
- * out-params), or be null. The len and cap values must be unchanged since the call.
+ * out-params), and ownership must not already have been released.
  */
 void htm_free_bytes(uint8_t *ptr,
                     uintptr_t len,

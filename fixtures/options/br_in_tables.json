@@ -18,7 +18,12 @@
           "Line 2"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_br_in_tables_true",
+      "title": "BR elements in table cells render as line breaks"
+    }
   },
   {
     "id": "options_br_in_tables_false",
@@ -37,6 +42,11 @@
           "Col"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_br_in_tables_false",
+      "title": "BR elements in table cells are stripped when disabled"
+    }
   }
 ]

@@ -45,6 +45,15 @@ fn main() {
             // invocation — including the rebuild that fires during `dart pub get`
             // in e2e flows, which is when this otherwise reverts.
             fix_handler_executor_calls();
+
+            // FRB is not feature-aware: it emits a wire wrapper and a dispatch arm for
+            // every `pub fn` it can see, including ones behind `#[cfg(feature = ...)]`.
+            // Under a reduced feature set (Android: --no-default-features --features
+            // android-target) those functions are configured out and the glue fails with
+            // E0425. alef injects the gates during `alef generate`, but the FRB run above
+            // rewrites the file from scratch and drops them — same reversion the handler
+            // rewrite above exists to survive, so this re-applies for the same reason.
+            carry_frb_cfg_gates();
         }
         Ok(status) => panic!("flutter_rust_bridge_codegen generate failed (exit code: {status})"),
         Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
@@ -564,5 +573,96 @@ mod tests {
             "signature extraction should stop before body"
         );
         assert_eq!(sig, "void process(String data) {");
+    }
+}
+
+const FRB_GENERATED_RUST: &str = "src/frb_generated.rs";
+
+/// Collect `name -> #[cfg(...)]` for every column-0 `pub fn`/`pub async fn` in `lib.rs`
+/// that sits directly under a column-0 `#[cfg(...)]` attribute.
+///
+/// Only top-level free functions matter here: those are the only items FRB turns into a
+/// wire wrapper. A gate on an `impl` block is out of scope and currently unreachable.
+fn cfg_gated_free_functions(lib_rs: &str) -> Vec<(String, String)> {
+    let lines: Vec<&str> = lib_rs.lines().collect();
+    let mut gated = Vec::new();
+    let mut index = 0;
+    while index < lines.len() {
+        if !lines[index].starts_with("#[cfg(") {
+            index += 1;
+            continue;
+        }
+        // Join a multi-line predicate (e.g. `any(\n feature = "a",\n ...)`) back together.
+        let mut attribute = String::from(lines[index]);
+        let mut cursor = index;
+        while !attribute.trim_end().ends_with(")]") && cursor + 1 < lines.len() {
+            cursor += 1;
+            attribute.push_str(lines[cursor].trim());
+        }
+        // Skip any further attributes stacked on the same item.
+        let mut item = cursor + 1;
+        while item < lines.len() && lines[item].starts_with('#') {
+            item += 1;
+        }
+        if let Some(rest) = lines
+            .get(item)
+            .and_then(|l| l.strip_prefix("pub async fn ").or_else(|| l.strip_prefix("pub fn ")))
+            && let Some(name) = rest.split(['(', '<', ' ']).next()
+            && !name.is_empty()
+        {
+            gated.push((name.to_string(), attribute));
+        }
+        index = cursor + 1;
+    }
+    gated
+}
+
+/// Re-apply `lib.rs`'s cfg gates to the FRB glue: the `wire__crate__<name>_impl`
+/// definition and its numeric dispatch arm.
+///
+/// Dispatch arms are keyed by an explicit numeric literal fixed at generation time, not
+/// by position, so removing one cannot renumber its siblings. Idempotent — a site that
+/// already carries its gate is left alone.
+fn carry_frb_cfg_gates() {
+    let Ok(lib_rs) = std::fs::read_to_string("src/lib.rs") else {
+        println!("cargo:warning=carry_frb_cfg_gates: src/lib.rs unreadable — skipping");
+        return;
+    };
+    let Ok(generated) = std::fs::read_to_string(FRB_GENERATED_RUST) else {
+        println!("cargo:warning=carry_frb_cfg_gates: {FRB_GENERATED_RUST} unreadable — skipping");
+        return;
+    };
+
+    let gated = cfg_gated_free_functions(&lib_rs);
+    if gated.is_empty() {
+        return;
+    }
+
+    let mut lines: Vec<String> = generated.lines().map(str::to_string).collect();
+    let mut applied = 0usize;
+    for (name, attribute) in &gated {
+        let definition = format!("fn wire__crate__{name}_impl(");
+        let dispatch = format!("=> wire__crate__{name}_impl(");
+        let mut index = 0;
+        while index < lines.len() {
+            let hit =
+                lines[index].trim_start().starts_with(definition.as_str()) || lines[index].contains(dispatch.as_str());
+            if hit && !lines[index.saturating_sub(1)].trim_start().starts_with("#[cfg(") {
+                let indent = " ".repeat(lines[index].len() - lines[index].trim_start().len());
+                lines.insert(index, format!("{indent}{attribute}"));
+                applied += 1;
+                index += 1;
+            }
+            index += 1;
+        }
+    }
+
+    if applied == 0 {
+        return;
+    }
+    let mut out = lines.join("\n");
+    out.push('\n');
+    if let Err(err) = std::fs::write(FRB_GENERATED_RUST, out) {
+        println!("cargo:warning=carry_frb_cfg_gates: failed to write {FRB_GENERATED_RUST}: {err}");
     }
 }

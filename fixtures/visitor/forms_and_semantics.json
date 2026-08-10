@@ -35,6 +35,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_form_custom",
+      "title": "Visitor replaces form with custom output"
     }
   },
   {
@@ -72,6 +77,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_form_skip",
+      "title": "Visitor skips form elements entirely"
     }
   },
   {
@@ -105,6 +115,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_input_custom",
+      "title": "Visitor replaces input with labeled output"
     }
   },
   {
@@ -142,6 +157,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_input_skip",
+      "title": "Visitor skips all input elements"
     }
   },
   {
@@ -180,6 +200,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_button_custom",
+      "title": "Visitor replaces button with bracketed text"
     }
   },
   {
@@ -222,6 +247,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_button_skip",
+      "title": "Visitor removes all buttons from output"
     }
   },
   {
@@ -260,6 +290,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_definition_list_custom",
+      "title": "Visitor customizes definition list items"
     }
   }
 ]

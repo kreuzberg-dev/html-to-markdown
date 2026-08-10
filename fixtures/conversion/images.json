@@ -13,7 +13,12 @@
           "![A photo](photo.jpg)"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "image_simple",
+      "title": "Image with alt text"
+    }
   },
   {
     "id": "image_no_alt",
@@ -33,7 +38,12 @@
           "banner.jpg"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "image_no_alt",
+      "title": "Image without alt text produces image markdown"
+    }
   },
   {
     "id": "image_with_title",
@@ -50,7 +60,12 @@
           "Q3 Sales"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "image_with_title",
+      "title": "Image with title attribute includes title in output"
+    }
   },
   {
     "id": "image_figure_figcaption",
@@ -67,7 +82,12 @@
           "Beautiful sunset over the ocean"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "image_figure_figcaption",
+      "title": "Figure with figcaption preserves both image and caption"
+    }
   },
   {
     "id": "image_linked",
@@ -84,6 +104,11 @@
           "https://example.com"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "image_linked",
+      "title": "Image inside an anchor produces a linked image"
+    }
   }
 ]

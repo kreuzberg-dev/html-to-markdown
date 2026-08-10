@@ -15,7 +15,12 @@
           "- Item 3"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "unordered_list",
+      "title": "Unordered list"
+    }
   },
   {
     "id": "ordered_list",
@@ -33,7 +38,12 @@
           "3. Third"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "ordered_list",
+      "title": "Ordered list"
+    }
   },
   {
     "id": "list_nested_unordered",
@@ -52,7 +62,12 @@
           "Parent B"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_nested_unordered",
+      "title": "Nested unordered list with two levels of depth"
+    }
   },
   {
     "id": "list_nested_ordered",
@@ -71,7 +86,12 @@
           "Step 2"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_nested_ordered",
+      "title": "Nested ordered list with two levels of depth"
+    }
   },
   {
     "id": "list_mixed_nested",
@@ -90,7 +110,12 @@
           "Item B"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_mixed_nested",
+      "title": "Mixed list: ordered list nested inside unordered list"
+    }
   },
   {
     "id": "list_task_checkboxes",
@@ -111,7 +136,12 @@
           "Pending task"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_task_checkboxes",
+      "title": "Task list with checked and unchecked checkboxes"
+    }
   },
   {
     "id": "list_item_multiple_paragraphs",
@@ -129,7 +159,12 @@
           "Simple item"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_item_multiple_paragraphs",
+      "title": "List item containing multiple paragraphs"
+    }
   },
   {
     "id": "list_definition_dl",
@@ -148,6 +183,11 @@
           "Definition of term two."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "list_definition_dl",
+      "title": "Definition list with dt and dd elements"
+    }
   }
 ]

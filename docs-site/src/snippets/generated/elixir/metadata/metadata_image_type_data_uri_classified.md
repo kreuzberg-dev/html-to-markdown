@@ -1,0 +1,5 @@
+```elixir title="Elixir"
+options_value = %HtmlToMarkdown.ConversionOptions{extract_metadata: true}
+result = HtmlToMarkdown.convert("<p><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==\" alt=\"pixel\"></p>", options_value)
+
+```

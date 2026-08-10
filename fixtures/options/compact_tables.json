@@ -29,7 +29,12 @@
         "field": "content",
         "value": "| 42    |"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_compact_tables_true",
+      "title": "compact_tables emits unpadded cells and minimal --- separators"
+    }
   },
   {
     "id": "options_compact_tables_false",
@@ -56,6 +61,11 @@
         "field": "content",
         "value": "| --- |"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_compact_tables_false",
+      "title": "compact_tables false (default) pads cells to column width"
+    }
   }
 ]

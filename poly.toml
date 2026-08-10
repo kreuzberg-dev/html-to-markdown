@@ -621,3 +621,9 @@ run = "mix deps.get && mix credo --strict"
 root = "packages/elixir"
 workspace = true
 files = "packages/elixir/**/*.{ex,exs}"
+
+[hooks.pre-commit.commands.alef-snippets]
+run = "alef snippets check --strict --cache off"
+root = "."
+workspace = true
+files = "{alef.toml,fixtures/**/*.json,docs-site/src/snippets/generated/**}"

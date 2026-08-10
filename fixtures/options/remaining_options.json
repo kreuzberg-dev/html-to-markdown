@@ -23,7 +23,12 @@
         "field": "metadata.description",
         "value": "A test page"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_extract_metadata_true",
+      "title": "Extract metadata returns document metadata when enabled"
+    }
   },
   {
     "id": "options_skip_images_true",
@@ -48,7 +53,12 @@
         "field": "content",
         "value": "photo"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_skip_images_true",
+      "title": "Images are omitted from output when skipImages is true"
+    }
   },
   {
     "id": "options_keep_inline_images_in_paragraph",
@@ -70,7 +80,12 @@
           "more text"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_keep_inline_images_in_paragraph",
+      "title": "Images inside specified tags stay inline"
+    }
   },
   {
     "id": "options_list_indent_width_four",
@@ -90,7 +105,12 @@
           "Inner"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_list_indent_width_four",
+      "title": "Nested lists indented with 4 spaces per level"
+    }
   },
   {
     "id": "options_encoding_utf8",
@@ -106,7 +126,12 @@
         "type": "not_empty",
         "field": "content"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_encoding_utf8",
+      "title": "UTF-8 encoding hint for special characters"
+    }
   },
   {
     "id": "options_debug_true",
@@ -125,6 +150,11 @@
           "Debug test"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_debug_true",
+      "title": "Debug mode enabled does not crash and produces output"
+    }
   }
 ]

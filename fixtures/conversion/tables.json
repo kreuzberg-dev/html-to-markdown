@@ -18,7 +18,12 @@
           "---"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "simple_table",
+      "title": "Simple table with header"
+    }
   },
   {
     "id": "table_no_thead",
@@ -42,7 +47,12 @@
           "|"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_no_thead",
+      "title": "Table without thead uses first row as implied header"
+    }
   },
   {
     "id": "table_with_colspan",
@@ -64,7 +74,12 @@
           "Doe"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_with_colspan",
+      "title": "Table with colspan attribute in a header cell"
+    }
   },
   {
     "id": "table_with_alignment",
@@ -90,7 +105,12 @@
           "|"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_with_alignment",
+      "title": "Table with column alignment attributes"
+    }
   },
   {
     "id": "table_pipe_chars_in_content",
@@ -112,7 +132,12 @@
           "true"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_pipe_chars_in_content",
+      "title": "Table cells containing pipe characters are escaped in output"
+    }
   },
   {
     "id": "table_empty",
@@ -126,6 +151,11 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_empty",
+      "title": "Empty table produces no output or minimal output"
+    }
   }
 ]

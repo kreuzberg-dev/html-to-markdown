@@ -1,0 +1,8 @@
+```kotlin title="Kotlin (Android)"
+import io.xberg.android.*
+
+fun main() = kotlinx.coroutines.runBlocking {
+    val result = IoXbergAndroidHtmlToMarkdownRs.convert("<p>Confirm action: <button type=\"submit\">Click me</button> or <button type=\"reset\">Cancel</button></p>", ConversionOptions())
+}
+
+```

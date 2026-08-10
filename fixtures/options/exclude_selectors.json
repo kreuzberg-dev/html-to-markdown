@@ -21,7 +21,12 @@
         "field": "content",
         "value": "cookies"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_class",
+      "title": "Elements matching CSS class selector are excluded entirely"
+    }
   },
   {
     "id": "options_exclude_selectors_id",
@@ -45,7 +50,12 @@
         "field": "content",
         "value": "Buy stuff"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_id",
+      "title": "Elements matching CSS id selector are excluded entirely"
+    }
   },
   {
     "id": "options_exclude_selectors_attribute",
@@ -69,7 +79,12 @@
         "field": "content",
         "value": "Sidebar"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_attribute",
+      "title": "Elements matching CSS attribute selector are excluded entirely"
+    }
   },
   {
     "id": "options_exclude_selectors_multiple",
@@ -99,7 +114,12 @@
         "field": "content",
         "value": "Footer"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_multiple",
+      "title": "Multiple CSS selectors each exclude their matched elements"
+    }
   },
   {
     "id": "options_exclude_selectors_nested_content_dropped",
@@ -128,7 +148,12 @@
         "field": "content",
         "value": "Sidebar text"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_nested_content_dropped",
+      "title": "All descendants of excluded elements are dropped"
+    }
   },
   {
     "id": "options_exclude_selectors_empty_noop",
@@ -145,7 +170,12 @@
         "field": "content",
         "value": "Hello world"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_empty_noop",
+      "title": "Empty exclude_selectors list does not affect output"
+    }
   },
   {
     "id": "options_exclude_selectors_plain_text_mode",
@@ -170,7 +200,12 @@
         "field": "content",
         "value": "Navigation"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_plain_text_mode",
+      "title": "Exclude selectors work in plain text output mode"
+    }
   },
   {
     "id": "options_exclude_selectors_vs_strip_tags",
@@ -194,6 +229,11 @@
         "field": "content",
         "value": "Inner paragraph"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_exclude_selectors_vs_strip_tags",
+      "title": "exclude_selectors drops entire subtree unlike strip_tags which keeps children"
+    }
   }
 ]

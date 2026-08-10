@@ -18,7 +18,12 @@
         "field": "metadata.links",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_link_type_external_classified",
+      "title": "An https link is extracted into metadata.links when extract_metadata is true"
+    }
   },
   {
     "id": "metadata_link_type_email_classified",
@@ -39,7 +44,12 @@
         "field": "metadata.links",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_link_type_email_classified",
+      "title": "A mailto link is extracted into metadata.links when extract_metadata is true"
+    }
   },
   {
     "id": "metadata_link_type_anchor_classified",
@@ -60,7 +70,12 @@
         "field": "metadata.links",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_link_type_anchor_classified",
+      "title": "A fragment anchor link is extracted into metadata.links when extract_metadata is true"
+    }
   },
   {
     "id": "metadata_image_type_data_uri_classified",
@@ -81,7 +96,12 @@
         "field": "metadata.images",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_image_type_data_uri_classified",
+      "title": "A data-URI image is extracted into metadata.images when extract_metadata is true"
+    }
   },
   {
     "id": "metadata_image_type_external_classified",
@@ -102,6 +122,11 @@
         "field": "metadata.images",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_image_type_external_classified",
+      "title": "An https image URL is extracted into metadata.images when extract_metadata is true"
+    }
   }
 ]

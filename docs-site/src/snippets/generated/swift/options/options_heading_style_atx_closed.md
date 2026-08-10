@@ -1,0 +1,7 @@
+```swift title="Swift"
+import HtmlToMarkdown
+
+let _options = try HtmlToMarkdown.conversionOptionsFromJson("{\"heading_style\":\"AtxClosed\"}")
+_ = try HtmlToMarkdown.convert(html: "<h1>Closed Heading</h1>", options: _options)
+
+```

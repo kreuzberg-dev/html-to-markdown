@@ -13,7 +13,12 @@
           "`console.log()`"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "inline_code",
+      "title": "Inline code"
+    }
   },
   {
     "id": "code_block",
@@ -33,7 +38,12 @@
           "print('hello')"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "code_block",
+      "title": "Code block with language preserves content"
+    }
   },
   {
     "id": "code_block_no_language",
@@ -53,7 +63,12 @@
           "plain code here"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "code_block_no_language",
+      "title": "Code block without a language class preserves content"
+    }
   },
   {
     "id": "code_with_backticks_in_content",
@@ -73,7 +88,12 @@
           "backtick"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "code_with_backticks_in_content",
+      "title": "Inline code containing backtick characters is properly escaped"
+    }
   },
   {
     "id": "code_inline_in_paragraph",
@@ -89,6 +109,11 @@
           "`initialize()`"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "code_inline_in_paragraph",
+      "title": "Inline code element nested inside a paragraph"
+    }
   }
 ]

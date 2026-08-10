@@ -19,6 +19,11 @@
           "star"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_escape_ascii_enabled",
+      "title": "ASCII Markdown characters are escaped when escapeAscii is true"
+    }
   }
 ]

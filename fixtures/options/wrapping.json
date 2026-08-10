@@ -21,7 +21,12 @@
           "This is a long paragraph"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_wrap_enabled",
+      "title": "Wrap option enabled with custom width wraps long lines"
+    }
   },
   {
     "id": "options_wrap_disabled",
@@ -40,6 +45,11 @@
           "This is a long paragraph that should not be wrapped at all because wrapping is disabled."
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_wrap_disabled",
+      "title": "Wrap option disabled preserves long lines without breaking"
+    }
   }
 ]

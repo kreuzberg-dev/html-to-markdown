@@ -21,7 +21,12 @@
           "Child"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_list_indent_tabs",
+      "title": "Tab indentation type for nested list items"
+    }
   },
   {
     "id": "options_list_custom_bullets",
@@ -41,6 +46,11 @@
           "* Item B"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_list_custom_bullets",
+      "title": "Custom bullet character for unordered lists"
+    }
   }
 ]

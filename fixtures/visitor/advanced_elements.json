@@ -42,6 +42,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_definition_list_skip",
+      "title": "Visitor skips definition list items from output"
     }
   },
   {
@@ -89,6 +94,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_definition_list_custom_format",
+      "title": "Visitor formats definition lists with custom templates"
     }
   },
   {
@@ -122,6 +132,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_details_summary_custom",
+      "title": "Visitor customizes details/summary disclosure elements"
     }
   },
   {
@@ -164,6 +179,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_details_summary_skip",
+      "title": "Visitor removes details/summary elements entirely"
     }
   },
   {
@@ -202,6 +222,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_figure_custom",
+      "title": "Visitor customizes figure and figcaption elements"
     }
   },
   {
@@ -244,6 +269,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_figure_skip",
+      "title": "Visitor removes figure elements with their captions"
     }
   },
   {
@@ -286,6 +316,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_figure_custom_wrap",
+      "title": "Visitor wraps figure content with custom formatting"
     }
   }
 ]

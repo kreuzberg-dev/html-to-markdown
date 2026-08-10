@@ -16,7 +16,12 @@
           "==highlighted=="
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_highlight_double_equal",
+      "title": "Mark tag with double equal highlight style"
+    }
   },
   {
     "id": "options_highlight_bold",
@@ -35,7 +40,12 @@
           "**highlighted**"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_highlight_bold",
+      "title": "Mark tag rendered as bold"
+    }
   },
   {
     "id": "options_highlight_none",
@@ -59,6 +69,11 @@
         "field": "content",
         "value": "=="
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_highlight_none",
+      "title": "Mark tag with no highlight style strips the mark"
+    }
   }
 ]

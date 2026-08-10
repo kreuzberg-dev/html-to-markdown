@@ -11,7 +11,12 @@
         "field": "content",
         "value": ""
       }
-    ]
+    ],
+    "docs": {
+      "topic": "smoke",
+      "stem": "smoke_empty_string",
+      "title": "Empty string produces empty output"
+    }
   },
   {
     "id": "smoke_simple_paragraph",
@@ -29,7 +34,12 @@
         "type": "not_empty",
         "field": "content"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "smoke",
+      "stem": "smoke_simple_paragraph",
+      "title": "Simple paragraph converts correctly"
+    }
   },
   {
     "id": "smoke_simple_heading",
@@ -45,6 +55,11 @@
           "# Title"
         ]
       }
-    ]
+    ],
+    "docs": {
+      "topic": "smoke",
+      "stem": "smoke_simple_heading",
+      "title": "H1 heading converts to ATX markdown"
+    }
   }
 ]

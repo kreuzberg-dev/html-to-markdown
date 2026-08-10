@@ -1,0 +1,44 @@
+```zig title="Zig"
+const std = @import("std");
+const html_to_markdown = @import("html_to_markdown");
+
+pub fn main() !void {
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const c = html_to_markdown.c;
+    const TestVisitor_visitor_horizontal_rule_custom = struct {
+        pub fn visit_horizontal_rule(_ctx: [*c]const c.HTMHtmContext, _user_data: ?*anyopaque, out_custom: [*c][*c]u8, out_len: [*c]usize) callconv(.c) i32 {
+        _ = _ctx;
+        _ = _user_data;
+        const _buf = std.heap.c_allocator.dupeZ(u8, "\n[DIVIDER]\n") catch return 0;
+        if (out_custom != null) out_custom.* = _buf.ptr;
+        if (out_len != null) out_len.* = _buf.len;
+        return 1;
+        }
+    };
+    var _callbacks: c.HTMHtmVisitorCallbacks = std.mem.zeroes(c.HTMHtmVisitorCallbacks);
+    _callbacks.visit_horizontal_rule = &TestVisitor_visitor_horizontal_rule_custom.visit_horizontal_rule;
+    const _visitor = html_to_markdown.c.htm_visitor_create(&_callbacks);
+    defer html_to_markdown.c.htm_visitor_free(_visitor);
+    const _options_z = try std.heap.c_allocator.dupeZ(u8, "{}");
+    defer std.heap.c_allocator.free(_options_z);
+    const _options = html_to_markdown.c.htm_conversion_options_from_json(_options_z.ptr);
+    defer html_to_markdown.c.htm_conversion_options_free(_options);
+    html_to_markdown.c.htm_options_set_visitor(_options, _visitor);
+    const _html_z = try std.heap.c_allocator.dupeZ(u8, "<h1>Section A</h1><p>Content A</p><hr><h1>Section B</h1><p>Content B</p>");
+    defer std.heap.c_allocator.free(_html_z);
+    const _result = html_to_markdown.c.htm_convert(_html_z.ptr, _options);
+    try testing.expect(_result != null);
+    defer html_to_markdown.c.htm_conversion_result_free(_result.?);
+    const _json_ptr = html_to_markdown.c.htm_conversion_result_to_json(_result.?);
+    defer html_to_markdown.c.htm_free_string(_json_ptr);
+    const _result_json = std.mem.sliceTo(_json_ptr, 0);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    }
+}
+
+```

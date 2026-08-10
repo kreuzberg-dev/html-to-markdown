@@ -31,6 +31,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_heading_bare_string_preserves_case",
+      "title": "Visitor returns rendered heading template as bare string; mixed-case is preserved (regression guard for issue #350)"
     }
   },
   {
@@ -69,6 +74,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_heading",
+      "title": "Visitor replaces heading with custom format"
     }
   }
 ]

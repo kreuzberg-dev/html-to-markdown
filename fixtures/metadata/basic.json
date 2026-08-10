@@ -18,7 +18,12 @@
         "field": "metadata.title",
         "value": "My Page"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_title_tag",
+      "title": "Extract title from <title> tag"
+    }
   },
   {
     "id": "metadata_description_meta",
@@ -39,7 +44,12 @@
         "field": "metadata.description",
         "value": "This is the page description."
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_description_meta",
+      "title": "Extract description from <meta name='description'> tag"
+    }
   },
   {
     "id": "metadata_author_meta",
@@ -60,7 +70,12 @@
         "field": "metadata.author",
         "value": "Jane Doe"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_author_meta",
+      "title": "Extract author from <meta name='author'> tag"
+    }
   },
   {
     "id": "metadata_keywords_meta",
@@ -81,7 +96,12 @@
         "field": "metadata.document.keywords",
         "value": 1
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_keywords_meta",
+      "title": "Extract keywords from <meta name='keywords'> tag"
+    }
   },
   {
     "id": "metadata_canonical_url",
@@ -102,6 +122,11 @@
         "field": "metadata.canonical_url",
         "value": "https://example.com/canonical-page"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "metadata",
+      "stem": "metadata_canonical_url",
+      "title": "Extract canonical URL from <link rel='canonical'> tag"
+    }
   }
 ]

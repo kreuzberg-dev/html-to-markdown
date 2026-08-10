@@ -1,0 +1,12 @@
+```rust title="Rust"
+use html_to_markdown_rs::convert;
+use html_to_markdown_rs::ConversionOptions;
+
+fn main() {
+    let html = r#"<html><head><title>Product</title></head><body><div itemscope itemtype="https://schema.org/Product"><h1 itemprop="name">Awesome Widget</h1><span itemprop="description">The best widget on the market</span><span itemprop="price">29.99</span><span itemprop="priceCurrency">USD</span><img itemprop="image" src="widget.jpg" alt="Widget"><span itemprop="ratingValue">4.5</span></div></body></html>"#;
+    let options_json: serde_json::Value = serde_json::from_str(r#"{"extract_metadata":true}"#).unwrap();
+    let options: ConversionOptions = serde_json::from_value(options_json).unwrap();
+    let _ = convert(html, Some(options.clone()));
+}
+
+```

@@ -11,7 +11,12 @@
         "field": "content",
         "value": "# Heading 1"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h1",
+      "title": "H1 heading"
+    }
   },
   {
     "id": "heading_h2",
@@ -25,7 +30,12 @@
         "field": "content",
         "value": "## Heading 2"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h2",
+      "title": "H2 heading"
+    }
   },
   {
     "id": "heading_h3",
@@ -39,7 +49,12 @@
         "field": "content",
         "value": "### Heading 3"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h3",
+      "title": "H3 heading"
+    }
   },
   {
     "id": "heading_h4",
@@ -53,7 +68,12 @@
         "field": "content",
         "value": "#### Heading 4"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h4",
+      "title": "H4 heading"
+    }
   },
   {
     "id": "heading_h5",
@@ -67,7 +87,12 @@
         "field": "content",
         "value": "##### Heading 5"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h5",
+      "title": "H5 heading"
+    }
   },
   {
     "id": "heading_h6",
@@ -81,6 +106,11 @@
         "field": "content",
         "value": "###### Heading 6"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "heading_h6",
+      "title": "H6 heading"
+    }
   }
 ]

@@ -30,6 +30,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "visitor_custom_element_with_nesting",
+      "title": "Visitor handles custom elements with nested content"
     }
   },
   {
@@ -67,6 +72,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "visitor_unknown_tag_preservation",
+      "title": "Visitor preserves unknown HTML tags as raw HTML"
     }
   },
   {
@@ -104,6 +114,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "visitor_deeply_nested_skip",
+      "title": "Visitor skips deeply nested elements"
     }
   },
   {
@@ -136,6 +151,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "visitor_element_start_skip_entire_subtree",
+      "title": "Visitor skips at element_start level removes entire subtree"
     }
   },
   {
@@ -163,6 +183,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "visitor_element_end_modification",
+      "title": "Visitor modifies element at end after children processed"
     }
   }
 ]

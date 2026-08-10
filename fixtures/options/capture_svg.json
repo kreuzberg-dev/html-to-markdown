@@ -19,7 +19,12 @@
         "field": "content",
         "value": "Below SVG"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_capture_svg_true",
+      "title": "Enabling capture_svg processes inline SVG elements when extract_images is on"
+    }
   },
   {
     "id": "options_capture_svg_false",
@@ -41,6 +46,11 @@
         "field": "content",
         "value": "Below SVG"
       }
-    ]
+    ],
+    "docs": {
+      "topic": "options",
+      "stem": "options_capture_svg_false",
+      "title": "Disabling capture_svg still produces content; SVG is not extracted as an image"
+    }
   }
 ]

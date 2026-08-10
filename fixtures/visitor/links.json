@@ -30,6 +30,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_link_format",
+      "title": "Visitor reformats links using template interpolation"
     }
   },
   {
@@ -62,6 +67,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_skip_links",
+      "title": "Visitor skips all links entirely"
     }
   },
   {
@@ -101,6 +111,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_link_bare_string_preserves_case",
+      "title": "Visitor returns rendered template as a bare string (not a dict) and original mixed-case content is preserved end-to-end (regression guard for issue #350)"
     }
   },
   {
@@ -134,6 +149,11 @@
         "wasm"
       ],
       "reason": "WASM visitor bridge not yet exposed via @xberg-io/html-to-markdown-wasm public API"
+    },
+    "docs": {
+      "topic": "visitor",
+      "stem": "visitor_custom_link_static",
+      "title": "Visitor replaces link with static custom output"
     }
   }
 ]
