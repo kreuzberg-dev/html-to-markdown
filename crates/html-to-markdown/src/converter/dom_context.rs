@@ -6,6 +6,7 @@
 
 use lru::LruCache;
 use std::cell::{OnceCell, RefCell};
+use std::collections::HashMap;
 
 use crate::converter::main_helpers::is_inline_element;
 use crate::converter::utility::content::{is_block_level_name, normalized_tag_name};
@@ -24,6 +25,30 @@ pub struct TagInfo {
     pub(crate) is_block: bool,
 }
 
+/// Memoized summary of a `<table>` element's full subtree (including nested tables):
+/// whether it contains non-whitespace text, links, header cells, or a caption.
+///
+/// ~keep Caching this per table node (see [`DomContext::cached_table_content_summary`]) is
+/// ~keep what keeps `scanner::scan_table` linear across a chain of nested tables — without it,
+/// ~keep every table's own full-subtree scan re-walks every table nested below it, an O(n²)
+/// ~keep cost documented at `tests/deep_nesting_overflow.rs`.
+#[derive(Clone, Copy, Default)]
+pub struct TableContentSummary {
+    pub(crate) has_text: bool,
+    pub(crate) link_count: usize,
+    pub(crate) has_header: bool,
+    pub(crate) has_caption: bool,
+}
+
+impl TableContentSummary {
+    pub(crate) const fn merge(&mut self, other: Self) {
+        self.has_text |= other.has_text;
+        self.link_count += other.link_count;
+        self.has_header |= other.has_header;
+        self.has_caption |= other.has_caption;
+    }
+}
+
 /// DOM context that provides efficient access to parent/child relationships and text content.
 ///
 /// This context is built once during conversion and provides O(1) access to node relationships
@@ -40,6 +65,7 @@ pub struct DomContext {
     pub(crate) next_tag_map: Vec<OnceCell<Option<u32>>>,
     pub(crate) next_whitespace_map: Vec<OnceCell<bool>>,
     pub(crate) text_cache: RefCell<LruCache<u32, String>>,
+    pub(crate) table_content_summary_cache: RefCell<HashMap<u32, TableContentSummary>>,
 }
 
 impl DomContext {
@@ -337,5 +363,15 @@ impl DomContext {
     #[cfg_attr(not(feature = "visitor"), allow(dead_code))]
     pub(crate) fn get_sibling_index(&self, node_id: u32) -> Option<usize> {
         self.sibling_index(node_id)
+    }
+
+    /// Look up a memoized table content summary, if already computed.
+    pub(crate) fn cached_table_content_summary(&self, table_id: u32) -> Option<TableContentSummary> {
+        self.table_content_summary_cache.borrow().get(&table_id).copied()
+    }
+
+    /// Store a computed table content summary for reuse by ancestor/descendant table scans.
+    pub(crate) fn cache_table_content_summary(&self, table_id: u32, summary: TableContentSummary) {
+        self.table_content_summary_cache.borrow_mut().insert(table_id, summary);
     }
 }

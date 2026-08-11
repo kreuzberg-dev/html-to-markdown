@@ -6,12 +6,35 @@
 use crate::converter::dom_context::DomContext;
 use crate::converter::main_helpers::is_inline_element;
 use crate::converter::utility::attributes::{attribute_matches_any, element_has_navigation_hint};
-use crate::converter::utility::content::normalized_tag_name;
 use crate::options::ConversionOptions;
 
 /// Check if an inline ancestor element is allowed to contain block-level elements.
 pub fn inline_ancestor_allows_block(tag_name: &str) -> bool {
     matches!(tag_name, "a" | "ins" | "del")
+}
+
+/// Ancestor state inherited top-down while scanning for misnested elements.
+///
+/// ~keep Each field mirrors one of the three independent ancestor-chain scans the
+/// ~keep original implementation ran separately per node (O(depth) each); carrying
+/// ~keep the already-computed parent result down to children makes every node O(1)
+/// ~keep instead, since each scan only ever needs the *nearest* qualifying ancestor.
+#[derive(Clone, Copy)]
+struct MisnestState {
+    /// True if this node or any strict ancestor is `<pre>`/`<code>`.
+    inside_preformatted: bool,
+    /// True if any strict ancestor is an inline element that disallows block children.
+    blocked_by_inline_ancestor: bool,
+    /// Result of a `has_p_ancestor` scan started at this node (used by its children).
+    p_ancestor_state: bool,
+}
+
+impl MisnestState {
+    const ROOT: Self = Self {
+        inside_preformatted: false,
+        blocked_by_inline_ancestor: false,
+        p_ancestor_state: false,
+    };
 }
 
 /// Detect block elements that were incorrectly nested under inline ancestors.
@@ -23,79 +46,67 @@ pub fn inline_ancestor_allows_block(tag_name: &str) -> bool {
 /// a structural impossibility in valid HTML that signals the `tl` parser absorbed
 /// a table into a paragraph because of an unclosed `<p>` (common in Word/Outlook
 /// HTML such as `<p class='MsoNormal'>` cells). Issue #336.
+///
+/// ~keep Walks the tree top-down exactly once, carrying inherited ancestor state
+/// ~keep (see [`MisnestState`]) instead of re-walking every node's ancestor chain.
+/// ~keep The original per-node ancestor walk was O(depth) per node — O(n²) total on
+/// ~keep a deeply nested chain (e.g. 20k nested `<div>`s took ~30s; this pass alone
+/// ~keep accounted for essentially all of it, confirmed via phase timing in
+/// ~keep `tools/benchmark-harness/examples/profile_deep_nesting_phases.rs`).
 pub fn has_inline_block_misnest(dom_ctx: &DomContext, parser: &tl::Parser) -> bool {
-    for handle in dom_ctx.node_map.iter().flatten() {
-        if let Some(tl::Node::Tag(_tag)) = handle.get(parser) {
-            let node_id = handle.get_inner();
-            let Some(info) = dom_ctx.tag_info(node_id, parser) else {
-                continue;
+    let mut stack: Vec<(tl::NodeHandle, MisnestState)> = dom_ctx
+        .root_children
+        .iter()
+        .map(|handle| (*handle, MisnestState::ROOT))
+        .collect();
+
+    while let Some((handle, state)) = stack.pop() {
+        let node_id = handle.get_inner();
+        if !matches!(handle.get(parser), Some(tl::Node::Tag(_))) {
+            continue;
+        }
+        let Some(info) = dom_ctx.tag_info(node_id, parser) else {
+            continue;
+        };
+
+        // ~keep Table elements under <p>: tl misparsed an unclosed <p> in <td>.
+        if matches!(info.name.as_str(), "td" | "tr" | "th") && state.p_ancestor_state {
+            return true;
+        }
+
+        let self_inside_preformatted = state.inside_preformatted || matches!(info.name.as_str(), "pre" | "code");
+        if info.is_block && !self_inside_preformatted && state.blocked_by_inline_ancestor {
+            return true;
+        }
+
+        if let Some(children) = dom_ctx.children_of(node_id) {
+            let child_state = MisnestState {
+                inside_preformatted: self_inside_preformatted,
+                blocked_by_inline_ancestor: state.blocked_by_inline_ancestor
+                    || (is_inline_element(&info.name) && !inline_ancestor_allows_block(&info.name)),
+                p_ancestor_state: p_ancestor_state_for(&info.name, state.p_ancestor_state),
             };
-
-            // ~keep Table elements under <p>: tl misparsed an unclosed <p> in <td>.
-            if matches!(info.name.as_str(), "td" | "tr" | "th") && has_p_ancestor(dom_ctx, parser, node_id) {
-                return true;
-            }
-
-            if !info.is_block {
-                continue;
-            }
-
-            let mut check_parent = Some(node_id);
-            let mut inside_preformatted = false;
-            while let Some(check_id) = check_parent {
-                if let Some(info) = dom_ctx.tag_info(check_id, parser) {
-                    if matches!(info.name.as_str(), "pre" | "code") {
-                        inside_preformatted = true;
-                        break;
-                    }
-                }
-                check_parent = dom_ctx.parent_of(check_id);
-            }
-
-            if inside_preformatted {
-                continue;
-            }
-
-            let mut current = dom_ctx.parent_of(node_id);
-            while let Some(parent_id) = current {
-                if let Some(parent_info) = dom_ctx.tag_info(parent_id, parser) {
-                    if is_inline_element(&parent_info.name) && !inline_ancestor_allows_block(&parent_info.name) {
-                        return true;
-                    }
-                } else if let Some(parent_handle) = dom_ctx.node_handle(parent_id) {
-                    if let Some(tl::Node::Tag(parent_tag)) = parent_handle.get(parser) {
-                        let parent_name = normalized_tag_name(parent_tag.name().as_utf8_str());
-                        if is_inline_element(&parent_name) && !inline_ancestor_allows_block(&parent_name) {
-                            return true;
-                        }
-                    }
-                }
-                current = dom_ctx.parent_of(parent_id);
-            }
+            stack.extend(children.iter().map(|child| (*child, child_state)));
         }
     }
 
     false
 }
 
-/// Walk ancestors of `node_id` looking for a `<p>` element.
+/// Compute the `has_p_ancestor` scan result to hand down to a node's children,
+/// given the node's own tag name and the state its own parent handed down.
 ///
-/// Stops ascending once it leaves the table hierarchy (`table`/`body`/`html`)
-/// to avoid false positives where a `<p>` legitimately wraps a `<table>`.
-fn has_p_ancestor(dom_ctx: &DomContext, parser: &tl::Parser, node_id: u32) -> bool {
-    let mut current = dom_ctx.parent_of(node_id);
-    while let Some(parent_id) = current {
-        if let Some(parent_info) = dom_ctx.tag_info(parent_id, parser) {
-            if parent_info.name == "p" {
-                return true;
-            }
-            if matches!(parent_info.name.as_str(), "table" | "body" | "html") {
-                return false;
-            }
-        }
-        current = dom_ctx.parent_of(parent_id);
+/// Mirrors the original ancestor walk's stopping rule: a `<p>` ancestor found
+/// before crossing a `table`/`body`/`html` boundary counts; hitting the boundary
+/// first resets the search to "no `<p>` ancestor".
+fn p_ancestor_state_for(tag_name: &str, inherited: bool) -> bool {
+    if tag_name == "p" {
+        true
+    } else if matches!(tag_name, "table" | "body" | "html") {
+        false
+    } else {
+        inherited
     }
-    false
 }
 
 /// Determine if a node should be dropped during preprocessing.
