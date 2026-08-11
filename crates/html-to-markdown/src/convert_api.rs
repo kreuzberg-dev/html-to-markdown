@@ -260,10 +260,23 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
     #[cfg(not(feature = "visitor"))]
     let visitor: Option<()> = None;
 
-    // ~keep Run the conversion pipeline.
     // ~keep Pass structure_collector by value — convert_html_impl will consume it via Rc::try_unwrap
     // ~keep to return the finished DocumentStructure. We must not hold a second Rc reference.
-    let (markdown, document, tables, depth_warning) = {
+    //
+    // ~keep The whole pipeline runs inside `catch_unwind`: a panicking visitor callback
+    // ~keep poisons the visitor's `Mutex` (std::sync::Mutex poisons on an unwind while
+    // ~keep the guard is held). Without a catch here, that panic would unwind straight
+    // ~keep out of `convert()`, and any *later* call reusing the same visitor handle
+    // ~keep would find it permanently poisoned. Catching it here confines the failure
+    // ~keep to this call and lets us clear the poison flag below. See
+    // ~keep xberg-io/html-to-markdown#28.
+    type ConvertOutput = (
+        String,
+        Option<crate::types::DocumentStructure>,
+        Vec<crate::types::TableData>,
+        Option<crate::types::ProcessingWarning>,
+    );
+    let convert_outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| -> Result<ConvertOutput> {
         #[cfg(all(feature = "metadata", feature = "inline-images"))]
         {
             crate::converter::convert_html_impl(
@@ -273,7 +286,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                 metadata_collector.as_ref().map(Rc::clone),
                 visitor,
                 structure_collector,
-            )?
+            )
         }
         #[cfg(all(feature = "metadata", not(feature = "inline-images")))]
         {
@@ -284,7 +297,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                 metadata_collector.as_ref().map(Rc::clone),
                 visitor,
                 structure_collector,
-            )?
+            )
         }
         #[cfg(all(not(feature = "metadata"), feature = "inline-images"))]
         {
@@ -295,7 +308,7 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                 None,
                 visitor,
                 structure_collector,
-            )?
+            )
         }
         #[cfg(all(not(feature = "metadata"), not(feature = "inline-images")))]
         {
@@ -306,7 +319,23 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
                 None,
                 visitor,
                 structure_collector,
-            )?
+            )
+        }
+    }));
+
+    let (markdown, document, tables, depth_warning) = match convert_outcome {
+        Ok(result) => result?,
+        Err(panic_payload) => {
+            // ~keep Clear the poison flag so a later, unrelated conversion that reuses this
+            // ~keep same visitor handle is not permanently latched into failure. The state
+            // ~keep guarded by this Mutex is the caller's own visitor object; no other
+            // ~keep thread can observe it mid-mutation because every access is serialised
+            // ~keep through this same lock, so recovering it here cannot expose a torn read.
+            #[cfg(feature = "visitor")]
+            if let Some(handle) = &options.visitor {
+                handle.clear_poison();
+            }
+            return Err(crate::error::ConversionError::Panic(panic_message(&*panic_payload)));
         }
     };
 
@@ -363,6 +392,21 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
         images,
         warnings,
     })
+}
+
+/// Extract a human-readable message from a `catch_unwind` panic payload.
+///
+/// Panics started via `panic!("{}", msg)` carry a `String`; panics started via a string
+/// literal (`panic!("msg")`) carry a `&'static str`. Anything else falls back to a generic
+/// message rather than losing the error entirely.
+fn panic_message(payload: &(dyn std::any::Any + Send)) -> String {
+    if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_string()
+    } else if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else {
+        "visitor callback panicked during conversion".to_string()
+    }
 }
 
 /// Validate and normalize HTML input for conversion.
