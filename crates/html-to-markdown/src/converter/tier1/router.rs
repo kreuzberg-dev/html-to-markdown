@@ -144,6 +144,68 @@ pub enum RouterDecision {
 /// | `compact_tables`     | `false` (padded cells: `\| cell \|`)    | Yes — `true`                             |
 /// | `br_in_tables`       | bails on `<br>` in cells                | No — covered by scanner bail             |
 /// | `hocr_spatial_tables`| Tier-2 only (structural gate)           | Already gated above                      |
+///
+/// # Practical reachability & benchmark findings
+///
+/// The table and gates above answer "which options force Tier-2"; this section
+/// answers the practical follow-up: how much of the remaining headroom is real.
+///
+/// ## Reachable option surface
+///
+/// With the `metadata` feature compiled in (every shipped binding), Tier-1 is
+/// reachable via `TierStrategy::Auto` only when the caller sets
+/// `extract_metadata: false` — and, with `inline-images` compiled in,
+/// `extract_images: false` — on top of every other gate above already being
+/// satisfied. `ConversionOptions::default()` sets `extract_metadata: true`, so
+/// **the out-of-the-box default option set never reaches Tier-1**: every
+/// default-options `Auto` call routes to Tier-2 via the `extract_metadata` gate
+/// before the scanner ever runs.
+///
+/// ## Measured throughput (2026-08-11, this repo's 29-fixture corpus under
+/// `tools/benchmark-harness/fixtures`, release build, `testkit` feature)
+///
+/// Commands: `htmbench run --force-tier1 --output <a>` / `--force-tier2
+/// --output <b>` (3 replicate invocations, per-fixture median of each run's
+/// internal calibrated best-of-3), and `cargo run --example tier1_routing -p
+/// html-to-markdown-bench --features testkit` (options force
+/// `extract_metadata: false` to see the option-gate-free routing behaviour).
+///
+/// - Aggregate: forced-Tier1 189.4ms vs forced-Tier2 181.2ms — **Tier-1 is
+///   ~4.5% *slower* in aggregate** on this corpus, because 21/29 fixtures
+///   (72%, in line with a prior audit's reported 69–82% bail rate) bail and
+///   pay wasted-scan-then-full-Tier-2-fallback cost on top of Tier-2's own
+///   cost.
+/// - Bail distribution (`tier1_routing`, 21 bails): 8 `Classifier`
+///   (option-gated — zero scan cost, since `classify` short-circuits before
+///   the scanner runs), 7 `HiddenElement`, 3 `AdjacentRawTextTags`, 2
+///   `TableBlockChildInCell`, 1 `Cdata`. `DepthLimitExceeded` was added this
+///   lane but no corpus fixture is deeply-nested enough to exercise it.
+/// - Native (no bail): 8/29 (28%). Six of those are sub-millisecond synthetic
+///   edge-case fixtures (noisy, negligible absolute savings). The two
+///   real-world wins are `mdream/github-markdown-complete.html` (0.83ms vs
+///   9.73ms, ~11.7x) and `real-world/issues/gh-190/mitrade.html` (a modest,
+///   sub-millisecond-absolute win).
+/// - The 13 *structural* (non-`Classifier`) bails' wasted-scan time sums to
+///   roughly 1ms total — under 1% of the corpus's aggregate Tier-2 cost. Even
+///   a hypothetical, perfectly-accurate cheap pre-scan that skipped straight
+///   to Tier-2 for those inputs could only recover that ~1%; it cannot make
+///   Tier-1 beat Tier-2 in aggregate on this corpus, only shrink the gap.
+///
+/// ## Recommendation
+///
+/// On this corpus Tier-1 pays for itself only for documents resembling
+/// `github-markdown-complete.html` — heavy custom-element / raw-HTML markup,
+/// no hidden elements, no adjacent `<script>`/`<style>` pairs — and only when
+/// the caller has already opted out of `extract_metadata` and
+/// `extract_images`. Typical real-world pages in this corpus (Wikipedia
+/// articles, blog posts) either bail (paying a small tax) or never reach
+/// Tier-1 at all under default options. Widening structural bail coverage or
+/// threading `MetadataCollector`/`InlineImageCollector` through the scanner
+/// (see the rejected-alternatives note above) would pay off only if real
+/// traffic looks more like the narrow native-win case than this corpus's
+/// average — that has not been demonstrated. Hold Tier-1 at its current scope
+/// rather than investing further, pending traffic evidence that changes this
+/// picture.
 #[must_use]
 pub fn classify(report: &PrescanReport, options: &ConversionOptions) -> RouterDecision {
     use crate::options::{
