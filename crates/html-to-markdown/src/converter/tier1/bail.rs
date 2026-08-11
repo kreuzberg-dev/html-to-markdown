@@ -122,6 +122,16 @@ pub enum BailReason {
         /// Byte offset of the element's `<` in the input.
         offset: usize,
     },
+
+    /// A list (`<ul>`/`<ol>`) was opened while already nested inside another
+    /// list, where either the new list or an ancestor list is `<ol>`.
+    ///
+    /// A nested list's indent must equal the cumulative width of every
+    /// ancestor marker (`"- "` = 2, `"1. "` = 3, `"10. "` = 4, ...). Tier-1's
+    /// `push_list_item_indent` hardcodes a uniform 2-space-per-depth scheme,
+    /// which only holds when every list in the ancestor chain is unordered.
+    /// Bail so Tier-2 (which computes cumulative marker widths) is authoritative.
+    ListNestedOrdered,
 }
 
 impl fmt::Display for BailReason {
@@ -178,6 +188,12 @@ impl fmt::Display for BailReason {
             }
             Self::HiddenElement { offset } => {
                 write!(f, "hidden element (hidden attribute or style) at byte offset {offset}")
+            }
+            Self::ListNestedOrdered => {
+                write!(
+                    f,
+                    "nested list with an ordered ancestor or ordered self (cumulative indent width)"
+                )
             }
         }
     }

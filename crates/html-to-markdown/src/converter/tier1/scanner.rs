@@ -495,6 +495,21 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     }
                 }
 
+                // ~keep A nested list's indent must equal the cumulative width of every
+                // ~keep ancestor marker ("- " = 2, "1. " = 3, "10. " = 4, ...); Tier-1's
+                // ~keep `push_list_item_indent` hardcodes a uniform 2-space-per-depth
+                // ~keep scheme. That is correct for ul-in-ul (all markers are 2 wide) but
+                // ~keep wrong the moment an ordered list is anywhere in the ancestor chain
+                // ~keep of a nested list. Bail so Tier-2's cumulative-width logic wins.
+                if let TagKind::List(kind) = spec.kind {
+                    if kind != ListKind::Definition
+                        && state.list_depth > 0
+                        && (kind == ListKind::Ordered || find_parent_list_kind(&state.stack) == Some(ListKind::Ordered))
+                    {
+                        return Err(BailReason::ListNestedOrdered);
+                    }
+                }
+
                 let prev_ctx = state.escape_ctx;
                 let ol_start = if matches!(spec.kind, TagKind::List(ListKind::Ordered)) {
                     extract_ol_start(&attrs)

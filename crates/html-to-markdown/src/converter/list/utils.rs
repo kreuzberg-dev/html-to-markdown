@@ -169,6 +169,7 @@ pub fn is_loose_list(node_handle: tl::NodeHandle, parser: &tl::Parser, dom_ctx: 
 pub fn add_list_continuation_indent(
     output: &mut String,
     list_depth: usize,
+    list_indent_columns: usize,
     blank_line: bool,
     options: &ConversionOptions,
 ) {
@@ -186,42 +187,46 @@ pub fn add_list_continuation_indent(
         output.push('\n');
     }
 
-    let indent_level = calculate_list_continuation_indent(list_depth);
-    let indent_char = match options.list_indent_type {
-        ListIndentType::Tabs => "\t",
+    match options.list_indent_type {
+        ListIndentType::Tabs => {
+            let indent_level = calculate_list_continuation_indent(list_depth);
+            for _ in 0..indent_level {
+                output.push('\t');
+            }
+        }
+        // ~keep `list_indent_columns` is the cumulative width of every ancestor <li>'s own
+        // ~keep marker (see Context::list_indent_columns) — see item.rs's identical rationale.
         ListIndentType::Spaces => {
-            for _ in 0..options.list_indent_width {
+            for _ in 0..list_indent_columns {
                 output.push(' ');
             }
-            return;
         }
-    };
-    for _ in 0..indent_level {
-        output.push_str(indent_char);
     }
 }
 
 /// Calculate the indentation string for list continuations based on depth and options.
-pub fn continuation_indent_string(list_depth: usize, options: &ConversionOptions) -> Option<String> {
-    let indent_level = calculate_list_continuation_indent(list_depth);
-    if indent_level == 0 {
-        return None;
-    }
-
-    let mut indent = String::new();
+pub fn continuation_indent_string(
+    list_depth: usize,
+    list_indent_columns: usize,
+    options: &ConversionOptions,
+) -> Option<String> {
     match options.list_indent_type {
         ListIndentType::Tabs => {
-            for _ in 0..indent_level {
-                indent.push('\t');
+            let indent_level = calculate_list_continuation_indent(list_depth);
+            if indent_level == 0 {
+                return None;
             }
+            Some("\t".repeat(indent_level))
         }
+        // ~keep `list_indent_columns` is the cumulative width of every ancestor <li>'s own
+        // ~keep marker (see Context::list_indent_columns) — see item.rs's identical rationale.
         ListIndentType::Spaces => {
-            for _ in 0..(options.list_indent_width * indent_level) {
-                indent.push(' ');
+            if list_indent_columns == 0 {
+                return None;
             }
+            Some(" ".repeat(list_indent_columns))
         }
     }
-    Some(indent)
 }
 
 /// Add appropriate leading separator before a list.

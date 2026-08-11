@@ -63,7 +63,7 @@ pub fn handle(
         crate::converter::trim_trailing_whitespace(output);
         output.push_str("<br>");
     } else if is_list_continuation {
-        add_list_continuation_indent(output, ctx.list_depth, true, options);
+        add_list_continuation_indent(output, ctx.list_indent_columns, true, options);
     } else if needs_leading_sep {
         crate::converter::trim_trailing_whitespace(output);
         output.push_str("\n\n");
@@ -122,16 +122,21 @@ pub fn handle(
 }
 
 /// Add continuation indentation for list items.
+///
+/// `list_indent_columns` is the cumulative width of every ancestor `<li>`'s own marker
+/// (see `Context::list_indent_columns`) — the column at which this item's own content
+/// starts, so a continuation paragraph aligns under the preceding text rather than under
+/// a uniform per-depth offset that ignores ordered-marker width.
 fn add_list_continuation_indent(
     output: &mut String,
-    list_depth: usize,
+    list_indent_columns: usize,
     needs_space: bool,
     _options: &ConversionOptions,
 ) {
     if needs_space && !output.ends_with(' ') && !output.ends_with('\n') {
         output.push(' ');
     }
-    for _ in 0..(4 * list_depth) {
+    for _ in 0..list_indent_columns {
         output.push(' ');
     }
 }

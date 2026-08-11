@@ -38,7 +38,9 @@ pub fn handle_li(
     if ctx.list_depth > 0 {
         let indent = match options.list_indent_type {
             crate::options::ListIndentType::Tabs => "\t".repeat(ctx.list_depth),
-            crate::options::ListIndentType::Spaces => " ".repeat(ctx.list_depth * options.list_indent_width),
+            // ~keep `list_indent_columns` is the cumulative width of every ancestor <li>'s own
+            // ~keep marker (see Context::list_indent_columns), not a uniform per-depth value.
+            crate::options::ListIndentType::Spaces => " ".repeat(ctx.list_indent_columns),
         };
         output.push_str(&indent);
     }
@@ -112,9 +114,21 @@ pub fn handle_li(
             (false, false, None)
         };
 
+    // ~keep This item's own marker width, used to grow `list_indent_columns` for descendants
+    // ~keep (nested lists and continuation content). Unordered/task markers are always 2 wide
+    // ~keep ("- "); an ordered marker's width depends on its counter's digit count ("1. " = 3,
+    // ~keep "10. " = 4, ...). `list_indent_width` is honoured as a floor, not the literal width.
+    let own_marker_width = if is_task_list || !ctx.in_ordered_list {
+        options.list_indent_width.max(2)
+    } else {
+        let marker_len = format!("{}. ", ctx.list_counter).chars().count();
+        options.list_indent_width.max(marker_len)
+    };
+
     let li_ctx = Context {
         in_list_item: true,
         list_depth: ctx.list_depth + 1,
+        list_indent_columns: ctx.list_indent_columns + own_marker_width,
         ..ctx.clone()
     };
 

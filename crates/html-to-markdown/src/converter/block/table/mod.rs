@@ -108,7 +108,7 @@ pub fn handle_table_with_context(
             }
         }
 
-        let indented = layout::indent_table_for_list(&table_output, ctx.list_depth, options);
+        let indented = layout::indent_table_for_list(&table_output, ctx.list_depth, ctx.list_indent_columns, options);
         output.push_str(&indented);
     } else {
         if !output.is_empty() && !output.ends_with("\n\n") {

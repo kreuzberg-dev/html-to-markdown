@@ -56,6 +56,15 @@ pub struct Context {
     pub(crate) in_list_item: bool,
     /// List nesting depth (for indentation)
     pub(crate) list_depth: usize,
+    /// Cumulative column width (in the `Spaces` indent type) that a nested list item at this
+    /// point must be indented by: the sum of every ancestor `<li>`'s own marker width
+    /// (`"- "` = 2, `"1. "` = 3, `"10. "` = 4, ...), honouring `list_indent_width` as a floor.
+    ///
+    /// Uniform per-depth indentation (`list_depth * list_indent_width`) is only correct when
+    /// every ancestor list is unordered — an ordered ancestor's marker is wider than 2 columns,
+    /// so a nested list must be indented to that marker's actual content column or CommonMark
+    /// parses the child as a sibling instead of nested content.
+    pub(crate) list_indent_columns: usize,
     /// Unordered list nesting depth (for bullet cycling)
     pub(crate) ul_depth: usize,
     /// Are we inside any list (ul or ol)?
@@ -200,6 +209,7 @@ impl Context {
             inline_depth: 0,
             in_list_item: false,
             list_depth: 0,
+            list_indent_columns: 0,
             ul_depth: 0,
             in_list: false,
             loose_list: false,

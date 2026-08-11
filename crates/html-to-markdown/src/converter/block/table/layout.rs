@@ -13,6 +13,8 @@ use crate::options::ListIndentType;
 /// # Arguments
 /// * `table_content` - The Markdown table content to indent
 /// * `list_depth` - The nesting depth in the list hierarchy
+/// * `list_indent_columns` - Cumulative width of every ancestor `<li>`'s own marker
+///   (see `Context::list_indent_columns`); used for the `Spaces` indent type.
 /// * `options` - Conversion options (for indent type)
 ///
 /// # Returns
@@ -20,13 +22,14 @@ use crate::options::ListIndentType;
 pub fn indent_table_for_list(
     table_content: &str,
     list_depth: usize,
+    list_indent_columns: usize,
     options: &crate::options::ConversionOptions,
 ) -> String {
     if list_depth == 0 {
         return table_content.to_string();
     }
 
-    let Some(mut indent) = continuation_indent_string(list_depth, options) else {
+    let Some(mut indent) = continuation_indent_string(list_depth, list_indent_columns, options) else {
         return table_content.to_string();
     };
 
@@ -52,7 +55,11 @@ pub fn indent_table_for_list(
 }
 
 /// Get continuation indent string for list nesting.
-fn continuation_indent_string(list_depth: usize, options: &crate::options::ConversionOptions) -> Option<String> {
+fn continuation_indent_string(
+    list_depth: usize,
+    list_indent_columns: usize,
+    options: &crate::options::ConversionOptions,
+) -> Option<String> {
     use crate::converter::list::utils::continuation_indent_string;
-    continuation_indent_string(list_depth, options)
+    continuation_indent_string(list_depth, list_indent_columns, options)
 }
