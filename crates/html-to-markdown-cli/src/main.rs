@@ -38,6 +38,9 @@ fn init_tracing(debug: bool) {
 /// Builds a blocking Tokio runtime and drives `start_mcp_server` / `start_mcp_server_http`.
 /// Keeps `fn main()` synchronous in line with the Xberg pattern.
 #[cfg(feature = "mcp")]
+// ~keep host/port are only read in the mcp-http arm below; without that feature
+// ~keep (now the CLI's default — see Cargo.toml) they are genuinely unused.
+#[cfg_attr(not(feature = "mcp-http"), allow(unused_variables))]
 fn run_mcp(transport: &str, host: &str, port: u16) -> Result<(), Box<dyn std::error::Error>> {
     let rt = tokio::runtime::Runtime::new()?;
     match transport.to_lowercase().as_str() {

@@ -25,7 +25,11 @@ name = "html-to-markdown"
 path = "src/main.rs"
 
 [features]
-default = ["mcp", "mcp-http"]
+# ~keep mcp-http opens an unauthenticated HTTP listener; a CLI installed via
+# ~keep brew/cargo/npm/pip must not start a network service by default, so it
+# ~keep is opt-in (`--features mcp-http`) while stdio `mcp` (no listening
+# ~keep socket) stays on by default for the plugin's `mcp` subcommand.
+default = ["mcp"]
 mcp = ["html-to-markdown-rs/mcp", "dep:tokio"]
 mcp-http = ["mcp", "html-to-markdown-rs/mcp-http"]
 
@@ -37,11 +41,11 @@ clap_mangen.workspace = true
 encoding_rs.workspace = true
 html-to-markdown-rs = { workspace = true, features = ["metadata", "inline-images", "visitor", "serde"] }
 reqwest = { version = "0.13.4", default-features = false, features = [
-    "blocking",
-    "rustls",
-    "gzip",
-    "deflate",
-    "charset",
+  "blocking",
+  "rustls",
+  "gzip",
+  "deflate",
+  "charset",
 ] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
