@@ -106,7 +106,7 @@ pub fn handle(
                                             &mut annotation,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                         if !current_base.is_empty() {
@@ -125,7 +125,7 @@ pub fn handle(
                                             &mut current_base,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                     } else if tag_name != "rp" {
@@ -135,7 +135,7 @@ pub fn handle(
                                             &mut current_base,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                     }
@@ -147,7 +147,7 @@ pub fn handle(
                                         &mut current_base,
                                         options,
                                         &ruby_ctx,
-                                        depth,
+                                        depth + 1,
                                         dom_ctx,
                                     );
                                 }
@@ -179,7 +179,7 @@ pub fn handle(
                                             &mut annotation,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                         rt_annotations.push(annotation);
@@ -190,7 +190,7 @@ pub fn handle(
                                             &mut rtc_content,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                     } else if tag_name != "rp" {
@@ -200,13 +200,21 @@ pub fn handle(
                                             &mut base_text,
                                             options,
                                             &ruby_ctx,
-                                            depth,
+                                            depth + 1,
                                             dom_ctx,
                                         );
                                     }
                                 }
                                 tl::Node::Raw(_) => {
-                                    walk_node(child_handle, parser, &mut base_text, options, &ruby_ctx, depth, dom_ctx);
+                                    walk_node(
+                                        child_handle,
+                                        parser,
+                                        &mut base_text,
+                                        options,
+                                        &ruby_ctx,
+                                        depth + 1,
+                                        dom_ctx,
+                                    );
                                 }
                                 _ => {}
                             }
@@ -286,7 +294,7 @@ pub fn handle(
             let children = tag.children();
             {
                 for child_handle in children.top().iter() {
-                    walk_node(child_handle, parser, output, options, ctx, depth, dom_ctx);
+                    walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
                 }
             }
         }

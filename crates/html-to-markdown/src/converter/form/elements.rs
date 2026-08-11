@@ -96,7 +96,7 @@ pub fn handle_form(
             let children = tag.children();
             {
                 for child_handle in children.top().iter() {
-                    super::walk_node(child_handle, parser, output, options, ctx, depth, dom_ctx);
+                    super::walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
                 }
             }
             return;
@@ -106,7 +106,7 @@ pub fn handle_form(
         let children = tag.children();
         {
             for child_handle in children.top().iter() {
-                walk_node(child_handle, parser, &mut content, options, ctx, depth, dom_ctx);
+                walk_node(child_handle, parser, &mut content, options, ctx, depth + 1, dom_ctx);
             }
         }
 
@@ -147,7 +147,7 @@ pub fn handle_fieldset(
             let children = tag.children();
             {
                 for child_handle in children.top().iter() {
-                    super::walk_node(child_handle, parser, output, options, ctx, depth, dom_ctx);
+                    super::walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
                 }
             }
             return;
@@ -157,7 +157,7 @@ pub fn handle_fieldset(
         let children = tag.children();
         {
             for child_handle in children.top().iter() {
-                walk_node(child_handle, parser, &mut content, options, ctx, depth, dom_ctx);
+                walk_node(child_handle, parser, &mut content, options, ctx, depth + 1, dom_ctx);
             }
         }
 

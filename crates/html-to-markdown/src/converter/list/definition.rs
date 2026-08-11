@@ -35,7 +35,7 @@ pub fn handle_dl(
         {
             for child_handle in children.top().iter() {
                 use crate::converter::walk_node;
-                walk_node(child_handle, parser, output, options, ctx, depth, dom_ctx);
+                walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
             }
         }
         return;
@@ -45,7 +45,7 @@ pub fn handle_dl(
     let children = tag.children();
     {
         for child_handle in children.top().iter() {
-            crate::converter::walk_node(child_handle, parser, &mut content, options, ctx, depth, dom_ctx);
+            crate::converter::walk_node(child_handle, parser, &mut content, options, ctx, depth + 1, dom_ctx);
         }
     }
 
