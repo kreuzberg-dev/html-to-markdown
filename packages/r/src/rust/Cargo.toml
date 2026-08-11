@@ -17,7 +17,13 @@ crate-type = ["staticlib", "lib"]
 [dependencies]
 async-trait = "0.1"
 extendr-api = "0.9"
-html-to-markdown-rs = { version = "3.10.6", path = "../../../../crates/html-to-markdown", features = ["serde", "metadata", "visitor", "inline-images", "testkit"] }
+html-to-markdown-rs = { version = "3.10.6", path = "../../../../crates/html-to-markdown", features = [
+  "serde",
+  "metadata",
+  "visitor",
+  "inline-images",
+  "testkit",
+] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tracing = "0.1"
@@ -28,3 +34,34 @@ inline-images = ["html-to-markdown-rs/inline-images"]
 metadata = ["html-to-markdown-rs/metadata"]
 testkit = ["html-to-markdown-rs/testkit"]
 visitor = ["html-to-markdown-rs/visitor"]
+
+# ~keep Binding crates cannot use `lints.workspace = true`: the workspace forbids
+# `unsafe_code`, `forbid` is not overridable by an inner `allow`, and Cargo rejects
+# mixing `workspace = true` with per-lint overrides. Generated binding glue is
+# unsafe by construction, so the workspace set is mirrored here with `unsafe_code`
+# relaxed. Keep in sync with `[workspace.lints]` in the root manifest.
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "warn"
+unused_must_use = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)', 'cfg(feature, values("testkit"))', 'cfg(frb_expand)'] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+cargo = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+nursery = { level = "warn", priority = -1 }
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
+multiple_crate_versions = { level = "allow", priority = 1 }
+cargo_common_metadata = { level = "allow", priority = 1 }
+unnecessary_cast = { level = "allow", priority = 1 }
+unused_unit = { level = "allow", priority = 1 }
+unwrap_or_default = { level = "allow", priority = 1 }
+derivable_impls = { level = "allow", priority = 1 }
+unnecessary_wraps = { level = "allow", priority = 1 }
+needless_borrows_for_generic_args = { level = "allow", priority = 1 }
+useless_conversion = { level = "allow", priority = 1 }
+unnecessary_fallible_conversions = { level = "allow", priority = 1 }
+arc_with_non_send_sync = { level = "allow", priority = 1 }
