@@ -25,6 +25,28 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ~keep The reusable docs workflow's `check-fixture-snippets` runs `alef snippets audit`,
+  # which validates structure only and reported "clean" while 19 real coverage gaps shipped
+  # (8 curated snippets referenced by no page, 11 missing error-handling variants).
+  # `snippets gaps` is the check that actually catches those, so it is gated separately here.
+  snippet-gaps:
+    name: "Verify: snippet coverage"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+
+      - name: Fail on snippet coverage gaps
+        run: task docs:snippets:gaps
+        shell: bash
+
   docs:
     uses: xberg-io/actions/.github/workflows/reusable-docs-deploy.yml@v1
     with:

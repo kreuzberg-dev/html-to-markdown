@@ -101,10 +101,10 @@ jobs:
       zig: ${{ steps.filter.outputs.zig }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Detect changes
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4
         id: filter
         with:
           filters: |
@@ -206,6 +206,40 @@ jobs:
               - 'crates/html-to-markdown-ffi/**'
               - 'fixtures/**'
 
+  # ~keep e2e/ is entirely generated from fixtures/ (html-to-markdown audit #40).
+  # Nothing previously regenerated it in CI and diffed the result, so a fixture or
+  # generator change could drift from the checked-in e2e suite indefinitely.
+  e2e-freshness:
+    name: "Verify: e2e freshness"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: e2e-freshness
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+
+      - name: Regenerate e2e suites
+        run: task e2e:generate
+        shell: bash
+
+      - name: Fail if generated e2e/ drifted from committed output
+        run: |
+          if ! git diff --exit-code -- e2e/; then
+            echo "::error::e2e/ is stale — regenerating from fixtures/ produced a diff. Run 'task e2e:generate' and commit the result."
+            exit 1
+          fi
+        shell: bash
+
   build-ffi:
     needs: [changes]
     name: "Build: FFI (${{ matrix.runner }})"
@@ -225,7 +259,7 @@ jobs:
           - windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Free disk space
@@ -257,16 +291,24 @@ jobs:
         env:
           CARGO_TERM_COLOR: always
 
-      - name: Verify header exists
+      # ~keep `test -f` alone only proves build.rs wrote *a* header — it says
+      # nothing about whether the freshly-generated header matches the one
+      # committed to git, so a stale checked-in header could never fail this
+      # step. Diff against git to actually assert freshness.
+      - name: Verify header is fresh
         shell: bash
         run: |
           HEADER="crates/html-to-markdown-ffi/include/html_to_markdown.h"
           test -f "$HEADER"
-          echo "Header verified: $HEADER"
+          git diff --exit-code -- "$HEADER" || {
+            echo "::error::$HEADER is stale — cbindgen regenerated a different header than the one committed. Run 'cargo build -p html-to-markdown-ffi' and commit the result."
+            exit 1
+          }
+          echo "Header verified fresh: $HEADER"
 
       - name: Upload FFI artifacts
         if: matrix.runner != 'windows-latest'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ffi-${{ matrix.runner }}
           path: |
@@ -296,19 +338,19 @@ jobs:
         python: ["3.10", "3.12", "3.14"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -319,7 +361,7 @@ jobs:
           cache-key-prefix: python-${{ matrix.os }}-${{ matrix.python }}
 
       - name: Install Python Dependencies
-        uses: nick-fields/retry@v4
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -365,7 +407,7 @@ jobs:
             runtime: bun
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Install Task
@@ -382,7 +424,7 @@ jobs:
 
       - name: Setup Bun
         if: matrix.runtime == 'bun'
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
 
@@ -425,7 +467,7 @@ jobs:
         target: [x86_64-unknown-linux-musl, aarch64-unknown-linux-musl]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup Rust
@@ -494,7 +536,7 @@ jobs:
         ruby: ["3.2", "3.3"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup Rust
@@ -504,7 +546,7 @@ jobs:
 
       - name: Setup Ruby (Unix)
         if: runner.os != 'Windows'
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: "4.0.3"
@@ -513,7 +555,7 @@ jobs:
 
       - name: Setup Ruby (Windows)
         if: runner.os == 'Windows'
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: "4.0.3"
@@ -549,11 +591,11 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: "8.4"
           extensions: ctype, dom, json, libxml, mbstring, tokenizer, xml, xmlwriter
@@ -570,14 +612,14 @@ jobs:
         shell: bash
 
       - name: Install root Composer dependencies
-        uses: ramsey/composer-install@4.0.0
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           dependency-versions: locked
         env:
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
       - name: Install PHP package Composer dependencies
-        uses: ramsey/composer-install@4.0.0
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           dependency-versions: locked
           working-directory: crates/html-to-markdown-php/src
@@ -592,7 +634,7 @@ jobs:
           lib-name: html_to_markdown_php
 
       - name: Upload PHP extension artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: php-extension-ubuntu
           path: ${{ steps.build-php-extension.outputs.extension-path }}
@@ -617,7 +659,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Install Task
@@ -629,7 +671,7 @@ jobs:
           cache-key-prefix: csharp-${{ matrix.os }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: "10.0.x"
 
@@ -671,7 +713,7 @@ jobs:
         java: ["25"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup Rust
@@ -701,7 +743,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup Rust
@@ -744,18 +786,18 @@ jobs:
         python: ["3.10", "3.12", "3.14"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python }}
 
@@ -765,7 +807,7 @@ jobs:
           components: rustfmt, clippy, llvm-tools-preview
 
       - name: Install Python Dependencies
-        uses: nick-fields/retry@v4
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 5
           max_attempts: 3
@@ -811,7 +853,7 @@ jobs:
             runtime: bun
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
@@ -825,7 +867,7 @@ jobs:
 
       - name: Setup Bun
         if: matrix.runtime == 'bun'
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: latest
 
@@ -868,14 +910,14 @@ jobs:
         ruby: ["3.2", "3.3"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
 
       - name: Setup Ruby (Unix)
         if: runner.os != 'Windows'
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: "4.0.3"
@@ -884,7 +926,7 @@ jobs:
 
       - name: Setup Ruby (Windows)
         if: runner.os == 'Windows'
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler: "4.0.3"
@@ -954,10 +996,10 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: "8.4"
           extensions: ctype, dom, json, libxml, mbstring, tokenizer, xml, xmlwriter
@@ -972,14 +1014,14 @@ jobs:
         shell: bash
 
       - name: Install root Composer dependencies
-        uses: ramsey/composer-install@4.0.0
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           dependency-versions: locked
         env:
           COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
 
       - name: Install PHP package Composer dependencies
-        uses: ramsey/composer-install@4.0.0
+        uses: ramsey/composer-install@65e4f84970763564f46a70b8a54b90d033b3bdda # 4.0.0
         with:
           dependency-versions: locked
           working-directory: crates/html-to-markdown-php/src
@@ -1028,7 +1070,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
@@ -1039,7 +1081,7 @@ jobs:
           cache-key-prefix: csharp-test-${{ matrix.os }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
         with:
           dotnet-version: "10.0.x"
 
@@ -1100,13 +1142,13 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
 
       - name: Setup Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: ${{ env.GO_VERSION }}
           check-latest: true
@@ -1159,7 +1201,7 @@ jobs:
         java: ["25"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
@@ -1196,10 +1238,10 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Elixir
-        uses: erlef/setup-beam@v1
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           elixir-version: "1.19"
           otp-version: "28.1"
@@ -1248,7 +1290,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup R
         uses: xberg-io/actions/setup-r@v1
@@ -1297,7 +1339,7 @@ jobs:
           - macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
@@ -1316,12 +1358,16 @@ jobs:
           DYLD_LIBRARY_PATH: ${{ github.workspace }}/target/release
         run: cd e2e/c && make test
 
-      - name: Verify header exists
+      - name: Verify header is fresh
         shell: bash
         run: |
           HEADER="crates/html-to-markdown-ffi/include/html_to_markdown.h"
           test -f "$HEADER"
-          echo "Header verified: $HEADER"
+          git diff --exit-code -- "$HEADER" || {
+            echo "::error::$HEADER is stale — cbindgen regenerated a different header than the one committed. Run 'cargo build -p html-to-markdown-ffi' and commit the result."
+            exit 1
+          }
+          echo "Header verified fresh: $HEADER"
 
       - name: Verify pkg-config output
         shell: bash
@@ -1348,7 +1394,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
@@ -1360,11 +1406,16 @@ jobs:
         shell: bash
         run: cargo build --locked -p html-to-markdown-ffi
 
-      - name: Verify header generated
+      - name: Verify header is fresh
         shell: bash
         run: |
-          test -f crates/html-to-markdown-ffi/include/html_to_markdown.h
-          echo "Header verified on Windows."
+          HEADER="crates/html-to-markdown-ffi/include/html_to_markdown.h"
+          test -f "$HEADER"
+          git diff --exit-code -- "$HEADER" || {
+            echo "::error::$HEADER is stale — cbindgen regenerated a different header than the one committed. Run 'cargo build -p html-to-markdown-ffi' and commit the result."
+            exit 1
+          }
+          echo "Header verified fresh on Windows: $HEADER"
 
   test-wasm:
     needs: [build-wasm]
@@ -1374,7 +1425,7 @@ jobs:
     timeout-minutes: 120
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
@@ -1420,7 +1471,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         id: checkout
 
       - name: Setup Rust
@@ -1430,14 +1481,68 @@ jobs:
           cache-key-prefix: kotlin-android
 
       - name: Setup Android SDK/NDK
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
 
+      # ~keep Bundle the JNI crate (libhtm_jni.so) that the Kotlin bridge loads via
+      # System.loadLibrary("htm_jni") — NOT the plain C-FFI crate, whose lib*_ffi.so
+      # lacks the JNI entry points (html-to-markdown#446). This mirrors the exact
+      # crate/lib pair the publish workflow's kotlin-android-natives job builds, so a
+      # regression in the JNI crate surfaces here instead of only at publish time.
       - name: Build Android native libraries
         uses: xberg-io/actions/build-android-natives@v1
         with:
-          crate-name: html-to-markdown-ffi
-          lib-name: html_to_markdown_ffi
+          crate-name: html-to-markdown-rs-jni
+          lib-name: htm_jni
           abis: arm64-v8a,x86_64
+
+      - name: Cleanup Rust cache
+        if: always() && steps.checkout.outcome == 'success'
+        uses: xberg-io/actions/cleanup-rust-cache@v1
+
+  # ~keep Kotlin/Android ships to Maven Central but was never compiled or tested in
+  # CI (html-to-markdown audit #38) — build-kotlin-android above only cross-compiles
+  # the native .so, it never invokes Gradle/Kotlin compilation. `gradle test` here
+  # compiles the Kotlin facade against the host JVM and runs the e2e fixture suite
+  # via a host-platform JNI build (see packages/kotlin-android/build.gradle.kts'
+  # buildHostJni/copyHostJni tasks) — no Android emulator required.
+  test-kotlin-android:
+    needs: [changes]
+    name: "Test: Kotlin Android (host JVM)"
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.ffi == 'true' ||
+      needs.changes.outputs.kotlin == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        id: checkout
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: kotlin-android-test
+
+      - name: Setup Android SDK/NDK
+        uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4
+
+      - name: Setup JDK
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Install alef
+        uses: xberg-io/actions/install-alef@v1
+
+      - name: Compile and test Kotlin Android binding (host JVM)
+        run: alef test --e2e --lang kotlin_android
+        shell: bash
 
       - name: Cleanup Rust cache
         if: always() && steps.checkout.outcome == 'success'
@@ -1454,7 +1559,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
@@ -1470,7 +1575,7 @@ jobs:
           version: "6.0"
 
       - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
         with:
           php-version: "8.3"
 
@@ -1496,7 +1601,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
@@ -1507,7 +1612,7 @@ jobs:
           cache-key-prefix: dart
 
       - name: Setup Dart
-        uses: dart-lang/setup-dart@v1
+        uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260 # v1
 
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
@@ -1532,7 +1637,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
 
       - name: Install Task
         uses: xberg-io/actions/install-task@v1

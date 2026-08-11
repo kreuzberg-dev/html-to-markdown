@@ -1,0 +1,81 @@
+name: CI Security
+
+# Dependency vulnerability / advisory gate (html-to-markdown audit #40). Neither
+# `cargo deny check` (deny.toml already exists at repo root and is fully configured)
+# nor `pnpm audit` were ever wired into CI — this workflow closes that gap.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/ci-security.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "deny.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - ".github/workflows/ci-security.yaml"
+  workflow_dispatch: {}
+  schedule:
+    # Catch newly-published advisories against unchanged dependencies.
+    - cron: "17 6 * * 1"
+
+concurrency:
+  group: ci-security-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  rust-audit:
+    name: "Audit: Rust dependencies (cargo-deny)"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          cache-key-prefix: security-rust-audit
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+        shell: bash
+
+      - name: cargo deny check
+        run: task rust:audit
+        shell: bash
+
+  node-audit:
+    name: "Audit: Node.js dependencies (pnpm audit)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      - name: Setup Node.js workspace
+        uses: xberg-io/actions/setup-node-workspace@v1
+
+      - name: pnpm audit
+        run: task node:audit
+        shell: bash

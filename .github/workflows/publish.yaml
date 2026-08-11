@@ -80,7 +80,7 @@ jobs:
       release_dart: ${{ steps.meta.outputs.release_dart }}
       release_zig: ${{ steps.meta.outputs.release_zig }}
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -88,7 +88,7 @@ jobs:
           owner: xberg-io
 
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ (inputs.republish == true && (inputs.ref || github.event.repository.default_branch)) || inputs.ref || inputs.tag || github.ref }}
           fetch-depth: 0
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -424,7 +424,7 @@ jobs:
           - { os: windows-latest, rid: windows-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-11-arm, rid: windows-arm64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -450,7 +450,7 @@ jobs:
           done
           ls -la "dist/dart-natives/${{ matrix.rid }}/"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: dart-natives-${{ matrix.rid }}
           path: dist/dart-natives
@@ -463,11 +463,11 @@ jobs:
     if: ${{ needs.prepare.outputs.release_dart == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.dart-natives.result == 'success' && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: dart-natives-*
           path: dart-natives-artifacts
@@ -484,7 +484,7 @@ jobs:
             ls -la "packages/dart/lib/src/native/${rid}/"
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: dart-package-assembled
           path: packages/dart
@@ -497,13 +497,13 @@ jobs:
     if: ${{ needs.prepare.outputs.release_zig == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           fetch-depth: 0
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: c-ffi-*
           path: c-ffi-artifacts
@@ -549,7 +549,7 @@ jobs:
           cd packages/zig
           tar -czf "../../html-to-markdown-rs-zig-v${{ needs.prepare.outputs.version }}.tar.gz" .
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: zig-package-assembled
           path: html-to-markdown-rs-zig-v${{ needs.prepare.outputs.version }}.tar.gz
@@ -586,7 +586,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macos-latest, macos-15-intel]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -625,7 +625,7 @@ jobs:
             python scripts\prepare_wheel.py
           upload-artifact: "false"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: python-wheels-${{ matrix.os }}
           path: wheelhouse/*.whl
@@ -637,14 +637,14 @@ jobs:
     if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_python == 'true' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
           submodules: recursive
 
       - uses: xberg-io/actions/setup-rust@v1
-      - uses: actions/setup-python@v6.2.0
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version: "3.13"
 
@@ -661,7 +661,7 @@ jobs:
           package-dir: packages/python
           output-dir: dist
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: python-sdist
           path: dist/*.tar.gz
@@ -673,7 +673,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_node == 'true' && (needs.check-npm.outputs.node_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -693,7 +693,7 @@ jobs:
           mkdir -p typescript-defs
           cp crates/html-to-markdown-node/index.js crates/html-to-markdown-node/index.d.ts typescript-defs/
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: node-typescript-defs
           path: typescript-defs/
@@ -766,7 +766,7 @@ jobs:
               use_zig_cross: false,
             }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -840,7 +840,7 @@ jobs:
           [ -f index.d.ts ] && tar_members+=(index.d.ts)
           tar -czf "${GITHUB_WORKSPACE}/node-bindings-${{ matrix.target }}.tar.gz" "${tar_members[@]}"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: node-bindings-${{ matrix.target }}
           path: node-bindings-${{ matrix.target }}.tar.gz
@@ -853,7 +853,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -873,7 +873,7 @@ jobs:
           crate-dir: crates/html-to-markdown-wasm
           pack-tarball: "false"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: wasm-bundle
           path: |
@@ -902,7 +902,7 @@ jobs:
           - { os: macos-15-intel, label: macos-x86_64 }
           - { os: ubuntu-latest, label: windows-x64, dock_platform: x64-mingw-ucrt }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -948,7 +948,7 @@ jobs:
         with:
           cache-key-prefix: publish-ruby-${{ matrix.label }}
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: "3.3"
           bundler: "4.0.3"
@@ -1037,7 +1037,7 @@ jobs:
             esac
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: rubygems-${{ matrix.label }}
           path: packages/ruby/pkg/*.gem
@@ -1059,7 +1059,7 @@ jobs:
           - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin }
           - { os: windows-latest, label: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1105,7 +1105,7 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           output-dir: dist/php-package
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: php-package-${{ matrix.platform.label }}-php${{ matrix.php }}
           path: |
@@ -1132,7 +1132,7 @@ jobs:
           - { os: windows-latest, platform: windows-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-11-arm, platform: windows-arm64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1169,7 +1169,7 @@ jobs:
           done
           shopt -u nullglob
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: go-ffi-${{ matrix.platform }}
           path: dist/go-ffi
@@ -1192,7 +1192,7 @@ jobs:
           - { os: windows-latest, platform: windows-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-11-arm, platform: windows-arm64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1215,7 +1215,7 @@ jobs:
           alef publish build --lang ffi --target ${{ matrix.target }}
           alef publish package --lang ffi --target ${{ matrix.target }} -o dist/c-ffi
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: c-ffi-${{ matrix.platform }}
           path: dist/c-ffi
@@ -1228,7 +1228,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 180
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1254,7 +1254,7 @@ jobs:
           echo "checksum=${CHECKSUM}" >> "$GITHUB_OUTPUT"
           echo "Artifact bundle checksum: ${CHECKSUM}"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: swift-artifactbundle
           path: dist/swift-artifactbundle
@@ -1265,7 +1265,7 @@ jobs:
           mkdir -p dist/swift-checksums
           echo "${{ steps.checksum.outputs.checksum }}" > dist/swift-checksums/HtmlToMarkdown-rs.artifactbundle.zip.checksum
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: swift-checksum
           path: dist/swift-checksums/
@@ -1288,7 +1288,7 @@ jobs:
           - { os: windows-latest, platform: windows-x86_64, target: x86_64-pc-windows-msvc }
           - { os: windows-11-arm, platform: windows-aarch64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1316,7 +1316,7 @@ jobs:
           done
           ls -la "dist/java-ffi/${{ matrix.platform }}/native/"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: java-ffi-${{ matrix.platform }}
           path: dist/java-ffi
@@ -1340,7 +1340,7 @@ jobs:
           - { os: windows-latest, rid: win-x64, target: x86_64-pc-windows-msvc }
           - { os: windows-11-arm, rid: win-arm64, target: aarch64-pc-windows-msvc }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1368,7 +1368,7 @@ jobs:
           done
           ls -la "dist/csharp-ffi/${{ matrix.rid }}/native/"
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: csharp-ffi-${{ matrix.rid }}
           path: dist/csharp-ffi
@@ -1390,7 +1390,7 @@ jobs:
           - { os: macos-latest, label: macos-arm64, target: aarch64-apple-darwin }
           - { os: macos-15-intel, label: macos-x86_64, target: x86_64-apple-darwin }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1447,7 +1447,7 @@ jobs:
             rm -f "${ARTIFACT}"
           done
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: elixir-${{ matrix.label }}
           path: dist/elixir/*.tar.gz
@@ -1462,13 +1462,13 @@ jobs:
     env:
       MIX_ENV: dev
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
           submodules: recursive
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           elixir-version: "1.19"
           otp-version: "28.1"
@@ -1481,7 +1481,7 @@ jobs:
           nif-crate-path: packages/elixir/native/html_to_markdown_nif
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: elixir-hex-package
           path: packages/elixir/html_to_markdown-*.tar
@@ -1493,7 +1493,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_crates == 'true' && (needs.check-cratesio.outputs.all_exist != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
@@ -1517,7 +1517,7 @@ jobs:
             echo "::warning::Skipping html-to-markdown-cli crate packaging; html-to-markdown-rs ${RELEASE_VERSION} is not yet on crates.io."
           fi
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: cargo-crates
           path: crate-artifacts/*.crate
@@ -1562,7 +1562,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: go-ffi-*
           path: dist/go-ffi
@@ -1585,7 +1585,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: c-ffi-*
           path: dist/c-ffi
@@ -1608,7 +1608,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: swift-*
           path: dist/swift
@@ -1631,7 +1631,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: elixir-*
           path: dist/elixir
@@ -1652,7 +1652,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: php-package-*
           path: dist/php-package
@@ -1678,7 +1678,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
@@ -1693,6 +1693,20 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
+      # ~keep A `cargo publish`/registry-upload action reporting success is not
+      # proof the package actually landed — this repo has previously shipped a
+      # release where an npm publish step reported success for two releases
+      # while publishing nothing (html-to-markdown audit #39). Post-verify the
+      # external effect instead of trusting the tool's exit code.
+      - name: Verify crates.io indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: cratesio
+          package: html-to-markdown-rs
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   publish-pypi:
     name: Publish to PyPI
     needs: [prepare, python-wheels, python-sdist, check-pypi]
@@ -1703,12 +1717,12 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: python-wheels-*
           path: dist
           merge-multiple: true
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: python-sdist
           path: dist
@@ -1717,6 +1731,15 @@ jobs:
         with:
           packages-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+      - name: Verify PyPI indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: pypi
+          package: html-to-markdown
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
 
   publish-rubygems:
     name: Publish Ruby gems
@@ -1727,13 +1750,13 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: rubygems-*
           path: dist
           merge-multiple: true
 
-      - uses: ruby/setup-ruby@v1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1
         with:
           ruby-version: "3.3"
           bundler-cache: false
@@ -1742,12 +1765,21 @@ jobs:
         run: gem update --system
         shell: bash
 
-      - uses: rubygems/configure-rubygems-credentials@v2.0.0
+      - uses: rubygems/configure-rubygems-credentials@762a4b77c3300434bb57c7ce80b20e36231927aa # v2.0.0
 
       - uses: xberg-io/actions/publish-rubygems@v1
         with:
           gems-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+      - name: Verify RubyGems indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: rubygems
+          package: html-to-markdown
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
 
   publish-node:
     name: Publish Node packages
@@ -1758,18 +1790,18 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: node-bindings-*
           path: node-artifacts
           merge-multiple: true
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: node-typescript-defs
           path: typescript-defs
@@ -1861,12 +1893,12 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: wasm-bundle
           path: crates/html-to-markdown-wasm
@@ -1890,6 +1922,15 @@ jobs:
           provenance: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
+      - name: Verify npm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: npm
+          package: "@xberg-io/html-to-markdown-wasm"
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   publish-packagist:
     name: Trigger Packagist update
     needs: [prepare, upload-php-pie-release, check-packagist]
@@ -1906,18 +1947,27 @@ jobs:
         env:
           PACKAGIST_API_TOKEN: ${{ secrets.PACKAGIST_API_TOKEN }}
 
+      - name: Verify Packagist indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: packagist
+          package: xberg-io/html-to-markdown
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   publish-maven:
     name: Publish Maven (Java) package
     needs: [prepare, java-natives, check-maven]
     if: ${{ needs.prepare.outputs.release_java == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.java-natives.result == 'success' && (needs.check-maven.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: java-ffi-*
           path: java-ffi-artifacts
@@ -1934,7 +1984,7 @@ jobs:
             cp -r "${dir}native/." "packages/java/src/main/resources/natives/${classifier}/"
           done
 
-      - uses: actions/setup-java@v5.2.0
+      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: temurin
           java-version: "25"
@@ -1962,6 +2012,15 @@ jobs:
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Verify Maven Central indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: maven
+          package: "io.xberg:html-to-markdown"
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   publish-nuget:
     name: Publish NuGet package
     needs: [prepare, csharp-natives, check-nuget]
@@ -1971,12 +2030,12 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: csharp-ffi-*
           path: dist/csharp-ffi
@@ -1992,7 +2051,7 @@ jobs:
             cp -v "${dir}native/"* "packages/csharp/HtmlToMarkdown/runtimes/${rid}/native/" || true
           done
 
-      - uses: actions/setup-dotnet@v5.2.0
+      - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
         with:
           dotnet-version: "8.0.x"
 
@@ -2018,25 +2077,34 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
+      - name: Verify NuGet indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: nuget
+          package: XbergIo.HtmlToMarkdown
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   publish-hex:
     name: Publish Hex package
     needs: [prepare, elixir-package, upload-elixir-release, check-hex]
     if: ${{ needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.elixir-package.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: erlef/setup-beam@v1
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
         with:
           elixir-version: "1.19"
           otp-version: "28.1"
@@ -2060,6 +2128,17 @@ jobs:
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
 
+      # ~keep Job-level `if:` already excludes dry_run == 'true' for this job, but
+      # keep the guard explicit here too so this step reads correctly in isolation.
+      - name: Verify Hex.pm indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: hex
+          package: html_to_markdown
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   kotlin-android-natives:
     name: Build Kotlin Android natives (${{ matrix.abi }})
     needs: [prepare]
@@ -2070,7 +2149,7 @@ jobs:
       matrix:
         abi: [arm64-v8a, x86_64, armeabi-v7a, x86]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
@@ -2079,7 +2158,7 @@ jobs:
         with:
           targets: aarch64-linux-android,x86_64-linux-android,armv7-linux-androideabi,i686-linux-android
 
-      - uses: android-actions/setup-android@v4.0.1
+      - uses: android-actions/setup-android@40fd30fb8d7440372e1316f5d1809ec01dcd3699 # v4.0.1
 
       # ~keep Bundle the JNI crate (libhtm_jni.so) that the Kotlin bridge loads
       # via System.loadLibrary("htm_jni") — NOT the plain C-FFI crate, whose
@@ -2090,7 +2169,7 @@ jobs:
           lib-name: htm_jni
           abis: ${{ matrix.abi }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: kotlin-android-${{ matrix.abi }}
           # Upload the natives root so the ${{ matrix.abi }}/ subdir is preserved
@@ -2105,12 +2184,12 @@ jobs:
     if: ${{ needs.prepare.outputs.release_kotlin == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-maven-kotlin.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: kotlin-android-*
           path: kotlin-android-artifacts
@@ -2138,6 +2217,15 @@ jobs:
           MAVEN_GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
+      - name: Verify Maven Central indexing
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
+        uses: xberg-io/actions/wait-for-package@v1
+        with:
+          registry: maven
+          package: "io.xberg:html-to-markdown-kotlin"
+          version: ${{ needs.prepare.outputs.version }}
+          max-attempts: "60"
+
   trigger-pubdev:
     name: Trigger pub.dev publish workflow
     needs: [prepare, check-pub, assemble-dart-package]
@@ -2146,7 +2234,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2173,21 +2261,21 @@ jobs:
     if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') && needs.assemble-zig-package.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.ref }}
           submodules: recursive
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: true
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: zig-package-assembled
           path: .
@@ -2222,7 +2310,7 @@ jobs:
       needs.upload-c-ffi-release.result == 'success'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2240,7 +2328,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.upload-cli-release.result == 'success' && needs.upload-c-ffi-release.result == 'success' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: tap-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2248,18 +2336,18 @@ jobs:
           owner: xberg-io
           repositories: homebrew-tap
 
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: source-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: xberg-io/homebrew-tap
           token: ${{ steps.tap-token.outputs.token }}
@@ -2305,14 +2393,14 @@ jobs:
           - { os: ubuntu-latest, bottle_tag: x86_64_linux, install_brew: true }
           - { os: ubuntu-24.04-arm, bottle_tag: arm64_linux, install_brew: true }
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
@@ -2333,7 +2421,7 @@ jobs:
           github-repo: xberg-io/html-to-markdown
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: homebrew-bottle-json-${{ matrix.bottle_tag }}
           path: ${{ github.workspace }}/bottle-json/*.json
@@ -2346,7 +2434,7 @@ jobs:
     if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.publish-homebrew-formula.result == 'success' && needs.homebrew-bottles.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: tap-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2354,18 +2442,18 @@ jobs:
           owner: xberg-io
           repositories: homebrew-tap
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: xberg-io/homebrew-tap
           token: ${{ steps.tap-token.outputs.token }}
           path: homebrew-tap
           persist-credentials: true
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           path: ${{ github.workspace }}/bottle-json
           pattern: homebrew-bottle-json-*
@@ -2410,7 +2498,7 @@ jobs:
     if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && !contains(needs.*.result, 'failure') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2458,21 +2546,21 @@ jobs:
     if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.upload-swift-release.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           fetch-depth: 0
           token: ${{ steps.app-token.outputs.token }}
           persist-credentials: true
 
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: swift-checksum
           path: swift-checksums
@@ -2566,16 +2654,16 @@ jobs:
     if: ${{ needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
           submodules: recursive
 
-      - uses: r-lib/actions/setup-r@v2
+      - uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6 # v2
         with:
           r-version: "release"
 
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@4360b52568e2003a75bf9bc1d59f33a8e3fc893c # stable
 
       - name: Install system deps
         run: |
@@ -2588,7 +2676,7 @@ jobs:
           R CMD build .
           ls -la htmltomarkdown_*.tar.gz
 
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: r-source-tarball
           path: packages/r/htmltomarkdown_*.tar.gz
@@ -2603,7 +2691,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v8
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: r-source-tarball
           path: dist/r
@@ -2649,7 +2737,7 @@ jobs:
       !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2696,7 +2784,7 @@ jobs:
       !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
         with:
           app-id: ${{ secrets.BOT_APP_ID }}
@@ -2718,7 +2806,7 @@ jobs:
       id-token: write
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: xberg-io/actions/publish-npm@v1
         with:
           package-dir: cli-proxy/npm
@@ -2744,7 +2832,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - uses: xberg-io/actions/setup-node-workspace@v1
@@ -2788,11 +2876,11 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           ref: ${{ needs.prepare.outputs.checkout_ref }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
           python-version: "3.13"
       - name: Build Hermes wheel

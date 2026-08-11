@@ -198,6 +198,12 @@ tasks:
       - task: kotlin-android:upgrade
       - task: zig:upgrade
 
+  audit:
+    desc: "Check dependencies for known vulnerabilities and license/advisory violations"
+    cmds:
+      - task: rust:audit
+      - task: node:audit
+
   cov:rust:
     desc: "Generate Rust coverage report"
     cmds:
