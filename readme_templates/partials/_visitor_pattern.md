@@ -41,20 +41,21 @@ markdown = result.content
 import { convert, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
 // `visitor` is a plain object of camelCase callbacks — there is no exported
-// `Visitor` type. Return `VisitResult.Continue` / `Skip` / `PreserveHtml` for
-// the built-in behaviors, or `{ Custom: "..." }` to replace a node's output.
+// `Visitor` type. `VisitResult` is a type, not a runtime enum: return the
+// lowercase string `"continue"` / `"skip"` / `"preserve_html"` for the
+// built-in behaviors, or `{ custom: "..." }` to replace a node's output.
 const visitor = {
   visitLink(ctx: NodeContext, href: string, text: string, title?: string) {
     // Rewrite CDN URLs
     if (href.startsWith("https://old-cdn.com")) {
       href = href.replace("https://old-cdn.com", "https://new-cdn.com");
     }
-    return { Custom: `[${text}](${href})` };
+    return { custom: `[${text}](${href})` };
   },
 
   visitImage(ctx: NodeContext, src: string, alt?: string, title?: string): VisitResult {
     // Skip tracking pixels
-    return src.includes("tracking") ? VisitResult.Skip : VisitResult.Continue;
+    return src.includes("tracking") ? "skip" : "continue";
   },
 };
 
@@ -74,13 +75,13 @@ class MyVisitor
     if href.start_with?('https://old-cdn.com')
       href = href.sub('https://old-cdn.com', 'https://new-cdn.com')
     end
-    # Directive keys/symbols are matched case-sensitively: :Custom, :Skip, :Continue.
-    { Custom: "[#{text}](#{href})" }
+    # Directive keys/symbols are matched case-sensitively as lowercase: :custom, :skip, :continue.
+    { custom: "[#{text}](#{href})" }
   end
 
   def visit_image(ctx, src, alt = nil, title = nil)
     # Skip tracking pixels
-    src.include?('tracking') ? :Skip : :Continue
+    src.include?('tracking') ? :skip : :continue
   end
 end
 
@@ -106,12 +107,12 @@ $visitor = new class {
         if (str_starts_with($href, 'https://old-cdn.com')) {
             $href = str_replace('https://old-cdn.com', 'https://new-cdn.com', $href);
         }
-        return ['Custom' => "[{$text}]({$href})"];
+        return ['custom' => "[{$text}]({$href})"];
     }
 
     public function visit_image($ctx, $src, $alt, $title) {
         // Skip tracking pixels
-        return str_contains($src, 'tracking') ? 'Skip' : 'Continue';
+        return str_contains($src, 'tracking') ? 'skip' : 'continue';
     }
 };
 
@@ -221,9 +222,26 @@ result.content
 ```r
 library(htmltomarkdown)
 
+visitor <- list(
+  visit_link = function(ctx, href, text, title) {
+    # Rewrite CDN URLs
+    if (startsWith(href, "https://old-cdn.com")) {
+      href <- sub("https://old-cdn.com", "https://new-cdn.com", href, fixed = TRUE)
+    }
+    list(custom = paste0("[", text, "](", href, ")"))
+  },
+  visit_image = function(ctx, src, alt, title) {
+    # Skip tracking pixels
+    if (grepl("tracking", src, fixed = TRUE)) {
+      "skip"
+    } else {
+      "continue"
+    }
+  }
+)
+
 html <- '<a href="https://old-cdn.com/file.pdf">Download</a>'
-opts <- conversion_options(extract_metadata = FALSE)
-result <- convert(html, opts)
+result <- convert(html, options = list(visitor = visitor))
 cat(result$content)
 ```
 
