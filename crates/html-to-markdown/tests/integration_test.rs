@@ -588,6 +588,78 @@ fn hidden_elements_stripped() {
 }
 
 #[test]
+fn should_drop_template_text_content() {
+    let html = "<p>visible</p><template>secret template text</template><p>also visible</p>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_template_nested_element_content() {
+    let html =
+        "<p>visible</p><template><div><p>secret</p><span>nested secret</span></div></template><p>also visible</p>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_noscript_content() {
+    let html = "<p>visible</p><noscript><p>secret noscript text</p></noscript><p>also visible</p>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_display_none_content() {
+    let html = r#"<p>visible</p><div style="display:none">secret</div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_display_none_content_with_extra_whitespace_and_casing() {
+    let html = r#"<p>visible</p><div style="  Display : NONE  ">secret</div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_visibility_hidden_content() {
+    let html = r#"<p>visible</p><span style="visibility:hidden">secret</span><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_display_none_content_with_important_and_other_declarations() {
+    let html =
+        r#"<p>visible</p><div style="color:red; display: none !important; margin:0">secret</div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
+fn should_keep_content_when_style_does_not_hide_element() {
+    let html = r#"<p>visible</p><div style="color:red; display:block">still shown</div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nstill shown\n\nalso visible\n");
+}
+
+#[test]
+fn should_keep_aria_hidden_content_since_it_is_visually_rendered() {
+    let html = r#"<p>visible</p><div aria-hidden="true">still shown</div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nstill shown\n\nalso visible\n");
+}
+
+#[test]
+fn should_drop_nested_visible_content_inside_display_none_ancestor() {
+    let html = r#"<p>visible</p><div style="display:none"><p>secret</p><ul><li>also secret</li></ul></div><p>also visible</p>"#;
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "visible\n\nalso visible\n");
+}
+
+#[test]
 fn q_element_produces_quotes() {
     let html = "<p>He said <q>hello</q> to me</p>";
     let result = convert(html, None).unwrap();

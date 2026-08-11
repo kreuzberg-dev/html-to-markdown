@@ -714,6 +714,16 @@ pub fn walk_node(
                     );
                 }
 
+                // ~keep `<template>` content is an inert, unrendered document fragment per the
+                // ~keep HTML spec, and `<noscript>` content only renders with scripting disabled
+                // ~keep (never true for a Markdown conversion, which mirrors a scripting-enabled
+                // ~keep browser). Both must never reach the output. `plain_text.rs`'s `SKIP_TAGS`
+                // ~keep already treats them this way; kept as a separate arm here (rather than a
+                // ~keep shared constant) because this match also holds `svg`/`math` — which
+                // ~keep plain_text.rs skips outright but this path renders via a dedicated media
+                // ~keep handler — so the two tag sets are not actually the same list.
+                "template" | "noscript" => {}
+
                 "head" | "script" | "style" => {
                     crate::converter::metadata::handle(
                         &tag_name,

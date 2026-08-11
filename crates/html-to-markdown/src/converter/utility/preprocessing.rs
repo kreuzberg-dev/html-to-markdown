@@ -937,11 +937,13 @@ pub fn sanitize_markdown_url(url: &str) -> Cow<'_, str> {
     Cow::Owned(url[paren_start..paren_end].to_string())
 }
 
-/// Strip elements with the `hidden` attribute from HTML.
+/// Strip elements that are never rendered from HTML: those carrying the `hidden`
+/// attribute, and those hidden via an inline `style="display:none"` or
+/// `style="visibility:hidden"` declaration.
 ///
-/// Scans for opening tags containing the `hidden` attribute, finds their
-/// matching closing tag, and removes the entire element (tag + content).
-/// Self-closing tags with `hidden` are also removed.
+/// Scans for opening tags matching either condition, finds their matching
+/// closing tag, and removes the entire element (tag + content, so nested
+/// content never leaks out). Self-closing tags are also removed.
 pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
     let bytes = input.as_bytes();
     let len = bytes.len();
@@ -958,7 +960,7 @@ pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
         if bytes[idx] == b'<' && idx + 1 < len && bytes[idx + 1] != b'/' && bytes[idx + 1] != b'!' {
             if let Some(tag_end) = find_tag_end(bytes, idx + 1) {
                 let tag_slice = &input[idx..tag_end];
-                if tag_has_hidden_attribute(tag_slice) {
+                if tag_has_hidden_attribute(tag_slice) || tag_has_hidden_style(tag_slice) {
                     let name_start = idx + 1;
                     let mut name_end = name_start;
                     while name_end < len
@@ -1007,7 +1009,11 @@ pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
 ///
 /// Handles: `hidden`, `hidden=""`, `hidden="hidden"`, `hidden="true"`.
 /// Does NOT match attributes like `data-hidden` or `aria-hidden`.
-fn tag_has_hidden_attribute(tag: &str) -> bool {
+///
+/// ~keep `pub(crate)`: also called from `tier1::scanner` so the Tier-1 byte
+/// ~keep scanner bails on the same hidden-attribute condition this pass strips,
+/// ~keep rather than re-implementing the scan a second time.
+pub fn tag_has_hidden_attribute(tag: &str) -> bool {
     let bytes = tag.as_bytes();
     let len = bytes.len();
     let needle = b"hidden";
@@ -1032,11 +1038,118 @@ fn tag_has_hidden_attribute(tag: &str) -> bool {
     false
 }
 
+/// Check if an opening tag's inline `style` attribute hides the element via
+/// `display: none` or `visibility: hidden`.
+///
+/// This is a targeted declaration scan, not a full CSS parser: it extracts the raw
+/// `style` attribute value, splits it on `;`, and inspects each `property: value`
+/// pair. Untrusted input is handled defensively — extra whitespace around `:` and
+/// `;`, mixed casing, and a trailing `!important` (with or without a preceding
+/// space) are all tolerated.
+///
+/// ~keep `pub(crate)`: also called from `tier1::scanner` (see
+/// ~keep `tag_has_hidden_attribute` above).
+pub fn tag_has_hidden_style(tag: &str) -> bool {
+    let Some(style_value) = extract_attribute_value(tag, "style") else {
+        return false;
+    };
+    style_value.split(';').any(declaration_hides_element)
+}
+
+/// Check whether a single CSS declaration (`property: value`) hides its element.
+fn declaration_hides_element(declaration: &str) -> bool {
+    let Some((property, value)) = declaration.split_once(':') else {
+        return false;
+    };
+    let property = property.trim();
+    // ~keep `!important` (any casing, with or without a preceding space) is a CSS
+    // ~keep priority flag, not part of the value — drop everything from `!` onward.
+    let value = value.split('!').next().unwrap_or("").trim();
+
+    (property.eq_ignore_ascii_case("display") && value.eq_ignore_ascii_case("none"))
+        || (property.eq_ignore_ascii_case("visibility") && value.eq_ignore_ascii_case("hidden"))
+}
+
+/// Extract the value of a named attribute from a raw opening-tag string.
+///
+/// Walks name=value pairs left to right (skipping the leading tag name) and
+/// returns the first case-insensitive match. Handles double- and single-quoted
+/// values and bare (unquoted) values. Returns `None` when the attribute is
+/// absent or is a boolean attribute with no `=value`.
+fn extract_attribute_value<'a>(tag: &'a str, attr_name: &str) -> Option<&'a str> {
+    let bytes = tag.as_bytes();
+    let len = bytes.len();
+    let mut i = 0;
+    while i < len && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+        i += 1;
+    }
+
+    while i < len {
+        while i < len && (bytes[i].is_ascii_whitespace() || bytes[i] == b'/') {
+            i += 1;
+        }
+        if i >= len || bytes[i] == b'>' {
+            break;
+        }
+
+        let name_start = i;
+        while i < len && bytes[i] != b'=' && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' && bytes[i] != b'/' {
+            i += 1;
+        }
+        let name = &tag[name_start..i];
+
+        while i < len && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+
+        let mut value: Option<&str> = None;
+        if i < len && bytes[i] == b'=' {
+            i += 1;
+            while i < len && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            let (val, next) = scan_attribute_value(bytes, tag, i);
+            value = Some(val);
+            i = next;
+        }
+
+        if name.eq_ignore_ascii_case(attr_name) {
+            return value;
+        }
+    }
+    None
+}
+
+/// Scan a single attribute value starting at `start`, handling quoted and bare forms.
+///
+/// Returns the extracted value slice and the byte index immediately following it.
+fn scan_attribute_value<'a>(bytes: &[u8], tag: &'a str, start: usize) -> (&'a str, usize) {
+    let len = bytes.len();
+    if start < len && (bytes[start] == b'"' || bytes[start] == b'\'') {
+        let quote = bytes[start];
+        let val_start = start + 1;
+        let mut end = val_start;
+        while end < len && bytes[end] != quote {
+            end += 1;
+        }
+        let value = &tag[val_start..end];
+        let next = if end < len { end + 1 } else { end };
+        return (value, next);
+    }
+
+    let val_start = start;
+    let mut end = start;
+    while end < len && !bytes[end].is_ascii_whitespace() && bytes[end] != b'>' {
+        end += 1;
+    }
+    (&tag[val_start..end], end)
+}
+
 #[cfg(test)]
 mod tests {
     use super::{
         normalize_bogus_comment_endings, normalize_split_closing_tags, normalize_unclosed_list_items,
-        sanitize_markdown_url,
+        sanitize_markdown_url, strip_hidden_elements,
     };
 
     #[test]
@@ -1220,5 +1333,61 @@ mod tests {
     fn normalize_unclosed_list_items_empty_input() {
         let result = normalize_unclosed_list_items("");
         assert_eq!(result.as_ref(), "");
+    }
+
+    #[test]
+    fn strip_hidden_elements_removes_display_none_element() {
+        let input = r#"<p>visible</p><div style="display:none">secret</div><p>also visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p><p>also visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_removes_visibility_hidden_element() {
+        let input = r#"<p>visible</p><span style="visibility:hidden">secret</span><p>also visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p><p>also visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_tolerates_whitespace_around_declaration() {
+        let input = r#"<div style="display : none">secret</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_tolerates_mixed_case_declaration() {
+        let input = r#"<div style="Display:NONE">secret</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_tolerates_important_flag() {
+        let input = r#"<div style="display:none !important">secret</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_matches_declaration_among_others() {
+        let input = r#"<div style="color:red; display:none; margin:0">secret</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_leaves_visible_style_untouched() {
+        let input = r#"<div style="color:red; display:block">visible</div>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), input);
+    }
+
+    #[test]
+    fn strip_hidden_elements_removes_nested_content_inside_hidden_parent() {
+        let input = r#"<div style="display:none"><p>secret</p><span>also secret</span></div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
     }
 }
