@@ -6,6 +6,7 @@
 //! - Proper bullet/number formatting
 //! - Indentation and spacing
 
+use crate::converter::main_helpers::effective_max_depth;
 use crate::converter::main_helpers::tag_name_eq;
 use crate::converter::main_helpers::trim_trailing_whitespace;
 use crate::converter::utility::content::normalized_tag_name;
@@ -67,7 +68,20 @@ pub fn handle_li(
     }
 
     #[allow(clippy::trivially_copy_pass_by_ref)]
-    fn find_checkbox<'a>(node_handle: &tl::NodeHandle, parser: &'a tl::Parser<'a>) -> Option<(bool, tl::NodeHandle)> {
+    fn find_checkbox<'a>(
+        node_handle: &tl::NodeHandle,
+        parser: &'a tl::Parser<'a>,
+        options: &ConversionOptions,
+        ctx: &Context,
+        depth: usize,
+    ) -> Option<(bool, tl::NodeHandle)> {
+        // ~keep This helper recurses over the li subtree independently of `walk_node`
+        // ~keep (it runs before any handler dispatch), so it needs its own depth guard
+        // ~keep instead of relying on the main walker's check.
+        if depth >= effective_max_depth(options) {
+            ctx.depth_limit_reached.set(true);
+            return None;
+        }
         if let Some(tl::Node::Tag(node_tag)) = node_handle.get(parser) {
             if tag_name_eq(node_tag.name().as_utf8_str(), "input") {
                 let input_type = node_tag.attributes().get("type").flatten().map(|v| v.as_utf8_str());
@@ -81,7 +95,7 @@ pub fn handle_li(
             let children = node_tag.children();
             {
                 for child_handle in children.top().iter() {
-                    if let Some(result) = find_checkbox(child_handle, parser) {
+                    if let Some(result) = find_checkbox(child_handle, parser, options, ctx, depth + 1) {
                         return Some(result);
                     }
                 }
@@ -90,12 +104,12 @@ pub fn handle_li(
         None
     }
 
-    let (is_task_list, task_checked, checkbox_node) = if let Some((checked, node)) = find_checkbox(node_handle, parser)
-    {
-        (true, checked, Some(node))
-    } else {
-        (false, false, None)
-    };
+    let (is_task_list, task_checked, checkbox_node) =
+        if let Some((checked, node)) = find_checkbox(node_handle, parser, options, ctx, depth) {
+            (true, checked, Some(node))
+        } else {
+            (false, false, None)
+        };
 
     let li_ctx = Context {
         in_list_item: true,
@@ -122,7 +136,14 @@ pub fn handle_li(
             node_handle: &tl::NodeHandle,
             parser: &'a tl::Parser<'a>,
             checkbox: &Option<tl::NodeHandle>,
+            options: &ConversionOptions,
+            ctx: &Context,
+            depth: usize,
         ) -> bool {
+            if depth >= effective_max_depth(options) {
+                ctx.depth_limit_reached.set(true);
+                return false;
+            }
             if is_checkbox_node(node_handle, checkbox) {
                 return true;
             }
@@ -130,7 +151,7 @@ pub fn handle_li(
                 let children = node_tag.children();
                 {
                     for child_handle in children.top().iter() {
-                        if contains_checkbox(child_handle, parser, checkbox) {
+                        if contains_checkbox(child_handle, parser, checkbox, options, ctx, depth + 1) {
                             return true;
                         }
                     }
@@ -150,16 +171,23 @@ pub fn handle_li(
             checkbox: &Option<tl::NodeHandle>,
             dom_ctx: &DomContext,
         ) {
+            // ~keep Independent recursion from `walk_node` while probing for the nested
+            // ~keep checkbox, so it needs its own guard rather than relying on the depth
+            // ~keep check inside `walk_node` (which is only reached once a leaf is found).
+            if depth >= effective_max_depth(options) {
+                ctx.depth_limit_reached.set(true);
+                return;
+            }
             if is_checkbox_node(node_handle, checkbox) {
                 return;
             }
 
-            if contains_checkbox(node_handle, parser, checkbox) {
+            if contains_checkbox(node_handle, parser, checkbox, options, ctx, depth) {
                 if let Some(tl::Node::Tag(node_tag)) = node_handle.get(parser) {
                     let children = node_tag.children();
                     {
                         for child_handle in children.top().iter() {
-                            render_li_content(child_handle, parser, output, options, ctx, depth, checkbox, dom_ctx);
+                            render_li_content(child_handle, parser, output, options, ctx, depth + 1, checkbox, dom_ctx);
                         }
                     }
                 }

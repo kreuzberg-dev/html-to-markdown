@@ -7,8 +7,8 @@
 //! - Proper indentation and numbering
 
 use super::utils::{
-    add_list_leading_separator, add_nested_list_trailing_separator, calculate_list_nesting_depth, is_loose_list,
-    process_list_children,
+    DEFAULT_ORDERED_LIST_START, add_list_leading_separator, add_nested_list_trailing_separator,
+    calculate_list_nesting_depth, is_loose_list, parse_ordered_list_start, process_list_children,
 };
 use crate::options::ConversionOptions;
 #[cfg(feature = "visitor")]
@@ -46,8 +46,9 @@ pub fn handle_ol(
         .attributes()
         .get("start")
         .flatten()
-        .and_then(|v| v.as_utf8_str().parse::<usize>().ok())
-        .unwrap_or(1);
+        .map_or(DEFAULT_ORDERED_LIST_START, |v| {
+            parse_ordered_list_start(&v.as_utf8_str())
+        });
 
     #[cfg(feature = "visitor")]
     let list_output_start = output.len();

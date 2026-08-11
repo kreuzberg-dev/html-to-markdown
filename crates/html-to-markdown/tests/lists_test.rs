@@ -199,3 +199,79 @@ fn test_list_with_code_block() {
     assert!(result.contains("- Item with code:"));
     assert!(result.contains("fn main()"));
 }
+
+// Audit #10: `start` is untrusted external input. HTML permits any signed integer (browsers
+// count downward from a negative `start`), and the value can overflow every fixed-width
+// integer type, so the counter must never panic or silently wrap.
+
+#[test]
+fn should_render_zero_as_first_marker_when_start_attribute_is_zero() {
+    let html = r#"<ol start="0"><li>First</li><li>Second</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "0. First\n1. Second\n");
+}
+
+#[test]
+fn should_count_downward_when_start_attribute_is_negative() {
+    let html = r#"<ol start="-5"><li>First</li><li>Second</li><li>Third</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "-5. First\n-4. Second\n-3. Third\n");
+}
+
+#[test]
+fn should_default_to_one_when_start_attribute_is_not_a_valid_integer() {
+    let html = r#"<ol start="not-a-number"><li>First</li><li>Second</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "1. First\n2. Second\n");
+}
+
+#[test]
+fn should_clamp_to_i64_max_when_start_attribute_equals_u64_max() {
+    let html = r#"<ol start="18446744073709551615"><li>Only</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, format!("{}. Only\n", i64::MAX));
+}
+
+#[test]
+fn should_clamp_to_i64_max_when_start_attribute_overflows_every_integer_type() {
+    let html = r#"<ol start="999999999999999999999999999999999999999999"><li>Only</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, format!("{}. Only\n", i64::MAX));
+}
+
+#[test]
+fn should_clamp_to_i64_min_when_start_attribute_negative_overflows_every_integer_type() {
+    let html = r#"<ol start="-999999999999999999999999999999999999999999"><li>Only</li></ol>"#;
+
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, format!("{}. Only\n", i64::MIN));
+}
+
+#[test]
+fn should_render_i64_max_start_without_panicking_on_single_item() {
+    let html = format!(r#"<ol start="{}"><li>Only</li></ol>"#, i64::MAX);
+
+    let result = convert(&html, None).unwrap();
+    assert_eq!(result, format!("{}. Only\n", i64::MAX));
+}
+
+#[test]
+fn should_pin_counter_at_i64_max_without_overflow_when_list_exceeds_range() {
+    let start = i64::MAX - 1;
+    let html = format!(r#"<ol start="{start}"><li>First</li><li>Second</li><li>Third</li></ol>"#);
+
+    let result = convert(&html, None).unwrap();
+    assert_eq!(
+        result,
+        format!(
+            "{start}. First\n{max}. Second\n{max}. Third\n",
+            start = start,
+            max = i64::MAX
+        )
+    );
+}

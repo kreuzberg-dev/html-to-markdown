@@ -37,8 +37,11 @@ pub type ImageMetadataPayload = (BTreeMap<String, String>, Option<u32>, Option<u
 pub struct Context {
     /// Are we inside a code-like element (pre, code, kbd, samp)?
     pub(crate) in_code: bool,
-    /// Current list item counter for ordered lists
-    pub(crate) list_counter: usize,
+    /// Current list item counter for ordered lists.
+    ///
+    /// Signed so a negative `start` attribute (permitted by the HTML spec and honored by
+    /// browsers) can be represented without a separate sign flag.
+    pub(crate) list_counter: i64,
     /// Are we in an ordered list (vs unordered)?
     pub(crate) in_ordered_list: bool,
     /// Blockquote nesting depth

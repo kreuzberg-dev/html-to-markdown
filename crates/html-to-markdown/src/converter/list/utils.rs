@@ -10,6 +10,51 @@ use tl;
 type Context = crate::converter::Context;
 type DomContext = crate::converter::DomContext;
 
+/// Counter value an `<ol>` starts from when it has no (or an invalid) `start` attribute.
+///
+/// This mirrors the HTML spec default for ordered list numbering.
+pub const DEFAULT_ORDERED_LIST_START: i64 = 1;
+
+/// Parse the `start` attribute of an `<ol>` element into a counter value.
+///
+/// `start` is untrusted external input: the HTML spec allows any signed integer (browsers
+/// count downward from a negative `start`), and a document can supply a magnitude that
+/// overflows every fixed-width integer type. Rather than panicking or wrapping, out-of-range
+/// magnitudes are clamped to the `i64` bounds the render-time counter uses, and syntactically
+/// invalid values (empty, non-numeric) fall back to the spec default of 1.
+pub fn parse_ordered_list_start(raw: &str) -> i64 {
+    let trimmed = raw.trim();
+    if let Ok(value) = trimmed.parse::<i64>() {
+        return value;
+    }
+
+    let (is_negative, digits) = match trimmed.strip_prefix('-') {
+        Some(rest) => (true, rest),
+        None => (false, trimmed.strip_prefix('+').unwrap_or(trimmed)),
+    };
+
+    if !digits.is_empty() && digits.bytes().all(|byte| byte.is_ascii_digit()) {
+        let clamped = if is_negative { i64::MIN } else { i64::MAX };
+        tracing::warn!(
+            target: "html_to_markdown::list",
+            raw_value = trimmed,
+            clamped_value = clamped,
+            "ol start attribute magnitude out of range; clamping to i64 bounds"
+        );
+        return clamped;
+    }
+
+    if !trimmed.is_empty() {
+        tracing::warn!(
+            target: "html_to_markdown::list",
+            raw_value = trimmed,
+            default_value = DEFAULT_ORDERED_LIST_START,
+            "ol start attribute is not a valid integer; using default start"
+        );
+    }
+    DEFAULT_ORDERED_LIST_START
+}
+
 /// Calculate indentation level for list item continuations.
 ///
 /// Returns the number of 4-space indent groups needed for list continuations.
@@ -274,10 +319,11 @@ pub fn process_list_children(
     is_ordered: bool,
     is_loose: bool,
     nested_depth: usize,
-    start_counter: usize,
+    start_counter: i64,
     dom_ctx: &DomContext,
 ) {
     let mut counter = start_counter;
+    let mut counter_saturated = false;
 
     if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
         let children = tag.children();
@@ -308,10 +354,21 @@ pub fn process_list_children(
                 }
 
                 use crate::converter::walk_node;
-                walk_node(child_handle, parser, output, options, &list_ctx, depth, dom_ctx);
+                walk_node(child_handle, parser, output, options, &list_ctx, depth + 1, dom_ctx);
 
                 if is_ordered && is_list_item(*child_handle, parser, dom_ctx) {
-                    counter += 1;
+                    if counter == i64::MAX {
+                        if !counter_saturated {
+                            tracing::warn!(
+                                target: "html_to_markdown::list",
+                                counter,
+                                "ordered list counter reached i64::MAX; subsequent items repeat this value"
+                            );
+                            counter_saturated = true;
+                        }
+                    } else {
+                        counter += 1;
+                    }
                 }
             }
         }
