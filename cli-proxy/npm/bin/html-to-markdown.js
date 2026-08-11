@@ -34,7 +34,7 @@ function isHealthy(file) {
 async function ensureBinary() {
 	if (fs.existsSync(binPath) && isHealthy(binPath)) return;
 	process.stderr.write(`${BIN_NAME}: binary missing or corrupt, attempting download...\n`);
-	// Call main() explicitly rather than relying on import side-effects: ESM
+	// ~keep Call main() explicitly rather than relying on import side-effects: ESM
 	// caches modules, so the installer's top-level run is gated to direct
 	// invocation only and would not fire on import.
 	const { main: installMain } = await import("../install.js");

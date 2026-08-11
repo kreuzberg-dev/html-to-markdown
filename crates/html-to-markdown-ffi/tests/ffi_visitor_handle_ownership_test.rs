@@ -114,7 +114,7 @@ fn should_alias_the_same_address_on_repeated_visitor_getter_calls_today() {
              every call instead of cloning (crates/html-to-markdown-ffi/src/lib.rs:2610)"
         );
 
-        // Free the underlying handle exactly ONCE, through the options struct's own free path,
+        // ~keep Free the underlying handle exactly ONCE, through the options struct's own free path,
         // never through `htm_visitor_handle_free(first)` — doing that would be the real,
         // reachable double free this test exists to document without triggering.
         htm_visitor_free(visitor);
