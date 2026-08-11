@@ -97,7 +97,9 @@ test_apps/elixir/deps/
 test_apps/elixir/_build/
 
 # C# / .NET
-bin/
+packages/csharp/**/bin/
+test_apps/csharp/**/bin/
+e2e/csharp/**/bin/
 obj/
 *.dll
 *.exe
@@ -207,6 +209,7 @@ vendor/
 
 # Build caches (added by docs-quality sweep)
 **/.zig-cache/
+**/.zig-global-cache/
 **/.dart_tool/
 **/.build/
 test_apps/zig/zig-pkg/
