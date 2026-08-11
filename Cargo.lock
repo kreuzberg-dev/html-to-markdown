@@ -1378,6 +1378,7 @@ name = "html-to-markdown-bench"
 version = "3.10.6"
 dependencies = [
  "anyhow",
+ "astral-tl",
  "clap",
  "html-to-markdown-rs",
  "humantime",
