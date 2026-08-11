@@ -24,7 +24,11 @@ fn link_flattens_block_children_issue_131() {
     };
 
     let result = convert(html, Some(options)).unwrap();
-    assert_eq!(result, "[MWD08 - الابيض 70.00 SAR$18.66USD](https://www.google.com)\n");
+    // ~keep The `70.00 SAR` span carries `style="display: none;"`, so it is no longer
+    // ~keep emitted. This test's subject is that block children are flattened into the
+    // ~keep link label, which the assertion still covers; the price text was incidental
+    // ~keep to the real-world payload it was captured from.
+    assert_eq!(result, "[MWD08 - الابيض $18.66USD](https://www.google.com)\n");
 }
 
 #[test]
