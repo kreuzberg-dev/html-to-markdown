@@ -6,8 +6,13 @@ use reqwest::blocking::Client;
 use reqwest::header::{CONTENT_TYPE, USER_AGENT};
 use std::time::Duration;
 
-pub const DEFAULT_USER_AGENT: &str =
-    "Mozilla/5.0 (compatible; html-to-markdown-cli/2.10; +https://github.com/xberg-io/html-to-markdown)";
+// ~keep env!(CARGO_PKG_VERSION) keeps this in sync with the crate version automatically;
+// ~keep a hardcoded literal here previously drifted to a stale version.
+pub const DEFAULT_USER_AGENT: &str = concat!(
+    "Mozilla/5.0 (compatible; html-to-markdown-cli/",
+    env!("CARGO_PKG_VERSION"),
+    "; +https://github.com/xberg-io/html-to-markdown)"
+);
 
 pub fn decode_bytes(bytes: &[u8], encoding_name: &str) -> Result<String, String> {
     let lowercase = encoding_name.to_lowercase();
