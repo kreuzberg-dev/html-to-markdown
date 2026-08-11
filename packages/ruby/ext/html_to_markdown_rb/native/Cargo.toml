@@ -17,6 +17,11 @@ path = "../src/lib.rs"
 crate-type = ["cdylib"]
 
 [features]
+# ~keep `testkit` cannot leave this list yet: the alef-generated `src/lib.rs` matches on
+# `TierStrategy::Tier1`, which the core crate gates behind `feature = "testkit"`, and it
+# emits that arm without the `#[cfg(any(test, feature = "testkit"))]` guard. Every binding
+# generator has this bug - dropping it from the Dart crate produced E0599 too - so the fix
+# belongs in alef, tracked as ALEF-A21. Dropping it here fails the build at `gem install`.
 default = ["inline-images", "metadata", "testkit", "visitor"]
 inline-images = ["html-to-markdown-rs/inline-images"]
 metadata = ["html-to-markdown-rs/metadata"]
@@ -25,7 +30,12 @@ visitor = ["html-to-markdown-rs/visitor"]
 
 [dependencies]
 async-trait = "0.1"
-html-to-markdown-rs = { version = "3.10.6", path = "../../../../../crates/html-to-markdown", features = ["serde", "metadata", "visitor", "inline-images", "testkit"] }
+# ~keep No `path` here on purpose. This manifest is compiled by `extconf.rb` on the end
+# user's machine from the unpacked gem, whose root is the gem directory; a path escaping to
+# `crates/html-to-markdown` resolves to nothing once unpacked and `gem install` fails at
+# `cargo rustc`. Resolving from crates.io is what makes the source gem installable, so the
+# core crate must be published before the gem is.
+html-to-markdown-rs = { version = "3.10.6", features = ["serde", "metadata", "visitor", "inline-images"] }
 magnus = "0.8"
 rb-sys = ">=0.9, <0.9.128"
 serde = { version = "1", features = ["derive"] }

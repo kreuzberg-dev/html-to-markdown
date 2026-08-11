@@ -12,6 +12,9 @@ ignored = ["async-trait", "html_to_markdown_rs", "tracing"]
 [lib]
 crate-type = ["cdylib", "staticlib"]
 [features]
+# ~keep `testkit` is required to COMPILE, not to test: the alef-generated bridge
+# references `TierStrategy::Tier1` unconditionally, but that variant is
+# `#[cfg(any(test, feature = "testkit"))]` in the core crate. See audit #9 / ALEF-A21.
 default = ["inline-images", "metadata", "testkit", "visitor"]
 inline-images = ["html_to_markdown_rs/inline-images"]
 metadata = ["html_to_markdown_rs/metadata"]
@@ -26,6 +29,26 @@ serde_json = "1"
 tokio = { version = "1", features = ["rt-multi-thread", "sync"] }
 tracing = "0.1"
 
+# ~keep Binding crates cannot use `lints.workspace = true`: the workspace forbids
+# `unsafe_code`, `forbid` is not overridable by an inner `allow`, and Cargo rejects
+# mixing `workspace = true` with per-lint overrides. Generated binding glue is
+# unsafe by construction. `pedantic`/`nursery`/`cargo` are deliberately NOT mirrored:
+# the bridge source is alef-generated and carries a DO NOT EDIT header, so those style
+# findings are unfixable here and would only be satisfiable in the generator. What
+# remains is the set this repo can actually act on.
 [lints.rust]
-# flutter_rust_bridge uses #[cfg(frb_expand)] internally during macro expansion.
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
+unsafe_code = "allow"
+# ~keep flutter_rust_bridge generates the crate root and the build script.
+missing_docs = "allow"
+unused_must_use = "deny"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)', 'cfg(feature, values("testkit"))', 'cfg(frb_expand)'] }
+
+[lints.clippy]
+all = { level = "deny", priority = -1 }
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
+# ~keep Emitted by the generated bridge itself, so unfixable in this repo.
+match_same_arms = { level = "allow", priority = 1 }
+map_unwrap_or = { level = "allow", priority = 1 }
+uninlined_format_args = { level = "allow", priority = 1 }
