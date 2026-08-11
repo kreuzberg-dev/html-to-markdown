@@ -28,7 +28,7 @@ visitor = []
 serde = ["dep:serde", "dep:serde_json"]
 testkit = []
 mcp = ["dep:rmcp", "dep:tokio", "dep:schemars", "serde", "metadata"]
-mcp-http = ["mcp", "dep:axum"]
+mcp-http = ["mcp", "dep:axum", "dep:tower", "dep:tower-http"]
 
 [dependencies]
 ahash.workspace = true
@@ -38,11 +38,11 @@ bitflags = "2"
 html-escape = "0.2.14"
 html5ever.workspace = true
 image = { version = "0.25", default-features = false, features = [
-    "gif",
-    "jpeg",
-    "png",
-    "bmp",
-    "webp",
+  "gif",
+  "jpeg",
+  "png",
+  "bmp",
+  "webp",
 ], optional = true }
 lru = "0.18"
 memchr = "2"
@@ -50,11 +50,11 @@ once_cell.workspace = true
 phf = { version = "0.14", features = ["macros"] }
 regex.workspace = true
 rmcp = { version = "3.1.0", features = [
-    "server",
-    "macros",
-    "transport-io",
-    "transport-streamable-http-server",
-    "server-side-http",
+  "server",
+  "macros",
+  "transport-io",
+  "transport-streamable-http-server",
+  "server-side-http",
 ], optional = true }
 schemars = { version = "1.2.2", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
@@ -62,6 +62,8 @@ serde_json = { version = "1.0", optional = true }
 thiserror.workspace = true
 tl.workspace = true
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-std"], optional = true }
+tower = { version = "0.5", default-features = false, features = ["limit", "timeout"], optional = true }
+tower-http = { version = "0.6", default-features = false, features = ["limit"], optional = true }
 tracing.workspace = true
 
 [dev-dependencies]
