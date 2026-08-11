@@ -712,3 +712,48 @@ fn test_table_colspan_no_header_issue_233() {
     assert!(result.contains("| Cell 1"), "Cell 1 missing: {result}");
     assert!(result.contains("| Cell 2"), "Cell 2 missing: {result}");
 }
+
+/// Regression test for issue #13: a data row with MORE cells than the header row used to
+/// render with a separator row sized to the header's (narrower) column count. GFM-compliant
+/// renderers silently drop any cell past the declared column count, so the third cell's
+/// content ("3") would vanish even though our own Markdown text technically still contained
+/// it. The header/separator must now widen to the table's true max column count.
+#[test]
+fn should_widen_separator_row_when_a_data_row_has_more_cells_than_the_header() {
+    let html = "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n");
+}
+
+/// Regression test for issue #13: a data row with FEWER cells than the header must still be
+/// explicitly padded to the header's column count, keeping every row's declared column count
+/// consistent (defensive against non-GFM-strict Markdown table parsers).
+#[test]
+fn should_pad_ragged_row_with_fewer_cells_than_the_header() {
+    let html = "<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n");
+}
+
+/// Regression test for issue #13: `scan_table_node`'s nested-table/row-count scan did not
+/// stop at nested `<table>` boundaries, so a straight chain of one-nested-table-per-cell
+/// tables accumulated a `nested_table_count` proportional to the remaining chain depth at
+/// every level. That misfired the `looks_like_layout` heuristic (`nested_table_count > 1`)
+/// for every table except the innermost couple, converting real nested-table structure into
+/// a broken mix of list bullets and stray pipe/dash table syntax. A three-level chain (well
+/// past the `> 1` threshold under the old counting) must still render as clean pipe tables.
+#[test]
+fn should_not_misclassify_a_deep_nested_table_chain_as_a_layout_table() {
+    let html =
+        "<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>";
+    let result = convert(html, None).unwrap();
+    assert!(
+        !result.trim_start().starts_with('-'),
+        "a straight nested-table chain must not be misclassified as a layout list: {result}"
+    );
+    assert!(result.contains("leaf"), "leaf cell content must survive: {result}");
+    assert!(
+        result.matches("| ---").count() >= 1,
+        "expected pipe-table separator syntax, got: {result}"
+    );
+}

@@ -57,6 +57,15 @@ pub fn scan_table(
 ///
 /// Internal function that walks the table tree and collects metadata.
 ///
+/// `has_text`/`link_count`/`has_header`/`has_caption`/`has_span` are gathered from the
+/// *entire* subtree (including nested tables), since they answer "is there any semantic
+/// content here at all". `nested_table_count` and `row_counts`, however, feed the
+/// layout-table heuristic and must reflect only *this* table's own direct structure — a
+/// straight chain of one-nested-table-per-cell tables is not a layout table, but without
+/// stopping at nested `<table>` boundaries the scan would count every table and row
+/// transitively below the current one, misclassifying every ancestor in the chain as a
+/// layout table (issue #13).
+///
 /// # Arguments
 /// * `node_handle` - Current node to scan
 /// * `parser` - HTML parser instance
@@ -71,8 +80,8 @@ fn scan_table_node(
     is_root: bool,
     scan: &mut TableScan,
 ) {
-    let mut work = vec![(*node_handle, is_root)];
-    while let Some((node_handle, is_root)) = work.pop() {
+    let mut work = vec![(*node_handle, is_root, false)];
+    while let Some((node_handle, is_root, crossed_nested_table)) = work.pop() {
         let Some(node) = node_handle.get(parser) else {
             continue;
         };
@@ -89,6 +98,8 @@ fn scan_table_node(
                     || normalized_tag_name(tag.name().as_utf8_str()).into_owned().into(),
                     |info| Cow::Borrowed(info.name.as_str()),
                 );
+
+                let mut child_crossed_nested_table = crossed_nested_table;
 
                 match tag_name.as_ref() {
                     "a" => scan.link_count += 1,
@@ -109,7 +120,12 @@ fn scan_table_node(
                             }
                         }
                     }
-                    "table" if !is_root => scan.nested_table_count += 1,
+                    "table" if !is_root => {
+                        if !crossed_nested_table {
+                            scan.nested_table_count += 1;
+                        }
+                        child_crossed_nested_table = true;
+                    }
                     "tr" | "row" => {
                         let mut cell_count = 0;
                         for child in tag.children().top().iter() {
@@ -121,16 +137,20 @@ fn scan_table_node(
                                 if matches!(cell_name.as_ref(), "td" | "th" | "cell") {
                                     cell_count += super::cell::get_colspan(child, parser);
                                     let attrs = cell_tag.attributes();
-                                    if attrs.get("colspan").is_some() || attrs.get("rowspan").is_some() {
+                                    if !crossed_nested_table
+                                        && (attrs.get("colspan").is_some() || attrs.get("rowspan").is_some())
+                                    {
                                         scan.has_span = true;
                                     }
                                 }
                             }
                         }
-                        scan.row_counts.push(cell_count);
+                        if !crossed_nested_table {
+                            scan.row_counts.push(cell_count);
+                        }
                         let mut children: Vec<_> = tag.children().top().iter().copied().collect();
                         while let Some(child) = children.pop() {
-                            work.push((child, false));
+                            work.push((child, false, child_crossed_nested_table));
                         }
                         continue;
                     }
@@ -139,7 +159,7 @@ fn scan_table_node(
 
                 let mut children: Vec<_> = tag.children().top().iter().copied().collect();
                 while let Some(child) = children.pop() {
-                    work.push((child, false));
+                    work.push((child, false, child_crossed_nested_table));
                 }
             }
             _ => {}

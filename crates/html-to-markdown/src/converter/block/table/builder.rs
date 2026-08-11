@@ -174,12 +174,14 @@ pub fn handle_table(
                                 if let Some(tl::Node::Tag(row_tag)) = row_handle.get(parser) {
                                     let row_tag_name = normalized_tag_name(row_tag.name().as_utf8_str());
                                     if matches!(row_tag_name.as_ref(), "tr" | "row") {
-                                        append_layout_row(row_handle, parser, output, options, ctx, dom_ctx);
+                                        append_layout_row(row_handle, parser, output, options, ctx, dom_ctx, depth + 1);
                                     }
                                 }
                             }
                         }
-                        "tr" | "row" => append_layout_row(child_handle, parser, output, options, ctx, dom_ctx),
+                        "tr" | "row" => {
+                            append_layout_row(child_handle, parser, output, options, ctx, dom_ctx, depth + 1);
+                        }
                         "colgroup" | "col" => {}
                         _ => {
                             // ~keep Handle non-table-structure elements (like <a>, <img>, etc.) that may be
@@ -204,10 +206,13 @@ pub fn handle_table(
         }
 
         let mut row_index = 0;
+        // ~keep The header separator row's column count must cover every row's width, not
+        // ~keep just the first row: a later row with more actual cells than the header
+        // ~keep ("ragged" table) would otherwise render a separator declaring fewer columns
+        // ~keep than that row provides, and GFM-compliant renderers silently drop cells past
+        // ~keep the declared column count (issue #13).
         let total_cols = table_total_columns(node_handle, parser, dom_ctx);
-        let mut first_row_cols: Option<usize> = None;
         let mut rowspan_tracker = vec![None; total_cols];
-        let mut row_cells = Vec::new();
 
         // ~keep Pre-pass: compute per-column max content widths for aligned padding.
         // ~keep Uses a rowspan tracker so spanned columns are skipped just as they
@@ -241,6 +246,7 @@ pub fn handle_table(
                                         dom_ctx,
                                         &mut widths,
                                         &mut prepass_rowspan,
+                                        depth + 1,
                                     );
                                 }
                             }
@@ -254,6 +260,7 @@ pub fn handle_table(
                                 dom_ctx,
                                 &mut widths,
                                 &mut prepass_rowspan,
+                                depth + 1,
                             );
                         }
                         _ => {}
@@ -284,7 +291,7 @@ pub fn handle_table(
                                         &mut text,
                                         options,
                                         ctx,
-                                        0,
+                                        depth + 1,
                                         dom_ctx,
                                     );
                                 }
@@ -308,13 +315,6 @@ pub fn handle_table(
                                             .tag_name_for(*row_handle, parser)
                                             .unwrap_or_else(|| normalized_tag_name(row_tag.name().as_utf8_str()));
                                         if matches!(row_tag_name.as_ref(), "tr" | "row") {
-                                            if first_row_cols.is_none() {
-                                                collect_table_cells(row_handle, parser, dom_ctx, &mut row_cells);
-                                                let cols = row_cells
-                                                    .iter()
-                                                    .fold(0usize, |acc, h| acc.saturating_add(get_colspan(h, parser)));
-                                                first_row_cols = Some(cols.clamp(1, MAX_TABLE_COLS));
-                                            }
                                             convert_table_row(
                                                 row_handle,
                                                 parser,
@@ -325,7 +325,7 @@ pub fn handle_table(
                                                 table_scan.has_span,
                                                 &mut rowspan_tracker,
                                                 total_cols,
-                                                first_row_cols.unwrap_or(total_cols),
+                                                total_cols,
                                                 dom_ctx,
                                                 depth + 1,
                                                 is_header_section,
@@ -339,13 +339,6 @@ pub fn handle_table(
                         }
 
                         "tr" | "row" => {
-                            if first_row_cols.is_none() {
-                                collect_table_cells(child_handle, parser, dom_ctx, &mut row_cells);
-                                let cols = row_cells
-                                    .iter()
-                                    .fold(0usize, |acc, h| acc.saturating_add(get_colspan(h, parser)));
-                                first_row_cols = Some(cols.clamp(1, MAX_TABLE_COLS));
-                            }
                             convert_table_row(
                                 child_handle,
                                 parser,
@@ -356,7 +349,7 @@ pub fn handle_table(
                                 table_scan.has_span,
                                 &mut rowspan_tracker,
                                 total_cols,
-                                first_row_cols.unwrap_or(total_cols),
+                                total_cols,
                                 dom_ctx,
                                 depth + 1,
                                 row_index == 0,

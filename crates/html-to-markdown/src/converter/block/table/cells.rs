@@ -25,7 +25,9 @@ const MAX_TABLE_COLS: usize = 1000;
 /// * `options` - Conversion options
 /// * `ctx` - Conversion context
 /// * `dom_ctx` - DOM context
+/// * `depth` - Current recursion depth (the row's own depth; cell content is walked at `depth + 1`)
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[allow(clippy::too_many_arguments)]
 pub fn append_layout_row(
     row_handle: &tl::NodeHandle,
     parser: &tl::Parser,
@@ -33,6 +35,7 @@ pub fn append_layout_row(
     options: &crate::options::ConversionOptions,
     ctx: &super::super::super::Context,
     dom_ctx: &super::super::super::DomContext,
+    depth: usize,
 ) {
     if let Some(tl::Node::Tag(row_tag)) = row_handle.get(parser) {
         let mut row_text = String::new();
@@ -62,7 +65,7 @@ pub fn append_layout_row(
                             &mut cell_text,
                             options,
                             &cell_ctx,
-                            0,
+                            depth + 1,
                             dom_ctx,
                         );
                     }
@@ -95,7 +98,10 @@ pub fn append_layout_row(
 /// `rowspan_tracker` mirrors the tracker in `convert_table_row` so that spanned
 /// columns are skipped in the width pre-pass just as they are skipped in rendering.
 /// Pass a shared tracker across all row calls to correctly handle multi-row spans.
+///
+/// `depth` is the row's own recursion depth; cell content is measured at `depth + 1`.
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[allow(clippy::too_many_arguments)]
 pub fn collect_row_cell_widths(
     node_handle: &tl::NodeHandle,
     parser: &tl::Parser,
@@ -104,6 +110,7 @@ pub fn collect_row_cell_widths(
     dom_ctx: &super::super::super::DomContext,
     col_widths: &mut Vec<usize>,
     rowspan_tracker: &mut Vec<Option<usize>>,
+    depth: usize,
 ) {
     let mut cells = Vec::new();
     collect_table_cells(node_handle, parser, dom_ctx, &mut cells);
@@ -130,7 +137,7 @@ pub fn collect_row_cell_widths(
             break;
         };
 
-        let text = cell_text_content(cell_handle, parser, options, ctx, dom_ctx);
+        let text = cell_text_content(cell_handle, parser, options, ctx, dom_ctx, depth + 1);
         const MAX_CELL_WIDTH: usize = 200;
         let width = text.chars().count().min(MAX_CELL_WIDTH);
 
@@ -220,7 +227,7 @@ pub fn convert_table_row(
                             &mut text,
                             options,
                             &collect_ctx,
-                            0,
+                            depth + 1,
                             dom_ctx,
                         );
                     }
@@ -280,7 +287,7 @@ pub fn convert_table_row(
         ..ctx.clone()
     };
 
-    if has_span {
+    let mut filled_cols = if has_span {
         let mut col_index = 0;
         let mut cell_iter = cells.iter();
 
@@ -317,6 +324,7 @@ pub fn convert_table_row(
                     "",
                     dom_ctx,
                     col_width,
+                    depth + 1,
                 );
 
                 let (colspan, rowspan) = get_colspan_rowspan(cell_handle, parser);
@@ -330,6 +338,7 @@ pub fn convert_table_row(
                 break;
             }
         }
+        col_index
     } else {
         for (cell_idx, cell_handle) in cells.iter().enumerate() {
             let col_width = col_widths.get(cell_idx).copied();
@@ -342,8 +351,26 @@ pub fn convert_table_row(
                 "",
                 dom_ctx,
                 col_width,
+                depth + 1,
             );
         }
+        cells.len()
+    };
+
+    // ~keep A ragged row with fewer actual cells than the table's widest row must still
+    // ~keep declare `total_cols` columns: GFM requires the header row's cell count to match
+    // ~keep the delimiter row exactly, or the whole construct fails to parse as a table at
+    // ~keep all (issue #13). Padding every row keeps column counts consistent throughout.
+    while filled_cols < total_cols {
+        let width = col_widths.get(filled_cols).copied();
+        row_text.push(' ');
+        if let Some(w) = width {
+            for _ in 0..w {
+                row_text.push(' ');
+            }
+        }
+        row_text.push_str(" |");
+        filled_cols += 1;
     }
 
     output.push('|');

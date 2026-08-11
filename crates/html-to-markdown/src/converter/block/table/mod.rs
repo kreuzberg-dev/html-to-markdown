@@ -92,7 +92,7 @@ pub fn handle_table_with_context(
     builder::handle_table(node_handle, parser, &mut table_output, options, ctx, dom_ctx, depth);
 
     if let Some(ref sc) = ctx.structure_collector {
-        if let Some(grid) = collect_table_grid(node_handle, parser, options, ctx, dom_ctx) {
+        if let Some(grid) = collect_table_grid(node_handle, parser, options, ctx, dom_ctx, depth) {
             sc.borrow_mut().push_table_data(grid, table_output.trim().to_string());
         }
     }
@@ -136,6 +136,7 @@ fn collect_table_grid(
     options: &crate::options::ConversionOptions,
     ctx: &super::super::Context,
     dom_ctx: &super::super::DomContext,
+    depth: usize,
 ) -> Option<crate::types::TableGrid> {
     use utils::{is_tag_name, normalized_tag_name};
 
@@ -168,6 +169,7 @@ fn collect_table_grid(
                                 &mut row_index,
                                 &mut max_cols,
                                 is_header_section,
+                                depth + 1,
                             );
                         }
                     }
@@ -185,6 +187,7 @@ fn collect_table_grid(
                         &mut row_index,
                         &mut max_cols,
                         is_first,
+                        depth + 1,
                     );
                 }
                 _ => {}
@@ -204,6 +207,8 @@ fn collect_table_grid(
 }
 
 /// Process a single table row for grid collection.
+///
+/// `depth` is the row's own recursion depth; cell content is walked at `depth + 1`.
 #[allow(clippy::too_many_arguments)]
 fn collect_grid_row(
     row_handle: &tl::NodeHandle,
@@ -216,6 +221,7 @@ fn collect_grid_row(
     row_index: &mut u32,
     max_cols: &mut u32,
     is_header_section: bool,
+    depth: usize,
 ) {
     use cell::{collect_table_cells, get_colspan_rowspan};
 
@@ -235,7 +241,7 @@ fn collect_grid_row(
         };
         if let Some(tl::Node::Tag(cell_tag)) = cell_handle.get(parser) {
             for child_handle in cell_tag.children().top().iter() {
-                super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, 0, dom_ctx);
+                super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, depth + 1, dom_ctx);
             }
         }
         let content = crate::text::normalize_whitespace_cow(&text).trim().to_string();

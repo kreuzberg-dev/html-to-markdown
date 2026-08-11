@@ -109,6 +109,7 @@ pub fn collect_table_cells(
 /// * `options` - Conversion options
 /// * `ctx` - Conversion context
 /// * `dom_ctx` - DOM context
+/// * `depth` - Current recursion depth (the cell's own depth; children are walked at `depth + 1`)
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn cell_text_content(
     node_handle: &tl::NodeHandle,
@@ -116,6 +117,7 @@ pub fn cell_text_content(
     options: &crate::options::ConversionOptions,
     ctx: &super::super::super::Context,
     dom_ctx: &super::super::super::DomContext,
+    depth: usize,
 ) -> String {
     let mut text = String::with_capacity(64);
 
@@ -133,7 +135,7 @@ pub fn cell_text_content(
 
         if has_tag_child {
             for child_handle in children.top().iter() {
-                super::super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, 0, dom_ctx);
+                super::super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, depth + 1, dom_ctx);
             }
         } else {
             let raw = dom_ctx.text_content(*node_handle, parser);
@@ -185,7 +187,9 @@ fn escape_cell_text(text: &str, options: &crate::options::ConversionOptions) -> 
 /// * `_tag_name` - Tag name (for consistency, not used)
 /// * `dom_ctx` - DOM context for content extraction
 /// * `col_width` - Optional target width for padding (None = no padding)
+/// * `depth` - Current recursion depth (the cell's own depth; children are walked at `depth + 1`)
 #[allow(clippy::trivially_copy_pass_by_ref)]
+#[allow(clippy::too_many_arguments)]
 pub fn convert_table_cell(
     node_handle: &tl::NodeHandle,
     parser: &tl::Parser,
@@ -195,6 +199,7 @@ pub fn convert_table_cell(
     _tag_name: &str,
     dom_ctx: &super::super::super::DomContext,
     col_width: Option<usize>,
+    depth: usize,
 ) {
     let mut text = String::with_capacity(128);
 
@@ -207,7 +212,7 @@ pub fn convert_table_cell(
 
         if has_tag_child {
             for child_handle in children.top().iter() {
-                super::super::super::walk_node(child_handle, parser, &mut text, options, cell_ctx, 0, dom_ctx);
+                super::super::super::walk_node(child_handle, parser, &mut text, options, cell_ctx, depth + 1, dom_ctx);
             }
         } else {
             let raw = dom_ctx.text_content(*node_handle, parser);
