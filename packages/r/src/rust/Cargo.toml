@@ -38,30 +38,23 @@ visitor = ["html-to-markdown-rs/visitor"]
 # ~keep Binding crates cannot use `lints.workspace = true`: the workspace forbids
 # `unsafe_code`, `forbid` is not overridable by an inner `allow`, and Cargo rejects
 # mixing `workspace = true` with per-lint overrides. Generated binding glue is
-# unsafe by construction, so the workspace set is mirrored here with `unsafe_code`
-# relaxed. Keep in sync with `[workspace.lints]` in the root manifest.
+# unsafe by construction. `pedantic`/`nursery`/`cargo` are deliberately NOT mirrored:
+# the bridge source these crates compile is alef-generated and carries a DO NOT EDIT
+# header, so those style findings are unfixable here and would only be satisfiable in
+# the generator. What remains is the set this repo can actually act on.
 [lints.rust]
 unsafe_code = "allow"
-missing_docs = "warn"
+# ~keep The bridge source is alef-generated and undocumented at the item level.
+missing_docs = "allow"
 unused_must_use = "deny"
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(alef)', 'cfg(feature, values("testkit"))', 'cfg(frb_expand)'] }
 
 [lints.clippy]
 all = { level = "deny", priority = -1 }
-cargo = { level = "warn", priority = -1 }
-pedantic = { level = "warn", priority = -1 }
-nursery = { level = "warn", priority = -1 }
 print_stdout = "deny"
 print_stderr = "deny"
 dbg_macro = "deny"
-multiple_crate_versions = { level = "allow", priority = 1 }
-cargo_common_metadata = { level = "allow", priority = 1 }
-unnecessary_cast = { level = "allow", priority = 1 }
-unused_unit = { level = "allow", priority = 1 }
-unwrap_or_default = { level = "allow", priority = 1 }
-derivable_impls = { level = "allow", priority = 1 }
-unnecessary_wraps = { level = "allow", priority = 1 }
-needless_borrows_for_generic_args = { level = "allow", priority = 1 }
+# ~keep Emitted by the generated bridge itself, so unfixable in this repo.
+collapsible_if = { level = "allow", priority = 1 }
 useless_conversion = { level = "allow", priority = 1 }
-unnecessary_fallible_conversions = { level = "allow", priority = 1 }
-arc_with_non_send_sync = { level = "allow", priority = 1 }
+redundant_closure = { level = "allow", priority = 1 }
