@@ -119,7 +119,12 @@ pub fn handle_blockquote(
 
     if !trimmed_content.is_empty() {
         if ctx.blockquote_depth > 0 {
-            output.push_str("\n\n\n");
+            if !output.is_empty() {
+                while output.ends_with('\n') {
+                    output.truncate(output.len() - 1);
+                }
+                output.push_str("\n\n");
+            }
         } else if !output.is_empty() {
             if output.ends_with("\n\n") {
                 output.truncate(output.len() - 1);
@@ -132,9 +137,14 @@ pub fn handle_blockquote(
 
         let prefix = "> ";
 
+        // ~keep Only blank-out whitespace-only lines; preserve leading whitespace on
+        // ~keep real content lines (code block indentation, nested list markers) so
+        // ~keep quoted block children keep their structural meaning (issue #13).
         for line in trimmed_content.lines() {
             output.push_str(prefix);
-            output.push_str(line.trim());
+            if !line.trim().is_empty() {
+                output.push_str(line);
+            }
             output.push('\n');
         }
 

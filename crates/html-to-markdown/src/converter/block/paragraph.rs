@@ -40,13 +40,24 @@ pub fn handle(
         && !output.ends_with(". ");
 
     let after_code_block = output.ends_with("```\n");
+    // ~keep Inside a blockquote, sibling blocks (heading, list, table, pre) already manage
+    // ~keep their own trailing spacing and self-terminate without a blank line (matches
+    // ~keep CommonMark: an ATX heading ends its line regardless). The one case that still
+    // ~keep needs an explicit separator here is a paragraph directly after bare inline text,
+    // ~keep which leaves no trailing newline at all — without it the "> " prefixing pass
+    // ~keep merges the text and the paragraph into a single line, losing the block break
+    // ~keep (issue #13). Requiring "no trailing newline at all" (not just "no blank line")
+    // ~keep keeps the existing heading-then-paragraph compact style intact.
     let needs_leading_sep = !ctx.in_table_cell
         && !ctx.in_list_item
         && !ctx.convert_as_inline
-        && ctx.blockquote_depth == 0
         && !output.is_empty()
-        && !output.ends_with("\n\n")
-        && !after_code_block;
+        && !after_code_block
+        && if ctx.blockquote_depth > 0 {
+            !output.ends_with('\n')
+        } else {
+            !output.ends_with("\n\n")
+        };
 
     if is_table_continuation {
         crate::converter::trim_trailing_whitespace(output);

@@ -159,6 +159,47 @@ fn test_nested_blockquote() {
     assert_eq!(result, "> > Nested quote\n");
 }
 
+/// Regression test for issue #13: blindly `.trim()`-ing every content line inside a
+/// blockquote stripped the leading indentation off code-fence body lines, corrupting the
+/// code itself (e.g. `    line2 indented` losing its 4-space indent).
+#[test]
+fn should_preserve_code_block_indentation_inside_blockquote() {
+    let html = "<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "> ```\n> line1\n>     line2 indented\n> ```\n");
+}
+
+/// Regression test for issue #13: the same blanket `.trim()` also stripped the
+/// continuation-indent spaces off nested list items inside a blockquote, flattening a
+/// nested list into a single-level list and losing the parent/child relationship.
+#[test]
+fn should_preserve_nested_list_indentation_inside_blockquote() {
+    let html = "<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "> - item a\n>   * sub a1\n");
+}
+
+/// Regression test for issue #13: a paragraph immediately following bare inline text
+/// inside a blockquote used to merge onto the same line with no separator at all
+/// (`blockquote_depth == 0` gated off the leading blank-line separator), losing the
+/// paragraph break entirely.
+#[test]
+fn should_add_blank_line_between_text_and_paragraph_inside_blockquote() {
+    let html = "<blockquote>Just text, then <p>a paragraph</p></blockquote>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "> Just text, then\n>\n> a paragraph\n");
+}
+
+/// Regression test for issue #13: a nested blockquote preceded by sibling content in the
+/// same parent blockquote used to accumulate extra blank `>` lines (an unconditional
+/// `"\n\n\n"` push regardless of what already preceded it).
+#[test]
+fn should_not_duplicate_blank_lines_for_nested_blockquote_after_sibling_paragraph() {
+    let html = "<blockquote><p>Outer</p><blockquote><p>Inner</p></blockquote></blockquote>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "> Outer\n>\n> > Inner\n");
+}
+
 #[test]
 fn test_horizontal_rule() {
     let html = "<hr>";
