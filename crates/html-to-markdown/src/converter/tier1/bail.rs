@@ -49,6 +49,16 @@ pub enum BailReason {
         offset: usize,
     },
 
+    /// Two `<script>`/`<style>` (raw-text-ignored) elements were found directly
+    /// adjacent, with no separating whitespace.  Tier-2's script/style-stripping
+    /// preprocessing pass collapses such pairs into a single whitespace-only DOM
+    /// text node whose downstream handling produces a byte pattern Tier-1 does
+    /// not replicate; bail so Tier-2 (authoritative) handles it.
+    AdjacentRawTextTags {
+        /// Byte offset of the second element's `<` in the input.
+        offset: usize,
+    },
+
     // ~keep ── Table-specific bail reasons ───────────────────────────────────────────
     /// A `<td>` or `<th>` had a `rowspan` or `colspan` attribute with a value
     /// other than 1 (absent attribute counts as 1).
@@ -69,6 +79,22 @@ pub enum BailReason {
     /// `<tfoot>` close, or `<thead>` after any section that already closed.
     TableSectionOrder,
 
+    /// Open-tag nesting reached the effective depth limit
+    /// (`crate::converter::main_helpers::effective_max_depth`).
+    ///
+    /// The scanner's `state.stack` is an explicit `Vec`, not native recursion, so
+    /// it has no stack-overflow risk of its own — but Tier-2's recursive
+    /// `walk_node` silently truncates (skips deeper nodes and their content)
+    /// once `depth >= effective_max_depth`. Continuing the scan past that same
+    /// depth would produce the *untruncated* output, diverging from Tier-2's
+    /// authoritative truncated output. Bail so Tier-2 (which truncates) wins.
+    DepthLimitExceeded {
+        /// Nesting depth (open-tag count) at which the limit was reached.
+        depth: usize,
+        /// The effective limit that was exceeded.
+        max_depth: usize,
+    },
+
     /// A named HTML entity (e.g. `&mdash;`, `&laquo;`) was encountered that is
     /// not in Tier-1's 45-entry decode table, or a numeric character reference
     /// was malformed / mapped to an invalid Unicode code point.
@@ -80,6 +106,20 @@ pub enum BailReason {
         /// The entity name between `&` and `;` (e.g. `"mdash"`, `"#x2014"`).
         name: Box<str>,
         /// Byte offset in the HTML input where the `&` was found.
+        offset: usize,
+    },
+
+    /// An opening tag carries the `hidden` attribute, or an inline `style`
+    /// declaration that hides the element (`display: none` / `visibility:
+    /// hidden`).
+    ///
+    /// `converter::utility::preprocessing::strip_hidden_elements` (outside
+    /// tier1/) removes such elements — tag and all descendant content —
+    /// unconditionally before Tier-2 ever parses the document. Tier-1 has no
+    /// equivalent pass and would otherwise emit the hidden element's content
+    /// verbatim. Bail so Tier-2 (which already strips it) is authoritative.
+    HiddenElement {
+        /// Byte offset of the element's `<` in the input.
         offset: usize,
     },
 }
@@ -106,6 +146,12 @@ impl fmt::Display for BailReason {
             Self::UnknownCustomElement { name, offset } => {
                 write!(f, "unknown custom element <{name}> at byte offset {offset}")
             }
+            Self::AdjacentRawTextTags { offset } => {
+                write!(
+                    f,
+                    "adjacent <script>/<style> tags with no separating whitespace at byte offset {offset}"
+                )
+            }
             Self::TableRowspanColspan => {
                 write!(f, "table cell has rowspan or colspan != 1")
             }
@@ -123,6 +169,15 @@ impl fmt::Display for BailReason {
             }
             Self::UnknownEntity { name, offset } => {
                 write!(f, "unknown HTML entity &{name}; at byte offset {offset}")
+            }
+            Self::DepthLimitExceeded { depth, max_depth } => {
+                write!(
+                    f,
+                    "open-tag nesting depth {depth} reached the effective limit of {max_depth}"
+                )
+            }
+            Self::HiddenElement { offset } => {
+                write!(f, "hidden element (hidden attribute or style) at byte offset {offset}")
             }
         }
     }

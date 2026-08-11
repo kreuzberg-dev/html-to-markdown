@@ -46,6 +46,14 @@ const MAX_ENTITY_NAME_BYTES: usize = 32;
 /// Matches Tier-2's `col_widths.get(i).unwrap_or(0).max(MIN_SEPARATOR_DASHES)`.
 const MIN_SEPARATOR_DASHES: usize = 3;
 
+/// Minimum length of a Markdown code fence (```` ``` ````) per `CommonMark`.
+///
+/// ~keep Mirrors `converter::handlers::code_block::MIN_FENCE_LENGTH`. Not imported
+/// ~keep from there: that module is owned by another concurrent edit lane and this
+/// ~keep crate's `tier1/` ownership boundary forbids editing it to add a `pub(crate)`
+/// ~keep re-export. Reported as a proposed shared-helper extraction (see module docs).
+const MIN_FENCE_LENGTH: usize = 3;
+
 /// Static `TagSpec` used for all unknown custom elements (tag names containing
 /// `-`, e.g. `<x-foo>`, `<my-component>`).
 ///
@@ -169,6 +177,28 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 let mut name_buf = [0u8; MAX_TAG_NAME_BYTES];
                 let name_lower = lowercase_into(tag_name_bytes, &mut name_buf);
 
+                // ~keep Audit #12 follow-up: `strip_hidden_elements`
+                // ~keep (converter/utility/preprocessing.rs, outside tier1/) removes any
+                // ~keep element carrying `hidden` or a `style="display:none"` /
+                // ~keep `style="visibility:hidden"` declaration — tag and all descendant
+                // ~keep content — as a raw-string pass Tier-2 always runs before parsing,
+                // ~keep before either tier is even aware of tag identity. Checked here,
+                // ~keep before the `<svg>`/`<template>` special cases below, so it is as
+                // ~keep tag-agnostic as the pass it mirrors (a hidden `<svg>` must bail
+                // ~keep too — its dedicated branch below has no hidden-element awareness
+                // ~keep of its own). Reuses that pass's exact helpers (widened to
+                // ~keep `pub(crate)`) rather than re-implementing the `hidden`/style
+                // ~keep declaration scan a third time — see the code-fence/code-span
+                // ~keep duplication this lane already fixed above.
+                let tag_open_end =
+                    crate::converter::utility::preprocessing::find_tag_end(bytes, pos + 1).unwrap_or(bytes.len());
+                let tag_slice = &html[pos..tag_open_end];
+                if crate::converter::utility::preprocessing::tag_has_hidden_attribute(tag_slice)
+                    || crate::converter::utility::preprocessing::tag_has_hidden_style(tag_slice)
+                {
+                    return Err(BailReason::HiddenElement { offset: pos });
+                }
+
                 // ~keep Phase I: `<svg>` — emit as base64 data URI matching Tier-2's
                 // ~keep `handle_svg` output.  The entire subtree (open tag through
                 // ~keep `</svg>`) is consumed here; the scanner skips past it without
@@ -206,9 +236,15 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 }
 
                 // ~keep Phase N: `<template>` — inert script container; Tier-2 drops
-                // ~keep its content (see plain_text.rs SKIP_TAGS).  Skip the entire
-                // ~keep subtree without emitting anything.  Self-closing form is rare
-                // ~keep but handled.
+                // ~keep its content. Skip the entire subtree without emitting anything.
+                // ~keep Self-closing form is rare but handled.
+                // ~keep
+                // ~keep Audit #12 follow-up: this comment previously cited
+                // ~keep plain_text.rs SKIP_TAGS as the reason, which was true only for
+                // ~keep the plain-text output path — the two tiers were silently
+                // ~keep mismatched for Markdown output until main.rs's `"template" |
+                // ~keep "noscript" => {}` arm landed (converter/main.rs, outside
+                // ~keep tier1/). Both tiers now agree `<template>` is inert.
                 if name_lower == b"template" {
                     let Some((close_pos, is_self_closing)) = parse::find_tag_close(bytes, name_end) else {
                         pos = bytes.len();
@@ -260,25 +296,46 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                         None => bytes.len(),
                     };
                     pos = find_raw_text_close(bytes, open_end, name_lower).unwrap_or(bytes.len());
+
+                    // ~keep Tier-2's `strip_script_and_style_tags` preprocessing pass
+                    // ~keep (converter/utility/preprocessing.rs, outside tier1/) inserts a
+                    // ~keep boundary space *per removed element* when its source-adjacent
+                    // ~keep bytes are non-whitespace.  Two `<script>`/`<style>` tags sitting
+                    // ~keep back-to-back with zero separating whitespace therefore each
+                    // ~keep contribute a boundary space, and — because they collapse to a
+                    // ~keep single whitespace-only DOM text node — Tier-2's downstream
+                    // ~keep whitespace-mode handling of that node produces an idiosyncratic
+                    // ~keep byte pattern (observed: a stray `\n\n  \n` at the nuxt-example
+                    // ~keep fixture's trailing `<script><script></body>`) that is specific
+                    // ~keep to whitespace-only-node handling, not reproducible by mirroring
+                    // ~keep the boundary-space rule alone.  Bail so Tier-2 (authoritative)
+                    // ~keep handles this rare, adjacency-only case; the single-tag word-glue
+                    // ~keep mirror below still covers the common case.
+                    if is_adjacent_rawtext_ignored_open(bytes, pos) {
+                        return Err(BailReason::AdjacentRawTextTags { offset: pos });
+                    }
+
                     text_start = pos;
-                    // ~keep Tier-2 observed behaviour (medium_python "walrus operator"
-                    // ~keep case): after walking through a `<style>` block whose
-                    // ~keep content emits nothing, the subsequent inline sibling
-                    // ~keep emission gets a separating space inserted (matching the
-                    // ~keep `<style></style><span>X</span>` → `" X"` pattern).
-                    // ~keep Mirror this here: when the output buffer's tail looks
-                    // ~keep like inline text content (no trailing whitespace, no
-                    // ~keep `<br>` sentinel), push a single space.
-                    if name_lower == b"style" {
-                        let dest = state.cell_or_output_mut();
-                        let ends_with_word = !dest.is_empty()
-                            && !dest.ends_with(' ')
-                            && !dest.ends_with('\t')
-                            && !dest.ends_with('\n')
-                            && !dest.ends_with('<')
-                            && !dest.ends_with("<br>");
-                        if ends_with_word {
-                            dest.push(' ');
+                    // ~keep Mirror the single-element boundary-space rule: a space is
+                    // ~keep inserted only when the removed tag would otherwise glue two
+                    // ~keep word characters together.  The "before" check uses the emitted
+                    // ~keep output tail (not the raw source byte) so that a space already
+                    // ~keep produced by a preceding sibling is never doubled up; the "after"
+                    // ~keep check peeks the next source byte, matching Tier-2's boundary
+                    // ~keep condition exactly.
+                    if name_lower == b"script" || name_lower == b"style" {
+                        let after_is_word = pos < bytes.len() && !bytes[pos].is_ascii_whitespace();
+                        if after_is_word {
+                            let dest = state.cell_or_output_mut();
+                            let ends_with_word = !dest.is_empty()
+                                && !dest.ends_with(' ')
+                                && !dest.ends_with('\t')
+                                && !dest.ends_with('\n')
+                                && !dest.ends_with('<')
+                                && !dest.ends_with("<br>");
+                            if ends_with_word {
+                                dest.push(' ');
+                            }
                         }
                     }
                     continue;
@@ -458,6 +515,25 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                         .filter(|s| !s.is_empty())
                         .map(str::to_owned);
                     state.abbr_titles.push(title);
+                }
+
+                // ~keep TIER1-57: `state.stack` is an explicit `Vec`, not native
+                // ~keep recursion — the scanner itself has no stack-overflow risk.
+                // ~keep But Tier-2's recursive `walk_node` silently truncates once
+                // ~keep `depth >= effective_max_depth` (main.rs), and this scanner
+                // ~keep had no equivalent ceiling: a pathologically deep DOM would
+                // ~keep scan to completion here while Tier-2 truncates, diverging
+                // ~keep from the byte-equality contract. Bail so Tier-2's (truncated,
+                // ~keep authoritative) output wins instead of silently accepting
+                // ~keep input Tier-2 would reject part of. `state.stack.len()` (open
+                // ~keep tags below this one) is the same `depth` Tier-2 checks before
+                // ~keep dispatching this node.
+                let max_depth = crate::converter::main_helpers::effective_max_depth(options);
+                if state.stack.len() >= max_depth {
+                    return Err(BailReason::DepthLimitExceeded {
+                        depth: state.stack.len(),
+                        max_depth,
+                    });
                 }
 
                 emit_open(&mut state, spec, &attrs)?;
@@ -647,7 +723,12 @@ fn find_balanced_close(bytes: &[u8], open_end: usize, tag_name: &[u8]) -> Option
                         while j < len && bytes[j] != b'>' {
                             j += 1;
                         }
-                        return Some(j + 1);
+                        // ~keep A closing tag with no terminating `>` before EOF must
+                        // ~keep return `None` (not `Some(len + 1)`, an out-of-bounds
+                        // ~keep offset one past the last valid slice/index into `bytes`).
+                        // ~keep Callers (`find_svg_close` via `.unwrap_or(bytes.len())`)
+                        // ~keep already handle `None` by clamping to end-of-input.
+                        return if j < len { Some(j + 1) } else { None };
                     }
                 }
             }
@@ -790,9 +871,19 @@ fn emit_svg_from_slice(
     let svg_html = serialize_element(&handle, parser);
     let base64_svg = STANDARD.encode(svg_html.as_bytes());
 
+    // ~keep Security fix mirror (media/svg.rs::handle_svg, outside tier1/): an
+    // ~keep unescaped `<title>` here lets `x](https://evil.example)y` in the SVG
+    // ~keep source close the image label early and open a second, attacker-
+    // ~keep controlled Markdown image/link — the input is inert HTML, but the
+    // ~keep unescaped label turns it into a live injection. `escape_link_label`
+    // ~keep (utility/content.rs) is the shared helper Tier-2's `<a>` label path
+    // ~keep already uses; call the same one here rather than a third
+    // ~keep hand-written escaper.
+    let escaped_title = crate::converter::utility::content::escape_link_label(&title);
+
     let dest = state.cell_or_output_mut();
     dest.push_str("![");
-    dest.push_str(&title);
+    dest.push_str(&escaped_title);
     dest.push_str("](data:image/svg+xml;base64,");
     dest.push_str(&base64_svg);
     dest.push(')');
@@ -1293,6 +1384,16 @@ fn emit_void(
 
             let dest = state.cell_or_output_mut();
             if keep_as_markdown {
+                // ~keep Security fix mirror (`handlers/image.rs::format_image_markdown`,
+                // ~keep outside tier1/ — same class of bug as the SVG title / link label
+                // ~keep fixes above): an unescaped `alt` lets `x](https://evil.example`
+                // ~keep close the image label early and open a second,
+                // ~keep attacker-controlled Markdown image/link. Only applied on this
+                // ~keep (markdown-emitting) branch — the `!keep_as_markdown` branch below
+                // ~keep emits `alt` as plain text with no `![...]` wrapping at all,
+                // ~keep matching `format_image_markdown`'s `use_alt_only` branch, which
+                // ~keep also does not call `escape_link_label`.
+                let escaped_alt = crate::converter::utility::content::escape_link_label(alt);
                 if let Some(title_bytes) = title {
                     let title_owned;
                     let title_str: &str = if canonicalize {
@@ -1302,10 +1403,10 @@ fn emit_void(
                         std::str::from_utf8(title_bytes).map_err(|_| BailReason::Classifier)?
                     };
                     #[allow(clippy::format_push_string)]
-                    dest.push_str(&format!("![{alt}]({src} \"{title_str}\")"));
+                    dest.push_str(&format!("![{escaped_alt}]({src} \"{title_str}\")"));
                 } else {
                     #[allow(clippy::format_push_string)]
-                    dest.push_str(&format!("![{alt}]({src})"));
+                    dest.push_str(&format!("![{escaped_alt}]({src})"));
                 }
             } else {
                 // ~keep Strip to alt-text only — mirrors Tier-2 behaviour when the image
@@ -1388,6 +1489,33 @@ fn keep_inline_image_for_ancestors(input: &[u8], stack: &[OpenTag], keep: &[Stri
 #[cfg(feature = "inline-images")]
 fn eq_ascii_ignore_case(a: &[u8], b: &[u8]) -> bool {
     a.eq_ignore_ascii_case(b)
+}
+
+/// Returns `true` when `bytes[pos..]` opens a `<script` or `<style` tag with no
+/// separating whitespace — i.e. a second raw-text-ignored element sitting directly
+/// adjacent to the one the scanner just finished skipping.  See the bail site in
+/// the `TagKind::Ignored`-and-`is_rawtext` branch above for why this forces a
+/// Tier-2 fallback rather than being handled inline.
+fn is_adjacent_rawtext_ignored_open(bytes: &[u8], pos: usize) -> bool {
+    const CANDIDATES: [&[u8]; 2] = [b"script", b"style"];
+    if bytes.get(pos) != Some(&b'<') {
+        return false;
+    }
+    let name_start = pos + 1;
+    for name in CANDIDATES {
+        let name_end = name_start + name.len();
+        if bytes.len() < name_end {
+            continue;
+        }
+        if !bytes[name_start..name_end].eq_ignore_ascii_case(name) {
+            continue;
+        }
+        // ~keep Require a valid tag-name terminator so `<scriptx>` doesn't match.
+        if let Some(b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'/') = bytes.get(name_end) {
+            return true;
+        }
+    }
+    false
 }
 
 fn emit_close(state: &mut Tier1State, tag_name_bytes: &[u8], options: &ConversionOptions) -> Result<(), BailReason> {
@@ -1668,6 +1796,27 @@ fn close_button(state: &mut Tier1State, frame: &OpenTag) {
     }
 }
 
+/// Clamp a stored byte offset (e.g. `OpenTag::content_start`, captured as
+/// `buf.len()` when the tag opened) to a valid, in-bounds char boundary of
+/// `buf` as it stands *now*.
+///
+/// `content_start` is read back at close time, sometimes against a different
+/// buffer than the one it was captured against (`state.output` vs. the
+/// current table-cell accumulator — see the `state.in_table_cell()` branches
+/// throughout this file) or after other frames' close handlers have mutated
+/// the buffer. On the correct path `content_start` is already valid, so this
+/// is a no-op there (500k-case fuzzing under `TierStrategy::Auto` never hit a
+/// clamp); it exists so a stale offset degrades to a clamped position instead
+/// of an out-of-bounds or not-a-char-boundary panic in `&buf[start..]`,
+/// `buf.truncate(start)`, or `buf.insert_str(start, …)`.
+fn clamp_to_char_boundary(buf: &str, at: usize) -> usize {
+    let mut at = at.min(buf.len());
+    while at > 0 && !buf.is_char_boundary(at) {
+        at -= 1;
+    }
+    at
+}
+
 /// Close an inline emphasis-style element (`<strong>`, `<em>`, `<b>`, `<i>`).
 ///
 /// When the element produced no visible content (the source had `<strong></strong>`
@@ -1677,12 +1826,13 @@ fn close_button(state: &mut Tier1State, frame: &OpenTag) {
 /// match that.
 fn close_inline_marker(state: &mut Tier1State, frame: &OpenTag, marker: &str) {
     let buf = state.cell_or_output_mut();
-    let body_is_empty = buf.len() <= frame.content_start
-        || buf[frame.content_start..]
+    let content_start = clamp_to_char_boundary(buf, frame.content_start);
+    let body_is_empty = buf.len() <= content_start
+        || buf[content_start..]
             .bytes()
             .all(|b| matches!(b, b' ' | b'\t' | b'\n' | b'\r'));
     if body_is_empty {
-        let open_marker_start = frame.content_start.saturating_sub(marker.len());
+        let open_marker_start = clamp_to_char_boundary(buf, content_start.saturating_sub(marker.len()));
         buf.truncate(open_marker_start);
         return;
     }
@@ -1692,12 +1842,12 @@ fn close_inline_marker(state: &mut Tier1State, frame: &OpenTag, marker: &str) {
     // ~keep strong/emphasis markers gets pushed OUTSIDE them so `**\u{a0}X**` becomes
     // ~keep `\u{a0}**X**`.  Required for byte-equality on Wikipedia fixtures with
     // ~keep `<b><span>&nbsp;</span>X</b>` patterns.
-    let content_str = &buf[frame.content_start..];
+    let content_str = &buf[content_start..];
     let leading_len = content_str.len() - content_str.trim_start().len();
     if leading_len > 0 {
         let leading: String = content_str[..leading_len].to_owned();
-        buf.replace_range(frame.content_start..frame.content_start + leading_len, "");
-        let marker_start = frame.content_start.saturating_sub(marker.len());
+        buf.replace_range(content_start..content_start + leading_len, "");
+        let marker_start = clamp_to_char_boundary(buf, content_start.saturating_sub(marker.len()));
         buf.insert_str(marker_start, &leading);
     }
 
@@ -1797,23 +1947,25 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
             cell_buf.pop();
         }
         if !is_implicit {
-            let content = &state.cell_or_output_mut()[frame.content_start..];
+            let cell_buf = state.cell_or_output_mut();
+            let content_start = clamp_to_char_boundary(cell_buf, frame.content_start);
+            let content = &cell_buf[content_start..];
             if content.trim().is_empty() {
-                let len = frame.content_start;
-                state.cell_or_output_mut().truncate(len);
+                state.cell_or_output_mut().truncate(content_start);
             }
         }
         return Ok(());
     }
 
     trim_trailing_inline_whitespace(state);
+    let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
 
     if !is_implicit {
-        let content = &state.output[frame.content_start..];
+        let content = &state.output[content_start..];
         if content.trim().is_empty() {
             // ~keep Empty heading: Tier-2 emits nothing. Roll back to before
             // ~keep the heading's block separator was added.
-            state.output.truncate(frame.content_start);
+            state.output.truncate(content_start);
             let trimmed_len = state.output.trim_end_matches('\n').len();
             if trimmed_len > 0 {
                 state.output.truncate(trimmed_len);
@@ -1830,8 +1982,8 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
     // ~keep text-node normalization, folding `\n + indent` runs to a single space.
     // ~keep Mirror that here so `<h3>Mozilla\n   sponsorship</h3>` emits
     // ~keep `### Mozilla sponsorship` rather than `### Mozilla\n  sponsorship`.
-    if state.output[frame.content_start..].contains('\n') {
-        let content = state.output[frame.content_start..].to_owned();
+    if state.output[content_start..].contains('\n') {
+        let content = state.output[content_start..].to_owned();
         let mut normalized = String::with_capacity(content.len());
         let mut prev_was_space = false;
         for ch in content.chars() {
@@ -1846,12 +1998,12 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
                 prev_was_space = false;
             }
         }
-        state.output.truncate(frame.content_start);
+        state.output.truncate(content_start);
         state.output.push_str(normalized.trim_end());
     }
 
     let prefix = heading_prefix(n);
-    state.output.insert_str(frame.content_start, prefix);
+    state.output.insert_str(content_start, prefix);
     // ~keep Tier-2 leaves a blank line ("\n\n") after a heading. A
     // ~keep following paragraph's "\n\n" guard then finds it already and appends
     // ~keep nothing, yielding the expected single blank line.
@@ -1866,9 +2018,10 @@ fn close_blockquote(state: &mut Tier1State, frame: &OpenTag) {
     if state.in_table_cell() {
         return;
     }
-    let content = state.output[frame.content_start..].to_owned();
+    let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
+    let content = state.output[content_start..].to_owned();
     let prefixed = prefix_blockquote_lines(&content);
-    state.output.truncate(frame.content_start);
+    state.output.truncate(content_start);
     // ~keep Mirror Tier-2 blockquote.rs: when the output ends with "\n\n"
     // ~keep before the blockquote, remove one "\n" (heading-then-blockquote
     // ~keep produces only a single newline separator, not a blank line).
@@ -1888,15 +2041,23 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
     if state.in_table_cell() {
         return;
     }
-    let raw = state.output[frame.content_start..].to_owned();
-    state.output.truncate(frame.content_start);
+    let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
+    let raw = state.output[content_start..].to_owned();
+    state.output.truncate(content_start);
     match options.code_block_style {
         CodeBlockStyle::Indented => {
             let indented = indent_pre_lines(&raw);
             state.output.push_str(&indented);
         }
         CodeBlockStyle::Backticks => {
-            state.output.push_str("```");
+            // ~keep the fence must be strictly longer than the longest run of `` ` ``
+            // ~keep inside the content, otherwise the fence terminates early and
+            // ~keep corrupts the rest of the document (CommonMark 4.5). Mirrors
+            // ~keep `handlers::code_block::format_code_block`'s Backticks branch.
+            let fence_length = (longest_consecutive_backtick_run(&raw) + 1).max(MIN_FENCE_LENGTH);
+            let fence: String = std::iter::repeat_n('`', fence_length).collect();
+
+            state.output.push_str(&fence);
             if let Some(lang) = state.pre_lang.take() {
                 state.output.push_str(&lang);
             } else if !options.code_language.is_empty() {
@@ -1910,7 +2071,8 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
             let raw = raw.strip_suffix('\n').unwrap_or(raw);
             state.output.push_str(raw);
             state.output.push('\n');
-            state.output.push_str("```\n");
+            state.output.push_str(&fence);
+            state.output.push('\n');
         }
         CodeBlockStyle::Tildes => {
             let indented = indent_pre_lines(&raw);
@@ -1929,7 +2091,7 @@ fn close_code(state: &mut Tier1State, frame: &OpenTag) {
     // ~keep end is the raw code content.  Choose num_backticks + delimiter
     // ~keep spaces from that slice, then truncate and re-emit wrapped.
     let buf = state.cell_or_output_mut();
-    let content_start = frame.content_start.min(buf.len());
+    let content_start = clamp_to_char_boundary(buf, frame.content_start);
     if content_start >= buf.len() {
         // ~keep No content emitted between open and close — Tier-2 emits
         // ~keep nothing for empty <code></code>.
@@ -1954,18 +2116,7 @@ fn close_code(state: &mut Tier1State, frame: &OpenTag) {
             || (starts_with_space && ends_with_space && contains_backtick);
 
         let num_backticks = if contains_backtick {
-            let max_consecutive = content
-                .chars()
-                .fold((0usize, 0usize), |(max, current), c| {
-                    if c == '`' {
-                        let new_current = current + 1;
-                        (max.max(new_current), new_current)
-                    } else {
-                        (max, 0)
-                    }
-                })
-                .0;
-            if max_consecutive == 1 { 2 } else { 1 }
+            min_safe_code_span_delimiter_length(content)
         } else {
             1
         };
@@ -1988,6 +2139,55 @@ fn close_code(state: &mut Tier1State, frame: &OpenTag) {
     }
 }
 
+/// Compute the length of the longest consecutive run of `` ` `` in `content`.
+///
+/// ~keep Mirrors `converter::handlers::code_block::longest_consecutive_run`
+/// ~keep (see the shared-helper note on `MIN_FENCE_LENGTH` above).
+fn longest_consecutive_backtick_run(content: &str) -> usize {
+    content
+        .chars()
+        .fold((0usize, 0usize), |(max, current), c| {
+            if c == '`' {
+                let next = current + 1;
+                (max.max(next), next)
+            } else {
+                (max, 0)
+            }
+        })
+        .0
+}
+
+/// Smallest backtick-run length (starting at 1) that does not occur as a run inside `content`.
+///
+/// ~keep Mirrors `converter::handlers::code_block::min_safe_code_span_delimiter_length`
+/// ~keep byte-for-byte (see the shared-helper note on `MIN_FENCE_LENGTH` above). CommonMark
+/// ~keep closes an inline code span at the next backtick string of the *same* length as the
+/// ~keep opener (6.1), so `longest_run + 1` unconditionally over-escapes: content `` `` `` (a
+/// ~keep single length-2 run, no length-1 run) is valid with a single backtick delimiter.
+fn min_safe_code_span_delimiter_length(content: &str) -> usize {
+    let mut run_lengths = std::collections::HashSet::new();
+    let mut current = 0usize;
+    for c in content.chars() {
+        if c == '`' {
+            current += 1;
+        } else {
+            if current > 0 {
+                run_lengths.insert(current);
+            }
+            current = 0;
+        }
+    }
+    if current > 0 {
+        run_lengths.insert(current);
+    }
+
+    let mut candidate = 1usize;
+    while run_lengths.contains(&candidate) {
+        candidate += 1;
+    }
+    candidate
+}
+
 fn close_link(state: &mut Tier1State, frame: &OpenTag) {
     // ~keep Close the link: `](href "title")` or `](href)`
     // ~keep If no href, just emit the text as-is (Tier-2 behaviour: no link markup).
@@ -1998,7 +2198,7 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
     // ~keep collapses to `[text](url)` — matches Tier-2's normalize_link_label
     // ~keep at utility/content.rs:145 (kimbrain.html and similar source HTML
     // ~keep with whitespace before </a>).
-    let trim_start = frame.content_start.min(dest.len());
+    let trim_start = clamp_to_char_boundary(dest, frame.content_start);
     let trimmed_end = dest[trim_start..].trim_end_matches(|c: char| c.is_whitespace()).len();
     dest.truncate(trim_start + trimmed_end);
     // ~keep Mirror Tier-2's `normalize_whitespace_cow` step inside
@@ -2014,7 +2214,7 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
         dest.truncate(trim_start);
         dest.push_str(&normalised);
     }
-    // ~keep Wikipedia back-reference normalisation (Tier-2 `handlers/link.rs:208`):
+    // ~keep Wikipedia back-reference normalisation (Tier-2 `handlers/link.rs:205`):
     // ~keep a label of exactly `^` paired with an `#anchor` href is rewritten to
     // ~keep `↑` so it does not look like Markdown's footnote syntax.
     if let Some(href_str) = href.as_deref() {
@@ -2024,6 +2224,22 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
         }
     }
     if let Some(href) = href {
+        // ~keep Security fix mirror (`handlers/link.rs:208`, outside tier1/, via
+        // ~keep the shared `escape_link_label` helper — same class of bug just
+        // ~keep fixed for the SVG `<title>` label above): an unescaped `]` in
+        // ~keep link text lets `<a href="/x">a] (https://evil.example) b</a>`
+        // ~keep close the label early and open a second, attacker-controlled
+        // ~keep Markdown link — inert HTML source turned into a live injection
+        // ~keep by the unescaped label. Only applies when a `[...]` label is
+        // ~keep actually being emitted (the `href`-less branch below emits the
+        // ~keep text with no bracket wrapping at all, matching Tier-2's separate
+        // ~keep no-`escape_link_label` code path for that case). Applied after
+        // ~keep the caret rewrite above (matching Tier-2's order); `↑` contains
+        // ~keep no bracket so the rewrite is a no-op for `escape_link_label`
+        // ~keep either way.
+        let escaped_label = crate::converter::utility::content::escape_link_label(&dest[trim_start..]);
+        dest.truncate(trim_start);
+        dest.push_str(&escaped_label);
         if let Some(title) = title {
             // ~keep Tier-2 in production HTML fixtures HTML-encodes a literal `"`
             // ~keep in the title attribute to `&quot;` (rather than the
@@ -2045,7 +2261,8 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
             dest.push_str(&format!("]({href})"));
         }
     } else {
-        if let Some(bracket_pos) = dest[..frame.content_start].rfind('[') {
+        let bracket_search_end = clamp_to_char_boundary(dest, frame.content_start);
+        if let Some(bracket_pos) = dest[..bracket_search_end].rfind('[') {
             dest.remove(bracket_pos);
         }
     }
@@ -2087,7 +2304,7 @@ fn close_list_item(state: &mut Tier1State, frame: &OpenTag) {
     // ~keep so the next sibling `<li>` starts after a blank line.  Plain text
     // ~keep items still get the tight `\n` terminator.
     let had_block_children = {
-        let start = frame.content_start.min(dest.len());
+        let start = clamp_to_char_boundary(dest, frame.content_start);
         dest[start..].contains("\n\n")
     };
     if had_block_children {

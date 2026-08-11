@@ -29,6 +29,15 @@ pub enum RouterDecision {
 /// - `!options.strip_tags.is_empty()` — tag stripping requires DOM awareness
 /// - `!options.preserve_tags.is_empty()` — tag preservation requires DOM awareness
 /// - `options.debug` — debug output is consistent only on Tier-2
+/// - `!options.exclude_selectors.is_empty()` — Tier-1 is a byte scanner with no
+///   CSS selector engine; it cannot evaluate `tl`-compatible selectors, so any
+///   configured exclusion would silently pass excluded content straight
+///   through instead of dropping it (see `converter/main.rs`'s
+///   `tl::Selector`-based exclusion pass, outside tier1/)
+/// - `options.strip_newlines` — Tier-1 never strips `\r`/`\n` from text runs;
+///   Tier-2 applies it per text node (`converter/text_node.rs`)
+///
+/// # Result-shape gates (see doc block below the custom-element note)
 ///
 /// `options.extract_metadata` no longer forces Tier-2: Tier-1 re-parses the
 /// prescan's `head_range` slice and produces byte-identical YAML frontmatter.
@@ -43,6 +52,64 @@ pub enum RouterDecision {
 /// passes unknown tags through transparently via `CUSTOM_ELEMENT_BLOCK_SPEC`,
 /// and Phase DD canonicalizes image alt/title entities for custom-element
 /// pages via a separate `has_custom_element_tags(html)` recheck in `scan()`.
+///
+/// # Result-shape gates (TIER1-CRIT — silent `ConversionResult` field drops)
+///
+/// `convert_api.rs` (outside tier1/) hardcodes `document: None`, `tables:
+/// Vec::new()`, and (with the `inline-images` feature) `images: Vec::new()` on
+/// every successful Tier-1 conversion — it never threads `tier1::run`'s output
+/// through the structure/image collectors Tier-2 uses to populate those
+/// fields. Any option that asks for those fields to be populated must
+/// therefore force Tier-2, or the caller silently gets an empty result where
+/// Tier-2 would have returned real data — the exact "byte-equality contract
+/// broken, feature honored by Tier-2 silently dropped by Tier-1" failure mode
+/// this router exists to prevent, except at the `ConversionResult` level
+/// rather than the `content` string:
+///
+/// - `options.include_document_structure` — gates both `result.document`
+///   (`None` vs Tier-2's populated `DocumentStructure`) and `result.tables`
+///   (always empty from Tier-1; Tier-2 populates it from the same structure
+///   pass whenever `include_document_structure` is `true` — see
+///   `ConversionResult::tables` doc comment).
+/// - `options.extract_images` (`inline-images` feature) — gates
+///   `result.images` (always empty from Tier-1; Tier-2 populates it via
+///   `InlineImageCollector` during the DOM walk).
+///
+/// `options.extract_metadata` (TIER1-58 — supersedes the prior M5 decision
+/// below) now DOES gate on this axis when the `metadata` feature is compiled
+/// in. History: a prior phase (M5 — see `tests/tier1_metadata_test.rs`)
+/// deliberately made `extract_metadata` (default `true`) stop forcing Tier-2,
+/// reasoning that the YAML frontmatter embedded in `result.content` stays
+/// byte-identical to Tier-2's on the fast path. That reasoning covered the
+/// frontmatter *text* only. It did not cover `result.metadata` — the
+/// structured `HtmlMetadata` struct — which `convert_api.rs` hardcodes to
+/// `HtmlMetadata::default()` on every Tier-1 success path (`tier1::run` never
+/// builds one). A caller with default options and the `metadata` feature
+/// compiled in therefore silently got `{}` from `result.metadata` instead of
+/// Tier-2's populated struct: a public-API correctness bug, not a documented
+/// limitation.
+///
+/// Two fixes were considered:
+/// - (a) Thread structured metadata out of `tier1::run` by building a
+///   `MetadataCollector`-equivalent during the scan. Rejected: `HtmlMetadata`
+///   collects headers (with computed hierarchy/IDs), links, images, and
+///   structured data (JSON-LD/Microdata/RDFa) from the whole body, not just
+///   the head slice `tier1::run` already re-parses for frontmatter. A second,
+///   independent implementation of that surface is exactly the failure mode
+///   Task A (this file's neighbours in `scanner.rs`) just fixed: two
+///   hand-written copies of the same non-trivial logic silently drifting
+///   apart. Higher risk, not actually cheap once the real surface is counted.
+/// - (b) Gate `classify()` on `extract_metadata` (this fix). `extract_metadata`
+///   is a plain `bool` on `ConversionOptions`, known synchronously before the
+///   scan runs (unlike `report.had_svg` etc., which the scanner discovers
+///   mid-walk) — so, unlike the `include_document_structure` gate above, this
+///   one is cheap to evaluate here. Strictly correct: every routed Tier-2 call
+///   returns the authoritative struct. The cost is real — it reverts M5's
+///   fast path for the (feature-enabled, default-options) case — but a silent
+///   `{}` is worse than a slower correct answer.
+///
+/// When the `metadata` feature is not compiled in, `result.metadata` does not
+/// exist as a field, so there is nothing to diverge on and no gate is added.
 ///
 /// # Style-option gates (A1 — router style-option gate)
 ///
@@ -92,6 +159,17 @@ pub fn classify(report: &PrescanReport, options: &ConversionOptions) -> RouterDe
         || !options.strip_tags.is_empty()
         || !options.preserve_tags.is_empty()
         || options.debug
+        // ~keep exclude_selectors: Tier-1 has no CSS selector engine; a configured
+        // ~keep exclusion would silently pass excluded content through untouched.
+        || !options.exclude_selectors.is_empty()
+        // ~keep strip_newlines: Tier-1 never strips \r/\n from text runs.
+        || options.strip_newlines
+        // ~keep ── Result-shape gates ─────────────────────────────────────────────────
+        // ~keep include_document_structure: convert_api.rs hardcodes `document: None`
+        // ~keep and `tables: Vec::new()` on the Tier-1 success path — it never builds a
+        // ~keep StructureCollector for that branch — so a caller requesting the
+        // ~keep structured tree (or the tables it feeds) would silently get nothing.
+        || options.include_document_structure
         // ~keep ── Style-option gates ────────────────────────────────────────────────
         // ~keep output_format: Tier-1 only produces Markdown; other formats are Tier-2 only.
         || options.output_format != OutputFormat::Markdown
@@ -147,6 +225,29 @@ pub fn classify(report: &PrescanReport, options: &ConversionOptions) -> RouterDe
     // ~keep skip_subtree directives are honored.
     #[cfg(feature = "visitor")]
     if options.visitor.is_some() {
+        return RouterDecision::Tier2;
+    }
+
+    // ~keep TIER1-58: extract_metadata — see the doc block above ("supersedes
+    // ~keep the prior M5 decision"). `tier1::run` only produces the YAML
+    // ~keep frontmatter *text* embedded in `result.content`; it never builds the
+    // ~keep structured `HtmlMetadata` `convert_api.rs` returns as
+    // ~keep `result.metadata`, which stays `HtmlMetadata::default()` on every
+    // ~keep Tier-1 success path regardless of this option. Route to Tier-2
+    // ~keep whenever the caller asked for metadata and the struct exists.
+    #[cfg(feature = "metadata")]
+    if options.extract_metadata {
+        return RouterDecision::Tier2;
+    }
+
+    // ~keep extract_images: convert_api.rs hardcodes `images: Vec::new()` on the
+    // ~keep Tier-1 success path — it never builds an InlineImageCollector for that
+    // ~keep branch — so a caller requesting extracted inline images would silently
+    // ~keep get none. Gated behind the feature: without `inline-images` compiled in,
+    // ~keep both tiers ignore `extract_images` identically (see convert_api.rs
+    // ~keep `wants_images`), so there is nothing to diverge on.
+    #[cfg(feature = "inline-images")]
+    if options.extract_images {
         return RouterDecision::Tier2;
     }
 

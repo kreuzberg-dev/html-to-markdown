@@ -232,3 +232,142 @@ fn tier1_bail_falls_back_to_tier2() {
         "Tier-1 bail fallback output must match Tier-2 output"
     );
 }
+
+// ~keep ── 15. exclude_selectors forces Tier-2 (TIER1-CRIT) ─────────────────────────
+// ~keep Tier-1 has no CSS selector engine; a configured exclusion would silently
+// ~keep pass excluded content through untouched instead of dropping it.
+
+#[test]
+fn classify_tier2_on_exclude_selectors() {
+    let opts = ConversionOptions {
+        exclude_selectors: vec![".ad".to_string()],
+        ..minimal_options()
+    };
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier2);
+}
+
+#[test]
+fn classify_tier1_when_exclude_selectors_empty() {
+    let opts = minimal_options();
+    assert!(opts.exclude_selectors.is_empty());
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier1);
+}
+
+// ~keep ── 16. strip_newlines forces Tier-2 (TIER1-CRIT) ────────────────────────────
+// ~keep Tier-1 never strips \r/\n from text runs; Tier-2 applies it per text node.
+
+#[test]
+fn classify_tier2_on_strip_newlines() {
+    let opts = ConversionOptions {
+        strip_newlines: true,
+        ..minimal_options()
+    };
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier2);
+}
+
+#[test]
+fn classify_tier1_when_strip_newlines_false() {
+    let opts = minimal_options();
+    assert!(!opts.strip_newlines);
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier1);
+}
+
+// ~keep ── 17. include_document_structure forces Tier-2 (TIER1-CRIT) ────────────────
+// ~keep convert_api.rs hardcodes `document: None` / `tables: Vec::new()` on the
+// ~keep Tier-1 success path, so this option's request would be silently dropped.
+
+#[test]
+fn classify_tier2_on_include_document_structure() {
+    let opts = ConversionOptions {
+        include_document_structure: true,
+        ..minimal_options()
+    };
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier2);
+}
+
+#[test]
+fn classify_tier1_when_include_document_structure_false() {
+    let opts = minimal_options();
+    assert!(!opts.include_document_structure);
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier1);
+}
+
+// ~keep ── 18. extract_images forces Tier-2 (TIER1-CRIT, inline-images feature) ─────
+// ~keep convert_api.rs hardcodes `images: Vec::new()` on the Tier-1 success path,
+// ~keep so a caller requesting extracted inline images would silently get none.
+
+#[cfg(feature = "inline-images")]
+#[test]
+fn classify_tier2_on_extract_images() {
+    let opts = ConversionOptions {
+        extract_images: true,
+        ..minimal_options()
+    };
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier2);
+}
+
+#[cfg(feature = "inline-images")]
+#[test]
+fn classify_tier1_when_extract_images_false() {
+    let opts = minimal_options();
+    assert!(!opts.extract_images);
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier1);
+}
+
+// ~keep ── 19. Regression proof: Tier-1's ConversionResult never silently drops a
+// ~keep requested structured field. Forces TierStrategy::Tier1 (bypassing the
+// ~keep classifier) to prove the *scanner* would otherwise succeed here — the
+// ~keep classifier gate is what stands between this input and a silently-empty
+// ~keep `document`/`tables`/`images`. Confirms via the `Auto` strategy (which does
+// ~keep consult the classifier) that the gated options route to Tier-2 and the
+// ~keep fields end up populated, matching Tier-2 exactly.
+
+#[test]
+fn auto_routing_populates_document_and_tables_when_requested() {
+    let html = "<table><tr><td>a</td></tr></table>";
+    let opts = ConversionOptions {
+        include_document_structure: true,
+        tier_strategy: TierStrategy::Auto,
+        ..ConversionOptions::default()
+    };
+    let result = convert(html, Some(opts)).expect("conversion must succeed");
+    assert!(
+        result.document.is_some(),
+        "include_document_structure=true must populate result.document even under Auto routing"
+    );
+    assert!(
+        !result.tables.is_empty(),
+        "include_document_structure=true must populate result.tables for a document with a <table>"
+    );
+}
+
+// ~keep ── 20. extract_metadata forces Tier-2 when the `metadata` feature is compiled
+// ~keep in (TIER1-58) ────────────────────────────────────────────────────────────────
+// ~keep `tier1::run` only produces YAML frontmatter *text*; it never builds the
+// ~keep structured `HtmlMetadata` that `convert_api.rs` returns as `result.metadata`,
+// ~keep which stays `HtmlMetadata::default()` on every Tier-1 success path regardless
+// ~keep of this option. Unlike test 1 above (which uses `ConversionOptions::default()`
+// ~keep and is also gated by the unrelated default `highlight_style`), these use
+// ~keep `minimal_options()` so `extract_metadata` is isolated as the only variable.
+
+// ~keep `classify_routes_tier1_when_clean_and_extract_metadata_false` (test 2, above)
+// ~keep already proves the false side with these same otherwise-clear gates.
+
+#[cfg(feature = "metadata")]
+#[test]
+fn classify_tier2_on_extract_metadata_true_with_all_other_gates_clear() {
+    let opts = ConversionOptions {
+        extract_metadata: true,
+        ..minimal_options()
+    };
+    let choice = route("<p>hello</p>", &opts);
+    assert_eq!(choice, RouterDecision::Tier2);
+}
