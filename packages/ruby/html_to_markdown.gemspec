@@ -21,7 +21,7 @@ Gem::Specification.new do |spec|
   # picked up automatically.
   build_artifacts    = %r{/(?:target|tmp)/|\.(?:bundle|so|dylib|dll|o|a|log)\z|\.dSYM/|(?:\A|/)Makefile\z}
   candidate_files    = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select { |f| File.file?(f) }
-  spec.files         = candidate_files.reject { |f| f.match?(build_artifacts) }
+  spec.files         = candidate_files.grep_v(build_artifacts)
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/html_to_markdown_rb/native/extconf.rb"]
 
