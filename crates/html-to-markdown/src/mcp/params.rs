@@ -131,22 +131,127 @@ pub struct PreprocessingParams {
     pub remove_forms: Option<bool>,
 }
 
-impl From<PreprocessingParams> for PreprocessingOptionsUpdate {
-    fn from(params: PreprocessingParams) -> Self {
-        Self {
-            enabled: params.enabled,
-            preset: params.preset.map(|s| PreprocessingPreset::parse(&s)),
-            remove_navigation: params.remove_navigation,
-            remove_forms: params.remove_forms,
-        }
+/// An enum-valued [`ConvertConfig`] (or [`PreprocessingParams`]) field carried
+/// a string that is not one of the accepted wire values.
+///
+/// Every enum field is accepted as a string over MCP; before this type
+/// existed, an unrecognized string silently resolved to whichever variant a
+/// core `X::parse` fell back to (not necessarily that field's documented
+/// default — see the `mirror_covers_all_core_fields` drift-guard test module
+/// for context). Constructing this error instead names the offending field,
+/// echoes the value the client sent, and lists every accepted (snake_case,
+/// matching the `serde(rename_all = "snake_case")` wire format) value, so the
+/// client gets an actionable `invalid_params` error rather than a silent
+/// substitution.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InvalidEnumValue {
+    /// The `ConvertConfig` field name (as it appears on the wire).
+    pub field: &'static str,
+    /// The value the client sent.
+    pub value: String,
+    /// Every value `field` accepts.
+    pub accepted: &'static [&'static str],
+}
+
+impl std::fmt::Display for InvalidEnumValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "invalid value \"{}\" for `{}`: expected one of {}",
+            self.value,
+            self.field,
+            self.accepted.join(", ")
+        )
     }
 }
 
-impl From<ConvertConfig> for ConversionOptionsUpdate {
-    fn from(config: ConvertConfig) -> Self {
-        Self {
-            heading_style: config.heading_style.map(|s| HeadingStyle::parse(&s)),
-            list_indent_type: config.list_indent_type.map(|s| ListIndentType::parse(&s)),
+impl std::error::Error for InvalidEnumValue {}
+
+const HEADING_STYLE_VALUES: &[&str] = &["atx", "atxclosed", "underlined"];
+const LIST_INDENT_TYPE_VALUES: &[&str] = &["spaces", "tabs"];
+const HIGHLIGHT_STYLE_VALUES: &[&str] = &["doubleequal", "html", "bold", "none"];
+const WHITESPACE_MODE_VALUES: &[&str] = &["normalized", "strict"];
+const NEWLINE_STYLE_VALUES: &[&str] = &["spaces", "backslash"];
+const CODE_BLOCK_STYLE_VALUES: &[&str] = &["indented", "backticks", "tildes"];
+const URL_ESCAPE_STYLE_VALUES: &[&str] = &["angle", "percent"];
+const LINK_STYLE_VALUES: &[&str] = &["inline", "reference"];
+const OUTPUT_FORMAT_VALUES: &[&str] = &["markdown", "djot", "plain", "plaintext", "text"];
+const TIER_STRATEGY_VALUES: &[&str] = &["auto", "tier2"];
+const PREPROCESSING_PRESET_VALUES: &[&str] = &["minimal", "standard", "aggressive"];
+
+/// Reject `raw` unless it normalizes to one of `accepted`.
+///
+/// Uses the same normalization (`lowercase`, alphanumeric-only) the core
+/// `X::parse` constructors use, so anything this accepts, `parser` below
+/// parses into the value the client actually asked for — never a fallback.
+fn validate_enum_value(field: &'static str, raw: &str, accepted: &'static [&str]) -> Result<(), InvalidEnumValue> {
+    let normalized = crate::options::validation::normalize_token(raw);
+    if accepted.contains(&normalized.as_str()) {
+        Ok(())
+    } else {
+        Err(InvalidEnumValue {
+            field,
+            value: raw.to_string(),
+            accepted,
+        })
+    }
+}
+
+/// Validate and parse an optional enum-string field.
+///
+/// `None` (the client omitted the field) passes through unchanged; `Some`
+/// must normalize to one of `accepted` or this returns [`InvalidEnumValue`].
+fn validated_enum<T>(
+    field: &'static str,
+    raw: Option<String>,
+    accepted: &'static [&str],
+    parser: impl FnOnce(&str) -> T,
+) -> Result<Option<T>, InvalidEnumValue> {
+    match raw {
+        Some(raw) => {
+            validate_enum_value(field, &raw, accepted)?;
+            Ok(Some(parser(&raw)))
+        }
+        None => Ok(None),
+    }
+}
+
+impl TryFrom<PreprocessingParams> for PreprocessingOptionsUpdate {
+    type Error = InvalidEnumValue;
+
+    fn try_from(params: PreprocessingParams) -> Result<Self, Self::Error> {
+        Ok(Self {
+            enabled: params.enabled,
+            preset: validated_enum(
+                "preprocessing.preset",
+                params.preset,
+                PREPROCESSING_PRESET_VALUES,
+                PreprocessingPreset::parse,
+            )?,
+            remove_navigation: params.remove_navigation,
+            remove_forms: params.remove_forms,
+        })
+    }
+}
+
+impl TryFrom<ConvertConfig> for ConversionOptionsUpdate {
+    type Error = InvalidEnumValue;
+
+    fn try_from(config: ConvertConfig) -> Result<Self, Self::Error> {
+        let preprocessing = config.preprocessing.map(TryInto::try_into).transpose()?;
+        Ok(Self {
+            heading_style: validated_enum(
+                "heading_style",
+                config.heading_style,
+                HEADING_STYLE_VALUES,
+                HeadingStyle::parse,
+            )?,
+            list_indent_type: validated_enum(
+                "list_indent_type",
+                config.list_indent_type,
+                LIST_INDENT_TYPE_VALUES,
+                ListIndentType::parse,
+            )?,
             list_indent_width: config.list_indent_width,
             bullets: config.bullets,
             strong_em_symbol: config.strong_em_symbol.and_then(|s| s.chars().next()),
@@ -159,52 +264,112 @@ impl From<ConvertConfig> for ConversionOptionsUpdate {
             default_title: config.default_title,
             br_in_tables: config.br_in_tables,
             compact_tables: config.compact_tables,
-            highlight_style: config.highlight_style.map(|s| HighlightStyle::parse(&s)),
+            highlight_style: validated_enum(
+                "highlight_style",
+                config.highlight_style,
+                HIGHLIGHT_STYLE_VALUES,
+                HighlightStyle::parse,
+            )?,
             extract_metadata: config.extract_metadata,
-            whitespace_mode: config.whitespace_mode.map(|s| WhitespaceMode::parse(&s)),
+            whitespace_mode: validated_enum(
+                "whitespace_mode",
+                config.whitespace_mode,
+                WHITESPACE_MODE_VALUES,
+                WhitespaceMode::parse,
+            )?,
             strip_newlines: config.strip_newlines,
             wrap: config.wrap,
             wrap_width: config.wrap_width,
             convert_as_inline: config.convert_as_inline,
             sub_symbol: config.sub_symbol,
             sup_symbol: config.sup_symbol,
-            newline_style: config.newline_style.map(|s| NewlineStyle::parse(&s)),
-            code_block_style: config.code_block_style.map(|s| CodeBlockStyle::parse(&s)),
+            newline_style: validated_enum(
+                "newline_style",
+                config.newline_style,
+                NEWLINE_STYLE_VALUES,
+                NewlineStyle::parse,
+            )?,
+            code_block_style: validated_enum(
+                "code_block_style",
+                config.code_block_style,
+                CODE_BLOCK_STYLE_VALUES,
+                CodeBlockStyle::parse,
+            )?,
             keep_inline_images_in: config.keep_inline_images_in,
-            preprocessing: config.preprocessing.map(Into::into),
+            preprocessing,
             encoding: config.encoding,
             debug: config.debug,
             strip_tags: config.strip_tags,
             preserve_tags: config.preserve_tags,
             skip_images: config.skip_images,
-            url_escape_style: config.url_escape_style.map(|s| UrlEscapeStyle::parse(&s)),
-            link_style: config.link_style.map(|s| LinkStyle::parse(&s)),
-            output_format: config.output_format.map(|s| OutputFormat::parse(&s)),
+            url_escape_style: validated_enum(
+                "url_escape_style",
+                config.url_escape_style,
+                URL_ESCAPE_STYLE_VALUES,
+                UrlEscapeStyle::parse,
+            )?,
+            link_style: validated_enum("link_style", config.link_style, LINK_STYLE_VALUES, LinkStyle::parse)?,
+            output_format: validated_enum(
+                "output_format",
+                config.output_format,
+                OUTPUT_FORMAT_VALUES,
+                OutputFormat::parse,
+            )?,
             include_document_structure: config.include_document_structure,
             extract_images: config.extract_images,
             max_image_size: config.max_image_size,
             capture_svg: config.capture_svg,
             infer_dimensions: config.infer_dimensions,
-            max_depth: config.max_depth.map(|d| Some(usize::try_from(d).unwrap_or(usize::MAX))),
+            max_depth: config.max_depth.map(|requested| Some(clamp_max_depth(requested))),
             exclude_selectors: config.exclude_selectors,
-            tier_strategy: config.tier_strategy.map(|s| parse_tier_strategy(&s)),
+            tier_strategy: validated_enum(
+                "tier_strategy",
+                config.tier_strategy,
+                TIER_STRATEGY_VALUES,
+                parse_tier_strategy,
+            )?,
             #[cfg(feature = "visitor")]
             visitor: None,
-        }
+        })
     }
 }
 
-impl From<ConvertConfig> for ConversionOptions {
-    fn from(config: ConvertConfig) -> Self {
-        Self::from_update(config.into())
+impl TryFrom<ConvertConfig> for ConversionOptions {
+    type Error = InvalidEnumValue;
+
+    fn try_from(config: ConvertConfig) -> Result<Self, Self::Error> {
+        Ok(Self::from_update(config.try_into()?))
     }
 }
 
-/// Parse a [`TierStrategy`] from a string, falling back to the default (`Auto`).
+/// Convert an MCP client's requested `max_depth` (wire type `u64`) to the
+/// engine's native `usize`.
+///
+/// On 64-bit targets `usize == u64` and this is always exact. On 32-bit
+/// targets a client-requested value above `usize::MAX` cannot be represented;
+/// rather than silently wrapping or rejecting the whole request, it is
+/// clamped to `usize::MAX` and the clamp is surfaced via a `WARN` event so the
+/// degradation is observable instead of silent.
+fn clamp_max_depth(requested: u64) -> usize {
+    if let Ok(depth) = usize::try_from(requested) {
+        depth
+    } else {
+        tracing::warn!(
+            target: "html_to_markdown::mcp",
+            requested,
+            clamped_value = usize::MAX,
+            "max_depth exceeds this platform's usize range; clamping to usize::MAX"
+        );
+        usize::MAX
+    }
+}
+
+/// Parse a [`TierStrategy`] from a string already validated against
+/// [`TIER_STRATEGY_VALUES`].
 ///
 /// `TierStrategy` has no public `parse` constructor, so this matches on the
 /// normalised token the same way the other option enums do (case- and
-/// separator-insensitive), accepting `"auto"` (default) and `"tier2"`.
+/// separator-insensitive), accepting `"auto"` and `"tier2"`.
 fn parse_tier_strategy(value: &str) -> TierStrategy {
     match crate::options::validation::normalize_token(value).as_str() {
         "tier2" => TierStrategy::Tier2,
@@ -296,20 +461,82 @@ mod tests {
             code_block_style: Some("tildes".into()),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("all values are accepted");
         assert_eq!(opts.heading_style, HeadingStyle::AtxClosed);
         assert_eq!(opts.output_format, OutputFormat::Djot);
         assert_eq!(opts.code_block_style, CodeBlockStyle::Tildes);
     }
 
     #[test]
-    fn test_unknown_enum_string_falls_back_to_default() {
+    fn should_reject_unknown_enum_string_instead_of_substituting_a_default() {
         let config = ConvertConfig {
             heading_style: Some("nonsense".into()),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
-        assert_eq!(opts.heading_style, HeadingStyle::Underlined);
+        let error = ConversionOptions::try_from(config).expect_err("unrecognized value must be rejected");
+        assert_eq!(error.field, "heading_style");
+        assert_eq!(error.value, "nonsense");
+        assert_eq!(error.accepted, HEADING_STYLE_VALUES);
+    }
+
+    #[test]
+    fn should_report_the_offending_field_and_accepted_values_in_the_message() {
+        let config = ConvertConfig {
+            output_format: Some("yaml".into()),
+            ..ConvertConfig::default()
+        };
+        let error = ConversionOptions::try_from(config).expect_err("unrecognized value must be rejected");
+        let message = error.to_string();
+        assert!(
+            message.contains("output_format"),
+            "message must name the field: {message}"
+        );
+        assert!(
+            message.contains("yaml"),
+            "message must echo the offending value: {message}"
+        );
+        assert!(
+            message.contains("markdown"),
+            "message must list accepted values: {message}"
+        );
+    }
+
+    #[test]
+    fn should_reject_unknown_nested_preprocessing_preset() {
+        let config = ConvertConfig {
+            preprocessing: Some(PreprocessingParams {
+                preset: Some("extreme".into()),
+                ..PreprocessingParams::default()
+            }),
+            ..ConvertConfig::default()
+        };
+        let error = ConversionOptions::try_from(config).expect_err("unrecognized preset must be rejected");
+        assert_eq!(error.field, "preprocessing.preset");
+        assert_eq!(error.value, "extreme");
+    }
+
+    #[test]
+    fn should_reject_unknown_tier_strategy() {
+        let config = ConvertConfig {
+            tier_strategy: Some("tier3".into()),
+            ..ConvertConfig::default()
+        };
+        let error = ConversionOptions::try_from(config).expect_err("unrecognized tier strategy must be rejected");
+        assert_eq!(error.field, "tier_strategy");
+    }
+
+    #[test]
+    fn should_accept_every_documented_heading_style_value() {
+        for value in HEADING_STYLE_VALUES {
+            let config = ConvertConfig {
+                heading_style: Some((*value).to_string()),
+                ..ConvertConfig::default()
+            };
+            assert!(
+                ConversionOptions::try_from(config).is_ok(),
+                "documented value {value:?} must be accepted"
+            );
+        }
     }
 
     #[test]
@@ -319,7 +546,7 @@ mod tests {
             wrap_width: Some(100),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("no enum fields set");
         assert!(opts.wrap);
         assert_eq!(opts.wrap_width, 100);
         assert!(opts.autolinks);
@@ -333,7 +560,7 @@ mod tests {
             strong_em_symbol: Some("_".into()),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("no enum fields set");
         assert_eq!(opts.strong_em_symbol, '_');
     }
 
@@ -343,7 +570,7 @@ mod tests {
             max_depth: Some(5),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("no enum fields set");
         assert_eq!(opts.max_depth, Some(5));
     }
 
@@ -357,7 +584,7 @@ mod tests {
             }),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("\"aggressive\" is accepted");
         assert_eq!(opts.preprocessing.preset, PreprocessingPreset::Aggressive);
         assert!(!opts.preprocessing.remove_forms);
         assert!(opts.preprocessing.enabled);
@@ -370,7 +597,7 @@ mod tests {
             tier_strategy: Some("tier2".into()),
             ..ConvertConfig::default()
         };
-        let opts: ConversionOptions = config.into();
+        let opts: ConversionOptions = config.try_into().expect("\"tier2\" is accepted");
         assert_eq!(opts.tier_strategy, TierStrategy::Tier2);
     }
 

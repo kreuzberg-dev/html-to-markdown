@@ -23,6 +23,16 @@ pub fn map_conversion_error_to_mcp(error: ConversionError) -> McpError {
     }
 }
 
+/// Map an unrecognized [`ConvertConfig`](super::params::ConvertConfig) enum
+/// value to an MCP `invalid_params` error.
+///
+/// Names the offending field and lists every accepted value, so a typo or a
+/// stale wire value produces a precise, actionable error instead of the
+/// request silently converting with a substitute default.
+pub fn map_invalid_enum_to_mcp(error: super::params::InvalidEnumValue) -> McpError {
+    McpError::invalid_params(error.to_string(), None)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

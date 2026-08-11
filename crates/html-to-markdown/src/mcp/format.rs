@@ -19,18 +19,39 @@ pub fn conversion_result_value(result: &ConversionResult) -> serde_json::Value {
         },
     );
 
-    let tables_val = serde_json::to_value(&result.tables).unwrap_or(serde_json::Value::Array(Vec::new()));
+    let tables_val = serde_json::to_value(&result.tables).unwrap_or_else(|error| {
+        tracing::warn!(
+            target: "html_to_markdown::mcp",
+            error = %error,
+            "tables failed to serialise for MCP output; substituting an empty array"
+        );
+        serde_json::Value::Array(Vec::new())
+    });
     map.insert("tables".into(), tables_val);
 
     let doc_val = match &result.document {
-        Some(doc) => serde_json::to_value(doc).unwrap_or(serde_json::Value::Null),
+        Some(doc) => serde_json::to_value(doc).unwrap_or_else(|error| {
+            tracing::warn!(
+                target: "html_to_markdown::mcp",
+                error = %error,
+                "document structure failed to serialise for MCP output; substituting null"
+            );
+            serde_json::Value::Null
+        }),
         None => serde_json::Value::Null,
     };
     map.insert("document".into(), doc_val);
 
     #[cfg(feature = "metadata")]
     {
-        let meta_val = serde_json::to_value(&result.metadata).unwrap_or(serde_json::Value::Null);
+        let meta_val = serde_json::to_value(&result.metadata).unwrap_or_else(|error| {
+            tracing::warn!(
+                target: "html_to_markdown::mcp",
+                error = %error,
+                "metadata failed to serialise for MCP output; substituting null"
+            );
+            serde_json::Value::Null
+        });
         map.insert("metadata".into(), meta_val);
     }
 
@@ -55,7 +76,14 @@ pub fn conversion_result_value(result: &ConversionResult) -> serde_json::Value {
         map.insert("images".into(), serde_json::Value::Array(images_arr));
     }
 
-    let warnings_val = serde_json::to_value(&result.warnings).unwrap_or(serde_json::Value::Array(Vec::new()));
+    let warnings_val = serde_json::to_value(&result.warnings).unwrap_or_else(|error| {
+        tracing::warn!(
+            target: "html_to_markdown::mcp",
+            error = %error,
+            "conversion warnings failed to serialise for MCP output; substituting an empty array"
+        );
+        serde_json::Value::Array(Vec::new())
+    });
     map.insert("warnings".into(), warnings_val);
 
     serde_json::Value::Object(map)
@@ -72,7 +100,14 @@ pub fn format_conversion_result(result: &ConversionResult) -> String {
 /// feature-gated fields to special-case). Shared by [`format_metadata`] (text
 /// content) and the tool's `structuredContent` (SEP-2106).
 pub fn metadata_value(metadata: &crate::metadata::HtmlMetadata) -> serde_json::Value {
-    serde_json::to_value(metadata).unwrap_or(serde_json::Value::Null)
+    serde_json::to_value(metadata).unwrap_or_else(|error| {
+        tracing::warn!(
+            target: "html_to_markdown::mcp",
+            error = %error,
+            "metadata failed to serialise for MCP output; substituting null"
+        );
+        serde_json::Value::Null
+    })
 }
 
 /// Format extracted [`HtmlMetadata`](crate::metadata::HtmlMetadata) as pretty-printed JSON.

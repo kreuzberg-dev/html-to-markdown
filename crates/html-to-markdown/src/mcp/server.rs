@@ -16,7 +16,9 @@ use rmcp::{
 };
 
 #[cfg(feature = "mcp-http")]
-use rmcp::transport::streamable_http_server::{StreamableHttpService, session::local::LocalSessionManager};
+mod http_hardening;
+#[cfg(feature = "mcp-http")]
+use http_hardening::build_http_router;
 
 /// HTML-to-Markdown MCP server.
 ///
@@ -56,34 +58,76 @@ impl HtmlToMarkdownMcp {
             open_world_hint = false
         )
     )]
+    #[tracing::instrument(
+        level = "debug",
+        name = "html_to_markdown::mcp::convert_html",
+        skip_all,
+        fields(
+            input_len = tracing::field::Empty,
+            json = tracing::field::Empty,
+            config_present = tracing::field::Empty,
+            output_len = tracing::field::Empty,
+        )
+    )]
     async fn convert_html(
         &self,
         Parameters(params): Parameters<super::params::ConvertHtmlParams>,
     ) -> Result<CallToolResult, rmcp::ErrorData> {
-        use super::errors::map_conversion_error_to_mcp;
+        use super::errors::{map_conversion_error_to_mcp, map_invalid_enum_to_mcp};
         use super::format::{conversion_result_value, format_conversion_result};
 
-        let opts: ConversionOptions = params.config.map(Into::into).unwrap_or_default();
+        let span = tracing::Span::current();
+        span.record("input_len", params.html.len());
+        span.record("json", params.json);
+        span.record("config_present", params.config.is_some());
+
+        let opts: ConversionOptions = match params.config {
+            Some(config) => config.try_into().map_err(|error: super::params::InvalidEnumValue| {
+                tracing::warn!(
+                    target: "html_to_markdown::mcp",
+                    field = error.field,
+                    value = %error.value,
+                    "convert_html rejected an unrecognized enum value"
+                );
+                map_invalid_enum_to_mcp(error)
+            })?,
+            None => ConversionOptions::default(),
+        };
 
         let html = params.html;
         let want_json = params.json;
 
-        let result = tokio::task::spawn_blocking(move || crate::convert(&html, opts))
-            .await
-            .map_err(|e| rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None))?
-            .map_err(map_conversion_error_to_mcp)?;
+        // ~keep spawn_blocking runs on a separate blocking-pool thread that does not inherit
+        // ~keep the calling task's tracing span automatically; entering the captured span
+        // ~keep inside the (fully synchronous) closure restores the parent/child relationship
+        // ~keep with crate::convert's own `html_to_markdown::convert` span.
+        let mcp_span = tracing::Span::current();
+        let result = tokio::task::spawn_blocking(move || {
+            let _guard = mcp_span.enter();
+            crate::convert(&html, opts)
+        })
+        .await
+        .map_err(|e| {
+            tracing::error!(target: "html_to_markdown::mcp", error = %e, "convert_html task panicked");
+            rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None)
+        })?
+        .map_err(|error| {
+            tracing::warn!(target: "html_to_markdown::mcp", error = %error, "convert_html conversion failed");
+            map_conversion_error_to_mcp(error)
+        })?;
 
         if want_json {
             // SEP-2106: return the full ConversionResult as structuredContent (a JSON value),
             // with the pretty-printed JSON mirrored into text content for clients that ignore it.
             let text = format_conversion_result(&result);
+            span.record("output_len", text.len());
             let mut tool_result = CallToolResult::success(vec![ContentBlock::text(text)]);
             tool_result.structured_content = Some(conversion_result_value(&result));
             Ok(tool_result)
         } else {
-            Ok(CallToolResult::success(vec![ContentBlock::text(
-                result.content.unwrap_or_default(),
-            )]))
+            let content = result.content.unwrap_or_default();
+            span.record("output_len", content.len());
+            Ok(CallToolResult::success(vec![ContentBlock::text(content)]))
         }
     }
 
@@ -102,6 +146,12 @@ impl HtmlToMarkdownMcp {
             open_world_hint = false
         )
     )]
+    #[tracing::instrument(
+        level = "debug",
+        name = "html_to_markdown::mcp::extract_metadata",
+        skip_all,
+        fields(input_len = tracing::field::Empty, output_len = tracing::field::Empty)
+    )]
     async fn extract_metadata(
         &self,
         Parameters(params): Parameters<super::params::ExtractMetadataParams>,
@@ -109,19 +159,36 @@ impl HtmlToMarkdownMcp {
         use super::errors::map_conversion_error_to_mcp;
         use super::format::{format_metadata, metadata_value};
 
+        let span = tracing::Span::current();
+        span.record("input_len", params.html.len());
+
         let opts = ConversionOptions {
             extract_metadata: true,
             ..ConversionOptions::default()
         };
         let html = params.html;
 
-        let result = tokio::task::spawn_blocking(move || crate::convert(&html, opts))
-            .await
-            .map_err(|e| rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None))?
-            .map_err(map_conversion_error_to_mcp)?;
+        // ~keep see convert_html: entering the captured span inside the blocking closure
+        // ~keep restores parent/child span linkage across the spawn_blocking boundary.
+        let mcp_span = tracing::Span::current();
+        let result = tokio::task::spawn_blocking(move || {
+            let _guard = mcp_span.enter();
+            crate::convert(&html, opts)
+        })
+        .await
+        .map_err(|e| {
+            tracing::error!(target: "html_to_markdown::mcp", error = %e, "extract_metadata task panicked");
+            rmcp::ErrorData::internal_error(format!("Conversion task panicked: {e}"), None)
+        })?
+        .map_err(|error| {
+            tracing::warn!(target: "html_to_markdown::mcp", error = %error, "extract_metadata conversion failed");
+            map_conversion_error_to_mcp(error)
+        })?;
 
         // SEP-2106: metadata is already structured JSON — expose it as structuredContent too.
-        let mut tool_result = CallToolResult::success(vec![ContentBlock::text(format_metadata(&result.metadata))]);
+        let text = format_metadata(&result.metadata);
+        span.record("output_len", text.len());
+        let mut tool_result = CallToolResult::success(vec![ContentBlock::text(text)]);
         tool_result.structured_content = Some(metadata_value(&result.metadata));
         Ok(tool_result)
     }
@@ -233,6 +300,11 @@ pub async fn start_mcp_server() -> Result<(), Box<dyn std::error::Error + Send +
 
 /// Start the HTML-to-Markdown MCP server with HTTP Stream transport.
 ///
+/// Applies production hardening (see [`http_hardening`]) before binding:
+/// a request body size limit, a request timeout, a global concurrency limit,
+/// and `Origin`/`Host` validation that defaults to rejecting anything but the
+/// bound `host:port` (DNS-rebinding protection).
+///
 /// # Arguments
 ///
 /// * `host` - Host to bind to (e.g., `"127.0.0.1"` or `"0.0.0.0"`)
@@ -255,16 +327,9 @@ pub async fn start_mcp_server_http(
     host: impl AsRef<str>,
     port: u16,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    use axum::Router;
     use std::net::SocketAddr;
 
-    let http_service = StreamableHttpService::new(
-        || Ok(HtmlToMarkdownMcp::new()),
-        LocalSessionManager::default().into(),
-        Default::default(),
-    );
-
-    let router = Router::new().nest_service("/mcp", http_service);
+    let router = build_http_router(host.as_ref(), port);
 
     let addr: SocketAddr = format!("{}:{}", host.as_ref(), port)
         .parse()
@@ -429,6 +494,39 @@ mod tests {
 
         let text = text_of(&result);
         assert_eq!(text.trim(), r"\*bold\*", "escape_asterisks must escape both asterisks");
+    }
+
+    #[tokio::test]
+    async fn should_reject_convert_html_call_with_invalid_enum_value() {
+        let server = HtmlToMarkdownMcp::new();
+        let params = ConvertHtmlParams {
+            html: "<h1>Hi</h1>".into(),
+            config: Some(ConvertConfig {
+                heading_style: Some("not-a-real-style".into()),
+                ..ConvertConfig::default()
+            }),
+            json: false,
+        };
+        let error = server
+            .convert_html(Parameters(params))
+            .await
+            .expect_err("unrecognized heading_style must be rejected");
+
+        assert_eq!(
+            error.code,
+            rmcp::model::ErrorCode::INVALID_PARAMS,
+            "must surface as invalid_params, not a silent default substitution"
+        );
+        assert!(
+            error.message.contains("heading_style"),
+            "message must name the offending field: {}",
+            error.message
+        );
+        assert!(
+            error.message.contains("not-a-real-style"),
+            "message must echo the offending value: {}",
+            error.message
+        );
     }
 
     #[tokio::test]
