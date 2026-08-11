@@ -15,7 +15,11 @@ Foundation of the conversion pipeline: HTML parser selection, DOM tree construct
 
 ## Architecture
 
-Parser infrastructure in `converter.rs` and `wrapper.rs`. DOM traversal via `DomWalker` trait in `visitor.rs`. Element classification into Block, Inline, Void, FormControl, Semantic categories. Configuration through `ConversionOptions` (parser type, encoding, whitespace mode, max depth, max size).
+Parser infrastructure in `converter/tier1/` (byte-scanner) and `converter/main.rs` (`walk_node`, the
+recursive DOM-walk / Tier-2 path). Optional caller-supplied traversal hooks via the `HtmlVisitor` trait in
+`visitor/traits.rs` (no `DomWalker` trait exists). Element classification into Block, Inline, Void,
+FormControl, Semantic categories. Configuration through `ConversionOptions` (parser type, encoding,
+whitespace mode, `max_depth`); there is no configurable input size limit.
 
 ## Dependencies
 

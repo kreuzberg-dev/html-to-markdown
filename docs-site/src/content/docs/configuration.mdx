@@ -26,7 +26,7 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 | Option              | Type                  | Default    | Description                                                                                                                      |
 | ------------------- | --------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `list_indent_type`  | `"spaces"` \| `"tab"` | `"spaces"` | Indentation character for nested lists.                                                                                          |
-| `list_indent_width` | `int` (1–8)           | `2`        | Number of spaces per nesting level (when using spaces).                                                                          |
+| `list_indent_width` | `int`                 | `2`        | Number of spaces per nesting level (when using spaces). Not range-checked by the core library.                                  |
 | `bullets`           | `string`              | `"-*+"`    | Characters to cycle through for unordered list markers. For example `"-*+"` uses `-` at level 1, `*` at level 2, `+` at level 3. |
 
 ### Text Formatting
@@ -62,6 +62,7 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 | `autolinks`     | `bool`                      | `true`     | When link text equals the href, emit `<url>` instead of `[url](url)`.                                                       |
 | `default_title` | `bool`                      | `false`    | Use the href as link title when no `title` attribute is present.                                                            |
 | `link_style`    | `"inline"` \| `"reference"` | `"inline"` | `inline` emits `[text](url)`. `reference` emits `[text][1]` with numbered definitions collected at the end of the document. |
+| `url_escape_style` | `"angle"` \| `"percent"` | `"angle"` | Escaping for link/image URL destinations. `angle` wraps destinations containing spaces or newlines in `<...>`. `percent` percent-encodes every character that is not an RFC 3986 unreserved character or `/`. |
 
 ### Images
 
@@ -79,6 +80,7 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 | Option         | Type   | Default | Description                                                                     |
 | -------------- | ------ | ------- | ------------------------------------------------------------------------------- |
 | `br_in_tables` | `bool` | `false` | Preserve line breaks in table cells as `<br>` rather than converting to spaces. |
+| `compact_tables` | `bool` | `false` | Emit tables without column padding (no aligned widths, `---` separator per column). Token-efficient output for RAG / LLM contexts. |
 
 ### Whitespace
 
@@ -91,8 +93,8 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 
 | Option       | Type           | Default | Description                                            |
 | ------------ | -------------- | ------- | ------------------------------------------------------ |
-| `wrap`       | `bool`         | `false` | Enable line wrapping.                                  |
-| `wrap_width` | `int` (20–500) | `80`    | Column width for line wrapping when `wrap` is enabled. |
+| `wrap`       | `bool` | `false` | Enable line wrapping.                                  |
+| `wrap_width` | `int`  | `80`    | Column width for line wrapping when `wrap` is enabled. Not range-checked by the core library; a value of `0` behaves as unlimited. |
 
 ### Element Handling
 
@@ -101,6 +103,18 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 | `convert_as_inline` | `bool`  | `false` | Treat block-level elements as inline (no paragraph breaks).                                   |
 | `strip_tags`        | `array` | `[]`    | Tags to strip entirely (only text content is preserved, no Markdown conversion).              |
 | `preserve_tags`     | `array` | `[]`    | Tags to emit verbatim as HTML instead of converting to Markdown. Counterpart to `strip_tags`. |
+
+### Advanced
+
+| Option              | Type                        | Default    | Description                                                                                                                                                                                                          |
+| -------------------- | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `max_depth`         | `int` \| `null`             | `null`     | Maximum DOM traversal depth. `null` uses the library's internal native-stack safety limit (64). Values above the limit are clamped to an absolute ceiling (1024) to guard against stack overflow on pathologically deep input; there is no way to disable the depth limit entirely. |
+| `exclude_selectors` | `array`                      | `[]`       | CSS selectors for elements to drop entirely, including all descendants (unlike `strip_tags`, which keeps the text content). Supports tag names, `.class`, `#id`, `[attribute]`, etc. Invalid selectors are silently skipped at conversion time. |
+| `tier_strategy`     | `"auto"` \| `"tier2"`        | `"auto"`   | Which internal conversion path to use. `auto` runs a fast byte-scanner (Tier 1) when eligible and falls back to the full DOM walk (Tier 2) otherwise. `tier2` always uses the DOM-walk path. Not exposed as a stable option in every binding. |
+
+Conversion output is not sanitized. There is no configurable cap on input size — callers that accept HTML
+from untrusted sources are responsible for enforcing their own size limits before calling `convert()`. See
+[Security](https://github.com/xberg-io/html-to-markdown/blob/main/SECURITY.md).
 
 ### Parsing
 
@@ -128,20 +142,25 @@ All options are passed via `ConversionOptions` (builder pattern in Rust, keyword
 
 ### Preprocessing
 
-| Option            | Type                                          | Default      | Description                                                                                                                          |
-| ----------------- | --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `preprocess`      | `bool`                                        | `false`      | Clean up HTML before conversion. Required for any of the options below to have an effect.                                            |
-| `preset`          | `"minimal"` \| `"standard"` \| `"aggressive"` | `"standard"` | Preset level carried through for forward compatibility. Current releases honour the boolean flags below and do not branch on preset. |
-| `keep_navigation` | `bool`                                        | `false`      | Keep `<nav>`, and keep `<header>`/`<footer>`/`<aside>` that otherwise look like navigation.                                          |
-| `keep_forms`      | `bool`                                        | `false`      | Accepted and stored. Current releases do not drop form elements during preprocessing regardless of this flag.                        |
+`preprocessing` is a nested `PreprocessingOptions` value (Rust field names shown below; bindings expose the
+same sub-fields as keyword arguments or a nested object). The CLI uses different flag names for the same
+settings (`--preprocess`, `--keep-navigation`, `--keep-forms`) — those CLI-only names do not exist on
+`ConversionOptions`; see [CLI Reference](/cli/).
 
-When `preprocess` is `true` and `keep_navigation` is `false`, the preprocessor drops:
+| Option              | Type                                          | Default      | Description                                                                                                                          |
+| -------------------- | --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `enabled`            | `bool`                                        | `true`       | Enable HTML preprocessing globally. Required for the options below to have an effect.                                                |
+| `preset`             | `"minimal"` \| `"standard"` \| `"aggressive"` | `"standard"` | Preset level carried through for forward compatibility. Current releases honour the boolean flags below and do not branch on preset. |
+| `remove_navigation`  | `bool`                                        | `true`       | Remove `<nav>`, and remove `<header>`/`<footer>`/`<aside>` that otherwise look like navigation.                                       |
+| `remove_forms`       | `bool`                                        | `true`       | Accepted and stored. Current releases do not drop form elements during preprocessing regardless of this flag.                        |
+
+When `enabled` is `true` and `remove_navigation` is `true` (the default for both), the preprocessor drops:
 
 - every `<nav>` element
 - `<header>` elements outside a semantic content ancestor (`<article>`, `<main>`, etc.)
 - `<header>`, `<footer>`, and `<aside>` that carry navigation hints in their class or id attributes (`menu`, `sidebar`, `breadcrumb`, and similar)
 
-Script and style tags are always stripped before the DOM walk starts, independent of `preprocess`.
+Script and style tags are always stripped before the DOM walk starts, independent of `enabled`.
 
 ## Output Format Comparison
 

@@ -7,6 +7,39 @@ All notable changes to html-to-markdown will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.10.6] - 2026-08-05
+
+### Fixed
+
+- Node.js: the `linux-x64-musl` and `linux-arm64-musl` packages really are published now. 3.10.5
+  added them, but both cross-compiles failed to link (`cannot find libgcc_s.so.1`) and, because the
+  npm publish job requires every matrix leg, no Node package reached the registry at all. The build
+  action exported `CC`/`CARGO_TARGET_*_LINKER` pointing at `musl-gcc`, and cargo-zigbuild only sets
+  those when they are unset, so the zig cross-compile was silently replaced by a host-arch musl-gcc
+  that cannot produce a musl cdylib. The musl legs now opt out of that export.
+
+### Added
+
+- CI: the musl Node cross-compiles are built on every core/node change instead of only at publish
+  time, and the job fails if a platform package ends up without a native module.
+
+## [3.10.5] - 2026-08-05
+
+### Fixed
+
+- Node.js: the `linux-x64-musl` and `linux-arm64-musl` packages are now built and published. They
+  were advertised in the main package's `optionalDependencies` but never produced, so Alpine and
+  other musl installs silently fell back to no native binding, and `pnpm install --frozen-lockfile`
+  could not resolve them.
+- Ruby: the gem no longer publishes its generated types into the global `Object` namespace, which
+  collided with unrelated libraries (notably the `parser` gem's `Parser` constant). Generated types
+  now stay namespaced under `HtmlToMarkdown` (tree-sitter-language-pack issue #173).
+- Documentation: every code snippet in the READMEs, the docs site, and the coding-agent plugin
+  references was executed against the real API and corrected. The Rust README's metadata and custom
+  visitor examples did not compile, the Rust API reference showed `Result<_, Error>` instead of
+  `Result<_, ConversionError>`, the docs site shipped 102 empty language tabs across five pages, and
+  several bindings' snippets referenced helpers that no longer exist.
+
 ## [3.10.4] - 2026-08-04
 
 ### Fixed

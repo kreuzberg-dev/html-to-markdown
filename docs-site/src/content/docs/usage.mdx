@@ -29,6 +29,8 @@ import { Content as Snip_java_getting_started_with_options } from "../../snippet
 import { Content as Snip_csharp_getting_started_with_options } from "../../snippets/csharp/getting-started/with_options.md";
 import { Content as Snip_elixir_getting_started_with_options } from "../../snippets/elixir/getting-started/with_options.md";
 import { Content as Snip_r_getting_started_with_options } from "../../snippets/r/getting-started/with_options.md";
+import { Content as Snip_c_getting_started_with_options } from "../../snippets/c/getting-started/with_options.md";
+import { Content as Snip_wasm_getting_started_with_options } from "../../snippets/wasm/getting-started/with_options.md";
 import { Content as Snip_swift_getting_started_with_options } from "../../snippets/swift/getting-started/with_options.md";
 import { Content as Snip_dart_getting_started_with_options } from "../../snippets/dart/getting-started/with_options.md";
 import { Content as Snip_kotlin_android_getting_started_with_options } from "../../snippets/kotlin_android/getting-started/with_options.md";
@@ -43,11 +45,22 @@ import { Content as Snip_java_metadata_basic_extraction } from "../../snippets/j
 import { Content as Snip_csharp_metadata_basic_extraction } from "../../snippets/csharp/metadata/basic_extraction.md";
 import { Content as Snip_elixir_metadata_basic_extraction } from "../../snippets/elixir/metadata/basic_extraction.md";
 import { Content as Snip_r_metadata_basic_extraction } from "../../snippets/r/metadata/basic_extraction.md";
+import { Content as Snip_c_metadata_basic_extraction } from "../../snippets/c/metadata/basic_extraction.md";
+import { Content as Snip_wasm_metadata_basic_extraction } from "../../snippets/wasm/metadata/basic_extraction.md";
 import { Content as Snip_swift_metadata_basic_extraction } from "../../snippets/swift/metadata/basic_extraction.md";
 import { Content as Snip_dart_metadata_basic_extraction } from "../../snippets/dart/metadata/basic_extraction.md";
 import { Content as Snip_kotlin_android_metadata_basic_extraction } from "../../snippets/kotlin_android/metadata/basic_extraction.md";
 import { Content as Snip_zig_metadata_basic_extraction } from "../../snippets/zig/metadata/basic_extraction.md";
 import { Content as Snip_feedback } from "../../snippets/feedback.md";
+
+:::caution[Output is not sanitized]
+`convert()` does not sanitize its output. The returned Markdown can contain raw HTML, `javascript:`/`data:`
+URLs, and other content carried over verbatim from the input. Treat conversion output as untrusted and
+sanitize it in whatever renders it (browser, Markdown-to-HTML pipeline, etc.) before displaying
+attacker-controlled input. There is also no cap on input size — deeply nested input is bounded by
+`max_depth`, but there is no limit on total input length. See
+[Security](https://github.com/xberg-io/html-to-markdown/blob/main/SECURITY.md).
+:::
 
 ## Basic Conversion
 
@@ -152,6 +165,12 @@ Control output style, metadata extraction, and more via `ConversionOptions`.
 <TabItem label="R">
 <Snip_r_getting_started_with_options />
 </TabItem>
+<TabItem label="C">
+<Snip_c_getting_started_with_options />
+</TabItem>
+<TabItem label="WASM">
+<Snip_wasm_getting_started_with_options />
+</TabItem>
 <TabItem label="Swift">
 <Snip_swift_getting_started_with_options />
 </TabItem>
@@ -200,6 +219,12 @@ Enable `extract_metadata` to populate the `metadata` field with structured data 
 </TabItem>
 <TabItem label="R">
 <Snip_r_metadata_basic_extraction />
+</TabItem>
+<TabItem label="C">
+<Snip_c_metadata_basic_extraction />
+</TabItem>
+<TabItem label="WASM">
+<Snip_wasm_metadata_basic_extraction />
 </TabItem>
 <TabItem label="Swift">
 <Snip_swift_metadata_basic_extraction />

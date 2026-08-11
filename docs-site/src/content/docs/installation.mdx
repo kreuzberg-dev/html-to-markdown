@@ -74,10 +74,10 @@ By default only the `metadata` feature is enabled. Opt in to additional features
 
 ```toml
 # With visitor support
-html-to-markdown-rs = { version = "3.6", features = ["visitor"] }
+html-to-markdown-rs = { version = "3.10", features = ["visitor"] }
 
 # Everything
-html-to-markdown-rs = { version = "3.6", features = ["full"] }
+html-to-markdown-rs = { version = "3.10", features = ["full"] }
 ```
 
 </TabItem>
@@ -210,20 +210,20 @@ Requires PHP 8.2+. PIE downloads the prebuilt extension binary matching your PHP
 <dependency>
     <groupId>io.xberg</groupId>
     <artifactId>html-to-markdown</artifactId>
-    <version>3.6.8</version>
+    <version>3.10.6</version>
 </dependency>
 ```
 
 **Gradle** — add to `build.gradle`:
 
 ```groovy
-implementation 'io.xberg:html-to-markdown:3.6.8'
+implementation 'io.xberg:html-to-markdown:3.10.6'
 ```
 
 Or Kotlin DSL (`build.gradle.kts`):
 
 ```kotlin
-implementation("io.xberg:html-to-markdown:3.6.8")
+implementation("io.xberg:html-to-markdown:3.10.6")
 ```
 
 **Verify:**
@@ -425,7 +425,7 @@ Requires Dart 3.11+. The generated package is pure Dart from the caller's point 
 Add the Android artifact:
 
 ```kotlin
-implementation("io.xberg:html-to-markdown-android:3.6.8")
+implementation("io.xberg:html-to-markdown-android:3.10.6")
 ```
 
 Requires Android minSdk 21. This is an Android AAR with bundled JNI libraries; Kotlin/JVM users should use the Java artifact (`io.xberg:html-to-markdown`) directly.
