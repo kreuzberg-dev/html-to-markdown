@@ -157,5 +157,69 @@
       "stem": "table_empty",
       "title": "Empty table produces no output or minimal output"
     }
+  },
+  {
+    "id": "table_ragged_row_more_cells_than_header",
+    "description": "A data row with more cells than the header widens the separator so no cell is silently dropped",
+    "input": {
+      "html": "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>"
+    },
+    "assertions": [
+      {
+        "type": "equals",
+        "field": "content",
+        "value": "| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n"
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_ragged_row_more_cells_than_header",
+      "title": "A data row with more cells than the header widens the separator so no cell is silently dropped"
+    }
+  },
+  {
+    "id": "table_ragged_row_fewer_cells_than_header",
+    "description": "A data row with fewer cells than the header is padded to the declared column count",
+    "input": {
+      "html": "<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>"
+    },
+    "assertions": [
+      {
+        "type": "equals",
+        "field": "content",
+        "value": "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n"
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_ragged_row_fewer_cells_than_header",
+      "title": "A data row with fewer cells than the header is padded to the declared column count"
+    }
+  },
+  {
+    "id": "table_nested_chain_not_misclassified_as_layout",
+    "description": "A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list",
+    "input": {
+      "html": "<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>"
+    },
+    "assertions": [
+      {
+        "type": "not_empty",
+        "field": "content"
+      },
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "leaf",
+          "| ---"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "table_nested_chain_not_misclassified_as_layout",
+      "title": "A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list"
+    }
   }
 ]

@@ -1,0 +1,133 @@
+[
+  {
+    "id": "hidden_content_template_element_dropped",
+    "description": "Content inside <template> is never rendered per the HTML spec and must not appear in the output",
+    "input": {
+      "html": "<p>visible</p><template><p>secret template text</p></template><p>also visible</p>"
+    },
+    "assertions": [
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "secret template text"
+      },
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "visible",
+          "also visible"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "hidden_content_template_element_dropped",
+      "title": "Content inside <template> is never rendered and is dropped"
+    }
+  },
+  {
+    "id": "hidden_content_noscript_element_dropped",
+    "description": "Content inside <noscript> only renders with scripting disabled and must not appear in the output",
+    "input": {
+      "html": "<p>visible</p><noscript><p>secret noscript text</p></noscript><p>also visible</p>"
+    },
+    "assertions": [
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "secret noscript text"
+      },
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "visible",
+          "also visible"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "hidden_content_noscript_element_dropped",
+      "title": "Content inside <noscript> is dropped"
+    }
+  },
+  {
+    "id": "hidden_content_display_none_dropped",
+    "description": "Elements hidden via inline style=\"display:none\" must not appear in the output",
+    "input": {
+      "html": "<p>visible</p><div style=\"display:none\">secret hidden text</div><p>also visible</p>"
+    },
+    "assertions": [
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "secret hidden text"
+      },
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "visible",
+          "also visible"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "hidden_content_display_none_dropped",
+      "title": "Elements hidden via style=\"display:none\" are dropped"
+    }
+  },
+  {
+    "id": "hidden_content_visibility_hidden_dropped",
+    "description": "Elements hidden via inline style=\"visibility:hidden\" must not appear in the output",
+    "input": {
+      "html": "<p>visible</p><span style=\"visibility:hidden\">secret hidden span</span><p>also visible</p>"
+    },
+    "assertions": [
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "secret hidden span"
+      },
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "visible",
+          "also visible"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "hidden_content_visibility_hidden_dropped",
+      "title": "Elements hidden via style=\"visibility:hidden\" are dropped"
+    }
+  },
+  {
+    "id": "hidden_content_aria_hidden_still_rendered",
+    "description": "aria-hidden only hides content from assistive tech, not visually — it must still be rendered",
+    "input": {
+      "html": "<p>visible</p><div aria-hidden=\"true\">still shown</div><p>also visible</p>"
+    },
+    "assertions": [
+      {
+        "type": "contains_all",
+        "field": "content",
+        "values": [
+          "visible",
+          "still shown",
+          "also visible"
+        ]
+      }
+    ],
+    "docs": {
+      "topic": "edge-cases",
+      "stem": "hidden_content_aria_hidden_still_rendered",
+      "title": "aria-hidden content is still visually rendered"
+    }
+  }
+]

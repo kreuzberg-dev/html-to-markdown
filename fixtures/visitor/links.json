@@ -60,6 +60,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "example.com"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

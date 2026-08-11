@@ -22,6 +22,16 @@
         "type": "contains",
         "field": "content",
         "value": "Body text remains."
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -92,6 +102,11 @@
         "type": "contains",
         "field": "content",
         "value": "<custom-tag>"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "preserve_html"
       }
     ],
     "skip": {
@@ -124,6 +139,11 @@
         "type": "contains",
         "field": "content",
         "value": "**World**"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "continue"
       }
     ],
     "skip": {

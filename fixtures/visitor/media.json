@@ -65,6 +65,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "music.ogg"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -150,6 +160,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "demo.webm"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -235,6 +255,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "widget.example.com"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

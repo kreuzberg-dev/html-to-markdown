@@ -65,6 +65,11 @@
         "type": "contains",
         "field": "content",
         "value": "<x-custom>"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "preserve_html"
       }
     ],
     "skip": {
@@ -107,6 +112,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "highlight"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -144,6 +159,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "Content"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

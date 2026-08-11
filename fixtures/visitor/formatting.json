@@ -27,6 +27,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "underlined part"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -135,6 +145,16 @@
         "type": "contains",
         "field": "content",
         "value": "The formula CHO is sugar."
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -205,6 +225,16 @@
         "type": "contains",
         "field": "content",
         "value": "The equation x + y = z has no solutions."
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -285,6 +315,16 @@
         "type": "contains",
         "field": "content",
         "value": "for security."
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -355,6 +395,16 @@
         "type": "contains",
         "field": "content",
         "value": "Address Line 1Address Line 2Address Line 3"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -450,6 +500,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "---"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

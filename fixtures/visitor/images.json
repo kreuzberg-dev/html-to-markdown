@@ -76,6 +76,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "A photo"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

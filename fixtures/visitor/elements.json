@@ -27,6 +27,16 @@
         "type": "not_contains",
         "field": "content",
         "value": "let x = 42"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {
@@ -140,6 +150,16 @@
         "type": "contains",
         "field": "content",
         "value": "Normal"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "skip"
+      },
+      {
+        "type": "not_contains",
+        "field": "content",
+        "value": "Skip"
       }
     ],
     "skip": {

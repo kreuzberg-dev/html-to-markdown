@@ -94,5 +94,62 @@
       "stem": "blockquote_with_list",
       "title": "Blockquote containing a list preserves list items inside quote"
     }
+  },
+  {
+    "id": "blockquote_nested_list_indentation_preserved",
+    "description": "Nested list inside a blockquote keeps its continuation indentation",
+    "input": {
+      "html": "<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>"
+    },
+    "assertions": [
+      {
+        "type": "equals",
+        "field": "content",
+        "value": "> - item a\n>   * sub a1\n"
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_nested_list_indentation_preserved",
+      "title": "Nested list inside a blockquote keeps its continuation indentation"
+    }
+  },
+  {
+    "id": "blockquote_code_block_indentation_preserved",
+    "description": "Code block inside a blockquote keeps its line indentation",
+    "input": {
+      "html": "<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>"
+    },
+    "assertions": [
+      {
+        "type": "equals",
+        "field": "content",
+        "value": "> ```\n> line1\n>     line2 indented\n> ```\n"
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_code_block_indentation_preserved",
+      "title": "Code block inside a blockquote keeps its line indentation"
+    }
+  },
+  {
+    "id": "blockquote_text_then_paragraph_gets_blank_line",
+    "description": "Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line",
+    "input": {
+      "html": "<blockquote>Just text, then <p>a paragraph</p></blockquote>"
+    },
+    "assertions": [
+      {
+        "type": "equals",
+        "field": "content",
+        "value": "> Just text, then\n>\n> a paragraph\n"
+      }
+    ],
+    "docs": {
+      "topic": "conversion",
+      "stem": "blockquote_text_then_paragraph_gets_blank_line",
+      "title": "Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line"
+    }
   }
 ]
