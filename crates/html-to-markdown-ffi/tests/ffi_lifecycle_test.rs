@@ -22,7 +22,10 @@ fn should_allocate_and_free_default_conversion_options() {
     // SAFETY: exercising the exported alloc/free pair directly, per the crate's own contract.
     unsafe {
         let options = htm_conversion_options_default();
-        assert!(!options.is_null(), "htm_conversion_options_default must not return null");
+        assert!(
+            !options.is_null(),
+            "htm_conversion_options_default must not return null"
+        );
         htm_conversion_options_free(options);
     }
 }
@@ -36,8 +39,13 @@ fn should_round_trip_conversion_result_through_convert_and_free() {
         assert!(!result.is_null(), "htm_convert must succeed for well-formed HTML");
 
         let content_ptr = htm_conversion_result_content(result);
-        assert!(!content_ptr.is_null(), "content getter must return a non-null owned string");
-        let content = CStr::from_ptr(content_ptr).to_str().expect("content must be valid UTF-8");
+        assert!(
+            !content_ptr.is_null(),
+            "content getter must return a non-null owned string"
+        );
+        let content = CStr::from_ptr(content_ptr)
+            .to_str()
+            .expect("content must be valid UTF-8");
         assert_eq!(content, "# Hello World\n", "unexpected markdown output: {content:?}");
         htm_free_string(content_ptr);
 
@@ -78,7 +86,10 @@ fn should_round_trip_conversion_options_through_json() {
         assert!(!options.is_null(), "options must parse from valid JSON");
 
         let output_format = htm_conversion_options_output_format(options);
-        assert!(!output_format.is_null(), "output_format getter must return an owned enum handle");
+        assert!(
+            !output_format.is_null(),
+            "output_format getter must return an owned enum handle"
+        );
         htm_output_format_free(output_format);
 
         let serialized_ptr = htm_conversion_options_to_json(options);
@@ -107,7 +118,10 @@ fn should_extract_document_title_through_metadata_lifecycle() {
         assert!(!result.is_null(), "conversion with metadata extraction must succeed");
 
         let metadata = htm_conversion_result_metadata(result);
-        assert!(!metadata.is_null(), "metadata getter must return a non-null handle when extraction is enabled");
+        assert!(
+            !metadata.is_null(),
+            "metadata getter must return a non-null handle when extraction is enabled"
+        );
 
         let document = htm_html_metadata_document(metadata);
         assert!(!document.is_null());

@@ -126,8 +126,15 @@ fn should_return_null_result_when_convert_receives_null_html() {
     unsafe {
         clear_last_error_for_test();
         let result = htm_convert(ptr::null(), ptr::null());
-        assert!(result.is_null(), "convert must reject a null html pointer rather than dereference it");
-        assert_eq!(htm_last_error_code(), 1, "null html should set error code 1 (invalid input)");
+        assert!(
+            result.is_null(),
+            "convert must reject a null html pointer rather than dereference it"
+        );
+        assert_eq!(
+            htm_last_error_code(),
+            1,
+            "null html should set error code 1 (invalid input)"
+        );
     }
 }
 
@@ -136,7 +143,10 @@ fn should_succeed_when_convert_receives_null_options() {
     unsafe {
         let html = std::ffi::CString::new("<p>ok</p>").unwrap();
         let result = htm_convert(html.as_ptr(), ptr::null());
-        assert!(!result.is_null(), "convert must accept a null options pointer and fall back to defaults");
+        assert!(
+            !result.is_null(),
+            "convert must accept a null options pointer and fall back to defaults"
+        );
         htm_conversion_result_free(result);
     }
 }
