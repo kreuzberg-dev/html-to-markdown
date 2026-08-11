@@ -4,6 +4,11 @@
 //! value forces `RouterDecision::Tier2`, and a companion test confirming the
 //! default value still allows `RouterDecision::Tier1` (with all structural
 //! blockers turned off).
+//!
+//! Every test calls `route()`, which needs `tier1::router::classify` and
+//! `prescan::run` — only visible when `cfg(any(test, feature = "testkit"))`
+//! is true — so the whole file is gated on the `testkit` feature.
+#![cfg(feature = "testkit")]
 
 use html_to_markdown_rs::options::{
     CodeBlockStyle, ConversionOptions, HeadingStyle, HighlightStyle, LinkStyle, ListIndentType, NewlineStyle,

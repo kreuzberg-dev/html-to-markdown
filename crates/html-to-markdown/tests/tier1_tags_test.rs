@@ -2,6 +2,11 @@
 //!
 //! All lookups use lowercased byte slices — the lookup contract requires
 //! callers to lowercase tag names before calling `lookup()`.
+//!
+//! Every test calls `lookup()`, which lives under `tier1` — only visible when
+//! `cfg(any(test, feature = "testkit"))` is true — so the whole file is gated
+//! on the `testkit` feature.
+#![cfg(feature = "testkit")]
 
 use html_to_markdown_rs::tier1::tags::{ListKind, OptionalCloseRule, RawKind, TagKind, lookup};
 

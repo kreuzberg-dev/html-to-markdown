@@ -1,5 +1,6 @@
 // ~keep Rust inner attributes below are crate-level attributes, not a shell shebang.
 #![allow(missing_docs)]
+#![cfg(feature = "metadata")]
 
 #[test]
 fn extracts_json_ld_from_head_script() {

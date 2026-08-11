@@ -5,13 +5,16 @@
 //! Tier-2 fallback path.
 
 use html_to_markdown_rs::convert;
-use html_to_markdown_rs::options::{
-    CodeBlockStyle, ConversionOptions, HighlightStyle, PreprocessingOptions, PreprocessingPreset, TierStrategy,
-};
+#[cfg(feature = "testkit")]
+use html_to_markdown_rs::options::{CodeBlockStyle, HighlightStyle, PreprocessingOptions, PreprocessingPreset};
+use html_to_markdown_rs::options::{ConversionOptions, TierStrategy};
+#[cfg(feature = "testkit")]
 use html_to_markdown_rs::prescan;
+#[cfg(feature = "testkit")]
 use html_to_markdown_rs::tier1::router::{RouterDecision, classify};
 
 /// Prescan `html` and classify with the given options.
+#[cfg(feature = "testkit")]
 fn route(html: &str, options: &ConversionOptions) -> RouterDecision {
     let (_cleaned, report) = prescan::run(html);
     classify(&report, options)
@@ -19,6 +22,7 @@ fn route(html: &str, options: &ConversionOptions) -> RouterDecision {
 
 /// `ConversionOptions` with all structural and style gates set to Tier-1-
 /// compatible values so the classifier can return Tier1.
+#[cfg(feature = "testkit")]
 fn minimal_options() -> ConversionOptions {
     ConversionOptions {
         extract_metadata: false,
@@ -30,6 +34,7 @@ fn minimal_options() -> ConversionOptions {
 
 // ~keep ── 1. Default options always force Tier-2 ─────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_routes_tier2_when_extract_metadata_true() {
     // ~keep Default options have extract_metadata: true — must always be Tier-2.
@@ -40,6 +45,7 @@ fn classify_routes_tier2_when_extract_metadata_true() {
 
 // ~keep ── 2. Clean HTML with metadata off → Tier-1 ───────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_routes_tier1_when_clean_and_extract_metadata_false() {
     let opts = minimal_options();
@@ -49,6 +55,7 @@ fn classify_routes_tier1_when_clean_and_extract_metadata_false() {
 
 // ~keep ── 3. Custom elements no longer gate routing (Phase FF) ────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier1_on_custom_elements() {
     // ~keep Phase FF dropped the had_custom_elements router gate; Tier-1's
@@ -60,6 +67,7 @@ fn classify_tier1_on_custom_elements() {
 
 // ~keep ── 4. CDATA forces Tier-2 ──────────────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_cdata() {
     let opts = minimal_options();
@@ -69,6 +77,7 @@ fn classify_tier2_on_cdata() {
 
 // ~keep ── 5. Unescaped `<` forces Tier-2 ──────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_unescaped_lt() {
     let opts = minimal_options();
@@ -78,6 +87,7 @@ fn classify_tier2_on_unescaped_lt() {
 
 // ~keep ── 6. strip_tags forces Tier-2 ─────────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_strip_tags() {
     let opts = ConversionOptions {
@@ -91,6 +101,7 @@ fn classify_tier2_on_strip_tags() {
 
 // ~keep ── 7. preserve_tags forces Tier-2 ──────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_preserve_tags() {
     let opts = ConversionOptions {
@@ -104,6 +115,7 @@ fn classify_tier2_on_preserve_tags() {
 
 // ~keep ── 8. wrap forces Tier-2 ───────────────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_wrap() {
     let opts = ConversionOptions {
@@ -117,6 +129,7 @@ fn classify_tier2_on_wrap() {
 
 // ~keep ── 9. convert_as_inline forces Tier-2 ──────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_convert_as_inline() {
     let opts = ConversionOptions {
@@ -130,6 +143,7 @@ fn classify_tier2_on_convert_as_inline() {
 
 // ~keep ── 10. non-standard preprocessing preset forces Tier-2 ─────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_non_standard_preprocessing() {
     let opts = ConversionOptions {
@@ -146,6 +160,7 @@ fn classify_tier2_on_non_standard_preprocessing() {
 
 // ~keep ── 11. TierStrategy::Tier2 overrides classifier ────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn tier_strategy_tier2_overrides_classifier() {
     // ~keep Even the cleanest HTML with all classifier flags off: Tier2 wins.
@@ -180,6 +195,7 @@ fn convert_with_default_options_still_works() {
 
 // ~keep ── 13. debug flag forces Tier-2 ────────────────────────────────────────────
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_debug_flag() {
     let opts = ConversionOptions {
@@ -237,6 +253,7 @@ fn tier1_bail_falls_back_to_tier2() {
 // ~keep Tier-1 has no CSS selector engine; a configured exclusion would silently
 // ~keep pass excluded content through untouched instead of dropping it.
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_exclude_selectors() {
     let opts = ConversionOptions {
@@ -247,6 +264,7 @@ fn classify_tier2_on_exclude_selectors() {
     assert_eq!(choice, RouterDecision::Tier2);
 }
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier1_when_exclude_selectors_empty() {
     let opts = minimal_options();
@@ -258,6 +276,7 @@ fn classify_tier1_when_exclude_selectors_empty() {
 // ~keep ── 16. strip_newlines forces Tier-2 (TIER1-CRIT) ────────────────────────────
 // ~keep Tier-1 never strips \r/\n from text runs; Tier-2 applies it per text node.
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_strip_newlines() {
     let opts = ConversionOptions {
@@ -268,6 +287,7 @@ fn classify_tier2_on_strip_newlines() {
     assert_eq!(choice, RouterDecision::Tier2);
 }
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier1_when_strip_newlines_false() {
     let opts = minimal_options();
@@ -280,6 +300,7 @@ fn classify_tier1_when_strip_newlines_false() {
 // ~keep convert_api.rs hardcodes `document: None` / `tables: Vec::new()` on the
 // ~keep Tier-1 success path, so this option's request would be silently dropped.
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier2_on_include_document_structure() {
     let opts = ConversionOptions {
@@ -290,6 +311,7 @@ fn classify_tier2_on_include_document_structure() {
     assert_eq!(choice, RouterDecision::Tier2);
 }
 
+#[cfg(feature = "testkit")]
 #[test]
 fn classify_tier1_when_include_document_structure_false() {
     let opts = minimal_options();
@@ -302,7 +324,7 @@ fn classify_tier1_when_include_document_structure_false() {
 // ~keep convert_api.rs hardcodes `images: Vec::new()` on the Tier-1 success path,
 // ~keep so a caller requesting extracted inline images would silently get none.
 
-#[cfg(feature = "inline-images")]
+#[cfg(all(feature = "testkit", feature = "inline-images"))]
 #[test]
 fn classify_tier2_on_extract_images() {
     let opts = ConversionOptions {
@@ -313,7 +335,7 @@ fn classify_tier2_on_extract_images() {
     assert_eq!(choice, RouterDecision::Tier2);
 }
 
-#[cfg(feature = "inline-images")]
+#[cfg(all(feature = "testkit", feature = "inline-images"))]
 #[test]
 fn classify_tier1_when_extract_images_false() {
     let opts = minimal_options();
@@ -361,7 +383,7 @@ fn auto_routing_populates_document_and_tables_when_requested() {
 // ~keep `classify_routes_tier1_when_clean_and_extract_metadata_false` (test 2, above)
 // ~keep already proves the false side with these same otherwise-clear gates.
 
-#[cfg(feature = "metadata")]
+#[cfg(all(feature = "testkit", feature = "metadata"))]
 #[test]
 fn classify_tier2_on_extract_metadata_true_with_all_other_gates_clear() {
     let opts = ConversionOptions {

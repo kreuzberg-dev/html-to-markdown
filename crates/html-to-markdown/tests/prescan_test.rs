@@ -1,4 +1,10 @@
 //! Integration tests for the prescan module.
+//!
+//! Every test calls `prescan::run()` directly — only visible when
+//! `cfg(any(test, feature = "testkit"))` is true — so the whole file is
+//! gated on the `testkit` feature.
+#![cfg(feature = "testkit")]
+
 use html_to_markdown_rs::prescan::{self, PrescanReport};
 
 fn report(html: &str) -> PrescanReport {

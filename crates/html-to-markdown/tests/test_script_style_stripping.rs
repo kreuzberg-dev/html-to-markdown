@@ -85,6 +85,7 @@ fn test_strip_style_tag() {
 }
 
 #[test]
+#[cfg(feature = "metadata")]
 fn test_preserve_json_ld_script() {
     let html = r#"<html>
 <head>
@@ -133,6 +134,7 @@ fn test_preserve_json_ld_script() {
 }
 
 #[test]
+#[cfg(feature = "metadata")]
 fn test_multiple_script_tags() {
     let html = r#"<html>
 <head>
@@ -175,6 +177,7 @@ fn test_multiple_script_tags() {
 }
 
 #[test]
+#[cfg(feature = "metadata")]
 fn test_reuters_like_structure() {
     let html = r#"<!DOCTYPE html>
 <html>

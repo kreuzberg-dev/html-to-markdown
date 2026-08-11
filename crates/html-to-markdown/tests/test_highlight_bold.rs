@@ -18,6 +18,7 @@ fn test_highlight_bold_rendering() {
     );
 }
 
+#[cfg(feature = "serde")]
 #[test]
 fn test_highlight_bold_from_json() {
     let options = serde_json::from_str::<ConversionOptions>(r#"{"highlight_style":"bold"}"#).unwrap();
