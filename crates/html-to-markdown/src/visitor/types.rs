@@ -702,22 +702,24 @@ mod tests {
     #[test]
     fn test_visit_result_variants() {
         let continue_result = VisitResult::Continue;
-        matches!(continue_result, VisitResult::Continue);
+        assert!(matches!(continue_result, VisitResult::Continue));
 
         let custom_result = VisitResult::Custom("# Custom Output".to_string());
-        if let VisitResult::Custom(output) = custom_result {
-            assert_eq!(output, "# Custom Output");
+        match custom_result {
+            VisitResult::Custom(output) => assert_eq!(output, "# Custom Output"),
+            other => panic!("expected VisitResult::Custom, got {other:?}"),
         }
 
         let skip_result = VisitResult::Skip;
-        matches!(skip_result, VisitResult::Skip);
+        assert!(matches!(skip_result, VisitResult::Skip));
 
         let preserve_result = VisitResult::PreserveHtml;
-        matches!(preserve_result, VisitResult::PreserveHtml);
+        assert!(matches!(preserve_result, VisitResult::PreserveHtml));
 
         let error_result = VisitResult::Error("Test error".to_string());
-        if let VisitResult::Error(msg) = error_result {
-            assert_eq!(msg, "Test error");
+        match error_result {
+            VisitResult::Error(msg) => assert_eq!(msg, "Test error"),
+            other => panic!("expected VisitResult::Error, got {other:?}"),
         }
     }
 }

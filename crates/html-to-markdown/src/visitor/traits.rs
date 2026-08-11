@@ -337,14 +337,29 @@ mod tests {
             true,
         );
 
-        matches!(visitor.visit_element_start(&ctx), VisitResult::Continue);
-        matches!(visitor.visit_element_end(&ctx, "output"), VisitResult::Continue);
-        matches!(visitor.visit_text(&ctx, "text"), VisitResult::Continue);
-        matches!(visitor.visit_link(&ctx, "href", "text", None), VisitResult::Continue);
-        matches!(visitor.visit_image(&ctx, "src", "alt", None), VisitResult::Continue);
-        matches!(visitor.visit_heading(&ctx, 1, "text", None), VisitResult::Continue);
-        matches!(visitor.visit_code_block(&ctx, None, "code"), VisitResult::Continue);
-        matches!(visitor.visit_code_inline(&ctx, "code"), VisitResult::Continue);
+        assert!(matches!(visitor.visit_element_start(&ctx), VisitResult::Continue));
+        assert!(matches!(
+            visitor.visit_element_end(&ctx, "output"),
+            VisitResult::Continue
+        ));
+        assert!(matches!(visitor.visit_text(&ctx, "text"), VisitResult::Continue));
+        assert!(matches!(
+            visitor.visit_link(&ctx, "href", "text", None),
+            VisitResult::Continue
+        ));
+        assert!(matches!(
+            visitor.visit_image(&ctx, "src", "alt", None),
+            VisitResult::Continue
+        ));
+        assert!(matches!(
+            visitor.visit_heading(&ctx, 1, "text", None),
+            VisitResult::Continue
+        ));
+        assert!(matches!(
+            visitor.visit_code_block(&ctx, None, "code"),
+            VisitResult::Continue
+        ));
+        assert!(matches!(visitor.visit_code_inline(&ctx, "code"), VisitResult::Continue));
     }
 
     #[derive(Debug)]
@@ -383,6 +398,6 @@ mod tests {
         }
 
         let img_result = visitor.visit_image(&ctx, "image.jpg", "Alt text", None);
-        matches!(img_result, VisitResult::Skip);
+        assert!(matches!(img_result, VisitResult::Skip));
     }
 }
