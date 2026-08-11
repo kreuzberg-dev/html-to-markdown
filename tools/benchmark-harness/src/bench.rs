@@ -60,15 +60,12 @@ pub fn run_one(html: &str, opts: Option<ConversionOptions>) -> (f64, usize) {
     let mut output_bytes = 0usize;
     let mut panicked = false;
     for _ in 0..WARMUP_ITERS {
-        match run_once(html, opts.clone()) {
-            Some(n) => {
-                output_bytes = n;
-                black_box(output_bytes);
-            }
-            None => {
-                panicked = true;
-                break;
-            }
+        if let Some(n) = run_once(html, opts.clone()) {
+            output_bytes = n;
+            black_box(output_bytes);
+        } else {
+            panicked = true;
+            break;
         }
     }
     if panicked {

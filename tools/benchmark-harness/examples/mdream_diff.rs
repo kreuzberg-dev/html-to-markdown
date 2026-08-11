@@ -2,6 +2,8 @@
 //!
 //! Usage: cargo run --release --example mdream_diff -p html-to-markdown-bench -- <fixture-rel-path>
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::path::PathBuf;
 
 use html_to_markdown_rs::{ConversionOptions, TierStrategy, convert};

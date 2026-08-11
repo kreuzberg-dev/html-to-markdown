@@ -34,36 +34,31 @@ pub enum Permutation {
 
 impl Permutation {
     /// All permutations in a stable order.
-    pub const ALL: &'static [Permutation] = &[
-        Permutation::Default,
-        Permutation::NoImages,
-        Permutation::NoMetadata,
-        Permutation::AtxClosed,
-    ];
+    pub const ALL: &'static [Self] = &[Self::Default, Self::NoImages, Self::NoMetadata, Self::AtxClosed];
 
     /// Short ASCII slug used in snapshot file names.
-    pub fn slug(self) -> &'static str {
+    pub const fn slug(self) -> &'static str {
         match self {
-            Permutation::Default => "default",
-            Permutation::NoImages => "no_images",
-            Permutation::NoMetadata => "no_metadata",
-            Permutation::AtxClosed => "atx_closed",
+            Self::Default => "default",
+            Self::NoImages => "no_images",
+            Self::NoMetadata => "no_metadata",
+            Self::AtxClosed => "atx_closed",
         }
     }
 
     /// Build the `ConversionOptions` for this permutation.
     pub fn options(self) -> ConversionOptions {
         match self {
-            Permutation::Default => ConversionOptions::default(),
-            Permutation::NoImages => ConversionOptions {
+            Self::Default => ConversionOptions::default(),
+            Self::NoImages => ConversionOptions {
                 code_block_style: CodeBlockStyle::Backticks,
                 ..Default::default()
             },
-            Permutation::NoMetadata => ConversionOptions {
+            Self::NoMetadata => ConversionOptions {
                 extract_metadata: false,
                 ..Default::default()
             },
-            Permutation::AtxClosed => ConversionOptions {
+            Self::AtxClosed => ConversionOptions {
                 heading_style: HeadingStyle::AtxClosed,
                 ..Default::default()
             },

@@ -152,6 +152,10 @@ pub fn run_survey(fixtures_dir: &Path, filter: Option<&str>) -> Result<SurveySta
 }
 
 /// Print a formatted survey summary to stdout.
+#[expect(
+    clippy::print_stdout,
+    reason = "the survey table is this tool's result output, not diagnostics; tracing would misroute it"
+)]
 pub fn print_survey(stats: &SurveyStats) {
     println!(
         "Corpus: {} fixtures, {} bytes total",

@@ -41,7 +41,7 @@ pub struct Loader {
 
 impl Loader {
     /// Create a loader rooted at `fixtures_dir`.
-    pub fn new(fixtures_dir: PathBuf) -> Self {
+    pub const fn new(fixtures_dir: PathBuf) -> Self {
         Self { fixtures_dir }
     }
 

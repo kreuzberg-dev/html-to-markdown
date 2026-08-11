@@ -30,7 +30,17 @@ testkit = ["html-to-markdown-rs/testkit"]
 [dependencies]
 anyhow = "1"
 clap = { version = "4.6", features = ["derive"] }
-html-to-markdown-rs = { path = "../../crates/html-to-markdown", features = ["testkit", "visitor"] }
+# ~keep Feature set must mirror the shipped CLI (crates/html-to-markdown-cli:
+# metadata, inline-images, visitor, serde) so `task bench:run` measures the
+# artifact users actually install, not a superset/subset of it. `testkit` is
+# opt-in here (via this crate's own `testkit` feature, --force-tier1 only) to
+# match the CLI, which does not ship with it.
+html-to-markdown-rs = { path = "../../crates/html-to-markdown", default-features = false, features = [
+    "metadata",
+    "inline-images",
+    "visitor",
+    "serde",
+] }
 humantime = "2"
 pretty_assertions = "1"
 serde = { version = "1", features = ["derive"] }
@@ -45,6 +55,18 @@ walkdir = "2"
 # Pinned via Cargo.lock; not used by production code.
 mdream = "1.0"
 
+# ~keep This example imports `html_to_markdown_rs::testkit` directly, so it cannot
+# build unless the feature is on. `src/main.rs` cfg-gates its own testkit use, but
+# an example has no such escape hatch and would break `--all-targets`.
+[[example]]
+name = "tier1_routing"
+path = "examples/tier1_routing.rs"
+required-features = ["testkit"]
+
+# ~keep Cargo rejects mixing `lints.workspace = true` with per-lint overrides, so this
+# mirrors the workspace set minus `pedantic`/`nursery`, which a timing harness trips by
+# construction. `print_stdout`/`print_stderr`/`dbg_macro` stay denied per the repo's
+# tracing-only rule; the result-output sites opt back in with `#[expect]`.
 [lints.rust]
 unsafe_code = "forbid"
 missing_docs = "warn"
@@ -53,6 +75,9 @@ unused_must_use = "deny"
 [lints.clippy]
 all = { level = "deny", priority = -1 }
 cargo = { level = "warn", priority = -1 }
+print_stdout = "deny"
+print_stderr = "deny"
+dbg_macro = "deny"
 multiple_crate_versions = { level = "allow", priority = 1 }
 cargo_common_metadata = { level = "allow", priority = 1 }
 must_use_candidate = { level = "allow", priority = 1 }

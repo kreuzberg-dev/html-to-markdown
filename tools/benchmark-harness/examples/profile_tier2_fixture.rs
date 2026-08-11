@@ -7,6 +7,8 @@
 //!   cargo flamegraph --release --example profile_tier2_fixture -p html-to-markdown-bench
 //!
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::time::Instant;
 
 fn main() -> anyhow::Result<()> {
@@ -28,7 +30,7 @@ fn main() -> anyhow::Result<()> {
     }
 
     let elapsed = start.elapsed();
-    let bytes_total = (html.len() as u64) * (ITERS as u64);
+    let bytes_total = (html.len() as u64) * u64::from(ITERS);
     let mb_per_sec = (bytes_total as f64) / (1024.0 * 1024.0) / elapsed.as_secs_f64();
 
     println!(

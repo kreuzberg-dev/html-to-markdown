@@ -7,6 +7,8 @@
 //! Run:
 //!   cargo run --release --example tier1_routing -p html-to-markdown-bench
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 

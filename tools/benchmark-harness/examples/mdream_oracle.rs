@@ -11,6 +11,8 @@
 //! Run:
 //!   cargo run --release --example mdream_oracle -p html-to-markdown-bench
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::path::PathBuf;
 
 use html_to_markdown_bench::fixture::Loader;
@@ -56,7 +58,7 @@ fn main() -> anyhow::Result<()> {
             md_out.len(),
             label,
             sim * 100.0,
-            first_div.map(|n| n.to_string()).unwrap_or_else(|| "-".to_string())
+            first_div.map_or_else(|| "-".to_string(), |n| n.to_string())
         );
 
         if byte_eq {

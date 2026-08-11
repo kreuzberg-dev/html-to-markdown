@@ -3,6 +3,8 @@
 //! Used with `samply record -- ./target/release/examples/profile_visitor <fixture>`.
 //! Defaults to a large real-world wikipedia page that exercises the visitor heavily.
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::sync::{Arc, Mutex};
 
 use html_to_markdown_bench::bench::NoOpVisitor;

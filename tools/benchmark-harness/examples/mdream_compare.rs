@@ -12,6 +12,8 @@
 //! mdream's scanner speed but only if its output is semantically close enough
 //! to ours on most real-world docs.
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use std::path::PathBuf;
 use std::time::Instant;
 

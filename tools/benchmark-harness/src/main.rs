@@ -78,6 +78,7 @@ struct RunArgs {
     with_visitor: bool,
 }
 
+#[expect(clippy::print_stdout, reason = "CLI result output, not diagnostics")]
 fn cmd_run(args: RunArgs) -> Result<()> {
     tracing::info!("loading fixtures from {}", args.fixtures.display());
     let loader = fixture::Loader::new(args.fixtures.clone());
@@ -190,6 +191,11 @@ struct CompareArgs {
     guardrails: PathBuf,
 }
 
+#[expect(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "guardrail pass/fail report is this command's result output"
+)]
 fn cmd_compare(args: CompareArgs) -> Result<()> {
     let results: RunResults = load_json(&args.results)?;
     let baseline: RunResults = load_json(&args.baseline)?;
@@ -255,6 +261,11 @@ struct OracleArgs {
     bless: bool,
 }
 
+#[expect(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "oracle comparison report is this command's result output"
+)]
 fn cmd_oracle(args: OracleArgs) -> Result<()> {
     let loader = fixture::Loader::new(args.fixtures.clone());
     let fixtures = loader.load(args.filter.as_deref())?;

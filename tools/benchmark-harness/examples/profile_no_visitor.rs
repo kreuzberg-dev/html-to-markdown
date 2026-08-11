@@ -1,5 +1,7 @@
 //! Profile driver for baseline (no visitor) on a single fixture.
 
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)]
+
 use html_to_markdown_rs::convert;
 
 fn main() {
