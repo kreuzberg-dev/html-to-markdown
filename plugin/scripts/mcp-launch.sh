@@ -83,6 +83,7 @@ fi
 
 try_download() {
 	local arch triple ext base_url asset asset_url tmp ex src_dir
+	local sums_asset sums_url sums_fetched expected_sum actual_sum
 	arch="$(uname -m)"
 	case "$(uname -s)" in
 	Darwin)
@@ -116,8 +117,10 @@ try_download() {
 	esac
 
 	base_url="https://github.com/${REPO}/releases/latest/download"
-	asset="html-to-markdown-${triple}.${ext}"
+	asset="cli-${triple}.${ext}"
 	asset_url="${base_url}/${asset}"
+	sums_asset="cli-SHA256SUMS"
+	sums_url="${base_url}/${sums_asset}"
 
 	if have curl; then
 		fetch() { curl -fsSL --retry 3 -o "$2" "$1"; }
@@ -138,7 +141,40 @@ try_download() {
 		return 1
 	fi
 
-	log "warning: no published checksum for $asset; integrity is verified by HTTPS/TLS only, not a content hash"
+	# Right after a release the checksums asset can briefly 404 while GitHub
+	# finishes propagating release assets; retry a few times before giving up.
+	sums_fetched=0
+	for _attempt in 1 2 3 4 5; do
+		if fetch "$sums_url" "$tmp/$sums_asset" 2>/dev/null; then
+			sums_fetched=1
+			break
+		fi
+		sleep 2
+	done
+	if [ "$sums_fetched" -ne 1 ]; then
+		log "could not download $sums_asset after retries; refusing to execute an unverified binary; falling through"
+		return 1
+	fi
+
+	expected_sum="$(awk -v asset="$asset" '$2 == asset { print $1 }' "$tmp/$sums_asset")"
+	if [ -z "$expected_sum" ]; then
+		log "no checksum entry for $asset in $sums_asset; refusing to execute an unverified binary; falling through"
+		return 1
+	fi
+
+	if have sha256sum; then
+		actual_sum="$(sha256sum "$tmp/$asset" | awk '{print $1}')"
+	elif have shasum; then
+		actual_sum="$(shasum -a 256 "$tmp/$asset" | awk '{print $1}')"
+	else
+		log "no sha256sum or shasum available to verify $asset; refusing to execute an unverified binary; falling through"
+		return 1
+	fi
+
+	if [ "$actual_sum" != "$expected_sum" ]; then
+		die "checksum mismatch for $asset (expected $expected_sum, got $actual_sum) — refusing to execute"
+	fi
+	log "checksum verified for $asset"
 
 	ex="$tmp/extracted"
 	mkdir -p "$ex"
@@ -160,7 +196,7 @@ try_download() {
 		;;
 	esac
 
-	src_dir="$ex/html-to-markdown-${triple}"
+	src_dir="$ex/cli-${triple}"
 	[ -d "$src_dir" ] || src_dir="$ex"
 	if [ ! -f "$src_dir/$BINARY_NAME" ]; then
 		log "binary $BINARY_NAME not found inside $asset; falling through"
