@@ -29,6 +29,9 @@ serde_json = "1"
 tracing = "0.1"
 
 [features]
+# ~keep `testkit` is required to COMPILE, not to test: the alef-generated bridge
+# references `TierStrategy::Tier1` unconditionally, but that variant is
+# `#[cfg(any(test, feature = "testkit"))]` in the core crate. See audit #9 / ALEF-A21.
 default = ["inline-images", "metadata", "testkit", "visitor"]
 inline-images = ["html-to-markdown-rs/inline-images"]
 metadata = ["html-to-markdown-rs/metadata"]

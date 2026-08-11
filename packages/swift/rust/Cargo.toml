@@ -30,7 +30,7 @@ doctest = false
 bench = false
 
 [features]
-default = ["inline-images", "metadata", "testkit", "visitor"]
+default = ["inline-images", "metadata", "visitor"]
 inline-images = ["html_to_markdown_rs/inline-images"]
 metadata = ["html_to_markdown_rs/metadata"]
 testkit = ["html_to_markdown_rs/testkit"]
@@ -40,7 +40,9 @@ visitor = ["html_to_markdown_rs/visitor"]
 ahash = "0.8"
 async-trait = "0.1"
 html-to-markdown-ffi = { version = "3.10.6", path = "../../../crates/html-to-markdown-ffi" }
-html_to_markdown_rs = { version = "3.10.6", path = "../../../crates/html-to-markdown", features = ["full", "testkit"], package = "html-to-markdown-rs" }
+html_to_markdown_rs = { version = "3.10.6", path = "../../../crates/html-to-markdown", features = [
+  "full",
+], package = "html-to-markdown-rs" }
 libc = "0.2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
