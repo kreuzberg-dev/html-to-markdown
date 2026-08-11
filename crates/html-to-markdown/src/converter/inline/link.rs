@@ -396,6 +396,85 @@ pub fn percent_encode_url(url: &str) -> String {
     encoded
 }
 
+/// Check whether every `)` in `href` is matched by a preceding `(`, and every `(` is closed.
+///
+/// A raw (non-bracketed) Markdown link destination may contain parentheses only if they form a
+/// properly nested, balanced pair — a plain count of `(` versus `)` is not sufficient, since e.g.
+/// `")("` has equal counts but is not balanced (CommonMark 6.3). Unbalanced parentheses must be
+/// backslash-escaped or the destination must be wrapped in angle brackets.
+#[must_use]
+fn parens_are_balanced(href: &str) -> bool {
+    let mut depth: i32 = 0;
+    for c in href.chars() {
+        match c {
+            '(' => depth += 1,
+            ')' => {
+                depth -= 1;
+                if depth < 0 {
+                    return false;
+                }
+            }
+            _ => {}
+        }
+    }
+    depth == 0
+}
+
+/// Escape a Markdown title's backslashes and double quotes for interpolation into a
+/// double-quoted title `"..."`.
+///
+/// Backslashes are escaped *before* quotes: a title ending in a literal `\` would otherwise
+/// make the following delimiter's `\"` read as an escaped quote instead of the closing
+/// delimiter, letting the title (and the destination that follows) run into whatever content
+/// comes next in the document.
+#[must_use]
+pub fn escape_markdown_title(text: &str) -> std::borrow::Cow<'_, str> {
+    if !text.contains('\\') && !text.contains('"') {
+        return std::borrow::Cow::Borrowed(text);
+    }
+    std::borrow::Cow::Owned(text.replace('\\', "\\\\").replace('"', "\\\""))
+}
+
+/// Append a Markdown link destination (the `(...)` portion, without the enclosing parens) to
+/// `output`, honoring `url_escape_style`.
+///
+/// Shared by [`append_markdown_link`] (for `<a href>`) and the image/graphic handlers, so a
+/// destination gets the same treatment — empty-destination handling, percent-encoding,
+/// space-triggered angle-bracket wrapping with backslash-safe `<`/`>` escaping inside it, and
+/// paren-balance escaping — no matter which element produced it.
+pub fn append_url_destination(
+    output: &mut String,
+    dest: &str,
+    url_escape_style: crate::options::validation::UrlEscapeStyle,
+) {
+    if dest.is_empty() {
+        output.push_str("<>");
+    } else if url_escape_style == crate::options::validation::UrlEscapeStyle::Percent {
+        let encoded = percent_encode_url(dest);
+        output.push_str(&encoded);
+    } else if dest.contains(' ') || dest.contains('\n') {
+        // ~keep angle-bracket destinations may contain raw parentheses, but a raw `<`, `>`, or
+        // ~keep an unescaped `\` (which would otherwise merge with the next escaped char and
+        // ~keep un-escape it) terminates the wrap early, so all three must be escaped inside it
+        // ~keep (CommonMark 6.3).
+        output.push('<');
+        for c in dest.chars() {
+            match c {
+                '\\' => output.push_str("\\\\"),
+                '<' => output.push_str("\\<"),
+                '>' => output.push_str("\\>"),
+                other => output.push(other),
+            }
+        }
+        output.push('>');
+    } else if parens_are_balanced(dest) {
+        output.push_str(dest);
+    } else {
+        let escaped_dest = dest.replace('(', "\\(").replace(')', "\\)");
+        output.push_str(&escaped_dest);
+    }
+}
+
 /// Format and append a Markdown link to the output string.
 ///
 /// Generates the link syntax: `[label](href "title")`
@@ -440,44 +519,15 @@ pub fn append_markdown_link(
     output.push_str(label);
     output.push_str("](");
 
-    if href.is_empty() {
-        output.push_str("<>");
-    } else if options.url_escape_style == crate::options::validation::UrlEscapeStyle::Percent {
-        let encoded = percent_encode_url(href);
-        output.push_str(&encoded);
-    } else if href.contains(' ') || href.contains('\n') {
-        output.push('<');
-        output.push_str(href);
-        output.push('>');
-    } else {
-        let open_count = href.chars().filter(|&c| c == '(').count();
-        let close_count = href.chars().filter(|&c| c == ')').count();
-
-        if open_count == close_count {
-            output.push_str(href);
-        } else {
-            let escaped_href = href.replace('(', "\\(").replace(')', "\\)");
-            output.push_str(&escaped_href);
-        }
-    }
+    append_url_destination(output, href, options.url_escape_style);
 
     if let Some(title_text) = title {
         output.push_str(" \"");
-        if title_text.contains('"') {
-            let escaped_title = title_text.replace('"', "\\\"");
-            output.push_str(&escaped_title);
-        } else {
-            output.push_str(title_text);
-        }
+        output.push_str(&escape_markdown_title(title_text));
         output.push('"');
     } else if options.default_title && raw_text == href {
         output.push_str(" \"");
-        if href.contains('"') {
-            let escaped_href = href.replace('"', "\\\"");
-            output.push_str(&escaped_href);
-        } else {
-            output.push_str(href);
-        }
+        output.push_str(&escape_markdown_title(href));
         output.push('"');
     }
 
@@ -597,6 +647,73 @@ mod tests {
     }
 
     #[test]
+    fn parens_are_balanced_accepts_nested_parens() {
+        assert!(parens_are_balanced("wiki/Rust_(programming_language)"));
+        assert!(parens_are_balanced("no/parens/here"));
+    }
+
+    #[test]
+    fn parens_are_balanced_rejects_equal_counts_out_of_order() {
+        // ~keep equal open/close counts are not sufficient for balance: a `)` before its `(`
+        // ~keep is the exact naive-count bug this check replaces.
+        assert!(!parens_are_balanced("a)b(c"));
+    }
+
+    #[test]
+    fn parens_are_balanced_rejects_unmatched_open_or_close() {
+        assert!(!parens_are_balanced("a(b"));
+        assert!(!parens_are_balanced("a)b"));
+    }
+
+    #[test]
+    fn append_markdown_link_angle_leaves_balanced_parens_unescaped_when_href_has_parens() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(
+            &mut out,
+            "Rust",
+            "https://en.wikipedia.org/wiki/Rust_(programming_language)",
+            None,
+            "Rust",
+            &options,
+            None,
+        );
+        assert_eq!(out, "[Rust](https://en.wikipedia.org/wiki/Rust_(programming_language))");
+    }
+
+    #[test]
+    fn append_markdown_link_angle_escapes_out_of_order_parens_when_href_has_parens() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(
+            &mut out,
+            "link",
+            "http://example.com/a)(b",
+            None,
+            "link",
+            &options,
+            None,
+        );
+        assert_eq!(out, "[link](http://example.com/a\\)\\(b)");
+    }
+
+    #[test]
+    fn append_markdown_link_angle_escapes_gt_inside_wrap_when_href_has_space_and_gt() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "/my file >.pdf", None, "text", &options, None);
+        assert_eq!(out, "[text](</my file \\>.pdf>)");
+    }
+
+    #[test]
+    fn append_markdown_link_angle_produces_empty_angle_brackets_when_href_is_empty() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "", None, "text", &options, None);
+        assert_eq!(out, "[text](<>)");
+    }
+
+    #[test]
     fn append_markdown_link_percent_preserves_title() {
         let mut out = String::new();
         let options = opts_with_style(UrlEscapeStyle::Percent);
@@ -610,5 +727,42 @@ mod tests {
             None,
         );
         assert_eq!(out, "[link](/path%20with%20spaces \"My Title\")");
+    }
+
+    #[test]
+    fn escape_markdown_title_escapes_backslash_before_quote_so_the_closing_quote_is_not_swallowed() {
+        // ~keep audit #24 finding 8: a title ending in a literal `\` must not let a following `\"`
+        // (backslash escaping the delimiter's quote) read as an escaped quote instead of the
+        // closing delimiter.
+        assert_eq!(escape_markdown_title("foo\\"), "foo\\\\");
+        assert_eq!(escape_markdown_title("say \"hi\"\\"), "say \\\"hi\\\"\\\\");
+    }
+
+    #[test]
+    fn append_markdown_link_escapes_a_trailing_backslash_in_title_so_the_closing_quote_is_not_swallowed() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "/url", Some("foo\\"), "text", &options, None);
+        assert_eq!(out, "[text](/url \"foo\\\\\")");
+    }
+
+    #[test]
+    fn append_markdown_link_escapes_a_trailing_backslash_in_default_title_so_the_closing_quote_is_not_swallowed() {
+        let mut out = String::new();
+        let mut options = opts_with_style(UrlEscapeStyle::Angle);
+        options.default_title = true;
+        append_markdown_link(&mut out, "text", "http://a\\", None, "http://a\\", &options, None);
+        assert_eq!(out, "[text](http://a\\ \"http://a\\\\\")");
+    }
+
+    #[test]
+    fn append_markdown_link_escapes_a_backslash_inside_the_angle_bracket_wrap_so_it_cannot_unescape_a_delimiter() {
+        // ~keep audit #24 finding 8: inside an angle-bracket-wrapped destination, an unescaped `\`
+        // immediately before an escaped `<`/`>` merges with it into a single `\\` escape pair,
+        // un-escaping the delimiter and terminating the destination early.
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "/my file\\>.pdf", None, "text", &options, None);
+        assert_eq!(out, "[text](</my file\\\\\\>.pdf>)");
     }
 }

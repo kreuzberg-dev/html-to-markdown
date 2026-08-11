@@ -59,11 +59,26 @@ impl ReferenceCollector {
             out.push_str(url);
             if let Some(t) = title {
                 out.push_str(" \"");
-                out.push_str(&t.replace('"', "\\\""));
+                out.push_str(&crate::converter::inline::link::escape_markdown_title(t));
                 out.push('"');
             }
             out.push('\n');
         }
         out
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::ReferenceCollector;
+
+    #[test]
+    fn finish_escapes_a_trailing_backslash_in_title_so_the_closing_quote_is_not_swallowed() {
+        // ~keep audit #24 finding 8: a title ending in a literal `\` must not let a following `\"`
+        // read as an escaped quote instead of the closing delimiter, which would otherwise
+        // leave the reference definition (and everything after it) unterminated.
+        let mut collector = ReferenceCollector::new();
+        collector.get_or_insert("https://example.com", Some("foo\\"));
+        assert_eq!(collector.finish(), "[1]: https://example.com \"foo\\\\\"\n");
     }
 }

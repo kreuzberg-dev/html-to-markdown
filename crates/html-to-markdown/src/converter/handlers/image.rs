@@ -12,6 +12,8 @@ use std::collections::BTreeMap;
 
 use crate::converter::Context;
 use crate::converter::dom_context::DomContext;
+use crate::converter::inline::link::{append_url_destination, escape_markdown_title};
+use crate::converter::utility::content::escape_link_label;
 use crate::converter::utility::preprocessing::sanitize_markdown_url;
 use crate::options::ConversionOptions;
 
@@ -236,47 +238,29 @@ fn format_image_markdown(
     if use_alt_only {
         return alt.to_string();
     }
+    let escaped_alt = escape_link_label(alt);
     if link_style == crate::options::validation::LinkStyle::Reference {
         if let Some(collector) = reference_collector {
             let ref_num = collector.borrow_mut().get_or_insert(src, title);
-            let mut buf = String::with_capacity(alt.len() + 10);
+            let mut buf = String::with_capacity(escaped_alt.len() + 10);
             buf.push_str("![");
-            buf.push_str(alt);
+            buf.push_str(&escaped_alt);
             buf.push_str("][");
             buf.push_str(&ref_num.to_string());
             buf.push(']');
             return buf;
         }
     }
-    let mut buf = String::with_capacity(src.len() + alt.len() + 10);
+    let mut buf = String::with_capacity(src.len() + escaped_alt.len() + 10);
     buf.push_str("![");
-    buf.push_str(alt);
+    buf.push_str(&escaped_alt);
     buf.push_str("](");
 
-    if src.is_empty() {
-        buf.push_str("<>");
-    } else if url_escape_style == crate::options::validation::UrlEscapeStyle::Percent {
-        let encoded = crate::converter::inline::link::percent_encode_url(src);
-        buf.push_str(&encoded);
-    } else if src.contains(' ') || src.contains('\n') {
-        buf.push('<');
-        buf.push_str(src);
-        buf.push('>');
-    } else {
-        let open_count = src.chars().filter(|&c| c == '(').count();
-        let close_count = src.chars().filter(|&c| c == ')').count();
-
-        if open_count == close_count {
-            buf.push_str(src);
-        } else {
-            let escaped_src = src.replace('(', "\\(").replace(')', "\\)");
-            buf.push_str(&escaped_src);
-        }
-    }
+    append_url_destination(&mut buf, src, url_escape_style);
 
     if let Some(title_text) = title {
         buf.push_str(" \"");
-        buf.push_str(title_text);
+        buf.push_str(&escape_markdown_title(title_text));
         buf.push('"');
     }
     buf.push(')');
@@ -342,5 +326,71 @@ mod tests {
             None,
         );
         assert_eq!(result, "![photo](https://example.com/img.png)");
+    }
+
+    #[test]
+    fn should_escape_alt_text_that_would_close_the_image_and_open_a_new_link() {
+        // ~keep audit #24 finding 1: an inert `alt` containing `]` and `(` must not be able to
+        // terminate the image label early and start a second, attacker-controlled link.
+        let result = format_image_markdown(
+            "x.png",
+            "a](https://evil.example/payload)",
+            None,
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![a\\](https://evil.example/payload)](x.png)");
+    }
+
+    #[test]
+    fn should_escape_alt_text_in_reference_style_images_too() {
+        // The same alt-escaping bug existed independently in the reference-style branch.
+        let collector = crate::converter::reference_collector::ReferenceCollector::new();
+        let handle = std::rc::Rc::new(std::cell::RefCell::new(collector));
+        let result = format_image_markdown(
+            "x.png",
+            "a](https://evil.example/payload)",
+            None,
+            false,
+            LinkStyle::Reference,
+            UrlEscapeStyle::Angle,
+            Some(&handle),
+        );
+        assert_eq!(result, "![a\\](https://evil.example/payload)][1]");
+    }
+
+    #[test]
+    fn should_escape_a_quote_in_the_title_that_would_open_a_real_link_after_it() {
+        // ~keep audit #24 finding 4: an inert `title` containing `"` must not be able to close the
+        // title early, turning the rest of the title text into document markdown (e.g. a link).
+        let result = format_image_markdown(
+            "a.png",
+            "photo",
+            Some("x\" [click](https://evil.example)"),
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![photo](a.png \"x\\\" [click](https://evil.example)\")");
+    }
+
+    #[test]
+    fn should_reject_out_of_order_parens_in_src_like_append_markdown_link_does() {
+        // ~keep audit #24 finding 7: a naive open-count == close-count check treats ")(" as
+        // balanced. Reuses `append_url_destination`, which applies the same
+        // `parens_are_balanced` check already used (and tested) for `<a href>`.
+        let result = format_image_markdown(
+            "a)(b.png",
+            "alt",
+            None,
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![alt](a\\)\\(b.png)");
     }
 }

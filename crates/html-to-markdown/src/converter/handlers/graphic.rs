@@ -12,6 +12,9 @@ use std::collections::BTreeMap;
 
 use crate::converter::Context;
 use crate::converter::dom_context::DomContext;
+use crate::converter::inline::link::{append_url_destination, escape_markdown_title};
+use crate::converter::utility::content::escape_link_label;
+use crate::converter::utility::preprocessing::sanitize_markdown_url;
 use crate::options::ConversionOptions;
 
 #[cfg(feature = "visitor")]
@@ -48,7 +51,10 @@ pub fn handle_graphic(
         .or_else(|| tag.attributes().get("href").flatten())
         .or_else(|| tag.attributes().get("xlink:href").flatten())
         .or_else(|| tag.attributes().get("src").flatten())
-        .map_or(Cow::Borrowed(""), |v| v.as_utf8_str());
+        .map_or(Cow::Borrowed(""), |v| {
+            let s = v.as_utf8_str();
+            Cow::Owned(sanitize_markdown_url(&s).into_owned())
+        });
 
     // ~keep Use "alt" attribute, fallback to "filename"
     let alt = tag
@@ -123,6 +129,7 @@ pub fn handle_graphic(
                 title.as_deref(),
                 should_use_alt_text,
                 options.link_style,
+                options.url_escape_style,
                 ctx.reference_collector.as_ref(),
             )),
             VisitResult::Custom(custom) => Some(custom),
@@ -142,6 +149,7 @@ pub fn handle_graphic(
             title.as_deref(),
             should_use_alt_text,
             options.link_style,
+            options.url_escape_style,
             ctx.reference_collector.as_ref(),
         ))
     };
@@ -153,6 +161,7 @@ pub fn handle_graphic(
         title.as_deref(),
         should_use_alt_text,
         options.link_style,
+        options.url_escape_style,
         ctx.reference_collector.as_ref(),
     ));
 
@@ -194,33 +203,99 @@ fn format_graphic_markdown(
     title: Option<&str>,
     use_alt_only: bool,
     link_style: crate::options::validation::LinkStyle,
+    url_escape_style: crate::options::validation::UrlEscapeStyle,
     reference_collector: Option<&crate::converter::reference_collector::ReferenceCollectorHandle>,
 ) -> String {
     if use_alt_only {
         return alt.to_string();
     }
+    let escaped_alt = escape_link_label(alt);
     if link_style == crate::options::validation::LinkStyle::Reference {
         if let Some(collector) = reference_collector {
             let ref_num = collector.borrow_mut().get_or_insert(src, title);
-            let mut buf = String::with_capacity(alt.len() + 10);
+            let mut buf = String::with_capacity(escaped_alt.len() + 10);
             buf.push_str("![");
-            buf.push_str(alt);
+            buf.push_str(&escaped_alt);
             buf.push_str("][");
             buf.push_str(&ref_num.to_string());
             buf.push(']');
             return buf;
         }
     }
-    let mut buf = String::with_capacity(src.len() + alt.len() + 10);
+    let mut buf = String::with_capacity(src.len() + escaped_alt.len() + 10);
     buf.push_str("![");
-    buf.push_str(alt);
+    buf.push_str(&escaped_alt);
     buf.push_str("](");
-    buf.push_str(src);
+    append_url_destination(&mut buf, src, url_escape_style);
     if let Some(title_text) = title {
         buf.push_str(" \"");
-        buf.push_str(title_text);
+        buf.push_str(&escape_markdown_title(title_text));
         buf.push('"');
     }
     buf.push(')');
     buf
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::options::validation::{LinkStyle, UrlEscapeStyle};
+
+    #[test]
+    fn should_escape_alt_text_that_would_close_the_graphic_and_open_a_new_link() {
+        // ~keep audit #24 finding 6: `<graphic alt>` had the same unescaped-label bug as `<img alt>`
+        // (finding 1) — an inert `]`/`(` in alt must not manufacture a second, live link.
+        let result = format_graphic_markdown(
+            "x.svg",
+            "a](https://evil.example/payload)",
+            None,
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![a\\](https://evil.example/payload)](x.svg)");
+    }
+
+    #[test]
+    fn should_escape_a_quote_in_the_title_that_would_open_a_real_link_after_it() {
+        // ~keep audit #24 finding 4: `<graphic title>` had zero quote escaping.
+        let result = format_graphic_markdown(
+            "a.svg",
+            "diagram",
+            Some("x\" [click](https://evil.example)"),
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![diagram](a.svg \"x\\\" [click](https://evil.example)\")");
+    }
+
+    #[test]
+    fn should_reject_out_of_order_parens_in_src() {
+        // ~keep audit #24 finding 6/7: `<graphic src>` previously had no paren handling at all
+        // (worse than `<img src>`'s naive count check).
+        let result = format_graphic_markdown(
+            "a)(b.svg",
+            "alt",
+            None,
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![alt](a\\)\\(b.svg)");
+    }
+
+    #[test]
+    fn should_sanitize_a_markdown_like_src_the_same_way_img_does() {
+        // ~keep audit #24 finding 6: `<graphic src>` never went through `sanitize_markdown_url`,
+        // unlike `<img src>` (image.rs). Verified end-to-end since sanitization happens at
+        // attribute-extraction time in `handle_graphic`, before `format_graphic_markdown`.
+        let html = r#"<p><graphic url="[p](https://example.com/real)" alt="pic" /></p>"#;
+        let result = crate::convert(html, None).unwrap();
+        let content = result.content.unwrap_or_default();
+        assert_eq!(content, "![pic](https://example.com/real)\n");
+    }
 }

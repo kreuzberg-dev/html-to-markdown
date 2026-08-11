@@ -12,8 +12,33 @@ use tl::{HTMLTag, NodeHandle, Parser};
 
 use crate::converter::Context;
 use crate::converter::dom_context::DomContext;
+use crate::converter::inline::link::append_markdown_link;
 use crate::converter::main_helpers::tag_name_eq;
+use crate::converter::utility::content::escape_link_label;
+use crate::converter::utility::preprocessing::sanitize_markdown_url;
 use crate::options::ConversionOptions;
+
+/// ~keep Append a media element's `src` as a Markdown link where the destination doubles as
+/// the label (`[src](src)`), routed through [`append_markdown_link`] so the destination gets
+/// the same sanitization/escaping as `<a href>` (audit #24: `src` was previously spliced into
+/// both the label and destination positions completely unescaped).
+///
+/// `raw_text` is passed as `""` rather than `src` to keep `append_markdown_link`'s
+/// `default_title` branch (which fires when `raw_text == href`) from ever firing here — these
+/// elements never rendered a title before this fix, and `src` is guaranteed non-empty by the
+/// `should_output_media_link` guard at the call site, so `"" == src` is never true.
+fn append_media_src_link(output: &mut String, src: &str, options: &ConversionOptions, ctx: &Context) {
+    let escaped_label = escape_link_label(src);
+    append_markdown_link(
+        output,
+        &escaped_label,
+        src,
+        None,
+        "",
+        options,
+        ctx.reference_collector.as_ref(),
+    );
+}
 
 /// Extract src attribute from media element (audio, video, iframe).
 pub fn extract_media_src<'a>(tag: &'a HTMLTag<'a>) -> Cow<'a, str> {
@@ -71,12 +96,13 @@ pub fn handle_audio(
     use crate::converter::main::walk_node;
 
     let children = tag.children();
-    let src = if extract_media_src(tag).is_empty() {
+    let raw_src = if extract_media_src(tag).is_empty() {
         find_source_src(children.top().iter(), parser).unwrap_or(Cow::Borrowed(""))
     } else {
         extract_media_src(tag)
     };
-    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_ref()) };
+    let src = sanitize_markdown_url(&raw_src).into_owned();
+    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_str()) };
 
     #[cfg(feature = "visitor")]
     if let Some(ref visitor_handle) = ctx.visitor {
@@ -123,20 +149,7 @@ pub fn handle_audio(
     }
 
     if should_output_media_link(&src) {
-        if let Some(ref collector) = ctx.reference_collector {
-            let ref_num = collector.borrow_mut().get_or_insert(&src, None);
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("][");
-            output.push_str(&ref_num.to_string());
-            output.push(']');
-        } else {
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("](");
-            output.push_str(&src);
-            output.push(')');
-        }
+        append_media_src_link(output, &src, options, ctx);
         if !ctx.in_paragraph && !ctx.convert_as_inline {
             output.push_str("\n\n");
         }
@@ -180,12 +193,13 @@ pub fn handle_video(
     use crate::converter::main::walk_node;
 
     let children = tag.children();
-    let src = if extract_media_src(tag).is_empty() {
+    let raw_src = if extract_media_src(tag).is_empty() {
         find_source_src(children.top().iter(), parser).unwrap_or(Cow::Borrowed(""))
     } else {
         extract_media_src(tag)
     };
-    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_ref()) };
+    let src = sanitize_markdown_url(&raw_src).into_owned();
+    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_str()) };
 
     #[cfg(feature = "visitor")]
     if let Some(ref visitor_handle) = ctx.visitor {
@@ -232,20 +246,7 @@ pub fn handle_video(
     }
 
     if should_output_media_link(&src) {
-        if let Some(ref collector) = ctx.reference_collector {
-            let ref_num = collector.borrow_mut().get_or_insert(&src, None);
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("][");
-            output.push_str(&ref_num.to_string());
-            output.push(']');
-        } else {
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("](");
-            output.push_str(&src);
-            output.push(')');
-        }
+        append_media_src_link(output, &src, options, ctx);
         if !ctx.in_paragraph && !ctx.convert_as_inline {
             output.push_str("\n\n");
         }
@@ -289,7 +290,7 @@ pub fn handle_picture(
     for child_handle in tag.children().top().iter() {
         if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {
             if tag_name_eq(child_tag.name().as_utf8_str(), "img") {
-                walk_node(child_handle, parser, output, options, ctx, depth, dom_ctx);
+                walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
                 break;
             }
         }
@@ -305,17 +306,19 @@ pub fn handle_iframe(
     node_handle: &NodeHandle,
     tag: &HTMLTag,
     output: &mut String,
+    options: &ConversionOptions,
     ctx: &Context,
     depth: usize,
     dom_ctx: &DomContext,
     parser: &Parser,
 ) {
-    let src = tag
+    let raw_src = tag
         .attributes()
         .get("src")
         .flatten()
         .map_or(Cow::Borrowed(""), |v| v.as_utf8_str());
-    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_ref()) };
+    let src = sanitize_markdown_url(&raw_src).into_owned();
+    let src_opt: Option<&str> = if src.is_empty() { None } else { Some(src.as_str()) };
 
     #[cfg(feature = "visitor")]
     if let Some(ref visitor_handle) = ctx.visitor {
@@ -362,22 +365,49 @@ pub fn handle_iframe(
     }
 
     if !src.is_empty() {
-        if let Some(ref collector) = ctx.reference_collector {
-            let ref_num = collector.borrow_mut().get_or_insert(&src, None);
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("][");
-            output.push_str(&ref_num.to_string());
-            output.push(']');
-        } else {
-            output.push('[');
-            output.push_str(&src);
-            output.push_str("](");
-            output.push_str(&src);
-            output.push(')');
-        }
+        append_media_src_link(output, &src, options, ctx);
         if !ctx.in_paragraph && !ctx.convert_as_inline {
             output.push_str("\n\n");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    // ~keep audit #24 finding 2: `src` was spliced into both the label and destination positions of
+    // `[src](src)` completely unescaped, so a single inert `src` value containing `](` could
+    // close the manufactured link early and open a second, attacker-controlled one.
+
+    #[test]
+    fn should_escape_a_src_that_would_close_the_iframe_link_and_open_a_new_one() {
+        let html = "<iframe src='a](https://evil.example/payload)b'></iframe>";
+        let result = crate::convert(html, None).unwrap();
+        let content = result.content.unwrap_or_default();
+        assert_eq!(
+            content,
+            "[a\\](https://evil.example/payload)b](a](https://evil.example/payload)b)\n"
+        );
+    }
+
+    #[test]
+    fn should_escape_a_src_that_would_close_the_audio_link_and_open_a_new_one() {
+        let html = "<audio src='a](https://evil.example/payload)b'></audio>";
+        let result = crate::convert(html, None).unwrap();
+        let content = result.content.unwrap_or_default();
+        assert_eq!(
+            content,
+            "[a\\](https://evil.example/payload)b](a](https://evil.example/payload)b)\n"
+        );
+    }
+
+    #[test]
+    fn should_escape_a_src_that_would_close_the_video_link_and_open_a_new_one() {
+        let html = "<video src='a](https://evil.example/payload)b'></video>";
+        let result = crate::convert(html, None).unwrap();
+        let content = result.content.unwrap_or_default();
+        assert_eq!(
+            content,
+            "[a\\](https://evil.example/payload)b](a](https://evil.example/payload)b)\n"
+        );
     }
 }
