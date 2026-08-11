@@ -91,12 +91,18 @@ fn force_tier1_output(html: &str) -> Option<String> {
 /// match — bail is not a failure.  The only failure case is when Tier-1 produces
 /// output that diverges from Tier-2.
 ///
-/// Known Tier-2 quirks (NOT Tier-1 bugs) — Tier-2 emits stray trailing
-/// whitespace from script-tag DOM nodes that Tier-1 correctly omits.
-/// The diff is 4 bytes (`\n  \n` appended to T2 output).  Tracked
-/// separately; not a Phase C blocker.
-const KNOWN_TIER2_QUIRK_FIXTURES: &[&str] = &["mdream/nuxt-example.html"];
-
+/// `mdream/nuxt-example.html` used to be skipped here as a "known Tier-2
+/// quirk" (a stray trailing `\n  \n`).  Root cause: Tier-2's
+/// `strip_script_and_style_tags` preprocessing pass (outside tier1/) inserts a
+/// boundary space per removed `<script>`/`<style>` element to avoid gluing
+/// adjacent text together; two such elements sitting back-to-back with zero
+/// separating whitespace (as this fixture's trailing
+/// `<script>...</script><script>...</script></body>` does) each contribute a
+/// boundary space, collapsing into a whitespace-only DOM text node whose
+/// downstream handling produces that byte pattern.  Tier-1 now bails via
+/// `BailReason::AdjacentRawTextTags` whenever it detects two adjacent
+/// raw-text-ignored tags with no separating whitespace, so the fallback
+/// produces the identical (authoritative) Tier-2 bytes instead of diverging.
 #[test]
 fn tier1_byte_equality_against_all_fixtures() {
     let fixtures_root = Path::new(FIXTURES_ROOT);
@@ -107,11 +113,6 @@ fn tier1_byte_equality_against_all_fixtures() {
 
     for rel_path in FIXTURE_PATHS {
         total += 1;
-        if KNOWN_TIER2_QUIRK_FIXTURES.contains(rel_path) {
-            eprintln!("SKIP {rel_path}: known Tier-2 trailing-whitespace quirk");
-            skipped += 1;
-            continue;
-        }
         let full_path = fixtures_root.join(rel_path);
         let Ok(html) = fs::read_to_string(&full_path) else {
             eprintln!("SKIP {rel_path}: cannot read");
