@@ -824,6 +824,80 @@ fn test_metadata_flags_work_with_json() {
         .stdout(predicate::str::contains("\"content\""));
 }
 
+#[test]
+fn should_use_newline_style_spaces_when_flag_is_omitted() {
+    cli()
+        .write_stdin("<p>Line 1<br>Line 2</p>")
+        .assert()
+        .success()
+        .stdout("Line 1  \nLine 2\n");
+}
+
+#[test]
+fn should_use_code_block_style_backticks_when_flag_is_omitted() {
+    cli()
+        .write_stdin("<pre><code>code</code></pre>")
+        .assert()
+        .success()
+        .stdout("```\ncode\n```\n");
+}
+
+#[test]
+fn should_cycle_hyphen_asterisk_plus_when_bullets_flag_is_omitted() {
+    cli()
+        .write_stdin("<ul><li>a<ul><li>b<ul><li>c</li></ul></li></ul></li></ul>")
+        .assert()
+        .success()
+        .stdout("- a\n  * b\n    + c\n");
+}
+
+#[test]
+fn should_reject_wrap_width_above_the_documented_range() {
+    cli()
+        .arg("--wrap-width")
+        .arg("5000")
+        .write_stdin("<p>Test</p>")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("20..=500"));
+}
+
+#[test]
+fn should_null_content_field_but_keep_other_json_fields_when_no_content_is_set() {
+    cli()
+        .arg("--json")
+        .arg("--no-content")
+        .write_stdin("<html><head><title>T</title></head><body><h1>Title</h1></body></html>")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"content\": null"))
+        .stdout(predicate::str::contains("\"metadata\""));
+}
+
+#[test]
+fn should_emit_per_warning_tracing_event_when_show_warnings_is_set() {
+    cli()
+        .arg("--max-depth")
+        .arg("2")
+        .arg("--show-warnings")
+        .write_stdin("<div><div><div><p>x</p></div></div></div>")
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("conversion warning"))
+        .stderr(predicate::str::contains("DepthLimitExceeded"));
+}
+
+#[test]
+fn should_not_emit_per_warning_summary_when_show_warnings_is_unset() {
+    cli()
+        .arg("--max-depth")
+        .arg("2")
+        .write_stdin("<div><div><div><p>x</p></div></div></div>")
+        .assert()
+        .success()
+        .stderr(predicate::str::contains("conversion warning").not());
+}
+
 fn serve_once(body: &'static str, content_type: Option<&'static str>) -> (String, thread::JoinHandle<()>) {
     let (url, handle, _rx) = serve_once_with_capture(body, content_type);
     (url, handle)

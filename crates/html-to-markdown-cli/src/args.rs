@@ -121,15 +121,17 @@ pub struct Cli {
 
     /// Spaces per list indent level
     ///
-    /// Default is 2 (`CommonMark` standard). Use 4 for wider indentation.
+    /// Default is 2 (`CommonMark` standard). Accepts 1-8. Use 4 for wider indentation.
     #[arg(long, value_name = "N", value_parser = clap::value_parser!(u8).range(1..=8))]
     #[arg(help_heading = "List Options")]
     pub list_indent_width: Option<u8>,
 
     /// Bullet characters for unordered lists
     ///
-    /// Characters cycle through nesting levels. Default "-" uses hyphen
-    /// consistently. "*+-" uses * for level 1, + for level 2, - for level 3.
+    /// Characters cycle through nesting levels: the first character is used
+    /// for level 1, the second for level 2, and so on, repeating once nesting
+    /// exceeds the character count. Default "-*+": - for level 1, * for level
+    /// 2, + for level 3.
     #[arg(short = 'b', long, value_name = "CHARS")]
     #[arg(help_heading = "List Options")]
     #[arg(value_parser = validate_bullets)]
@@ -184,8 +186,8 @@ pub struct Cli {
     /// Line break style
     ///
     /// How to represent <br> tags:
-    /// - 'backslash': Backslash at end of line (default, `CommonMark`)
-    /// - 'spaces': Two spaces at end of line
+    /// - 'spaces': Two spaces at end of line (default, `CommonMark`)
+    /// - 'backslash': Backslash at end of line
     #[arg(long, value_name = "STYLE")]
     #[arg(help_heading = "Text Formatting")]
     pub newline_style: Option<CliNewlineStyle>,
@@ -193,9 +195,9 @@ pub struct Cli {
     /// Code block style
     ///
     /// How to format code blocks:
-    /// - 'indented': 4-space indentation (default, `CommonMark`)
-    /// - `backticks`: Fenced with backticks
+    /// - `backticks`: Fenced with backticks (default, GFM)
     /// - 'tildes': Fenced with tildes (~~~)
+    /// - 'indented': 4-space indentation (`CommonMark`)
     #[arg(long, value_name = "STYLE")]
     #[arg(help_heading = "Code Blocks")]
     pub code_block_style: Option<CliCodeBlockStyle>,
@@ -297,18 +299,24 @@ pub struct Cli {
     #[arg(requires = "json")]
     pub extract_inline_images: bool,
 
-    /// Print processing warnings to stderr
+    /// Emit one WARN-level tracing event per conversion warning
     ///
-    /// Emits each non-fatal warning to stderr in the format:
-    /// `Warning [<kind>]: <message>`
+    /// Iterates the result's warning list and emits one `WARN` tracing event
+    /// per entry (`kind`/`detail` fields), via the process's tracing
+    /// subscriber — not a fixed `Warning [<kind>]: <message>` string. Works
+    /// with or without --json. The library's own instrumentation may already
+    /// surface some warnings at the default WARN level; this guarantees every
+    /// warning attached to the result is shown.
     #[arg(long)]
-    #[arg(help_heading = "JSON Output")]
+    #[arg(help_heading = "Warnings")]
     pub show_warnings: bool,
 
-    /// Skip text content generation, only extract metadata and structure
+    /// Null out the "content" field in JSON output
     ///
-    /// Requires --json. Sets `output_format` to plain text extraction mode;
-    /// the "content" field in the JSON output will be empty.
+    /// Requires --json. Conversion still runs and generates the full
+    /// content — this flag does not skip generation or change
+    /// `output_format` — but the "content" field in the JSON result is set
+    /// to `null` instead of the converted text.
     #[arg(long)]
     #[arg(help_heading = "JSON Output")]
     #[arg(requires = "json")]
@@ -340,7 +348,8 @@ pub struct Cli {
 
     /// Wrap width in columns
     ///
-    /// Column width for text wrapping when --wrap is enabled
+    /// Column width for text wrapping when --wrap is enabled. Accepts 20-500.
+    /// Default 80 (matches the engine default) when --wrap is set without this flag.
     #[arg(long, value_name = "N", value_parser = clap::value_parser!(u16).range(20..=500))]
     #[arg(help_heading = "Wrapping")]
     pub wrap_width: Option<u16>,

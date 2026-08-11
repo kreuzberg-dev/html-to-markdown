@@ -49,9 +49,9 @@ impl From<CliListIndentType> for ListIndentType {
 
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum CliNewlineStyle {
-    /// Two spaces at end of line
+    /// Two spaces at end of line (default)
     Spaces,
-    /// Backslash at end of line (default)
+    /// Backslash at end of line
     Backslash,
 }
 
@@ -66,9 +66,9 @@ impl From<CliNewlineStyle> for NewlineStyle {
 
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
 pub enum CliCodeBlockStyle {
-    /// Indented code blocks: 4 spaces (default)
+    /// Indented code blocks: 4 spaces
     Indented,
-    /// Fenced code blocks (backtick style)
+    /// Fenced code blocks (backtick style) (default)
     Backticks,
     /// Fenced code blocks: ~~~
     Tildes,
