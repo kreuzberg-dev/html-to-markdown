@@ -1,8 +1,10 @@
 //! SVG and `MathML` element handling with serialization and base64 encoding.
 
-use crate::converter::main_helpers::tag_name_eq;
-use crate::converter::utility::content::normalized_tag_name;
+use crate::converter::main_helpers::{effective_max_depth, tag_name_eq};
+use crate::converter::utility::content::{escape_link_label, normalized_tag_name};
+use crate::converter::utility::serialization::escape_html_attribute_value;
 use crate::converter::utility::svg_attrs::canonical_svg_attr;
+use crate::options::conversion::NATIVE_STACK_SAFE_DEPTH;
 // ~keep reason: BTreeMap is only used when the inline-images feature is active.
 #[allow(unused_imports)]
 use std::collections::BTreeMap;
@@ -97,8 +99,34 @@ pub fn handle_inline_svg(
 ///
 /// Attributes are sorted by name to guarantee deterministic output across
 /// process invocations (the underlying parser stores them in a `HashMap`).
+///
+/// Depth-guarded by [`NATIVE_STACK_SAFE_DEPTH`]. Callers that already track the
+/// element's depth in the wider DOM walk (`handle_svg`, `handle_math`) should call
+/// [`serialize_element_at_depth`] instead, so the same recursion budget the caller is
+/// already spending against `effective_max_depth` is honored here too.
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn serialize_element(node_handle: &NodeHandle, parser: &Parser) -> String {
+    serialize_element_at_depth(node_handle, parser, 0, NATIVE_STACK_SAFE_DEPTH)
+}
+
+/// Serialize a node to HTML string.
+///
+/// See [`serialize_element`] for the depth-guard contract.
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub fn serialize_node(node_handle: &NodeHandle, parser: &Parser) -> String {
+    serialize_node_at_depth(node_handle, parser, 0, NATIVE_STACK_SAFE_DEPTH)
+}
+
+/// Serialize an element to HTML string, stopping descent once `depth` reaches `max_depth`.
+///
+/// Mutually recursive with [`serialize_node_at_depth`] over `tag.children()`. Follows the
+/// same convention as the main DOM walker (`walk_node` in `converter/main.rs`): the depth
+/// counter increments on every descent into a child, and reaching the limit stops further
+/// descent rather than erroring, so a pathologically nested `<svg>`/`<math>` subtree cannot
+/// overflow the stack (audit #23). The element's own opening tag and attributes are always
+/// emitted; only its descendants are dropped once the budget is exhausted.
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub fn serialize_element_at_depth(node_handle: &NodeHandle, parser: &Parser, depth: usize, max_depth: usize) -> String {
     if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
         let tag_name = normalized_tag_name(tag.name().as_utf8_str());
         let mut html = String::with_capacity(256);
@@ -128,7 +156,7 @@ pub fn serialize_element(node_handle: &NodeHandle, parser: &Parser) -> String {
                 // ~keep byte-identical output.
                 if !value.is_empty() {
                     html.push_str("=\"");
-                    html.push_str(&value);
+                    html.push_str(&escape_html_attribute_value(&value));
                     html.push('"');
                 }
             }
@@ -137,10 +165,17 @@ pub fn serialize_element(node_handle: &NodeHandle, parser: &Parser) -> String {
         let has_children = !tag.children().top().is_empty();
         if has_children {
             html.push('>');
-            let children = tag.children();
-            {
+            if depth >= max_depth {
+                tracing::warn!(
+                    target: "html_to_markdown::convert",
+                    max_depth,
+                    tag = %tag_name,
+                    "SVG/MathML serialization reached the effective depth limit; descendants were skipped"
+                );
+            } else {
+                let children = tag.children();
                 for child_handle in children.top().iter() {
-                    html.push_str(&serialize_node(child_handle, parser));
+                    html.push_str(&serialize_node_at_depth(child_handle, parser, depth + 1, max_depth));
                 }
             }
             html.push_str("</");
@@ -154,13 +189,15 @@ pub fn serialize_element(node_handle: &NodeHandle, parser: &Parser) -> String {
     String::new()
 }
 
-/// Serialize a node to HTML string.
+/// Serialize a node to HTML string, stopping descent once `depth` reaches `max_depth`.
+///
+/// See [`serialize_element_at_depth`] for the depth-guard contract.
 #[allow(clippy::trivially_copy_pass_by_ref)]
-pub fn serialize_node(node_handle: &NodeHandle, parser: &Parser) -> String {
+pub fn serialize_node_at_depth(node_handle: &NodeHandle, parser: &Parser, depth: usize, max_depth: usize) -> String {
     if let Some(node) = node_handle.get(parser) {
         match node {
             tl::Node::Raw(bytes) => bytes.as_utf8_str().to_string(),
-            tl::Node::Tag(_) => serialize_element(node_handle, parser),
+            tl::Node::Tag(_) => serialize_element_at_depth(node_handle, parser, depth, max_depth),
             _ => String::new(),
         }
     } else {
@@ -191,7 +228,7 @@ pub fn handle_svg(
     output: &mut String,
     options: &crate::options::ConversionOptions,
     ctx: &super::Context,
-    _depth: usize,
+    depth: usize,
     dom_ctx: &super::DomContext,
 ) {
     use crate::converter::utility::content::get_text_content;
@@ -239,11 +276,11 @@ pub fn handle_svg(
     } else {
         use base64::{Engine as _, engine::general_purpose::STANDARD};
 
-        let svg_html = serialize_element(node_handle, parser);
+        let svg_html = serialize_element_at_depth(node_handle, parser, depth, effective_max_depth(options));
         let base64_svg = STANDARD.encode(svg_html.as_bytes());
 
         output.push_str("![");
-        output.push_str(&title);
+        output.push_str(&escape_link_label(&title));
         output.push_str("](data:image/svg+xml;base64,");
         output.push_str(&base64_svg);
         output.push(')');
@@ -261,7 +298,7 @@ pub fn handle_math(
     output: &mut String,
     options: &crate::options::ConversionOptions,
     ctx: &super::Context,
-    _depth: usize,
+    depth: usize,
     dom_ctx: &super::DomContext,
 ) {
     use crate::converter::utility::content::get_text_content;
@@ -273,7 +310,7 @@ pub fn handle_math(
         return;
     }
 
-    let math_html = serialize_element(node_handle, parser);
+    let math_html = serialize_element_at_depth(node_handle, parser, depth, effective_max_depth(options));
 
     let escaped_text = text::escape(
         &text_content,
@@ -300,5 +337,49 @@ pub fn handle_math(
 
     if is_display_block && !ctx.in_paragraph && !ctx.convert_as_inline {
         output.push_str("\n\n");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn should_escape_svg_title_caption_that_would_open_a_new_image_link() {
+        // ~keep audit #24 finding 5: the `<svg><title>` used as the data-URI image caption was
+        // pushed unescaped, so an inert `]`/`(` in it could manufacture a second, live image
+        // pointing at an attacker-controlled URL — same mechanism as finding 1 (`<img alt>`).
+        let html = "<svg><title>a](https://evil.example/payload)</title></svg>";
+        let result = crate::convert(html, None).unwrap();
+        let content = result.content.unwrap_or_default();
+        assert_eq!(
+            content,
+            "![a\\](https://evil.example/payload)](data:image/svg+xml;base64,\
+             PHN2Zz48dGl0bGU+YV0oaHR0cHM6Ly9ldmlsLmV4YW1wbGUvcGF5bG9hZCk8L3RpdGxlPjwvc3ZnPg==)\n"
+        );
+    }
+}
+
+#[cfg(test)]
+mod attribute_escaping_tests {
+    use super::serialize_element;
+
+    #[test]
+    fn should_escape_a_quote_inside_a_reconstructed_attribute_value() {
+        // ~keep audit #24 finding 3 (media/svg.rs duplicate): the source HTML's `"` is valid,
+        // inert content inside a single-quoted attribute. Reconstructing it into a
+        // double-quoted attribute without escaping manufactures a real `onclick` that never
+        // existed as an attribute in the original document.
+        let html = r#"<foo title='x" onclick="alert(1)" y=' data-safe="1">"#;
+        let dom = tl::parse(html, tl::ParserOptions::default()).unwrap();
+        let parser = dom.parser();
+        let node_handle = dom
+            .children()
+            .iter()
+            .find(|handle| matches!(handle.get(parser), Some(tl::Node::Tag(_))))
+            .expect("tag node");
+        let result = serialize_element(node_handle, parser);
+        assert_eq!(
+            result,
+            "<foo data-safe=\"1\" title=\"x&quot; onclick=&quot;alert(1)&quot; y=\" />"
+        );
     }
 }
