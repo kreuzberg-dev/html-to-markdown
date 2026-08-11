@@ -18,6 +18,56 @@ use crate::converter::utility::serialization::serialize_node;
 #[cfg(feature = "visitor")]
 use std::borrow::Cow;
 
+/// Minimum length of a Markdown code fence (```` ``` ```` or `~~~`) per CommonMark.
+const MIN_FENCE_LENGTH: usize = 3;
+
+/// Compute the length of the longest consecutive run of `marker` in `content`.
+fn longest_consecutive_run(content: &str, marker: char) -> usize {
+    content
+        .chars()
+        .fold((0usize, 0usize), |(max, current), c| {
+            if c == marker {
+                let next = current + 1;
+                (max.max(next), next)
+            } else {
+                (max, 0)
+            }
+        })
+        .0
+}
+
+/// Smallest backtick-run length (starting at 1) that does not occur as a run inside `content`.
+///
+/// CommonMark closes an inline code span at the next backtick string of the *same* length as
+/// the opening delimiter (6.1) — a longer or shorter run never matches. So the delimiter only
+/// needs to avoid colliding with a run length that actually appears in `content`; it does not
+/// need to exceed the longest run (unlike a fenced block, whose closing rule matches on *any*
+/// run at least as long as the fence). Picking `longest_run + 1` unconditionally over-escapes:
+/// content `` `` `` (a single length-2 run, no length-1 run) is valid with a single backtick.
+fn min_safe_code_span_delimiter_length(content: &str) -> usize {
+    let mut run_lengths = std::collections::HashSet::new();
+    let mut current = 0usize;
+    for c in content.chars() {
+        if c == '`' {
+            current += 1;
+        } else {
+            if current > 0 {
+                run_lengths.insert(current);
+            }
+            current = 0;
+        }
+    }
+    if current > 0 {
+        run_lengths.insert(current);
+    }
+
+    let mut candidate = 1usize;
+    while run_lengths.contains(&candidate) {
+        candidate += 1;
+    }
+    candidate
+}
+
 /// Handle an inline `<code>` element and convert to Markdown.
 ///
 /// This handler processes inline code elements including:
@@ -322,19 +372,7 @@ fn format_inline_code(content: &str, output: &mut String) {
     };
 
     let (num_backticks, needs_spaces) = if contains_backtick {
-        let max_consecutive = content
-            .chars()
-            .fold((0, 0), |(max, current), c| {
-                if c == '`' {
-                    let new_current = current + 1;
-                    (max.max(new_current), new_current)
-                } else {
-                    (max, 0)
-                }
-            })
-            .0;
-        let num = if max_consecutive == 1 { 2 } else { 1 };
-        (num, needs_delimiter_spaces)
+        (min_safe_code_span_delimiter_length(content), needs_delimiter_spaces)
     } else {
         (1, needs_delimiter_spaces)
     };
@@ -401,13 +439,18 @@ fn format_code_block(
                 }
             }
 
-            let fence = if options.code_block_style == crate::options::CodeBlockStyle::Backticks {
-                "```"
+            let fence_char = if options.code_block_style == crate::options::CodeBlockStyle::Backticks {
+                '`'
             } else {
-                "~~~"
+                '~'
             };
+            // ~keep the fence must be strictly longer than the longest run of the fence
+            // ~keep character inside the content, otherwise the fence terminates early
+            // ~keep and corrupts the rest of the document (CommonMark 4.5).
+            let fence_length = (longest_consecutive_run(content, fence_char) + 1).max(MIN_FENCE_LENGTH);
+            let fence: String = std::iter::repeat_n(fence_char, fence_length).collect();
 
-            output.push_str(fence);
+            output.push_str(&fence);
             if let Some(lang) = language {
                 output.push_str(lang);
             } else if !options.code_language.is_empty() {
@@ -416,7 +459,7 @@ fn format_code_block(
             output.push('\n');
             output.push_str(content.trim_end_matches('\n'));
             output.push('\n');
-            output.push_str(fence);
+            output.push_str(&fence);
             output.push_str("\n\n");
         }
     }
