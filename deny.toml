@@ -8,10 +8,7 @@ exclude = ["html-to-markdown-wasm-wasmtime-tests"]
 feature-depth = 1
 
 [advisories]
-ignore = [
-  { id = "RUSTSEC-2026-0176", reason = "pyo3 0.28: Out-of-bounds read in nth/nth_back for PyList/PyTuple iterators. The h2m bindings never call these iterator paths — every PyList/PyTuple traversal goes through the bound-handle wrappers." },
-  { id = "RUSTSEC-2026-0177", reason = "pyo3 0.28: Missing Sync bound on PyCFunction::new_closure closures. The h2m bindings do not use PyCFunction::new_closure." },
-]
+ignore = []
 
 [licenses]
 allow = [
