@@ -1,3 +1,12 @@
+---
+id: fixture_go_options_max_image_size_tiny_limit_safe
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

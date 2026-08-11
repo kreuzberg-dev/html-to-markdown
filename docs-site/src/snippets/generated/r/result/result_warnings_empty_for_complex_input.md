@@ -1,3 +1,12 @@
+---
+id: fixture_r_result_warnings_empty_for_complex_input
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

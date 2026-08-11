@@ -1,3 +1,12 @@
+---
+id: fixture_r_result_warning_kind_image_extraction_failed
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

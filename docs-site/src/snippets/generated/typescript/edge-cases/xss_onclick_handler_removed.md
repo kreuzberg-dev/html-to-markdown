@@ -1,3 +1,12 @@
+---
+id: fixture_node_xss_onclick_handler_removed
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { convert } from "@xberg-io/html-to-markdown";
 function main() {

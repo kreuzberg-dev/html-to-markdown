@@ -1,3 +1,12 @@
+---
+id: fixture_java_options_list_indent_width_four
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

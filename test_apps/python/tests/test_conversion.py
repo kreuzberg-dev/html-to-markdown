@@ -26,6 +26,14 @@ def _alef_e2e_item_texts(item: object) -> tuple[str, ...]:
     )
 
 
+def test_blockquote_code_block_indentation_preserved() -> None:
+    """Code block inside a blockquote keeps its line indentation."""
+    html = "<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>"
+
+    result = convert(html, None)
+    assert result.content.strip() == "> ```\n> line1\n>     line2 indented\n> ```\n"  # noqa: S101
+
+
 def test_blockquote_multiple_paragraphs() -> None:
     """Blockquote with multiple paragraphs has each paragraph prefixed."""
     html = "<blockquote><p>First paragraph.</p><p>Second paragraph.</p></blockquote>"
@@ -49,6 +57,14 @@ def test_blockquote_nested() -> None:
     assert "Inner quote." in result.content  # noqa: S101
 
 
+def test_blockquote_nested_list_indentation_preserved() -> None:
+    """Nested list inside a blockquote keeps its continuation indentation."""
+    html = "<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>"
+
+    result = convert(html, None)
+    assert result.content.strip() == "> - item a\n>   * sub a1\n"  # noqa: S101
+
+
 def test_blockquote_simple() -> None:
     """Simple blockquote."""
     html = "<blockquote><p>Quote text</p></blockquote>"
@@ -56,6 +72,14 @@ def test_blockquote_simple() -> None:
     result = convert(html, None)
     assert result.content is not None  # noqa: S101
     assert "> Quote text" in result.content  # noqa: S101
+
+
+def test_blockquote_text_then_paragraph_gets_blank_line() -> None:
+    """Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line."""
+    html = "<blockquote>Just text, then <p>a paragraph</p></blockquote>"
+
+    result = convert(html, None)
+    assert result.content.strip() == "> Just text, then\n>\n> a paragraph\n"  # noqa: S101
 
 
 def test_blockquote_with_list() -> None:
@@ -758,6 +782,18 @@ def test_table_empty() -> None:
     assert result.content.strip() == ""  # noqa: S101
 
 
+def test_table_nested_chain_not_misclassified_as_layout() -> None:
+    """A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list."""
+    html = "<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>"
+
+    result = convert(html, None)
+    assert result.content  # noqa: S101
+    assert result.content is not None  # noqa: S101
+    assert "leaf" in result.content  # noqa: S101
+    assert result.content is not None  # noqa: S101
+    assert "| ---" in result.content  # noqa: S101
+
+
 def test_table_no_thead() -> None:
     """Table without thead uses first row as implied header."""
     html = "<table><tr><td>Product</td><td>Price</td></tr><tr><td>Apple</td><td>1.00</td></tr></table>"
@@ -788,6 +824,22 @@ def test_table_pipe_chars_in_content() -> None:
     assert "Result" in result.content  # noqa: S101
     assert result.content is not None  # noqa: S101
     assert "true" in result.content  # noqa: S101
+
+
+def test_table_ragged_row_fewer_cells_than_header() -> None:
+    """A data row with fewer cells than the header is padded to the declared column count."""
+    html = "<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>"
+
+    result = convert(html, None)
+    assert result.content.strip() == "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n"  # noqa: S101
+
+
+def test_table_ragged_row_more_cells_than_header() -> None:
+    """A data row with more cells than the header widens the separator so no cell is silently dropped."""
+    html = "<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>"
+
+    result = convert(html, None)
+    assert result.content.strip() == "| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n"  # noqa: S101
 
 
 def test_table_with_alignment() -> None:

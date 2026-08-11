@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_visitor_subscript_custom
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 visitor = %{
       :handle_subscript => fn(args) ->

@@ -1,3 +1,12 @@
+---
+id: fixture_swift_malformed_bogus_comment_triple_dash
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

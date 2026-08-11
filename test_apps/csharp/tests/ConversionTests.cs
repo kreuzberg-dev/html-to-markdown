@@ -22,6 +22,15 @@ namespace HtmlToMarkdown
             private static readonly JsonSerializerOptions ConfigOptions = new() { Converters = { new JsonStringEnumConverter(JsonNamingPolicy.SnakeCaseLower) }, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault };
 
         [Fact]
+        public void Test_BlockquoteCodeBlockIndentationPreserved()
+        {
+            // Code block inside a blockquote keeps its line indentation
+            var result = HtmlToMarkdownConverter.Convert("<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>", new ConversionOptions());
+    Assert.Equal("> ```\n> line1\n>     line2 indented\n> ```\n", result.Content!.Trim());
+
+        }
+
+        [Fact]
         public void Test_BlockquoteMultipleParagraphs()
         {
             // Blockquote with multiple paragraphs has each paragraph prefixed
@@ -43,11 +52,29 @@ namespace HtmlToMarkdown
         }
 
         [Fact]
+        public void Test_BlockquoteNestedListIndentationPreserved()
+        {
+            // Nested list inside a blockquote keeps its continuation indentation
+            var result = HtmlToMarkdownConverter.Convert("<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>", new ConversionOptions());
+    Assert.Equal("> - item a\n>   * sub a1\n", result.Content!.Trim());
+
+        }
+
+        [Fact]
         public void Test_BlockquoteSimple()
         {
             // Simple blockquote
             var result = HtmlToMarkdownConverter.Convert("<blockquote><p>Quote text</p></blockquote>", new ConversionOptions());
     Assert.Contains("> quote text", result.Content.ToString().ToLower());
+
+        }
+
+        [Fact]
+        public void Test_BlockquoteTextThenParagraphGetsBlankLine()
+        {
+            // Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line
+            var result = HtmlToMarkdownConverter.Convert("<blockquote>Just text, then <p>a paragraph</p></blockquote>", new ConversionOptions());
+    Assert.Equal("> Just text, then\n>\n> a paragraph\n", result.Content!.Trim());
 
         }
 
@@ -712,6 +739,17 @@ namespace HtmlToMarkdown
         }
 
         [Fact]
+        public void Test_TableNestedChainNotMisclassifiedAsLayout()
+        {
+            // A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list
+            var result = HtmlToMarkdownConverter.Convert("<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>", new ConversionOptions());
+    Assert.False(string.IsNullOrEmpty(result.Content?.ToString()));
+    Assert.Contains("leaf", result.Content.ToString().ToLower());
+    Assert.Contains("| ---", result.Content.ToString().ToLower());
+
+        }
+
+        [Fact]
         public void Test_TableNoThead()
         {
             // Table without thead uses first row as implied header
@@ -734,6 +772,24 @@ namespace HtmlToMarkdown
     Assert.Contains("expression", result.Content.ToString().ToLower());
     Assert.Contains("result", result.Content.ToString().ToLower());
     Assert.Contains("true", result.Content.ToString().ToLower());
+
+        }
+
+        [Fact]
+        public void Test_TableRaggedRowFewerCellsThanHeader()
+        {
+            // A data row with fewer cells than the header is padded to the declared column count
+            var result = HtmlToMarkdownConverter.Convert("<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>", new ConversionOptions());
+    Assert.Equal("| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n", result.Content!.Trim());
+
+        }
+
+        [Fact]
+        public void Test_TableRaggedRowMoreCellsThanHeader()
+        {
+            // A data row with more cells than the header widens the separator so no cell is silently dropped
+            var result = HtmlToMarkdownConverter.Convert("<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>", new ConversionOptions());
+    Assert.Equal("| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n", result.Content!.Trim());
 
         }
 

@@ -1,3 +1,12 @@
+---
+id: fixture_python_options_max_image_size_generous_limit
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert, ConversionOptions
 

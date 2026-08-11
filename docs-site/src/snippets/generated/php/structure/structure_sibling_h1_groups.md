@@ -1,3 +1,12 @@
+---
+id: fixture_php_structure_sibling_h1_groups
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

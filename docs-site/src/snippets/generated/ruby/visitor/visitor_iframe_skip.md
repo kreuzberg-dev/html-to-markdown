@@ -1,3 +1,12 @@
+---
+id: fixture_ruby_visitor_iframe_skip
+language: ruby
+target: ruby
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```ruby title="Ruby"
 require "html-to-markdown"
 visitor = Class.new do

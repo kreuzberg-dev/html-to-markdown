@@ -7,6 +7,25 @@ use html_to_markdown_rs::ConversionOptions;
 use html_to_markdown_rs::convert;
 
 #[test]
+fn test_blockquote_code_block_indentation_preserved() {
+    // Code block inside a blockquote keeps its line indentation
+    let html = r#"<blockquote><pre><code>line1
+    line2 indented</code></pre></blockquote>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert_eq!(
+        _content.to_string().as_str().trim(),
+        r#"> ```
+> line1
+>     line2 indented
+> ```
+"#,
+        "equals assertion failed"
+    );
+}
+
+#[test]
 fn test_blockquote_multiple_paragraphs() {
     // Blockquote with multiple paragraphs has each paragraph prefixed
     let html = r#"<blockquote><p>First paragraph.</p><p>Second paragraph.</p></blockquote>"#;
@@ -46,6 +65,22 @@ fn test_blockquote_nested() {
 }
 
 #[test]
+fn test_blockquote_nested_list_indentation_preserved() {
+    // Nested list inside a blockquote keeps its continuation indentation
+    let html = r#"<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert_eq!(
+        _content.to_string().as_str().trim(),
+        r#"> - item a
+>   * sub a1
+"#,
+        "equals assertion failed"
+    );
+}
+
+#[test]
 fn test_blockquote_simple() {
     // Simple blockquote
     let html = r#"<blockquote><p>Quote text</p></blockquote>"#;
@@ -56,6 +91,23 @@ fn test_blockquote_simple() {
         format!("{:?}", _content).contains(r#"> Quote text"#),
         "expected to contain: {}",
         r#"> Quote text"#
+    );
+}
+
+#[test]
+fn test_blockquote_text_then_paragraph_gets_blank_line() {
+    // Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line
+    let html = r#"<blockquote>Just text, then <p>a paragraph</p></blockquote>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert_eq!(
+        _content.to_string().as_str().trim(),
+        r#"> Just text, then
+>
+> a paragraph
+"#,
+        "equals assertion failed"
     );
 }
 
@@ -1252,6 +1304,27 @@ fn test_table_empty() {
 }
 
 #[test]
+fn test_table_nested_chain_not_misclassified_as_layout() {
+    // A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list
+    let html =
+        r#"<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert!(!_content.is_empty(), "expected non-empty value");
+    assert!(
+        format!("{:?}", _content).contains(r#"leaf"#),
+        "expected to contain: {}",
+        r#"leaf"#
+    );
+    assert!(
+        format!("{:?}", _content).contains(r#"| ---"#),
+        "expected to contain: {}",
+        r#"| ---"#
+    );
+}
+
+#[test]
 fn test_table_no_thead() {
     // Table without thead uses first row as implied header
     let html = r#"<table><tr><td>Product</td><td>Price</td></tr><tr><td>Apple</td><td>1.00</td></tr></table>"#;
@@ -1308,6 +1381,40 @@ fn test_table_pipe_chars_in_content() {
         format!("{:?}", _content).contains(r#"true"#),
         "expected to contain: {}",
         r#"true"#
+    );
+}
+
+#[test]
+fn test_table_ragged_row_fewer_cells_than_header() {
+    // A data row with fewer cells than the header is padded to the declared column count
+    let html = r#"<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert_eq!(
+        _content.to_string().as_str().trim(),
+        r#"| A | B | C |
+| --- | --- | --- |
+| 1 | 2 |   |
+"#,
+        "equals assertion failed"
+    );
+}
+
+#[test]
+fn test_table_ragged_row_more_cells_than_header() {
+    // A data row with more cells than the header widens the separator so no cell is silently dropped
+    let html = r#"<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>"#;
+    let options: ConversionOptions = Default::default();
+    let result = convert(html, Some(options.clone())).expect("call failed");
+    let _content = result.content.as_ref().map(|v| v.to_string()).unwrap_or_default();
+    assert_eq!(
+        _content.to_string().as_str().trim(),
+        r#"| A | B |   |
+| --- | --- | --- |
+| 1 | 2 | 3 |
+"#,
+        "equals assertion failed"
     );
 }
 

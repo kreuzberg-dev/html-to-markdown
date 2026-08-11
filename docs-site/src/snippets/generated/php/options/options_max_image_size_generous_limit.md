@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_max_image_size_generous_limit
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -1,3 +1,12 @@
+---
+id: fixture_swift_malformed_deeply_nested_elements
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

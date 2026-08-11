@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_malformed_missing_block_closing_tags
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

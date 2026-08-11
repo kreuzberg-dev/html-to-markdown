@@ -1,3 +1,12 @@
+---
+id: fixture_python_options_preprocessing_remove_navigation_false_keeps_nav
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert, ConversionOptions
 

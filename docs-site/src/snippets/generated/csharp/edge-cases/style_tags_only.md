@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_style_tags_only
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

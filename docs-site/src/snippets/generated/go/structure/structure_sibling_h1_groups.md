@@ -1,3 +1,12 @@
+---
+id: fixture_go_structure_sibling_h1_groups
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

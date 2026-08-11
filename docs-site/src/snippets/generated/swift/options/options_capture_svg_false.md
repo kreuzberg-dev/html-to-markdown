@@ -1,3 +1,12 @@
+---
+id: fixture_swift_options_capture_svg_false
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

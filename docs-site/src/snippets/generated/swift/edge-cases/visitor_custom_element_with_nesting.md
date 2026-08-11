@@ -1,3 +1,12 @@
+---
+id: fixture_swift_visitor_custom_element_with_nesting
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

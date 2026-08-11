@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_visitor_element_start_skip_entire_subtree
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

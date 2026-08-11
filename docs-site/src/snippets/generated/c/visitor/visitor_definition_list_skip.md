@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_definition_list_skip
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -52,6 +61,8 @@ int main(void) {
     assert(_content != NULL && strstr(_content, "End of glossary") != NULL && "expected to contain substring");
     assert((_content == NULL || strstr(_content, "Term A") == NULL) && "expected NOT to contain substring");
     assert((_content == NULL || strstr(_content, "Definition") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

@@ -1,3 +1,12 @@
+---
+id: fixture_python_list_task_checkboxes
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

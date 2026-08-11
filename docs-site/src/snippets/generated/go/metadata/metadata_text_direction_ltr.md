@@ -1,3 +1,12 @@
+---
+id: fixture_go_metadata_text_direction_ltr
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

@@ -1,3 +1,12 @@
+---
+id: fixture_rust_options_keep_inline_images_in_paragraph
+language: rust
+target: rust
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```rust title="Rust"
 use html_to_markdown_rs::convert;
 use html_to_markdown_rs::ConversionOptions;

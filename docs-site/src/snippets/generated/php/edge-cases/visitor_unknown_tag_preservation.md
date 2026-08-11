@@ -1,3 +1,12 @@
+---
+id: fixture_php_visitor_unknown_tag_preservation
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

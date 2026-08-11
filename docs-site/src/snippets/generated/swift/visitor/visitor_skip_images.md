@@ -1,3 +1,12 @@
+---
+id: fixture_swift_visitor_skip_images
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

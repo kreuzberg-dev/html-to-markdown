@@ -1,3 +1,12 @@
+---
+id: fixture_python_conversion_autolink_mixed_filename_and_url
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

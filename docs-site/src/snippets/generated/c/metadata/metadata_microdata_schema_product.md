@@ -1,3 +1,12 @@
+---
+id: fixture_c_metadata_microdata_schema_product
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

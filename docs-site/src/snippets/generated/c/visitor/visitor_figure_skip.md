@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_figure_skip
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -41,6 +50,8 @@ int main(void) {
     assert(_content != NULL && strstr(_content, "As shown in the chart above.") != NULL && "expected to contain substring");
     assert((_content == NULL || strstr(_content, "Revenue Trends") == NULL) && "expected NOT to contain substring");
     assert((_content == NULL || strstr(_content, "chart.svg") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

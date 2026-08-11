@@ -1,3 +1,12 @@
+---
+id: fixture_node_xss_svg_nested_script_stripped
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { convert } from "@xberg-io/html-to-markdown";
 function main() {

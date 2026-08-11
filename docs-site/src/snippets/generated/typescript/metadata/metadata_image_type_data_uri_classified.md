@@ -1,3 +1,12 @@
+---
+id: fixture_node_metadata_image_type_data_uri_classified
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { ConversionOptions, convert } from "@xberg-io/html-to-markdown";
 function main() {

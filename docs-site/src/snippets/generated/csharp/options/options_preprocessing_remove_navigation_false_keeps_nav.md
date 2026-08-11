@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_options_preprocessing_remove_navigation_false_keeps_nav
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_max_image_size_tiny_limit_safe
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

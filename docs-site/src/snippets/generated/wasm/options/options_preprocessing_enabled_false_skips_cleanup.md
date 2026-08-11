@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_preprocessing_enabled_false_skips_cleanup
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, WasmPreprocessingOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

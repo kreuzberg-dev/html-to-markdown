@@ -1,3 +1,12 @@
+---
+id: fixture_c_result_warning_kind_image_extraction_failed
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

@@ -1,3 +1,12 @@
+---
+id: fixture_r_real_world_documentation_page
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

@@ -1,3 +1,12 @@
+---
+id: fixture_rust_result_warnings_empty_for_complex_input
+language: rust
+target: rust
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```rust title="Rust"
 use html_to_markdown_rs::convert;
 use html_to_markdown_rs::ConversionOptions;

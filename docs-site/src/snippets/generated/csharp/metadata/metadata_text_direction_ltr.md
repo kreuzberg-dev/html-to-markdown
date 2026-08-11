@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_metadata_text_direction_ltr
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

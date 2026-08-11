@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_heading_bare_string_preserves_case
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

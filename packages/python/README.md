@@ -171,7 +171,7 @@ markdown = result.content           # Converted Markdown string
 metadata = result.metadata          # Metadata (when extract_metadata=True)
 tables   = result.tables            # Structured table data
 document = result.document          # Document-level info
-images   = result.images            # Extracted images
+images   = result.metadata.images   # Extracted images
 warnings = result.warnings          # Any conversion warnings
 ```
 

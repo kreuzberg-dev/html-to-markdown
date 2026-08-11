@@ -1,3 +1,12 @@
+---
+id: fixture_r_options_exclude_selectors_plain_text_mode
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

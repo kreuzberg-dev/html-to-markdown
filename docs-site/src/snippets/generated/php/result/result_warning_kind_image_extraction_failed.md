@@ -1,3 +1,12 @@
+---
+id: fixture_php_result_warning_kind_image_extraction_failed
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_result_warnings_empty_for_complex_input
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

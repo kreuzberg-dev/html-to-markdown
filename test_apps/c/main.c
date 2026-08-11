@@ -10,6 +10,10 @@ int main(void) {
     int passed = 0;
 
     /* Category: conversion */
+    printf("  Running test_blockquote_code_block_indentation_preserved...");
+    test_blockquote_code_block_indentation_preserved();
+    printf(" PASSED\n");
+    passed++;
     printf("  Running test_blockquote_multiple_paragraphs...");
     test_blockquote_multiple_paragraphs();
     printf(" PASSED\n");
@@ -18,8 +22,16 @@ int main(void) {
     test_blockquote_nested();
     printf(" PASSED\n");
     passed++;
+    printf("  Running test_blockquote_nested_list_indentation_preserved...");
+    test_blockquote_nested_list_indentation_preserved();
+    printf(" PASSED\n");
+    passed++;
     printf("  Running test_blockquote_simple...");
     test_blockquote_simple();
+    printf(" PASSED\n");
+    passed++;
+    printf("  Running test_blockquote_text_then_paragraph_gets_blank_line...");
+    test_blockquote_text_then_paragraph_gets_blank_line();
     printf(" PASSED\n");
     passed++;
     printf("  Running test_blockquote_with_list...");
@@ -286,12 +298,24 @@ int main(void) {
     test_table_empty();
     printf(" PASSED\n");
     passed++;
+    printf("  Running test_table_nested_chain_not_misclassified_as_layout...");
+    test_table_nested_chain_not_misclassified_as_layout();
+    printf(" PASSED\n");
+    passed++;
     printf("  Running test_table_no_thead...");
     test_table_no_thead();
     printf(" PASSED\n");
     passed++;
     printf("  Running test_table_pipe_chars_in_content...");
     test_table_pipe_chars_in_content();
+    printf(" PASSED\n");
+    passed++;
+    printf("  Running test_table_ragged_row_fewer_cells_than_header...");
+    test_table_ragged_row_fewer_cells_than_header();
+    printf(" PASSED\n");
+    passed++;
+    printf("  Running test_table_ragged_row_more_cells_than_header...");
+    test_table_ragged_row_more_cells_than_header();
     printf(" PASSED\n");
     passed++;
     printf("  Running test_table_with_alignment...");

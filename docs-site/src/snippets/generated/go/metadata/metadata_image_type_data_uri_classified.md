@@ -1,3 +1,12 @@
+---
+id: fixture_go_metadata_image_type_data_uri_classified
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

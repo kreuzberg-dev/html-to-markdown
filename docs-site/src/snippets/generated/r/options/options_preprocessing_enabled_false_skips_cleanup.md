@@ -1,3 +1,12 @@
+---
+id: fixture_r_options_preprocessing_enabled_false_skips_cleanup
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

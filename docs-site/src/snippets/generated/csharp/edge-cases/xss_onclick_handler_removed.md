@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_xss_onclick_handler_removed
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

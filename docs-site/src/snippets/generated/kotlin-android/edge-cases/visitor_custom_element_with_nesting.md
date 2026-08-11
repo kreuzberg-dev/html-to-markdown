@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_visitor_custom_element_with_nesting
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

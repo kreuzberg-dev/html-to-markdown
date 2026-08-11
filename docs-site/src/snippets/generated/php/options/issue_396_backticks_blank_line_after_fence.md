@@ -1,3 +1,12 @@
+---
+id: fixture_php_issue_396_backticks_blank_line_after_fence
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

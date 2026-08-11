@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_visitor_unknown_tag_preservation
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 visitor = %{
       :handle_custom_element => fn(_args) ->

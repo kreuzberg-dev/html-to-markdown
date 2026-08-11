@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_output_format_plain
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, WasmOutputFormat, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

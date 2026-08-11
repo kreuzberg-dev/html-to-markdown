@@ -1,3 +1,12 @@
+---
+id: fixture_swift_result_warning_kind_image_extraction_failed
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

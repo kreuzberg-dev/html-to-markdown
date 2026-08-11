@@ -1,3 +1,12 @@
+---
+id: fixture_r_form_textarea
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

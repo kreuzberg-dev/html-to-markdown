@@ -5,6 +5,13 @@
 defmodule E2e.ConversionTest do
   use ExUnit.Case, async: false
 
+  describe "blockquote_code_block_indentation_preserved" do
+    test "blockquote_code_block_indentation_preserved" do
+      {:ok, result} = HtmlToMarkdown.convert("<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>")
+      assert String.trim(result.content) == "> ```\n> line1\n>     line2 indented\n> ```\n"
+    end
+  end
+
   describe "blockquote_multiple_paragraphs" do
     test "blockquote_multiple_paragraphs" do
       {:ok, result} = HtmlToMarkdown.convert("<blockquote><p>First paragraph.</p><p>Second paragraph.</p></blockquote>")
@@ -22,10 +29,24 @@ defmodule E2e.ConversionTest do
     end
   end
 
+  describe "blockquote_nested_list_indentation_preserved" do
+    test "blockquote_nested_list_indentation_preserved" do
+      {:ok, result} = HtmlToMarkdown.convert("<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>")
+      assert String.trim(result.content) == "> - item a\n>   * sub a1\n"
+    end
+  end
+
   describe "blockquote_simple" do
     test "blockquote_simple" do
       {:ok, result} = HtmlToMarkdown.convert("<blockquote><p>Quote text</p></blockquote>")
       assert String.contains?(to_string(result.content), "> Quote text")
+    end
+  end
+
+  describe "blockquote_text_then_paragraph_gets_blank_line" do
+    test "blockquote_text_then_paragraph_gets_blank_line" do
+      {:ok, result} = HtmlToMarkdown.convert("<blockquote>Just text, then <p>a paragraph</p></blockquote>")
+      assert String.trim(result.content) == "> Just text, then\n>\n> a paragraph\n"
     end
   end
 
@@ -596,6 +617,17 @@ defmodule E2e.ConversionTest do
     end
   end
 
+  describe "table_nested_chain_not_misclassified_as_layout" do
+    test "table_nested_chain_not_misclassified_as_layout" do
+      {:ok, result} =
+        HtmlToMarkdown.convert("<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>")
+
+      assert result.content != ""
+      assert String.contains?(to_string(result.content), "leaf")
+      assert String.contains?(to_string(result.content), "| ---")
+    end
+  end
+
   describe "table_no_thead" do
     test "table_no_thead" do
       {:ok, result} = HtmlToMarkdown.convert("<table><tr><td>Product</td><td>Price</td></tr><tr><td>Apple</td><td>1.00</td></tr></table>")
@@ -619,6 +651,20 @@ defmodule E2e.ConversionTest do
       assert String.contains?(to_string(result.content), "Expression")
       assert String.contains?(to_string(result.content), "Result")
       assert String.contains?(to_string(result.content), "true")
+    end
+  end
+
+  describe "table_ragged_row_fewer_cells_than_header" do
+    test "table_ragged_row_fewer_cells_than_header" do
+      {:ok, result} = HtmlToMarkdown.convert("<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>")
+      assert String.trim(result.content) == "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n"
+    end
+  end
+
+  describe "table_ragged_row_more_cells_than_header" do
+    test "table_ragged_row_more_cells_than_header" do
+      {:ok, result} = HtmlToMarkdown.convert("<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>")
+      assert String.trim(result.content) == "| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n"
     end
   end
 

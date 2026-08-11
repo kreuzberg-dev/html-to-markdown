@@ -1,3 +1,12 @@
+---
+id: fixture_c_result_tables_empty_when_no_tables
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_options_exclude_selectors_multiple
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 options_value = %HtmlToMarkdown.ConversionOptions{exclude_selectors: [".nav", "footer"]}
 result = HtmlToMarkdown.convert("<body><nav class=\"nav\">Menu</nav><p>Content</p><footer>Footer</footer></body>", options_value)

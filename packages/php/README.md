@@ -291,12 +291,12 @@ $visitor = new class {
         if (str_starts_with($href, 'https://old-cdn.com')) {
             $href = str_replace('https://old-cdn.com', 'https://new-cdn.com', $href);
         }
-        return ['Custom' => "[{$text}]({$href})"];
+        return ['custom' => "[{$text}]({$href})"];
     }
 
     public function visit_image($ctx, $src, $alt, $title) {
         // Skip tracking pixels
-        return str_contains($src, 'tracking') ? 'Skip' : 'Continue';
+        return str_contains($src, 'tracking') ? 'skip' : 'continue';
     }
 };
 

@@ -1,3 +1,12 @@
+---
+id: fixture_c_options_sup_symbol_caret
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

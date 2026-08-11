@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_url_escape_style_percent_angle_brackets_in_url
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, WasmUrlEscapeStyle, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

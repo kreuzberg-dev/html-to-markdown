@@ -1,3 +1,12 @@
+---
+id: fixture_go_link_empty_href
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

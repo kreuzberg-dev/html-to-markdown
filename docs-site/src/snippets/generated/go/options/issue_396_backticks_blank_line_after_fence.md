@@ -1,3 +1,12 @@
+---
+id: fixture_go_issue_396_backticks_blank_line_after_fence
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

@@ -1,3 +1,12 @@
+---
+id: fixture_php_result_tables_empty_when_no_tables
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

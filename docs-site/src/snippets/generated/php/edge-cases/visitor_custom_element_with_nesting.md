@@ -1,3 +1,12 @@
+---
+id: fixture_php_visitor_custom_element_with_nesting
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -1,3 +1,12 @@
+---
+id: fixture_swift_code_with_backticks_in_content
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

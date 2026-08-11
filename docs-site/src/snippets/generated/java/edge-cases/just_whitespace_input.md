@@ -1,3 +1,12 @@
+---
+id: fixture_java_just_whitespace_input
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

@@ -1,3 +1,12 @@
+---
+id: fixture_r_metadata_extract_all_links
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

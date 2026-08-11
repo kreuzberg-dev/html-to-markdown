@@ -1,3 +1,12 @@
+---
+id: fixture_c_options_url_escape_style_percent_angle_brackets_in_url
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

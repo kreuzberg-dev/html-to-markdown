@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_options_max_image_size_tiny_limit_safe
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

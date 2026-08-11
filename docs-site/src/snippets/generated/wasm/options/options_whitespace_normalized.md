@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_whitespace_normalized
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, WasmWhitespaceMode, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

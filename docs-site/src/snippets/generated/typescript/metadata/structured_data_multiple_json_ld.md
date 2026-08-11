@@ -1,3 +1,12 @@
+---
+id: fixture_node_structured_data_multiple_json_ld
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { convert } from "@xberg-io/html-to-markdown";
 function main() {

@@ -1,3 +1,12 @@
+---
+id: fixture_go_result_tables_empty_when_no_tables
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

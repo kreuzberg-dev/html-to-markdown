@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_unknown_tag_preservation
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -42,6 +51,7 @@ int main(void) {
     assert(_content != NULL && strstr(_content, "Article text") != NULL && "expected to contain substring");
     assert(_content != NULL && strstr(_content, "More article text") != NULL && "expected to contain substring");
     assert(_content != NULL && strstr(_content, "<x-custom>") != NULL && "expected to contain substring");
+    assert((_content == NULL || strstr(_content, "preserve_html") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

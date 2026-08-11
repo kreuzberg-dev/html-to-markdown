@@ -1,3 +1,12 @@
+---
+id: fixture_java_options_max_image_size_generous_limit
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

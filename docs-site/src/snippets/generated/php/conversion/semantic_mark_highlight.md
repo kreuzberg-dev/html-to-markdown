@@ -1,3 +1,12 @@
+---
+id: fixture_php_semantic_mark_highlight
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

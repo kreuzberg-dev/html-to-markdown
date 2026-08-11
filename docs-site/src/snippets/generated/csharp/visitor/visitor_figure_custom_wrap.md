@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_visitor_figure_custom_wrap
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

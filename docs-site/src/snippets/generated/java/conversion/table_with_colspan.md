@@ -1,3 +1,12 @@
+---
+id: fixture_java_table_with_colspan
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

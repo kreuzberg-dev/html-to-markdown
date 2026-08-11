@@ -1,3 +1,12 @@
+---
+id: fixture_java_structure_deep_nesting_h1_h2_h3
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

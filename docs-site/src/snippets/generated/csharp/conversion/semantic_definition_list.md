@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_semantic_definition_list
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

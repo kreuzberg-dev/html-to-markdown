@@ -1,3 +1,12 @@
+---
+id: fixture_c_metadata_text_direction_rtl
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

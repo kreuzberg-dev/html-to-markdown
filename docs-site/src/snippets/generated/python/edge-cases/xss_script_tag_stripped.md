@@ -1,3 +1,12 @@
+---
+id: fixture_python_xss_script_tag_stripped
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

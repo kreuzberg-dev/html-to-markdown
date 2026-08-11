@@ -1,3 +1,12 @@
+---
+id: fixture_go_structured_data_multiple_json_ld
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

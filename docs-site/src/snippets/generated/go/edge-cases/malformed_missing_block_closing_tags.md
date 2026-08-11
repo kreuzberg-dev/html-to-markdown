@@ -1,3 +1,12 @@
+---
+id: fixture_go_malformed_missing_block_closing_tags
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

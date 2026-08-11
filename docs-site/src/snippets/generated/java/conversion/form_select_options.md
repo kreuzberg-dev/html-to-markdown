@@ -1,3 +1,12 @@
+---
+id: fixture_java_form_select_options
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

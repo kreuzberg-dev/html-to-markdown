@@ -1,3 +1,12 @@
+---
+id: fixture_php_form_input_elements
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

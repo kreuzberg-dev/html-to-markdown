@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_extract_images_true_data_uri
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

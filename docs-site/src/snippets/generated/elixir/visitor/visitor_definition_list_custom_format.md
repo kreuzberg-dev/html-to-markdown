@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_visitor_definition_list_custom_format
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 visitor = %{
       :handle_definition_description => fn(args) ->

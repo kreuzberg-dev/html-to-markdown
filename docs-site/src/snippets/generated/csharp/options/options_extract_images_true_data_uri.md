@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_options_extract_images_true_data_uri
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

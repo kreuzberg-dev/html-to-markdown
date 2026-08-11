@@ -13,6 +13,16 @@
 #include "html_to_markdown.h"
 #include "test_runner.h"
 
+void test_blockquote_code_block_indentation_preserved(void) {
+    /* Code block inside a blockquote keeps its line indentation */
+    HTMConversionResult* result = htm_convert("<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(str_trim_eq(content, "> ```\n> line1\n>     line2 indented\n> ```\n") == 0 && "equals assertion failed");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
 void test_blockquote_multiple_paragraphs(void) {
     /* Blockquote with multiple paragraphs has each paragraph prefixed */
     HTMConversionResult* result = htm_convert("<blockquote><p>First paragraph.</p><p>Second paragraph.</p></blockquote>", NULL);
@@ -36,12 +46,32 @@ void test_blockquote_nested(void) {
     htm_conversion_result_free(result);
 }
 
+void test_blockquote_nested_list_indentation_preserved(void) {
+    /* Nested list inside a blockquote keeps its continuation indentation */
+    HTMConversionResult* result = htm_convert("<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(str_trim_eq(content, "> - item a\n>   * sub a1\n") == 0 && "equals assertion failed");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
 void test_blockquote_simple(void) {
     /* Simple blockquote */
     HTMConversionResult* result = htm_convert("<blockquote><p>Quote text</p></blockquote>", NULL);
     assert(result != NULL && "expected call to succeed");
     char* content = htm_conversion_result_content(result);
     assert(content != NULL && strstr(content, "> Quote text") != NULL && "expected to contain substring");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
+void test_blockquote_text_then_paragraph_gets_blank_line(void) {
+    /* Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line */
+    HTMConversionResult* result = htm_convert("<blockquote>Just text, then <p>a paragraph</p></blockquote>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(str_trim_eq(content, "> Just text, then\n>\n> a paragraph\n") == 0 && "equals assertion failed");
     htm_free_string(content);
     htm_conversion_result_free(result);
 }
@@ -778,6 +808,18 @@ void test_table_empty(void) {
     htm_conversion_result_free(result);
 }
 
+void test_table_nested_chain_not_misclassified_as_layout(void) {
+    /* A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list */
+    HTMConversionResult* result = htm_convert("<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(content != NULL && strlen(content) > 0 && "expected non-empty value");
+    assert(content != NULL && strstr(content, "leaf") != NULL && "expected to contain substring");
+    assert(content != NULL && strstr(content, "| ---") != NULL && "expected to contain substring");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
 void test_table_no_thead(void) {
     /* Table without thead uses first row as implied header */
     HTMConversionResult* result = htm_convert("<table><tr><td>Product</td><td>Price</td></tr><tr><td>Apple</td><td>1.00</td></tr></table>", NULL);
@@ -802,6 +844,26 @@ void test_table_pipe_chars_in_content(void) {
     assert(content != NULL && strstr(content, "Expression") != NULL && "expected to contain substring");
     assert(content != NULL && strstr(content, "Result") != NULL && "expected to contain substring");
     assert(content != NULL && strstr(content, "true") != NULL && "expected to contain substring");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
+void test_table_ragged_row_fewer_cells_than_header(void) {
+    /* A data row with fewer cells than the header is padded to the declared column count */
+    HTMConversionResult* result = htm_convert("<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(str_trim_eq(content, "| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n") == 0 && "equals assertion failed");
+    htm_free_string(content);
+    htm_conversion_result_free(result);
+}
+
+void test_table_ragged_row_more_cells_than_header(void) {
+    /* A data row with more cells than the header widens the separator so no cell is silently dropped */
+    HTMConversionResult* result = htm_convert("<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>", NULL);
+    assert(result != NULL && "expected call to succeed");
+    char* content = htm_conversion_result_content(result);
+    assert(str_trim_eq(content, "| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n") == 0 && "equals assertion failed");
     htm_free_string(content);
     htm_conversion_result_free(result);
 }

@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_og_multiple_tags
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

@@ -1,3 +1,12 @@
+---
+id: fixture_ruby_visitor_custom_element_with_nesting
+language: ruby
+target: ruby
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```ruby title="Ruby"
 require "html-to-markdown"
 visitor = Class.new do

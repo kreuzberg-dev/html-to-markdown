@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_list_indent_width_four
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

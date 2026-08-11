@@ -1,3 +1,12 @@
+---
+id: fixture_go_xss_script_tag_stripped
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

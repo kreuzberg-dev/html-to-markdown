@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_options_highlight_none
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 options_value = %HtmlToMarkdown.ConversionOptions{highlight_style: "None"}
 result = HtmlToMarkdown.convert("<p>Text with <mark>plain</mark> content.</p>", options_value)

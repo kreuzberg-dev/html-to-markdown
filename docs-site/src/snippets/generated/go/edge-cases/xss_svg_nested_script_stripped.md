@@ -1,3 +1,12 @@
+---
+id: fixture_go_xss_svg_nested_script_stripped
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

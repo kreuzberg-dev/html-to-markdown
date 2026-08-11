@@ -1,3 +1,12 @@
+---
+id: fixture_php_list_nested_ordered
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

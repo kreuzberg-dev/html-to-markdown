@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_output_format_djot
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

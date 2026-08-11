@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_issue_396_backticks_blank_line_after_fence
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using System.Text.Json;
 using HtmlToMarkdown;

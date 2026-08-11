@@ -1,3 +1,12 @@
+---
+id: fixture_swift_issue_396_backticks_blank_line_after_fence
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

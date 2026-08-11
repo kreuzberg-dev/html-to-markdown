@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_visitor_details_summary_skip
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 visitor = %{
       :handle_details => fn(_args) ->

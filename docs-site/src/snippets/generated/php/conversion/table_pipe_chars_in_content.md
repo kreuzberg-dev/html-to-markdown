@@ -1,3 +1,12 @@
+---
+id: fixture_php_table_pipe_chars_in_content
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -1,3 +1,12 @@
+---
+id: fixture_node_real_world_documentation_page
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { CodeBlockStyle, ConversionOptions, HeadingStyle, convert } from "@xberg-io/html-to-markdown";
 function main() {

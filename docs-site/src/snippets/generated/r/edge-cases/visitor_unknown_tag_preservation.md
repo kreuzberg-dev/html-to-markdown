@@ -1,3 +1,12 @@
+---
+id: fixture_r_visitor_unknown_tag_preservation
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

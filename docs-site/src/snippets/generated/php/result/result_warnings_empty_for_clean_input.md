@@ -1,3 +1,12 @@
+---
+id: fixture_php_result_warnings_empty_for_clean_input
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

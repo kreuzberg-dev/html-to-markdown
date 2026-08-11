@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_real_world_blog_post
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

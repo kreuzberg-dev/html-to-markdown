@@ -1,3 +1,12 @@
+---
+id: fixture_go_options_keep_inline_images_in_paragraph
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

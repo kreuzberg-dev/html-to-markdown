@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_input_skip
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -43,6 +52,8 @@ int main(void) {
     assert(_content != NULL && strstr(_content, "Sign up:") != NULL && "expected to contain substring");
     assert(_content != NULL && strstr(_content, "Continue") != NULL && "expected to contain substring");
     assert((_content == NULL || strstr(_content, "email") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

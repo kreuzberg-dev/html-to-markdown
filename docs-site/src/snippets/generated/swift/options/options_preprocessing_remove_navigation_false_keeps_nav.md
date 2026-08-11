@@ -1,3 +1,12 @@
+---
+id: fixture_swift_options_preprocessing_remove_navigation_false_keeps_nav
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

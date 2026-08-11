@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_line_break_skip
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -38,6 +47,8 @@ int main(void) {
     char* _content = alef_json_get_string(_json, "content");
 
     assert(_content != NULL && strstr(_content, "Address Line 1Address Line 2Address Line 3") != NULL && "expected to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

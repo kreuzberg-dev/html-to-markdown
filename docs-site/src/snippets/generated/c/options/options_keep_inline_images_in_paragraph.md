@@ -1,3 +1,12 @@
+---
+id: fixture_c_options_keep_inline_images_in_paragraph
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

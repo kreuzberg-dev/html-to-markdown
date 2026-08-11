@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_result_warning_kind_image_extraction_failed
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

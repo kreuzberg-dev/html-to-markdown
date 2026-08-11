@@ -1,3 +1,12 @@
+---
+id: fixture_go_options_heading_style_atx_closed
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

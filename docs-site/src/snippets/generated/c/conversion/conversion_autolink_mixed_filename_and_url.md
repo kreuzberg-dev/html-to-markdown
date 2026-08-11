@@ -1,3 +1,12 @@
+---
+id: fixture_c_conversion_autolink_mixed_filename_and_url
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

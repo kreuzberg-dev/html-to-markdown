@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_structured_data_json_ld
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

@@ -1,3 +1,12 @@
+---
+id: fixture_go_real_world_documentation_page
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

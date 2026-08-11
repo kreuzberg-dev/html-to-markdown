@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_element_start_skip_entire_subtree
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -39,6 +48,8 @@ int main(void) {
 
     assert((_content == NULL || strstr(_content, "Title") == NULL) && "expected NOT to contain substring");
     assert((_content == NULL || strstr(_content, "Content") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

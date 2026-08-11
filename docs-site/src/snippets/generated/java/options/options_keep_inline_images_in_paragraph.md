@@ -1,3 +1,12 @@
+---
+id: fixture_java_options_keep_inline_images_in_paragraph
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

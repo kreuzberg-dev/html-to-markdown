@@ -1,3 +1,12 @@
+---
+id: fixture_c_malformed_deeply_nested_elements
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

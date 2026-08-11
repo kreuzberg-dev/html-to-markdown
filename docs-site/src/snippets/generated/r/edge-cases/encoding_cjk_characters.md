@@ -1,3 +1,12 @@
+---
+id: fixture_r_encoding_cjk_characters
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

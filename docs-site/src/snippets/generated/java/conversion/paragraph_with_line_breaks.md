@@ -1,3 +1,12 @@
+---
+id: fixture_java_paragraph_with_line_breaks
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

@@ -1,3 +1,12 @@
+---
+id: fixture_r_options_max_image_size_tiny_limit_safe
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

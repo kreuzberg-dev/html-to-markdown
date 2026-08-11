@@ -1,3 +1,12 @@
+---
+id: fixture_c_blockquote_with_list
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

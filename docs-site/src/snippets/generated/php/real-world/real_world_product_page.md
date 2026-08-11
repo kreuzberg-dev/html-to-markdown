@@ -1,3 +1,12 @@
+---
+id: fixture_php_real_world_product_page
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

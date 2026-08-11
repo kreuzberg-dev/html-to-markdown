@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_issue_396_backticks_blank_line_after_fence
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmCodeBlockStyle, WasmConversionOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

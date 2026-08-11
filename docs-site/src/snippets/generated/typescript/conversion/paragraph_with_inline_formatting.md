@@ -1,3 +1,12 @@
+---
+id: fixture_node_paragraph_with_inline_formatting
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { convert } from "@xberg-io/html-to-markdown";
 function main() {

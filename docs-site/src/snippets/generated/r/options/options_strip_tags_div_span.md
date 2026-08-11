@@ -1,3 +1,12 @@
+---
+id: fixture_r_options_strip_tags_div_span
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

@@ -1,3 +1,12 @@
+---
+id: fixture_go_result_warning_kind_image_extraction_failed
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

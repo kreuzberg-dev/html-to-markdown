@@ -275,9 +275,26 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 ```r
 library(htmltomarkdown)
 
+visitor <- list(
+  visit_link = function(ctx, href, text, title) {
+    # Rewrite CDN URLs
+    if (startsWith(href, "https://old-cdn.com")) {
+      href <- sub("https://old-cdn.com", "https://new-cdn.com", href, fixed = TRUE)
+    }
+    list(custom = paste0("[", text, "](", href, ")"))
+  },
+  visit_image = function(ctx, src, alt, title) {
+    # Skip tracking pixels
+    if (grepl("tracking", src, fixed = TRUE)) {
+      "skip"
+    } else {
+      "continue"
+    }
+  }
+)
+
 html <- '<a href="https://old-cdn.com/file.pdf">Download</a>'
-opts <- conversion_options(extract_metadata = FALSE)
-result <- convert(html, opts)
+result <- convert(html, options = list(visitor = visitor))
 cat(result$content)
 ```
 

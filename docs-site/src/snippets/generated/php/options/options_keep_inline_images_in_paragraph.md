@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_keep_inline_images_in_paragraph
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

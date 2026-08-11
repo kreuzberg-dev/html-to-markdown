@@ -1,3 +1,12 @@
+---
+id: fixture_rust_xss_onclick_handler_removed
+language: rust
+target: rust
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```rust title="Rust"
 use html_to_markdown_rs::convert;
 use html_to_markdown_rs::ConversionOptions;

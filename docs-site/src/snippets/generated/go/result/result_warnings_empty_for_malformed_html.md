@@ -1,3 +1,12 @@
+---
+id: fixture_go_result_warnings_empty_for_malformed_html
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

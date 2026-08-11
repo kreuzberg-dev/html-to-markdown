@@ -1,3 +1,12 @@
+---
+id: fixture_php_table_with_colspan
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -287,13 +287,13 @@ class MyVisitor
     if href.start_with?('https://old-cdn.com')
       href = href.sub('https://old-cdn.com', 'https://new-cdn.com')
     end
-    # Directive keys/symbols are matched case-sensitively: :Custom, :Skip, :Continue.
-    { Custom: "[#{text}](#{href})" }
+    # Directive keys/symbols are matched case-sensitively as lowercase: :custom, :skip, :continue.
+    { custom: "[#{text}](#{href})" }
   end
 
   def visit_image(ctx, src, alt = nil, title = nil)
     # Skip tracking pixels
-    src.include?('tracking') ? :Skip : :Continue
+    src.include?('tracking') ? :skip : :continue
   end
 end
 

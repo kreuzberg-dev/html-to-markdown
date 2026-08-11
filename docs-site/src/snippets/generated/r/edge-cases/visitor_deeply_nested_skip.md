@@ -1,3 +1,12 @@
+---
+id: fixture_r_visitor_deeply_nested_skip
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

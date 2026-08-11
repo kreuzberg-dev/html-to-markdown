@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_xss_svg_nested_script_stripped
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

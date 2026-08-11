@@ -1,3 +1,12 @@
+---
+id: fixture_swift_structure_deep_nesting_h1_h2_h3
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

@@ -1,3 +1,12 @@
+---
+id: fixture_php_xss_onclick_handler_removed
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

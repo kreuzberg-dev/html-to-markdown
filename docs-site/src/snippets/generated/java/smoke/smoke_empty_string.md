@@ -1,3 +1,12 @@
+---
+id: fixture_java_smoke_empty_string
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

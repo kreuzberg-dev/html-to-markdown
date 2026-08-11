@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_heading_style_atx_closed
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, WasmHeadingStyle, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

@@ -317,20 +317,21 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 import { convert, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
 // `visitor` is a plain object of camelCase callbacks — there is no exported
-// `Visitor` type. Return `VisitResult.Continue` / `Skip` / `PreserveHtml` for
-// the built-in behaviors, or `{ Custom: "..." }` to replace a node's output.
+// `Visitor` type. `VisitResult` is a type, not a runtime enum: return the
+// lowercase string `"continue"` / `"skip"` / `"preserve_html"` for the
+// built-in behaviors, or `{ custom: "..." }` to replace a node's output.
 const visitor = {
   visitLink(ctx: NodeContext, href: string, text: string, title?: string) {
     // Rewrite CDN URLs
     if (href.startsWith("https://old-cdn.com")) {
       href = href.replace("https://old-cdn.com", "https://new-cdn.com");
     }
-    return { Custom: `[${text}](${href})` };
+    return { custom: `[${text}](${href})` };
   },
 
   visitImage(ctx: NodeContext, src: string, alt?: string, title?: string): VisitResult {
     // Skip tracking pixels
-    return src.includes("tracking") ? VisitResult.Skip : VisitResult.Continue;
+    return src.includes("tracking") ? "skip" : "continue";
   },
 };
 

@@ -1,3 +1,12 @@
+---
+id: fixture_python_visitor_custom_element_with_nesting
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

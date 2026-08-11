@@ -1,3 +1,12 @@
+---
+id: fixture_zig_result_warnings_empty_for_complex_input
+language: zig
+target: zig
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```zig title="Zig"
 const std = @import("std");
 const html_to_markdown = @import("html_to_markdown");

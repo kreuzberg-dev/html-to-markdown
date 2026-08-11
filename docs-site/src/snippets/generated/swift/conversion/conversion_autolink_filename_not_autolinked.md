@@ -1,3 +1,12 @@
+---
+id: fixture_swift_conversion_autolink_filename_not_autolinked
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

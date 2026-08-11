@@ -1,3 +1,12 @@
+---
+id: fixture_r_structure_deep_nesting_h1_h2_h3
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

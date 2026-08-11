@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_figure_custom_wrap
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

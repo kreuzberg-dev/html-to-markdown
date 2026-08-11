@@ -1,3 +1,12 @@
+---
+id: fixture_java_code_with_backticks_in_content
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

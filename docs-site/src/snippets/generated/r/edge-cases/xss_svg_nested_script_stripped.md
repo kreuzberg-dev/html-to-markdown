@@ -1,3 +1,12 @@
+---
+id: fixture_r_xss_svg_nested_script_stripped
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

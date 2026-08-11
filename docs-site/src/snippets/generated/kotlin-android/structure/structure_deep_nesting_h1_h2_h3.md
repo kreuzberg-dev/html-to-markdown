@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_structure_deep_nesting_h1_h2_h3
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

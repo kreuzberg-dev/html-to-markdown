@@ -1,3 +1,12 @@
+---
+id: fixture_r_visitor_line_break_skip
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

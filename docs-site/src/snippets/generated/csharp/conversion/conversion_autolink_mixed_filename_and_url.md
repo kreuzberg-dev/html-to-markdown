@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_conversion_autolink_mixed_filename_and_url
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

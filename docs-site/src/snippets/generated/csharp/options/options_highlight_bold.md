@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_options_highlight_bold
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using System.Text.Json;
 using HtmlToMarkdown;

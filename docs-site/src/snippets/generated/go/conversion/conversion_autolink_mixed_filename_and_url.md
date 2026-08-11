@@ -1,3 +1,12 @@
+---
+id: fixture_go_conversion_autolink_mixed_filename_and_url
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

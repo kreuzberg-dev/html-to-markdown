@@ -1,3 +1,12 @@
+---
+id: fixture_php_structure_code_block
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

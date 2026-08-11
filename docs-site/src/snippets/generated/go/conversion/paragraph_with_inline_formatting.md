@@ -1,3 +1,12 @@
+---
+id: fixture_go_paragraph_with_inline_formatting
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

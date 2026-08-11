@@ -18,6 +18,21 @@ fn suppress_abort() void {
 
 // E2e tests for category: conversion
 
+test "blockquote_code_block_indentation_preserved" {
+    // Code block inside a blockquote keeps its line indentation
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<blockquote><pre><code>line1\n    line2 indented</code></pre></blockquote>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expectEqualStrings("> ```\n> line1\n>     line2 indented\n> ```\n", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
+}
+
 test "blockquote_multiple_paragraphs" {
     // Blockquote with multiple paragraphs has each paragraph prefixed
     suppress_abort();
@@ -71,6 +86,21 @@ test "blockquote_nested" {
     }
 }
 
+test "blockquote_nested_list_indentation_preserved" {
+    // Nested list inside a blockquote keeps its continuation indentation
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expectEqualStrings("> - item a\n>   * sub a1\n", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
+}
+
 test "blockquote_simple" {
     // Simple blockquote
     suppress_abort();
@@ -89,6 +119,21 @@ test "blockquote_simple" {
         defer if (_jva0 != .string) std.heap.c_allocator.free(_jsa0);
         try testing.expect(std.mem.indexOf(u8, _jsa0, "> Quote text") != null);
     }
+}
+
+test "blockquote_text_then_paragraph_gets_blank_line" {
+    // Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<blockquote>Just text, then <p>a paragraph</p></blockquote>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expectEqualStrings("> Just text, then\n>\n> a paragraph\n", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
 }
 
 test "blockquote_with_list" {
@@ -1662,6 +1707,33 @@ test "table_empty" {
     try testing.expectEqualStrings("", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
 }
 
+test "table_nested_chain_not_misclassified_as_layout" {
+    // A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expect(result.object.get("content").? != .null);
+    {
+        const _jva0 = result.object.get("content").?;
+        const _jsa0 = if (_jva0 == .string) _jva0.string else try std.json.Stringify.valueAlloc(std.heap.c_allocator, _jva0, .{});
+        defer if (_jva0 != .string) std.heap.c_allocator.free(_jsa0);
+        try testing.expect(std.mem.indexOf(u8, _jsa0, "leaf") != null);
+    }
+    {
+        const _jva1 = result.object.get("content").?;
+        const _jsa1 = if (_jva1 == .string) _jva1.string else try std.json.Stringify.valueAlloc(std.heap.c_allocator, _jva1, .{});
+        defer if (_jva1 != .string) std.heap.c_allocator.free(_jsa1);
+        try testing.expect(std.mem.indexOf(u8, _jsa1, "| ---") != null);
+    }
+}
+
 test "table_no_thead" {
     // Table without thead uses first row as implied header
     suppress_abort();
@@ -1738,6 +1810,36 @@ test "table_pipe_chars_in_content" {
         defer if (_jva2 != .string) std.heap.c_allocator.free(_jsa2);
         try testing.expect(std.mem.indexOf(u8, _jsa2, "true") != null);
     }
+}
+
+test "table_ragged_row_fewer_cells_than_header" {
+    // A data row with fewer cells than the header is padded to the declared column count
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expectEqualStrings("| A | B | C |\n| --- | --- | --- |\n| 1 | 2 |   |\n", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
+}
+
+test "table_ragged_row_more_cells_than_header" {
+    // A data row with more cells than the header widens the separator so no cell is silently dropped
+    suppress_abort();
+    var gpa: std.heap.DebugAllocator(.{}) = .init;
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+
+    const _result_json = try html_to_markdown_rs.convert("<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>", null);
+    defer std.heap.c_allocator.free(_result_json);
+    var _parsed = try std.json.parseFromSlice(std.json.Value, allocator, _result_json, .{});
+    defer _parsed.deinit();
+    const result = &_parsed.value;
+    try testing.expectEqualStrings("| A | B |   |\n| --- | --- | --- |\n| 1 | 2 | 3 |\n", std.mem.trim(u8, result.object.get("content").?.string, " \n\r\t"));
 }
 
 test "table_with_alignment" {

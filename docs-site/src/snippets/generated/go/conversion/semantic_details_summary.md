@@ -1,3 +1,12 @@
+---
+id: fixture_go_semantic_details_summary
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

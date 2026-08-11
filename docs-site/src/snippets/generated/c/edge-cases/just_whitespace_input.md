@@ -1,3 +1,12 @@
+---
+id: fixture_c_just_whitespace_input
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

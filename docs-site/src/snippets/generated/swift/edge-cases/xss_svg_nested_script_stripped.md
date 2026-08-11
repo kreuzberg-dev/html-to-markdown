@@ -1,3 +1,12 @@
+---
+id: fixture_swift_xss_svg_nested_script_stripped
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

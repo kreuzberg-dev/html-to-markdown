@@ -1,3 +1,12 @@
+---
+id: fixture_swift_table_pipe_chars_in_content
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

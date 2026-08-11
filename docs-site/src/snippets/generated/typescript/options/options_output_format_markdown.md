@@ -1,3 +1,12 @@
+---
+id: fixture_node_options_output_format_markdown
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { ConversionOptions, HeadingStyle, OutputFormat, convert } from "@xberg-io/html-to-markdown";
 function main() {

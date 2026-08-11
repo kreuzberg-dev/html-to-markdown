@@ -1,3 +1,12 @@
+---
+id: fixture_java_issue_396_backticks_blank_line_after_fence
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

@@ -1,3 +1,12 @@
+---
+id: fixture_java_twitter_card_tags
+language: java
+target: java
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```java title="Java"
 import io.xberg.htmltomarkdown.*;
 

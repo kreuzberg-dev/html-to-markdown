@@ -1,3 +1,12 @@
+---
+id: fixture_zig_link_with_bold_text
+language: zig
+target: zig
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```zig title="Zig"
 const std = @import("std");
 const html_to_markdown = @import("html_to_markdown");

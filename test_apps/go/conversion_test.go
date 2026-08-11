@@ -13,6 +13,22 @@ import (
 	htmd "github.com/xberg-io/html-to-markdown/packages/go/v3"
 )
 
+func Test_BlockquoteCodeBlockIndentationPreserved(t *testing.T) {
+	// Code block inside a blockquote keeps its line indentation
+	result, err := htmd.Convert(`<blockquote><pre><code>line1
+    line2 indented</code></pre></blockquote>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	var content string
+	if result.Content != nil {
+		content = string(*result.Content)
+	}
+	if strings.TrimSpace(string(content)) != "> ```\n> line1\n>     line2 indented\n> ```\n" {
+		t.Errorf("equals mismatch: got %v", content)
+	}
+}
+
 func Test_BlockquoteMultipleParagraphs(t *testing.T) {
 	// Blockquote with multiple paragraphs has each paragraph prefixed
 	result, err := htmd.Convert(`<blockquote><p>First paragraph.</p><p>Second paragraph.</p></blockquote>`, nil)
@@ -52,6 +68,23 @@ func Test_BlockquoteNested(t *testing.T) {
 	}
 }
 
+func Test_BlockquoteNestedListIndentationPreserved(t *testing.T) {
+	// Nested list inside a blockquote keeps its continuation indentation
+	result, err := htmd.Convert(`<blockquote><ul><li>item a<ul><li>sub a1</li></ul></li></ul></blockquote>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	var content string
+	if result.Content != nil {
+		content = string(*result.Content)
+	}
+	if strings.TrimSpace(string(content)) != `> - item a
+>   * sub a1
+` {
+		t.Errorf("equals mismatch: got %v", content)
+	}
+}
+
 func Test_BlockquoteSimple(t *testing.T) {
 	// Simple blockquote
 	result, err := htmd.Convert(`<blockquote><p>Quote text</p></blockquote>`, nil)
@@ -62,6 +95,24 @@ func Test_BlockquoteSimple(t *testing.T) {
 	if !strings.Contains(string(*result.Content), `> Quote text`) {
 		t.Errorf("expected to contain %s", `> Quote text`)
 	}
+	}
+}
+
+func Test_BlockquoteTextThenParagraphGetsBlankLine(t *testing.T) {
+	// Bare text followed by a paragraph inside a blockquote gets a blank-line separator instead of merging into one line
+	result, err := htmd.Convert(`<blockquote>Just text, then <p>a paragraph</p></blockquote>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	var content string
+	if result.Content != nil {
+		content = string(*result.Content)
+	}
+	if strings.TrimSpace(string(content)) != `> Just text, then
+>
+> a paragraph
+` {
+		t.Errorf("equals mismatch: got %v", content)
 	}
 }
 
@@ -1259,6 +1310,27 @@ func Test_TableEmpty(t *testing.T) {
 	}
 }
 
+func Test_TableNestedChainNotMisclassifiedAsLayout(t *testing.T) {
+	// A straight chain of one-nested-table-per-cell tables renders as pipe tables, not a broken layout list
+	result, err := htmd.Convert(`<table><tr><td><table><tr><td><table><tr><td>leaf</td></tr></table></td></tr></table></td></tr></table>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	if result.Content == nil {
+		t.Errorf("expected non-empty value")
+	}
+	if result.Content != nil {
+	if !strings.Contains(string(*result.Content), `leaf`) {
+		t.Errorf("expected to contain %s", `leaf`)
+	}
+	}
+	if result.Content != nil {
+	if !strings.Contains(string(*result.Content), `| ---`) {
+		t.Errorf("expected to contain %s", `| ---`)
+	}
+	}
+}
+
 func Test_TableNoThead(t *testing.T) {
 	// Table without thead uses first row as implied header
 	result, err := htmd.Convert(`<table><tr><td>Product</td><td>Price</td></tr><tr><td>Apple</td><td>1.00</td></tr></table>`, nil)
@@ -1318,6 +1390,42 @@ func Test_TablePipeCharsInContent(t *testing.T) {
 	if !strings.Contains(string(*result.Content), `true`) {
 		t.Errorf("expected to contain %s", `true`)
 	}
+	}
+}
+
+func Test_TableRaggedRowFewerCellsThanHeader(t *testing.T) {
+	// A data row with fewer cells than the header is padded to the declared column count
+	result, err := htmd.Convert(`<table><tr><th>A</th><th>B</th><th>C</th></tr><tr><td>1</td><td>2</td></tr></table>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	var content string
+	if result.Content != nil {
+		content = string(*result.Content)
+	}
+	if strings.TrimSpace(string(content)) != `| A | B | C |
+| --- | --- | --- |
+| 1 | 2 |   |
+` {
+		t.Errorf("equals mismatch: got %v", content)
+	}
+}
+
+func Test_TableRaggedRowMoreCellsThanHeader(t *testing.T) {
+	// A data row with more cells than the header widens the separator so no cell is silently dropped
+	result, err := htmd.Convert(`<table><tr><th>A</th><th>B</th></tr><tr><td>1</td><td>2</td><td>3</td></tr></table>`, nil)
+	if err != nil {
+		t.Fatalf("call failed: %v", err)
+	}
+	var content string
+	if result.Content != nil {
+		content = string(*result.Content)
+	}
+	if strings.TrimSpace(string(content)) != `| A | B |   |
+| --- | --- | --- |
+| 1 | 2 | 3 |
+` {
+		t.Errorf("equals mismatch: got %v", content)
 	}
 }
 

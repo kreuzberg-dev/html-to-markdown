@@ -1,3 +1,12 @@
+---
+id: fixture_node_options_exclude_selectors_plain_text_mode
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { ConversionOptions, OutputFormat, convert } from "@xberg-io/html-to-markdown";
 function main() {

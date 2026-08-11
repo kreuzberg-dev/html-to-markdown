@@ -1,3 +1,12 @@
+---
+id: fixture_php_visitor_element_start_skip_entire_subtree
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

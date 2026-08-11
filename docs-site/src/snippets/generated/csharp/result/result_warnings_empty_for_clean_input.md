@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_result_warnings_empty_for_clean_input
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

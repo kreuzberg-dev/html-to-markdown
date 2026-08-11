@@ -1,3 +1,12 @@
+---
+id: fixture_go_visitor_unknown_tag_preservation
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

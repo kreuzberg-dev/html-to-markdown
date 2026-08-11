@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_visitor_custom_element_with_nesting
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

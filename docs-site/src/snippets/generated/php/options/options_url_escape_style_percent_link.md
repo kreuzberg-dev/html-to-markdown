@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_url_escape_style_percent_link
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

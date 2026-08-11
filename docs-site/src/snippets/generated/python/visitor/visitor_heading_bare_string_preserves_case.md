@@ -1,3 +1,12 @@
+---
+id: fixture_python_visitor_heading_bare_string_preserves_case
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

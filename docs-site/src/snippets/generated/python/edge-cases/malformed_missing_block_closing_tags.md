@@ -1,3 +1,12 @@
+---
+id: fixture_python_malformed_missing_block_closing_tags
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

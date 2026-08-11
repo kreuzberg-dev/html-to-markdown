@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_options_code_block_tildes_style
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmCodeBlockStyle, WasmConversionOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

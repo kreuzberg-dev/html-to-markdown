@@ -1,3 +1,12 @@
+---
+id: fixture_php_metadata_text_direction_rtl
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

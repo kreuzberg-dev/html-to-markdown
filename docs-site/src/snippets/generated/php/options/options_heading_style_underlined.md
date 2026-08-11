@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_heading_style_underlined
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

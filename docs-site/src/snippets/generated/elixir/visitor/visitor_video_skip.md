@@ -1,3 +1,12 @@
+---
+id: fixture_elixir_visitor_video_skip
+language: elixir
+target: elixir
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```elixir title="Elixir"
 visitor = %{
       :handle_video => fn(_args) ->

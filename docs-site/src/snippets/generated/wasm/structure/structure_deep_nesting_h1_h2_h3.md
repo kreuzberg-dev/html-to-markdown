@@ -1,3 +1,12 @@
+---
+id: fixture_wasm_structure_deep_nesting_h1_h2_h3
+language: typescript
+target: wasm
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="WebAssembly"
 import { WasmConversionOptions, convert } from "@xberg-io/html-to-markdown-wasm";
 function main() {

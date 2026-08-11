@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_capture_svg_true
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

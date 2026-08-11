@@ -1,3 +1,12 @@
+---
+id: fixture_rust_conversion_autolink_mailto
+language: rust
+target: rust
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```rust title="Rust"
 use html_to_markdown_rs::convert;
 use html_to_markdown_rs::ConversionOptions;

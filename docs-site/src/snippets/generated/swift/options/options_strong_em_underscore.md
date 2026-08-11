@@ -1,3 +1,12 @@
+---
+id: fixture_swift_options_strong_em_underscore
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

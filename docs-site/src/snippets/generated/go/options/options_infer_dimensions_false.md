@@ -1,3 +1,12 @@
+---
+id: fixture_go_options_infer_dimensions_false
+language: go
+target: go
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```go title="Go"
 package main
 

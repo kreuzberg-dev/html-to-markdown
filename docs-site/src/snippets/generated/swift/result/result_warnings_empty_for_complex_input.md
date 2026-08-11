@@ -1,3 +1,12 @@
+---
+id: fixture_swift_result_warnings_empty_for_complex_input
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

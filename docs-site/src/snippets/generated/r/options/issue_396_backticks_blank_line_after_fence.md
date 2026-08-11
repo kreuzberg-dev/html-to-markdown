@@ -1,3 +1,12 @@
+---
+id: fixture_r_issue_396_backticks_blank_line_after_fence
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

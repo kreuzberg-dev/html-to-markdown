@@ -1,3 +1,12 @@
+---
+id: fixture_swift_options_url_escape_style_percent_angle_brackets_in_url
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

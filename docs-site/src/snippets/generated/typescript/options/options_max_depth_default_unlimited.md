@@ -1,3 +1,12 @@
+---
+id: fixture_node_options_max_depth_default_unlimited
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { convert } from "@xberg-io/html-to-markdown";
 function main() {

@@ -1,3 +1,12 @@
+---
+id: fixture_c_visitor_skip_heading
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
@@ -42,6 +51,8 @@ int main(void) {
 
     assert((_content == NULL || strstr(_content, "Title") == NULL) && "expected NOT to contain substring");
     assert(_content != NULL && strstr(_content, "Body text remains.") != NULL && "expected to contain substring");
+    assert((_content == NULL || strstr(_content, "skip") == NULL) && "expected NOT to contain substring");
+    assert((_content == NULL || strstr(_content, "Skip") == NULL) && "expected NOT to contain substring");
 
     free(_content);
     htm_free_string(_json);

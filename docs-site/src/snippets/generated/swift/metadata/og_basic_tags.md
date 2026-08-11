@@ -1,3 +1,12 @@
+---
+id: fixture_swift_og_basic_tags
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_options_max_depth_default_unlimited
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

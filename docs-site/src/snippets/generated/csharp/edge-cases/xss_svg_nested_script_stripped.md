@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_xss_svg_nested_script_stripped
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

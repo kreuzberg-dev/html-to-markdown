@@ -1,3 +1,12 @@
+---
+id: fixture_swift_visitor_link_bare_string_preserves_case
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

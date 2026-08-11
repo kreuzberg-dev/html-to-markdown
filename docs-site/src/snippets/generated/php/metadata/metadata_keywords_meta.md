@@ -1,3 +1,12 @@
+---
+id: fixture_php_metadata_keywords_meta
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

@@ -1,3 +1,12 @@
+---
+id: fixture_swift_encoding_cjk_characters
+language: swift
+target: swift
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```swift title="Swift"
 import HtmlToMarkdown
 

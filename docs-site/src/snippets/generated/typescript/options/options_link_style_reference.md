@@ -1,3 +1,12 @@
+---
+id: fixture_node_options_link_style_reference
+language: typescript
+target: node
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```typescript title="TypeScript"
 import { ConversionOptions, LinkStyle, convert } from "@xberg-io/html-to-markdown";
 function main() {

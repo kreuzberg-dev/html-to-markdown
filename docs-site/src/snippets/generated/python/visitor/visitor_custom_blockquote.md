@@ -1,3 +1,12 @@
+---
+id: fixture_python_visitor_custom_blockquote
+language: python
+target: python
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```python title="Python"
 from html_to_markdown import convert
 

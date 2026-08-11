@@ -1,3 +1,12 @@
+---
+id: fixture_c_structure_deep_nesting_h1_h2_h3
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

@@ -1,3 +1,12 @@
+---
+id: fixture_c_issue_396_backticks_blank_line_after_fence
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>

@@ -1,3 +1,12 @@
+---
+id: fixture_kotlin_android_options_max_image_size_tiny_limit_safe
+language: kotlin
+target: kotlin_android
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```kotlin title="Kotlin (Android)"
 import io.xberg.android.*
 

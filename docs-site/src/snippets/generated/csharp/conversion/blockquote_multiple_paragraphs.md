@@ -1,3 +1,12 @@
+---
+id: fixture_csharp_blockquote_multiple_paragraphs
+language: csharp
+target: csharp
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```csharp title="C#"
 using HtmlToMarkdown;
 

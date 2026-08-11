@@ -1,3 +1,12 @@
+---
+id: fixture_php_options_preprocessing_remove_navigation_false_keeps_nav
+language: php
+target: php
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```php title="PHP"
 <?php
 

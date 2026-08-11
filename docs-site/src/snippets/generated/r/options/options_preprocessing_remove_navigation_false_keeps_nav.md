@@ -1,3 +1,12 @@
+---
+id: fixture_r_options_preprocessing_remove_navigation_false_keeps_nav
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

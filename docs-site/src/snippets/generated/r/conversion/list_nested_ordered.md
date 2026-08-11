@@ -1,3 +1,12 @@
+---
+id: fixture_r_list_nested_ordered
+language: r
+target: r
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```r title="R"
 library("htmltomarkdown", character.only = TRUE)
 

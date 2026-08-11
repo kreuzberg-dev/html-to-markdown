@@ -1,3 +1,12 @@
+---
+id: fixture_c_list_nested_ordered
+language: c
+target: c
+level: typecheck
+requires: []
+side_effect: safe
+---
+
 ```c title="C"
 #include <assert.h>
 #include <stdint.h>
