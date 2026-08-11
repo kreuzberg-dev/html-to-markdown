@@ -6,6 +6,7 @@
 //! - Proper bullet/number formatting
 //! - Indentation and spacing
 
+use crate::converter::list::utils::add_list_leading_separator;
 use crate::converter::main_helpers::effective_max_depth;
 use crate::converter::main_helpers::tag_name_eq;
 use crate::converter::main_helpers::trim_trailing_whitespace;
@@ -218,21 +219,26 @@ pub fn handle_li(
             output.push_str(trimmed_task);
         }
     } else {
-        if !ctx.in_table_cell {
-            if ctx.in_ordered_list {
-                use std::fmt::Write;
-                let _ = write!(output, "{}. ", ctx.list_counter);
+        if ctx.in_table_cell {
+            // ~keep GFM pipe cells cannot hold block content, so sibling <li>s inside a
+            // ~keep cell lose their marker (see below) and would otherwise be concatenated
+            // ~keep with zero separator. Reuse the same leading-separator helper used before
+            // ~keep the enclosing <ul>/<ol> opens so consecutive items get the identical
+            // ~keep <br> boundary already established for <p>/<div> siblings in a cell.
+            add_list_leading_separator(output, ctx);
+        } else if ctx.in_ordered_list {
+            use std::fmt::Write;
+            let _ = write!(output, "{}. ", ctx.list_counter);
+        } else {
+            let bullets: Vec<char> = options.bullets.chars().collect();
+            let bullet_index = if ctx.ul_depth > 0 { ctx.ul_depth - 1 } else { 0 };
+            let bullet = if bullets.is_empty() {
+                '*'
             } else {
-                let bullets: Vec<char> = options.bullets.chars().collect();
-                let bullet_index = if ctx.ul_depth > 0 { ctx.ul_depth - 1 } else { 0 };
-                let bullet = if bullets.is_empty() {
-                    '*'
-                } else {
-                    bullets[bullet_index % bullets.len()]
-                };
-                output.push(bullet);
-                output.push(' ');
-            }
+                bullets[bullet_index % bullets.len()]
+            };
+            output.push(bullet);
+            output.push(' ');
         }
 
         let item_start_pos = output.len();

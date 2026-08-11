@@ -198,3 +198,31 @@ fn table_bail_reason_display_strings_are_non_empty() {
         assert!(!s.is_empty(), "Display for {reason:?} produced empty string");
     }
 }
+
+#[test]
+fn sibling_list_items_in_a_table_cell_are_separated() {
+    // ~keep `should_handle_list_in_table_cell` above uses a single <li>, which is why
+    // ~keep this regression went unnoticed: with the marker stripped for cell context,
+    // ~keep consecutive items were appended with no separator at all, so <li>a</li><li>b</li>
+    // ~keep rendered as the fabricated word `ab`. Both tiers now emit the same <br>
+    // ~keep boundary already used between sibling <p>/<div> in a cell.
+    for (html, expected_cell) in [
+        (
+            "<table><tr><td><ul><li>a</li><li>b</li></ul></td></tr></table>",
+            "a<br>b",
+        ),
+        (
+            "<table><tr><td><ol><li>one</li><li>two</li></ol></td></tr></table>",
+            "one<br>two",
+        ),
+    ] {
+        let t2 = tier2(html);
+        assert!(
+            t2.contains(expected_cell),
+            "Tier-2 cell should contain `{expected_cell}`, got:\n{t2}"
+        );
+        assert!(!t2.contains("ab |"), "list items must not be concatenated, got:\n{t2}");
+        let t1 = tier1_run(html).expect("Tier-1 should not bail on a list in a cell");
+        assert_eq!(t1, t2, "Tier-1 and Tier-2 must agree byte-for-byte");
+    }
+}

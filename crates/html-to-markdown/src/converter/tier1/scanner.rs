@@ -1201,11 +1201,18 @@ const TIER1_BULLETS: [u8; 3] = [b'-', b'*', b'+'];
 fn open_list_item(state: &mut Tier1State) {
     // ~keep When inside a table cell, Tier-2 does NOT emit bullet/number prefixes
     // ~keep for list items (see list/item.rs: `if !ctx.in_table_cell { ... bullet ... }`).
-    // ~keep The cell accumulator already receives the raw text; separators are handled
-    // ~keep by the `\n` → ` ` replacement at cell-close time.
+    // ~keep Sibling <li>s still need a boundary though — mirror Tier-2's reuse of
+    // ~keep `add_list_leading_separator` per item (list/item.rs's `else if
+    // ~keep ctx.in_table_cell` arm) with the same `<br>`-if-continuation condition
+    // ~keep already used by `open_list` above, so `<li>a</li><li>b</li>` in a cell
+    // ~keep becomes `a<br>b` instead of the two items' raw text running together.
     if state.in_table_cell() {
         if find_parent_list_kind(&state.stack) == Some(ListKind::Ordered) {
             increment_ol_counter(&mut state.stack);
+        }
+        let cell_buf = state.cell_or_output_mut();
+        if !cell_buf.is_empty() && !cell_buf.ends_with('|') && !cell_buf.ends_with(' ') && !cell_buf.ends_with("<br>") {
+            cell_buf.push_str("<br>");
         }
         return;
     }
