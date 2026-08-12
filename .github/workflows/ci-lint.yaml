@@ -70,4 +70,4 @@ jobs:
       setup-dart: true
       setup-elixir: true
       check-fixture-snippets: true
-      alef-version: 0.60.0
+      alef-version: 0.60.1
