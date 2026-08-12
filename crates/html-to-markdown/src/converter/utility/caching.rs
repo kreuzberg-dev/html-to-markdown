@@ -1,18 +1,16 @@
 //! Performance caching utilities.
 //!
 //! Caching mechanisms for expensive operations during conversion, including
-//! DOM context building and cache capacity management.
+//! DOM context building.
 
 use crate::converter::DomContext;
-use std::num::NonZeroUsize;
 
 /// Build a DOM context with hierarchical node information.
 ///
 /// Pre-computes parent-child relationships, sibling indices, and caches
 /// tag information for efficient DOM navigation during conversion.
 #[must_use]
-pub fn build_dom_context(dom: &tl::VDom, parser: &tl::Parser, input_len: usize) -> DomContext {
-    let cache_capacity = text_cache_capacity_for_input(input_len);
+pub fn build_dom_context(dom: &tl::VDom, parser: &tl::Parser, _input_len: usize) -> DomContext {
     let mut ctx = DomContext {
         parent_map: Vec::new(),
         children_map: Vec::new(),
@@ -24,7 +22,6 @@ pub fn build_dom_context(dom: &tl::VDom, parser: &tl::Parser, input_len: usize) 
         next_inline_like_map: Vec::new(),
         next_tag_map: Vec::new(),
         next_whitespace_map: Vec::new(),
-        text_cache: std::cell::RefCell::new(lru::LruCache::new(cache_capacity)),
         table_content_summary_cache: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
 
@@ -43,16 +40,6 @@ pub fn build_dom_context(dom: &tl::VDom, parser: &tl::Parser, input_len: usize) 
     }
 
     ctx
-}
-
-/// Calculate appropriate cache capacity based on input size.
-///
-/// Returns a cache capacity between 32 and `TEXT_CACHE_CAPACITY`,
-/// scaled proportionally to input size (1KB = 1 slot).
-pub fn text_cache_capacity_for_input(input_len: usize) -> NonZeroUsize {
-    const TEXT_CACHE_CAPACITY: usize = 256;
-    let target = (input_len / 1024).clamp(32, TEXT_CACHE_CAPACITY);
-    NonZeroUsize::new(target).unwrap_or(NonZeroUsize::MIN)
 }
 
 /// Record node hierarchy into DOM context.

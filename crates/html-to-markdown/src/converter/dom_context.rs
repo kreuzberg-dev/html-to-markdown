@@ -1,10 +1,8 @@
 //! DOM context providing efficient access to parent/child relationships and text content.
 //!
 //! This module defines the `DomContext` structure which is built once during conversion
-//! and provides O(1) access to node relationships via precomputed maps. It also includes
-//! an LRU cache for text content extraction to avoid redundant string allocations.
+//! and provides O(1) access to node relationships via precomputed maps.
 
-use lru::LruCache;
 use std::cell::{OnceCell, RefCell};
 use std::collections::HashMap;
 
@@ -52,7 +50,7 @@ impl TableContentSummary {
 /// DOM context that provides efficient access to parent/child relationships and text content.
 ///
 /// This context is built once during conversion and provides O(1) access to node relationships
-/// via precomputed maps. It also includes an LRU cache for text content extraction.
+/// via precomputed maps.
 pub struct DomContext {
     pub(crate) parent_map: Vec<Option<u32>>,
     pub(crate) children_map: Vec<Option<Vec<tl::NodeHandle>>>,
@@ -64,7 +62,6 @@ pub struct DomContext {
     pub(crate) next_inline_like_map: Vec<OnceCell<bool>>,
     pub(crate) next_tag_map: Vec<OnceCell<Option<u32>>>,
     pub(crate) next_whitespace_map: Vec<OnceCell<bool>>,
-    pub(crate) text_cache: RefCell<LruCache<u32, String>>,
     pub(crate) table_content_summary_cache: RefCell<HashMap<u32, TableContentSummary>>,
 }
 
@@ -295,19 +292,13 @@ impl DomContext {
         }
     }
 
+    /// ~keep Deliberately uncached. An LRU keyed by node id used to live here; it was removed
+    /// ~keep because a cache *hit* still cloned - every caller needs an owned `String` - so the
+    /// ~keep cache only ever saved the subtree walk while adding one allocation on every miss.
+    /// ~keep Since 3a7c115a4 the table width pre-pass reuses its rendered cell text instead of
+    /// ~keep re-reading it, so the dominant repeat-read is gone and the hit rate can only fall.
     pub(crate) fn text_content(&self, node_handle: tl::NodeHandle, parser: &tl::Parser) -> String {
-        let id = node_handle.get_inner();
-        let cached = {
-            let mut cache = self.text_cache.borrow_mut();
-            cache.get(&id).cloned()
-        };
-        if let Some(value) = cached {
-            return value;
-        }
-
-        let value = self.text_content_uncached(node_handle, parser);
-        self.text_cache.borrow_mut().put(id, value.clone());
-        value
+        self.text_content_uncached(node_handle, parser)
     }
 
     pub(crate) fn text_content_uncached(&self, node_handle: tl::NodeHandle, parser: &tl::Parser) -> String {
