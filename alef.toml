@@ -1420,6 +1420,7 @@ throughput = "237.9 MB/s"
 [crates.readme.languages.go.snippets]
 basic_usage = "getting-started/basic_usage.md"
 with_options = "getting-started/with_options.md"
+metadata_extraction = "metadata/basic_extraction.md"
 table_extraction = "table-extraction/basic_extraction.md"
 
 [crates.readme.languages.java]
@@ -1471,6 +1472,7 @@ throughput = "258.5 MB/s"
 [crates.readme.languages.java.snippets]
 basic_usage = "getting-started/basic_usage.md"
 with_options = "getting-started/with_options.md"
+metadata_extraction = "metadata/basic_extraction.md"
 table_extraction = "table-extraction/basic_extraction.md"
 
 [crates.readme.languages.csharp]
@@ -1775,6 +1777,9 @@ note = "Real Wikipedia documents"
 [crates.readme.languages.wasm.snippets]
 basic_usage = "getting-started/basic_usage.md"
 with_options = "getting-started/with_options.md"
+metadata_extraction = "metadata/basic_extraction.md"
+visitor_basic = "visitor/basic_visitor.md"
+table_extraction = "table-extraction/basic_extraction.md"
 
 [crates.custom_modules]
 node = ["helpers"]
