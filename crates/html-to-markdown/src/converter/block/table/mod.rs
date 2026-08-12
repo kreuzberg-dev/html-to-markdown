@@ -235,10 +235,20 @@ fn collect_grid_row(
                 .is_some_and(|name| name.as_ref() == "th");
 
         let mut text = String::new();
-        let cell_ctx = super::super::Context {
+        // ~keep This walk runs after `builder::handle_table` has already rendered — and recorded —
+        // ~keep the same cells; it exists only to fill the structure collector's `TableGrid`. The
+        // ~keep metadata collector is an `Rc` that `..ctx.clone()` shares, so without detaching it
+        // ~keep here `include_document_structure` alone would add a third recording of every link
+        // ~keep and image in a table cell.
+        #[cfg_attr(not(feature = "metadata"), allow(unused_mut))]
+        let mut cell_ctx = super::super::Context {
             in_table_cell: true,
             ..ctx.clone()
         };
+        #[cfg(feature = "metadata")]
+        {
+            cell_ctx.metadata_collector = None;
+        }
         if let Some(tl::Node::Tag(cell_tag)) = cell_handle.get(parser) {
             for child_handle in cell_tag.children().top().iter() {
                 super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, depth + 1, dom_ctx);

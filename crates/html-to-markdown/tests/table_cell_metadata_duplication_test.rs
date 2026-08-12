@@ -84,14 +84,15 @@ fn should_record_table_cell_image_metadata_exactly_once() {
     assert_eq!(metadata.images[0].alt.as_deref(), Some("a photo"));
 }
 
-// ~keep The three tests below pin CURRENT, KNOWN-INCONSISTENT behaviour, not desired behaviour.
-// ~keep Cell-text reuse is bypassed when a structure collector or a reference-link collector is
-// ~keep active, so the width pre-pass and the render pass both record metadata for the same cell.
-// ~keep These counts are wrong (they should be 1); the assertions exist so that a future fix to
-// ~keep the remaining double-recording is a deliberate, visible change rather than a silent one.
+// ~keep The three tests below pin the invariant across the option combinations that disable
+// ~keep cell-text reuse: a cell's metadata is recorded by exactly one walk regardless of how many
+// ~keep times the cell is traversed. With reuse on the width pre-pass is the recording walk; with
+// ~keep reuse off the render pass is, and the pre-pass plus the structure collector's TableGrid
+// ~keep walk run with the metadata collector detached. Counts here are option-independent — they
+// ~keep must match the same HTML converted with the default options.
 
 #[test]
-fn should_still_record_table_cell_link_three_times_when_document_structure_is_enabled() {
+fn should_record_table_cell_link_once_when_document_structure_is_enabled() {
     let metadata = convert_with(
         SINGLE_CELL_LINK_HTML,
         ConversionOptions {
@@ -102,9 +103,9 @@ fn should_still_record_table_cell_link_three_times_when_document_structure_is_en
 
     assert_eq!(
         metadata.links.len(),
-        3,
-        "known inconsistency: include_document_structure disables cell-text reuse, so the \
-         pre-pass and render pass both record the link"
+        1,
+        "include_document_structure adds a width pre-pass walk and a TableGrid walk on top of \
+         the render pass; only the render pass may record"
     );
 }
 
@@ -118,11 +119,15 @@ fn should_record_link_once_outside_a_table_when_document_structure_is_enabled() 
         },
     );
 
-    assert_eq!(metadata.links.len(), 1, "the inconsistency is confined to table cells");
+    assert_eq!(
+        metadata.links.len(),
+        1,
+        "a link outside a table is walked once in every configuration"
+    );
 }
 
 #[test]
-fn should_still_record_table_cell_link_twice_when_reference_link_style_is_used() {
+fn should_record_table_cell_link_once_when_reference_link_style_is_used() {
     let metadata = convert_with(
         SINGLE_CELL_LINK_HTML,
         ConversionOptions {
@@ -133,7 +138,8 @@ fn should_still_record_table_cell_link_twice_when_reference_link_style_is_used()
 
     assert_eq!(
         metadata.links.len(),
-        2,
-        "known inconsistency: the reference collector disables cell-text reuse"
+        1,
+        "the reference collector disables cell-text reuse, so the render pass walks the cell and \
+         the width pre-pass must not record"
     );
 }

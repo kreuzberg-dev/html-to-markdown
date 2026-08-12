@@ -246,7 +246,8 @@ pub fn handle_table(
         let total_cols = table_total_columns(node_handle, parser, dom_ctx);
         let mut rowspan_tracker = vec![None; total_cols];
 
-        let mut cell_cache = CellTextCache::new(!options.compact_tables && cell_text_reuse_allowed(ctx, &table_scan));
+        let reuse_cell_text = !options.compact_tables && cell_text_reuse_allowed(ctx, &table_scan);
+        let mut cell_cache = CellTextCache::new(reuse_cell_text);
 
         // ~keep Pre-pass: compute per-column max content widths for aligned padding.
         // ~keep Uses a rowspan tracker so spanned columns are skipped just as they
@@ -257,11 +258,24 @@ pub fn handle_table(
         let col_widths: Vec<usize> = if options.compact_tables {
             Vec::new()
         } else {
-            let prepass_ctx = super::super::super::Context {
+            // ~keep Exactly one walk of a cell may reach the metadata collector, and the context's
+            // ~keep collector handles are `Rc`s that `..ctx.clone()` shares rather than copies.
+            // ~keep With reuse on, the render pass emits this pass's cached markdown without
+            // ~keep walking the cell again, so this pass is that one walk and keeps the handle.
+            // ~keep With reuse off the render pass walks and records, so the handle is detached
+            // ~keep here — the width measurement is an internal detail and must not be visible in
+            // ~keep `ConversionResult`. Detaching propagates to the whole subtree because every
+            // ~keep nested context is built from this one by `..clone()`.
+            #[cfg_attr(not(feature = "metadata"), allow(unused_mut))]
+            let mut prepass_ctx = super::super::super::Context {
                 skip_visitor_hooks: true,
                 measure_width_only: true,
                 ..ctx.clone()
             };
+            #[cfg(feature = "metadata")]
+            if !reuse_cell_text {
+                prepass_ctx.metadata_collector = None;
+            }
             let mut widths: Vec<usize> = Vec::new();
             let mut prepass_rowspan: Vec<Option<usize>> = vec![None; total_cols];
             let children = tag.children();
