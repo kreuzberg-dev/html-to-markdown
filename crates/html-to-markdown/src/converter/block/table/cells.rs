@@ -288,9 +288,8 @@ pub fn convert_table_row(
     let cell_contents: Vec<String> = if ctx.visitor.is_some() {
         // ~keep Same rule as the width pre-pass: this walk only feeds the `visit_table_row`
         // ~keep callback, the render pass below walks these cells again (a visitor disables
-        // ~keep cell-text reuse), so the shared `Rc` metadata collector is detached to keep
-        // ~keep exactly one recording walk per cell.
-        #[cfg_attr(not(feature = "metadata"), allow(unused_mut))]
+        // ~keep cell-text reuse), so every shared `Rc` collector is detached to keep exactly
+        // ~keep one recording walk per cell.
         let mut collect_ctx = super::super::super::Context {
             in_table_cell: true,
             ..ctx.clone()
@@ -298,6 +297,11 @@ pub fn convert_table_row(
         #[cfg(feature = "metadata")]
         {
             collect_ctx.metadata_collector = None;
+        }
+        collect_ctx.structure_collector = None;
+        #[cfg(feature = "inline-images")]
+        {
+            collect_ctx.inline_collector = None;
         }
         cells
             .iter()

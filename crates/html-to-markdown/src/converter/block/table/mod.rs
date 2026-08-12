@@ -236,11 +236,11 @@ fn collect_grid_row(
 
         let mut text = String::new();
         // ~keep This walk runs after `builder::handle_table` has already rendered — and recorded —
-        // ~keep the same cells; it exists only to fill the structure collector's `TableGrid`. The
-        // ~keep metadata collector is an `Rc` that `..ctx.clone()` shares, so without detaching it
-        // ~keep here `include_document_structure` alone would add a third recording of every link
-        // ~keep and image in a table cell.
-        #[cfg_attr(not(feature = "metadata"), allow(unused_mut))]
+        // ~keep the same cells; it exists only to fill the `TableGrid` returned below, which is
+        // ~keep built from `text` and not from any collector. The collectors are `Rc`s that
+        // ~keep `..ctx.clone()` shares, so without detaching them here `include_document_structure`
+        // ~keep alone would add a third recording of every link, image and nested table in a cell —
+        // ~keep including into the very `DocumentStructure` this walk exists to build.
         let mut cell_ctx = super::super::Context {
             in_table_cell: true,
             ..ctx.clone()
@@ -248,6 +248,11 @@ fn collect_grid_row(
         #[cfg(feature = "metadata")]
         {
             cell_ctx.metadata_collector = None;
+        }
+        cell_ctx.structure_collector = None;
+        #[cfg(feature = "inline-images")]
+        {
+            cell_ctx.inline_collector = None;
         }
         if let Some(tl::Node::Tag(cell_tag)) = cell_handle.get(parser) {
             for child_handle in cell_tag.children().top().iter() {

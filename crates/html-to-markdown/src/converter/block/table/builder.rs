@@ -258,23 +258,33 @@ pub fn handle_table(
         let col_widths: Vec<usize> = if options.compact_tables {
             Vec::new()
         } else {
-            // ~keep Exactly one walk of a cell may reach the metadata collector, and the context's
+            // ~keep Exactly one walk of a cell may reach each collector, and the context's
             // ~keep collector handles are `Rc`s that `..ctx.clone()` shares rather than copies.
             // ~keep With reuse on, the render pass emits this pass's cached markdown without
-            // ~keep walking the cell again, so this pass is that one walk and keeps the handle.
-            // ~keep With reuse off the render pass walks and records, so the handle is detached
+            // ~keep walking the cell again, so this pass is that one walk and keeps the handles.
+            // ~keep With reuse off the render pass walks and records, so the handles are detached
             // ~keep here — the width measurement is an internal detail and must not be visible in
             // ~keep `ConversionResult`. Detaching propagates to the whole subtree because every
             // ~keep nested context is built from this one by `..clone()`.
-            #[cfg_attr(not(feature = "metadata"), allow(unused_mut))]
+            // ~keep For the structure and inline-image collectors the reuse-on branch is
+            // ~keep unreachable rather than merely unused: `cell_text_reuse_allowed` returns false
+            // ~keep whenever either is set, so neither can ever be the pass that records. The
+            // ~keep guard is kept so the two rules stay coupled if that function changes.
             let mut prepass_ctx = super::super::super::Context {
                 skip_visitor_hooks: true,
                 measure_width_only: true,
                 ..ctx.clone()
             };
-            #[cfg(feature = "metadata")]
             if !reuse_cell_text {
-                prepass_ctx.metadata_collector = None;
+                #[cfg(feature = "metadata")]
+                {
+                    prepass_ctx.metadata_collector = None;
+                }
+                prepass_ctx.structure_collector = None;
+                #[cfg(feature = "inline-images")]
+                {
+                    prepass_ctx.inline_collector = None;
+                }
             }
             let mut widths: Vec<usize> = Vec::new();
             let mut prepass_rowspan: Vec<Option<usize>> = vec![None; total_cols];
