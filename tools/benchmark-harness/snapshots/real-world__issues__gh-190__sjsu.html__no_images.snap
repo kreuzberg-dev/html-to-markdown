@@ -66,7 +66,8 @@ the squares of odd integers:
 Here's the corresponding LISP definition:
 
 // = sum of squares of odd n in nums  
-(define (sumOddSquares nums)  뿯½뿯½ (sum (mapSquare (filterEvens nums))))
+(define (sumOddSquares nums)  
+뿯½뿯½ (sum (mapSquare (filterEvens nums))))
 
 Pipelines have also been used to implement compilers. Each
 
@@ -147,9 +148,15 @@ An active filter has a control loop function. Here's a
 simplified version that assumes the filter is a transformer:
 
 void controlLoop()  
-{  뿯½뿯½ while(true)  뿯½뿯½ {  뿯½뿯½뿯½뿯½뿯½ Message val = inPipe.read();  뿯½뿯½뿯½뿯½뿯½ val = transform(val); // do something
+{  
+뿯½뿯½ while(true)  
+뿯½뿯½ {  
+뿯½뿯½뿯½뿯½뿯½ Message val = inPipe.read();  
+뿯½뿯½뿯½뿯½뿯½ val = transform(val); // do something
 
-to val  뿯½뿯½뿯½뿯½뿯½ outPipe.write(val);  뿯½뿯½ }  
+to val  
+뿯½뿯½뿯½뿯½뿯½ outPipe.write(val);  
+뿯½뿯½ }  
 }
 
 When activated, a **passive
@@ -159,9 +166,12 @@ filter** reads a single message from its input pipe, processes it, then
 writes the result to its output pipe:
 
 void activate()  
-{  뿯½뿯½ Message val = inPipe.read();  뿯½뿯½ val = transform(val); // do something
+{  
+뿯½뿯½ Message val = inPipe.read();  
+뿯½뿯½ val = transform(val); // do something
 
-to val  뿯½뿯½ outPipe.write(val);  
+to val  
+뿯½뿯½ outPipe.write(val);  
 }
 
 There are two types of passive filters. A **data-driven filter** is activated when

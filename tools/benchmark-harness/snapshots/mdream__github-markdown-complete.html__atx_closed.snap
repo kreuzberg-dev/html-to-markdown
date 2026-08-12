@@ -126,14 +126,14 @@ Use `git status` to list all new or modified files that haven't yet been committ
 
 To format code or text into its own distinct block, use triple backticks.
 
-```markdown
+````markdown
 Some basic Git commands are:
 ```
 git status
 git add
 git commit
 ```
-```
+````
 
 ![Screenshot of rendered GitHub Markdown showing a simple code block without syntax highlighting.](/assets/cb-34231/images/help/writing/code-block-rendered.png)
 
