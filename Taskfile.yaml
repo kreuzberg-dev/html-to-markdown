@@ -162,6 +162,21 @@ tasks:
     cmds:
       - python3 scripts/check_ffi_symbols.py --allow-known {{.CLI_ARGS}}
 
+  check:binding-parse:
+    desc: "Parse every generated binding with its own language front end"
+    cmds:
+      - python3 scripts/check_binding_parse.py {{.CLI_ARGS}}
+
+  check:binding-parse:strict:
+    desc: "check:binding-parse, treating a skipped language as a failure (CI)"
+    cmds:
+      - python3 scripts/check_binding_parse.py --strict {{.CLI_ARGS}}
+
+  check:binding-parse:self-test:
+    desc: "Prove each binding-parse checker rejects deliberately invalid syntax"
+    cmds:
+      - python3 scripts/check_binding_parse.py --self-test {{.CLI_ARGS}}
+
   check:
     desc: "Run all checks (format + lint, no modifications)"
     cmds:
