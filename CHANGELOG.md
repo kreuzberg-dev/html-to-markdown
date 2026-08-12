@@ -30,6 +30,10 @@ output should expect to regenerate them when upgrading past this release.
   collector recording every element inside a `<td>` twice, once per pass, on the default
   extraction path. See `crates/html-to-markdown/tests/table_cell_metadata_duplication_test.rs`.
 - Link handling: fewer anchor traversals and allocations per `<a>` element. Output-neutral.
+- Removed the internal `text_content` LRU cache and with it the `lru` dependency. Because every
+  caller needs an owned `String`, a cache hit still cloned, so the cache cost an allocation per
+  miss and saved none; after the table change above, the dominant table path cannot hit it at all.
+  Measured 3.7% faster across the 29-fixture benchmark. Output-neutral.
 - DOM context building: the per-document context maps (parent, children, sibling-index, and
   related lookup tables) are now sized once from the arena's node count up front instead of
   growing incrementally as new node ids are seen. Output-neutral.
