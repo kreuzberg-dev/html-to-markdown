@@ -396,10 +396,17 @@ def report_comparison(
         if len(shown) < len(findings):
             print(f"             ... and {len(findings) - len(shown)} more (--verbose to list)")
 
-    stale = [symbol for symbol in allowlist if symbol not in grouped]
+    # ~keep An allowlisted symbol drops out of `grouped` for two opposite reasons, and
+    # ~keep conflating them reports a live bug as fixed: either the export finally appeared
+    # ~keep (resolved), or the CALLER disappeared while the export never existed (orphaned).
+    # ~keep This is not hypothetical - deleting C#'s htm_register_html_visitor DllImport
+    # ~keep removed the very string the C# detector matches on, so the symbol went "stale"
+    # ~keep while its public caller stayed put and the package stopped compiling.
+    resolved = [s for s in allowlist if s not in grouped and s in comparison.exported]
+    orphaned = [s for s in allowlist if s not in grouped and s not in comparison.exported]
     if not grouped:
         print("  no called-but-not-exported symbols")
-    return blocking, allowed, stale
+    return blocking, allowed, resolved, orphaned
 
 
 def main() -> int:
@@ -454,8 +461,10 @@ def main() -> int:
     if not disagreements:
         print("  header and Rust sources agree")
 
-    c_blocking, c_allowed, c_stale = report_comparison(c_abi, KNOWN_MISSING_EXPORTS, args.allow_known, args.verbose)
-    php_blocking, php_allowed, php_stale = report_comparison(
+    c_blocking, c_allowed, c_resolved, c_orphaned = report_comparison(
+        c_abi, KNOWN_MISSING_EXPORTS, args.allow_known, args.verbose
+    )
+    php_blocking, php_allowed, php_resolved, php_orphaned = report_comparison(
         php, KNOWN_MISSING_PHP_FUNCTIONS, args.allow_known, args.verbose
     )
 
@@ -463,11 +472,22 @@ def main() -> int:
     for entry in NOT_CHECKED:
         print(f"  {entry.language:<16} {entry.status}: {entry.reason}")
 
-    stale = c_stale + php_stale
-    if stale:
-        print("\nStale allowlist entries (symbol is no longer missing - delete the entry)")
-        for symbol in stale:
-            print(f"  STALE  {symbol}")
+    resolved = c_resolved + php_resolved
+    if resolved:
+        print("\nResolved allowlist entries (the export now exists - delete the entry)")
+        for symbol in resolved:
+            print(f"  RESOLVED  {symbol}")
+
+    orphaned = c_orphaned + php_orphaned
+    if orphaned:
+        print("\nOrphaned allowlist entries (NO export and NO caller - do NOT just delete)")
+        print("  The caller vanished rather than the export appearing. That is a fix only if")
+        print("  the feature was removed on purpose. If a public API still reaches this symbol,")
+        print("  its call site was deleted out from under it and the binding is now broken.")
+        for symbol in orphaned:
+            print(f"  ORPHANED  {symbol}")
+
+    stale = resolved + orphaned
 
     blocking = c_blocking + php_blocking
     allowed = c_allowed + php_allowed
@@ -482,7 +502,8 @@ def main() -> int:
     )
     print(
         f"{blocking} blocking, {allowed} allowlisted, "
-        f"{len(disagreements)} export-source disagreements, {len(stale)} stale allowlist entries"
+        f"{len(disagreements)} export-source disagreements, "
+        f"{len(resolved)} resolved allowlist entries, {len(orphaned)} orphaned allowlist entries"
     )
 
     failed = blocking + len(disagreements) + len(stale)
