@@ -45,6 +45,12 @@ output should expect to regenerate them when upgrading past this release.
 
 ### Fixed
 
+- Document-structure and inline-image collectors also record table-cell content exactly once.
+  Images, code blocks and nested tables inside a `<td>` were recorded up to three times with
+  `include_document_structure: true`, and inline images twice with `extract_images: true`. Note the
+  companion change: a table that renders to nothing (a blank table, or one a visitor skips) now
+  contributes nothing to `document` or the inline-image set, matching what it emits; `result.tables`
+  still reports its grid.
 - Metadata extracted from inside a table cell (links, images) is now recorded exactly once in
   every configuration. Previously a link in a `<td>` was recorded twice with
   `link_style: Reference`, and three times with `include_document_structure: true`, because the
