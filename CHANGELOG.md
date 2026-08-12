@@ -15,6 +15,11 @@ correctness fixes in this range shift output for the documents they affect — 6
 snapshots changed in total. Consumers who pin byte-exact golden files against this library's
 output should expect to regenerate them when upgrading past this release.
 
+A further 16 snapshots moved when hidden-element detection was corrected to read attribute
+structure instead of scanning raw tag text. Every one of those 16 **restores content that was
+previously deleted**: a Wikipedia link whose `title` attribute contained the word "hidden" was
+being stripped in full. If you saw links or sections disappear from converted pages, this is why.
+
 ### Added
 
 - Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.0 and checked for
