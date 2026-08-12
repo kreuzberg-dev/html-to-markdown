@@ -12,7 +12,6 @@
 use crate::converter::utility::content::{collect_link_label_text, escape_link_label, normalize_link_label};
 use crate::converter::utility::preprocessing::sanitize_markdown_url;
 use crate::options::ConversionOptions;
-#[cfg(feature = "visitor")]
 use std::borrow::Cow;
 #[cfg(feature = "metadata")]
 use std::collections::BTreeMap;
@@ -78,9 +77,6 @@ pub fn handle(
     let title = tag.attributes().get("title").flatten().map(|v| v.as_utf8_str());
 
     if let Some(href) = href_attr {
-        let raw_text_owned = crate::text::normalize_whitespace(&get_text_content(node_handle, parser, dom_ctx));
-        let raw_text = raw_text_owned.trim();
-
         if ctx.in_link {
             let children = tag.children();
             for child_handle in children.top().iter() {
@@ -88,6 +84,26 @@ pub fn handle(
             }
             return;
         }
+
+        let owned_children: Vec<tl::NodeHandle>;
+        let children: &[tl::NodeHandle] = if let Some(c) = dom_ctx.children_of(node_handle.get_inner()) {
+            c.as_slice()
+        } else {
+            owned_children = tag.children().top().iter().copied().collect();
+            owned_children.as_slice()
+        };
+        let (inline_label, _block_nodes, saw_block) = collect_link_label_text(children, parser, dom_ctx);
+
+        // ~keep Without block descendants the sweep above already visited exactly the nodes
+        // ~keep `get_text_content` would and decoded them the same way, so its text is reused
+        // ~keep rather than walking the `<a>` subtree a second time.
+        let text_source: Cow<'_, str> = if saw_block {
+            Cow::Owned(get_text_content(node_handle, parser, dom_ctx))
+        } else {
+            Cow::Borrowed(inline_label.as_str())
+        };
+        let normalized_text = crate::text::normalize_whitespace_cow(text_source.as_ref());
+        let raw_text = normalized_text.trim();
 
         // ~keep Check if this should be rendered as an autolink.
         // ~keep GFM requires an absolute URI with a scheme (e.g. `https://…`, `mailto:…`);
@@ -152,14 +168,6 @@ pub fn handle(
             }
         }
 
-        let owned_children: Vec<tl::NodeHandle>;
-        let children: &[tl::NodeHandle] = if let Some(c) = dom_ctx.children_of(node_handle.get_inner()) {
-            c.as_slice()
-        } else {
-            owned_children = tag.children().top().iter().copied().collect();
-            owned_children.as_slice()
-        };
-        let (inline_label, _block_nodes, saw_block) = collect_link_label_text(children, parser, dom_ctx);
         let mut label = if saw_block {
             let mut content = String::new();
             let link_ctx = Context {
@@ -214,12 +222,8 @@ pub fn handle(
             normalize_link_label(&content)
         };
 
-        // ~keep Apply fallback label strategies
-        if label.is_empty() && saw_block {
-            let fallback = crate::text::normalize_whitespace(&get_text_content(node_handle, parser, dom_ctx));
-            label = normalize_link_label(&fallback);
-        }
-
+        // ~keep `raw_text` is already the whole-subtree text when `saw_block`, so this single
+        // ~keep fallback covers both the block and inline cases.
         if label.is_empty() && !raw_text.is_empty() {
             label = normalize_link_label(raw_text);
         }
@@ -231,7 +235,7 @@ pub fn handle(
         let escaped_label = escape_link_label(&label);
 
         #[cfg(feature = "visitor")]
-        let link_output = if let Some(ref visitor_handle) = ctx.visitor {
+        if let Some(ref visitor_handle) = ctx.visitor {
             use crate::visitor::{NodeContext, NodeType, VisitResult};
 
             let node_id = node_handle.get_inner();
@@ -253,33 +257,27 @@ pub fn handle(
                 visitor.visit_link(&node_ctx, &href, &label, title.as_deref())
             };
             match visit_result {
-                VisitResult::Continue => {
-                    let mut buf = String::new();
-                    append_markdown_link(
-                        &mut buf,
-                        &escaped_label,
-                        href.as_str(),
-                        title.as_deref(),
-                        label.as_str(),
-                        options,
-                        ctx.reference_collector.as_ref(),
-                    );
-                    Some(buf)
-                }
-                VisitResult::Custom(custom) => Some(custom),
-                VisitResult::Skip => None,
+                VisitResult::Continue => append_markdown_link(
+                    output,
+                    &escaped_label,
+                    href.as_str(),
+                    title.as_deref(),
+                    label.as_str(),
+                    options,
+                    ctx.reference_collector.as_ref(),
+                ),
+                VisitResult::Custom(custom) => output.push_str(&custom),
+                VisitResult::Skip => {}
                 VisitResult::Error(err) => {
                     if ctx.visitor_error.borrow().is_none() {
                         *ctx.visitor_error.borrow_mut() = Some(err);
                     }
-                    None
                 }
-                VisitResult::PreserveHtml => Some(serialize_node(node_handle, parser)),
+                VisitResult::PreserveHtml => output.push_str(&serialize_node(node_handle, parser)),
             }
         } else {
-            let mut buf = String::new();
             append_markdown_link(
-                &mut buf,
+                output,
                 &escaped_label,
                 href.as_str(),
                 title.as_deref(),
@@ -287,27 +285,18 @@ pub fn handle(
                 options,
                 ctx.reference_collector.as_ref(),
             );
-            Some(buf)
-        };
+        }
 
         #[cfg(not(feature = "visitor"))]
-        let link_output = {
-            let mut buf = String::new();
-            append_markdown_link(
-                &mut buf,
-                &escaped_label,
-                href.as_str(),
-                title.as_deref(),
-                label.as_str(),
-                options,
-                ctx.reference_collector.as_ref(),
-            );
-            Some(buf)
-        };
-
-        if let Some(link_text) = link_output {
-            output.push_str(&link_text);
-        }
+        append_markdown_link(
+            output,
+            &escaped_label,
+            href.as_str(),
+            title.as_deref(),
+            label.as_str(),
+            options,
+            ctx.reference_collector.as_ref(),
+        );
 
         #[cfg(feature = "metadata")]
         if ctx.metadata_wants_links {

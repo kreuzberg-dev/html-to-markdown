@@ -21,11 +21,10 @@ use crate::converter::utility::content::{
 };
 use crate::options::ConversionOptions;
 use crate::text;
+use std::borrow::Cow;
 
 #[cfg(feature = "visitor")]
 use crate::converter::utility::serialization::serialize_node;
-#[cfg(feature = "visitor")]
-use std::borrow::Cow;
 
 /// Handle an `<a>` (link) element and convert to Markdown.
 ///
@@ -55,16 +54,28 @@ pub fn handle_link(
         .get("href")
         .flatten()
         .map(|v| text::decode_html_entities(&v.as_utf8_str()));
-    let title = tag
-        .attributes()
-        .get("title")
-        .flatten()
-        .map(|v| v.as_utf8_str().to_string());
+    let title = tag.attributes().get("title").flatten().map(|v| v.as_utf8_str());
 
     if let Some(href) = href_attr {
-        let raw_text = text::normalize_whitespace(&get_text_content(node_handle, parser, dom_ctx))
-            .trim()
-            .to_string();
+        let owned_children: Vec<tl::NodeHandle>;
+        let children: &[tl::NodeHandle] = if let Some(c) = dom_ctx.children_of(node_handle.get_inner()) {
+            c.as_slice()
+        } else {
+            owned_children = tag.children().top().iter().copied().collect();
+            owned_children.as_slice()
+        };
+        let (inline_label, _block_nodes, saw_block) = collect_link_label_text(children, parser, dom_ctx);
+
+        // ~keep Without block descendants the sweep above already visited exactly the nodes
+        // ~keep `get_text_content` would and decoded them the same way, so its text is reused
+        // ~keep rather than walking the `<a>` subtree a second time.
+        let text_source: Cow<'_, str> = if saw_block {
+            Cow::Owned(get_text_content(node_handle, parser, dom_ctx))
+        } else {
+            Cow::Borrowed(inline_label.as_str())
+        };
+        let normalized_text = text::normalize_whitespace_cow(text_source.as_ref());
+        let raw_text = normalized_text.trim();
 
         // ~keep GFM requires an absolute URI with a scheme (e.g. `https://…`, `mailto:…`);
         // ~keep bare paths or filenames must use the full `[text](href)` form (issue #397).
@@ -72,12 +83,12 @@ pub fn handle_link(
             && !options.default_title
             && !href.is_empty()
             && has_uri_scheme(href.as_str())
-            && (raw_text == href || (href.starts_with("mailto:") && raw_text == href[7..]));
+            && (raw_text == href || (href.starts_with("mailto:") && raw_text == &href[7..]));
 
         if is_autolink {
             output.push('<');
-            if href.starts_with("mailto:") && raw_text == href[7..] {
-                output.push_str(&raw_text);
+            if href.starts_with("mailto:") && raw_text == &href[7..] {
+                output.push_str(raw_text);
             } else {
                 output.push_str(&href);
             }
@@ -117,7 +128,7 @@ pub fn handle_link(
                             &escaped_label,
                             href.as_str(),
                             title.as_deref(),
-                            raw_text.as_str(),
+                            raw_text,
                             options,
                             ctx.reference_collector.as_ref(),
                         );
@@ -128,14 +139,6 @@ pub fn handle_link(
             }
         }
 
-        let owned_children: Vec<tl::NodeHandle>;
-        let children: &[tl::NodeHandle] = if let Some(c) = dom_ctx.children_of(node_handle.get_inner()) {
-            c.as_slice()
-        } else {
-            owned_children = tag.children().top().iter().copied().collect();
-            owned_children.as_slice()
-        };
-        let (inline_label, _block_nodes, saw_block) = collect_link_label_text(children, parser, dom_ctx);
         let mut label = if saw_block {
             let mut content = String::new();
             let link_ctx = Context {
@@ -188,13 +191,10 @@ pub fn handle_link(
             normalize_link_label(&content)
         };
 
-        if label.is_empty() && saw_block {
-            let fallback = text::normalize_whitespace(&get_text_content(node_handle, parser, dom_ctx));
-            label = normalize_link_label(&fallback);
-        }
-
+        // ~keep `raw_text` is already the whole-subtree text when `saw_block`, so this single
+        // ~keep fallback covers both the block and inline cases.
         if label.is_empty() && !raw_text.is_empty() {
-            label = normalize_link_label(&raw_text);
+            label = normalize_link_label(raw_text);
         }
 
         if label.is_empty() && !href.is_empty() && !children.is_empty() {
@@ -208,7 +208,7 @@ pub fn handle_link(
         let escaped_label = escape_link_label(&label);
 
         #[cfg(feature = "visitor")]
-        let link_output = if let Some(ref visitor_handle) = ctx.visitor {
+        if let Some(ref visitor_handle) = ctx.visitor {
             use crate::visitor::{NodeContext, NodeType, VisitResult};
 
             let node_id = node_handle.get_inner();
@@ -230,33 +230,27 @@ pub fn handle_link(
                 visitor.visit_link(&node_ctx, &href, &label, title.as_deref())
             };
             match visit_result {
-                VisitResult::Continue => {
-                    let mut buf = String::new();
-                    append_markdown_link(
-                        &mut buf,
-                        &escaped_label,
-                        href.as_str(),
-                        title.as_deref(),
-                        label.as_str(),
-                        options,
-                        ctx.reference_collector.as_ref(),
-                    );
-                    Some(buf)
-                }
-                VisitResult::Custom(custom) => Some(custom),
-                VisitResult::Skip => None,
+                VisitResult::Continue => append_markdown_link(
+                    output,
+                    &escaped_label,
+                    href.as_str(),
+                    title.as_deref(),
+                    label.as_str(),
+                    options,
+                    ctx.reference_collector.as_ref(),
+                ),
+                VisitResult::Custom(custom) => output.push_str(&custom),
+                VisitResult::Skip => {}
                 VisitResult::Error(err) => {
                     if ctx.visitor_error.borrow().is_none() {
                         *ctx.visitor_error.borrow_mut() = Some(err);
                     }
-                    None
                 }
-                VisitResult::PreserveHtml => Some(serialize_node(node_handle, parser)),
+                VisitResult::PreserveHtml => output.push_str(&serialize_node(node_handle, parser)),
             }
         } else {
-            let mut buf = String::new();
             append_markdown_link(
-                &mut buf,
+                output,
                 &escaped_label,
                 href.as_str(),
                 title.as_deref(),
@@ -264,27 +258,18 @@ pub fn handle_link(
                 options,
                 ctx.reference_collector.as_ref(),
             );
-            Some(buf)
-        };
+        }
 
         #[cfg(not(feature = "visitor"))]
-        let link_output = {
-            let mut buf = String::new();
-            append_markdown_link(
-                &mut buf,
-                &escaped_label,
-                href.as_str(),
-                title.as_deref(),
-                label.as_str(),
-                options,
-                ctx.reference_collector.as_ref(),
-            );
-            Some(buf)
-        };
-
-        if let Some(link_text) = link_output {
-            output.push_str(&link_text);
-        }
+        append_markdown_link(
+            output,
+            &escaped_label,
+            href.as_str(),
+            title.as_deref(),
+            label.as_str(),
+            options,
+            ctx.reference_collector.as_ref(),
+        );
 
         #[cfg(feature = "metadata")]
         if ctx.metadata_wants_links {
@@ -304,9 +289,13 @@ pub fn handle_link(
                     let value = value_opt.map(|v| v.to_string()).unwrap_or_default();
                     attributes_map.insert(key_str, value);
                 }
-                collector
-                    .borrow_mut()
-                    .add_link(href.clone(), label, title.clone(), rel_attr, attributes_map);
+                collector.borrow_mut().add_link(
+                    href.clone(),
+                    label,
+                    title.as_deref().map(str::to_string),
+                    rel_attr,
+                    attributes_map,
+                );
             }
         }
     } else {
