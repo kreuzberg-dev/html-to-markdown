@@ -6,8 +6,8 @@
 use std::borrow::Cow;
 
 use super::cell::{collect_table_cells, get_colspan};
-use super::cells::{append_layout_row, collect_row_cell_widths, convert_table_row};
-use super::scanner::scan_table;
+use super::cells::{CellTextCache, append_layout_row, collect_row_cell_widths, convert_table_row};
+use super::scanner::{TableScan, scan_table};
 use super::utils::{is_tag_name, normalized_tag_name};
 /// Maximum allowed table columns to prevent unbounded memory usage.
 const MAX_TABLE_COLS: usize = 1000;
@@ -66,6 +66,38 @@ pub fn table_total_columns(
     }
 
     max_cols.clamp(1, MAX_TABLE_COLS)
+}
+
+/// Whether each cell's markdown may be rendered once in the width pre-pass and reused
+/// verbatim in the render pass.
+///
+/// ~keep The pre-pass runs with `measure_width_only` (a nested `<table>` degrades to raw text,
+/// ~keep issue #406) and `skip_visitor_hooks`, so its rendering equals the render pass only
+/// ~keep when the table holds no nested table and no visitor is installed.
+///
+/// ~keep A collector shared through the context also observes the walk, and two of them feed
+/// ~keep back into the emitted bytes or into a caller-visible document model whose entries are
+/// ~keep positional: the reference collector numbers `[n]` link labels that appear in the
+/// ~keep output, and the structure/inline-image collectors index what they see. Those keep the
+/// ~keep two-pass path. The metadata collector does not affect emitted bytes, so reuse stays on
+/// ~keep for it — its entries stop being recorded twice per table cell, which is the double
+/// ~keep walk's bug, not a behaviour worth preserving.
+fn cell_text_reuse_allowed(ctx: &super::super::super::Context, table_scan: &TableScan) -> bool {
+    if table_scan.nested_table_count > 0 {
+        return false;
+    }
+    if ctx.structure_collector.is_some() || ctx.reference_collector.is_some() {
+        return false;
+    }
+    #[cfg(feature = "inline-images")]
+    if ctx.inline_collector.is_some() {
+        return false;
+    }
+    #[cfg(feature = "visitor")]
+    if ctx.visitor.is_some() {
+        return false;
+    }
+    true
 }
 
 /// Convert an entire table element to Markdown.
@@ -214,6 +246,8 @@ pub fn handle_table(
         let total_cols = table_total_columns(node_handle, parser, dom_ctx);
         let mut rowspan_tracker = vec![None; total_cols];
 
+        let mut cell_cache = CellTextCache::new(!options.compact_tables && cell_text_reuse_allowed(ctx, &table_scan));
+
         // ~keep Pre-pass: compute per-column max content widths for aligned padding.
         // ~keep Uses a rowspan tracker so spanned columns are skipped just as they
         // ~keep are in the render pass, keeping column indices correctly aligned.
@@ -246,6 +280,7 @@ pub fn handle_table(
                                         dom_ctx,
                                         &mut widths,
                                         &mut prepass_rowspan,
+                                        &mut cell_cache,
                                         depth + 1,
                                     );
                                 }
@@ -260,6 +295,7 @@ pub fn handle_table(
                                 dom_ctx,
                                 &mut widths,
                                 &mut prepass_rowspan,
+                                &mut cell_cache,
                                 depth + 1,
                             );
                         }
@@ -330,6 +366,7 @@ pub fn handle_table(
                                                 depth + 1,
                                                 is_header_section,
                                                 &col_widths,
+                                                &mut cell_cache,
                                             );
                                             row_index += 1;
                                         }
@@ -354,6 +391,7 @@ pub fn handle_table(
                                 depth + 1,
                                 row_index == 0,
                                 &col_widths,
+                                &mut cell_cache,
                             );
                             row_index += 1;
                         }

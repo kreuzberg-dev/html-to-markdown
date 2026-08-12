@@ -7,11 +7,49 @@
 
 use crate::converter::utility::content::normalized_tag_name;
 use std::borrow::Cow;
+use std::collections::HashMap;
 
-use super::cell::{cell_text_content, collect_table_cells, convert_table_cell, get_colspan_rowspan};
+use super::cell::{cell_text_content, collect_table_cells, convert_table_cell, emit_cell_text, get_colspan_rowspan};
 
 /// Maximum allowed table columns to prevent unbounded memory usage.
 const MAX_TABLE_COLS: usize = 1000;
+
+/// Rendered markdown of each cell visited by the column-width pre-pass, keyed by DOM node id.
+///
+/// ~keep The pre-pass and the render pass walk the same cell subtrees, so the pre-pass result
+/// ~keep can be emitted directly instead of rendering twice — but only where the two passes are
+/// ~keep provably byte-identical. The pre-pass context sets `measure_width_only` (nested tables
+/// ~keep degrade to raw text, issue #406) and `skip_visitor_hooks`, and a second walk is
+/// ~keep observable through any collector handle shared via the context. The caller decides via
+/// ~keep `enabled` (see `builder::cell_text_reuse_allowed`); when disabled this stores nothing.
+pub struct CellTextCache {
+    entries: HashMap<u32, String>,
+    enabled: bool,
+}
+
+impl CellTextCache {
+    /// Create a cache; `enabled == false` makes every store a no-op and every lookup a miss.
+    pub fn new(enabled: bool) -> Self {
+        Self {
+            entries: HashMap::new(),
+            enabled,
+        }
+    }
+
+    fn store(&mut self, node_id: u32, text: String) {
+        if self.enabled {
+            self.entries.insert(node_id, text);
+        }
+    }
+
+    fn take(&mut self, node_id: u32) -> Option<String> {
+        if self.enabled {
+            self.entries.remove(&node_id)
+        } else {
+            None
+        }
+    }
+}
 
 /// Append a layout table row as a list item.
 ///
@@ -110,6 +148,7 @@ pub fn collect_row_cell_widths(
     dom_ctx: &super::super::super::DomContext,
     col_widths: &mut Vec<usize>,
     rowspan_tracker: &mut Vec<Option<usize>>,
+    cell_cache: &mut CellTextCache,
     depth: usize,
 ) {
     let mut cells = Vec::new();
@@ -140,6 +179,7 @@ pub fn collect_row_cell_widths(
         let text = cell_text_content(cell_handle, parser, options, ctx, dom_ctx, depth + 1);
         const MAX_CELL_WIDTH: usize = 200;
         let width = text.chars().count().min(MAX_CELL_WIDTH);
+        cell_cache.store(cell_handle.get_inner(), text);
 
         if col >= col_widths.len() {
             col_widths.resize(col + 1, 0);
@@ -158,6 +198,39 @@ pub fn collect_row_cell_widths(
         }
 
         col = col.saturating_add(colspan);
+    }
+}
+
+/// Emit one cell of a rendered row, reusing the pre-pass rendering when it is cached.
+///
+/// `depth` is the cell's own recursion depth.
+#[allow(clippy::trivially_copy_pass_by_ref)]
+#[allow(clippy::too_many_arguments)]
+fn emit_row_cell(
+    cell_handle: &tl::NodeHandle,
+    parser: &tl::Parser,
+    row_text: &mut String,
+    options: &crate::options::ConversionOptions,
+    cell_ctx: &super::super::super::Context,
+    dom_ctx: &super::super::super::DomContext,
+    col_width: Option<usize>,
+    depth: usize,
+    cell_cache: &mut CellTextCache,
+) {
+    if let Some(text) = cell_cache.take(cell_handle.get_inner()) {
+        emit_cell_text(cell_handle, parser, row_text, &text, col_width);
+    } else {
+        convert_table_cell(
+            cell_handle,
+            parser,
+            row_text,
+            options,
+            cell_ctx,
+            "",
+            dom_ctx,
+            col_width,
+            depth,
+        );
     }
 }
 
@@ -185,6 +258,7 @@ const MIN_SEPARATOR_DASHES: usize = 3;
 /// * `depth` - Nesting depth
 /// * `is_header` - Whether this is a header row
 /// * `col_widths` - Per-column max content widths for padding (empty = no padding)
+/// * `cell_cache` - Markdown already rendered for these cells by the width pre-pass
 #[allow(clippy::too_many_arguments)]
 #[cfg_attr(not(feature = "visitor"), allow(unused_variables))]
 #[allow(clippy::trivially_copy_pass_by_ref)]
@@ -203,6 +277,7 @@ pub fn convert_table_row(
     depth: usize,
     is_header: bool,
     col_widths: &[usize],
+    cell_cache: &mut CellTextCache,
 ) {
     let mut row_text = String::with_capacity(256);
     let mut cells = Vec::new();
@@ -315,16 +390,16 @@ pub fn convert_table_row(
 
             if let Some(cell_handle) = cell_iter.next() {
                 let col_width = col_widths.get(col_index).copied();
-                convert_table_cell(
+                emit_row_cell(
                     cell_handle,
                     parser,
                     &mut row_text,
                     options,
                     &cell_ctx,
-                    "",
                     dom_ctx,
                     col_width,
                     depth + 1,
+                    cell_cache,
                 );
 
                 let (colspan, rowspan) = get_colspan_rowspan(cell_handle, parser);
@@ -342,16 +417,16 @@ pub fn convert_table_row(
     } else {
         for (cell_idx, cell_handle) in cells.iter().enumerate() {
             let col_width = col_widths.get(cell_idx).copied();
-            convert_table_cell(
+            emit_row_cell(
                 cell_handle,
                 parser,
                 &mut row_text,
                 options,
                 &cell_ctx,
-                "",
                 dom_ctx,
                 col_width,
                 depth + 1,
+                cell_cache,
             );
         }
         cells.len()

@@ -119,12 +119,33 @@ pub fn cell_text_content(
     dom_ctx: &super::super::super::DomContext,
     depth: usize,
 ) -> String {
-    let mut text = String::with_capacity(64);
-
     let cell_ctx = super::super::super::Context {
         in_table_cell: true,
         ..ctx.clone()
     };
+
+    render_cell_text(node_handle, parser, options, &cell_ctx, dom_ctx, depth)
+}
+
+/// Initial buffer capacity for a rendered cell's markdown.
+const CELL_TEXT_CAPACITY: usize = 128;
+
+/// Render a cell's content to the exact text that appears between its pipe delimiters.
+///
+/// `cell_ctx` must already carry `in_table_cell = true`; the caller owns that decision so
+/// the per-row context can be built once instead of cloned per cell.
+///
+/// `depth` is the cell's own recursion depth; children are walked at `depth + 1`.
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub fn render_cell_text(
+    node_handle: &tl::NodeHandle,
+    parser: &tl::Parser,
+    options: &crate::options::ConversionOptions,
+    cell_ctx: &super::super::super::Context,
+    dom_ctx: &super::super::super::DomContext,
+    depth: usize,
+) -> String {
+    let mut text = String::with_capacity(CELL_TEXT_CAPACITY);
 
     if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
         let children = tag.children();
@@ -135,7 +156,7 @@ pub fn cell_text_content(
 
         if has_tag_child {
             for child_handle in children.top().iter() {
-                super::super::super::walk_node(child_handle, parser, &mut text, options, &cell_ctx, depth + 1, dom_ctx);
+                super::super::super::walk_node(child_handle, parser, &mut text, options, cell_ctx, depth + 1, dom_ctx);
             }
         } else {
             let raw = dom_ctx.text_content(*node_handle, parser);
@@ -144,17 +165,23 @@ pub fn cell_text_content(
             } else {
                 Cow::Borrowed(raw.as_str())
             };
-            let escaped = escape_cell_text(normalized.as_ref(), options);
-            text = escaped;
+            text = escape_cell_text(normalized.as_ref(), options);
         }
     }
 
-    let text = text.trim();
-    if options.br_in_tables || !text.contains('\n') {
-        text.to_string()
-    } else {
-        text.replace('\n', " ")
+    trim_in_place(&mut text);
+    if !options.br_in_tables && text.contains('\n') {
+        text = text.replace('\n', " ");
     }
+    text
+}
+
+/// Trim leading and trailing whitespace without reallocating.
+fn trim_in_place(text: &mut String) {
+    let end = text.trim_end().len();
+    text.truncate(end);
+    let start = text.len() - text.trim_start().len();
+    text.drain(..start);
 }
 
 /// Escape text for use inside a table cell.
@@ -201,43 +228,28 @@ pub fn convert_table_cell(
     col_width: Option<usize>,
     depth: usize,
 ) {
-    let mut text = String::with_capacity(128);
+    let text = render_cell_text(node_handle, parser, options, cell_ctx, dom_ctx, depth);
+    emit_cell_text(node_handle, parser, output, &text, col_width);
+}
 
-    if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
-        let children = tag.children();
-        let has_tag_child = children
-            .top()
-            .iter()
-            .any(|child_handle| matches!(child_handle.get(parser), Some(tl::Node::Tag(_))));
-
-        if has_tag_child {
-            for child_handle in children.top().iter() {
-                super::super::super::walk_node(child_handle, parser, &mut text, options, cell_ctx, depth + 1, dom_ctx);
-            }
-        } else {
-            let raw = dom_ctx.text_content(*node_handle, parser);
-            let normalized = if options.whitespace_mode == crate::options::WhitespaceMode::Normalized {
-                crate::text::normalize_whitespace_cow(raw.as_str())
-            } else {
-                Cow::Borrowed(raw.as_str())
-            };
-            text = escape_cell_text(normalized.as_ref(), options);
-        }
-    }
-
-    let text = text.trim();
-    let text_for_output: Cow<str> = if options.br_in_tables || !text.contains('\n') {
-        Cow::Borrowed(text)
-    } else {
-        Cow::Owned(text.replace('\n', " "))
-    };
-
+/// Emit already-rendered cell text with its padding and colspan pipe delimiters.
+///
+/// Split out from [`convert_table_cell`] so a cell rendered during the column-width
+/// pre-pass can be emitted without walking its subtree a second time.
+#[allow(clippy::trivially_copy_pass_by_ref)]
+pub fn emit_cell_text(
+    node_handle: &tl::NodeHandle,
+    parser: &tl::Parser,
+    output: &mut String,
+    text: &str,
+    col_width: Option<usize>,
+) {
     let colspan = get_colspan(node_handle, parser);
 
     output.push(' ');
-    output.push_str(&text_for_output);
+    output.push_str(text);
     if let Some(width) = col_width {
-        let text_len = text_for_output.chars().count();
+        let text_len = text.chars().count();
         if text_len < width {
             for _ in 0..(width - text_len) {
                 output.push(' ');
