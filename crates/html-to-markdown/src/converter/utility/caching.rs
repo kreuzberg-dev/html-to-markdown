@@ -28,6 +28,13 @@ pub fn build_dom_context(dom: &tl::VDom, parser: &tl::Parser, input_len: usize) 
         table_content_summary_cache: std::cell::RefCell::new(std::collections::HashMap::new()),
     };
 
+    // ~keep Node ids index `dom.nodes()`, so the arena length is an exact upper bound on them.
+    // ~keep Sizing every map once here replaces one incremental grow per map per newly-seen id
+    // ~keep (nine maps x one grow per node) with nine allocations for the whole document.
+    if let Some(highest_node_id) = dom.nodes().len().checked_sub(1).and_then(|id| u32::try_from(id).ok()) {
+        ctx.ensure_capacity(highest_node_id);
+    }
+
     for (index, child_handle) in dom.children().iter().enumerate() {
         let id = child_handle.get_inner();
         ctx.ensure_capacity(id);
@@ -65,14 +72,19 @@ pub fn record_node_hierarchy(
         ctx.node_map[id as usize] = Some(node_handle);
 
         if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
-            let children: Vec<_> = tag.children().top().iter().copied().collect();
+            let tag_children = tag.children();
+            // ~keep `RawChildren::iter` reports no size hint, so collecting through it regrows the
+            // ~keep Vec from empty (and over-allocates to the growth step). Copying the slice sizes
+            // ~keep the allocation exactly once; the Vec itself must be owned because `children_map`
+            // ~keep outlives this borrow of the parser.
+            let children = tag_children.top().as_slice();
             for (index, child) in children.iter().enumerate() {
                 let child_id = child.get_inner();
                 ctx.ensure_capacity(child_id);
                 ctx.sibling_index_map[child_id as usize] = Some(index);
                 work.push((*child, Some(id)));
             }
-            ctx.children_map[id as usize] = Some(children);
+            ctx.children_map[id as usize] = Some(children.to_vec());
         }
     }
 }
