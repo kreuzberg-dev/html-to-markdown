@@ -1186,26 +1186,82 @@ pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
 pub fn tag_has_hidden_attribute(tag: &str) -> bool {
     let bytes = tag.as_bytes();
     let len = bytes.len();
-    let needle = b"hidden";
-    let nlen = needle.len();
 
     let mut i = 0;
-    while i < len && bytes[i] != b' ' && bytes[i] != b'\t' && bytes[i] != b'\n' && bytes[i] != b'>' {
+    while i < len && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
         i += 1;
     }
 
-    while i + nlen <= len {
-        if bytes[i..i + nlen].eq_ignore_ascii_case(needle) {
-            let before_ok = i == 0 || bytes[i - 1].is_ascii_whitespace();
-            let after = bytes.get(i + nlen).copied();
-            let after_ok = matches!(after, None | Some(b' ' | b'\t' | b'\n' | b'\r' | b'>' | b'=' | b'/'));
-            if before_ok && after_ok {
-                return true;
+    // ~keep Walk name=value pairs rather than scanning the raw tag text for the word
+    // ~keep `hidden`: a plain substring scan also matches inside quoted VALUES, so
+    // ~keep `<div title="... hidden from search engines">` read as hidden and the whole
+    // ~keep visible element was stripped.
+    while i < len {
+        while i < len && (bytes[i].is_ascii_whitespace() || bytes[i] == b'/') {
+            i += 1;
+        }
+        if i >= len || bytes[i] == b'>' {
+            return false;
+        }
+
+        let name_start = i;
+        while i < len && !bytes[i].is_ascii_whitespace() && bytes[i] != b'=' && bytes[i] != b'>' && bytes[i] != b'/' {
+            i += 1;
+        }
+        let name = &bytes[name_start..i];
+
+        while i < len && bytes[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        if i < len && bytes[i] == b'=' {
+            i += 1;
+            while i < len && bytes[i].is_ascii_whitespace() {
+                i += 1;
+            }
+            if i < len && (bytes[i] == b'"' || bytes[i] == b'\'') {
+                let quote = bytes[i];
+                i += 1;
+                while i < len && bytes[i] != quote {
+                    i += 1;
+                }
+                i += 1;
+            } else {
+                while i < len && !bytes[i].is_ascii_whitespace() && bytes[i] != b'>' {
+                    i += 1;
+                }
             }
         }
-        i += 1;
+
+        if name.eq_ignore_ascii_case(b"hidden") {
+            return true;
+        }
     }
     false
+}
+
+/// Remove `/* ... */` comments from a CSS declaration.
+///
+/// ~keep A comment before the property name shifts the first `:` so that
+/// ~keep `split_once(':')` yields `"/* note */ display"` as the property, which never
+/// ~keep matches — silently defeating the hidden-element check and leaking the content.
+fn strip_css_comments(declaration: &str) -> Cow<'_, str> {
+    if !declaration.contains("/*") {
+        return Cow::Borrowed(declaration);
+    }
+    let mut out = String::with_capacity(declaration.len());
+    let mut rest = declaration;
+    while let Some(start) = rest.find("/*") {
+        out.push_str(&rest[..start]);
+        match rest[start + 2..].find("*/") {
+            Some(end) => rest = &rest[start + 2 + end + 2..],
+            None => {
+                rest = "";
+                break;
+            }
+        }
+    }
+    out.push_str(rest);
+    Cow::Owned(out)
 }
 
 /// Check if an opening tag's inline `style` attribute hides the element via
@@ -1223,7 +1279,25 @@ pub fn tag_has_hidden_style(tag: &str) -> bool {
     let Some(style_value) = extract_attribute_value(tag, "style") else {
         return false;
     };
-    style_value.split(';').any(declaration_hides_element)
+    // ~keep CSS cascade: within one declaration block the LAST declaration for a property
+    // ~keep wins, so `display:none; display:block` is VISIBLE. Matching with `.any()`
+    // ~keep stripped it.
+    let mut display_hides = false;
+    let mut visibility_hides = false;
+    for declaration in style_value.split(';') {
+        let cleaned = strip_css_comments(declaration);
+        let Some((property, value)) = cleaned.split_once(':') else {
+            continue;
+        };
+        let property = property.trim();
+        let value = value.split('!').next().unwrap_or("").trim();
+        if property.eq_ignore_ascii_case("display") {
+            display_hides = value.eq_ignore_ascii_case("none");
+        } else if property.eq_ignore_ascii_case("visibility") {
+            visibility_hides = value.eq_ignore_ascii_case("hidden");
+        }
+    }
+    display_hides || visibility_hides
 }
 
 /// Check whether a single CSS declaration (`property: value`) hides its element.
