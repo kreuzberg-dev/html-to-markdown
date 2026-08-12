@@ -1,6 +1,23 @@
 // ~keep reason: CLI application modules do not expose docs to users; doc coverage not required
 #![allow(missing_docs)]
 
+// ~keep A `#[global_allocator]` is process-wide, so only this binary may set one — the
+// ~keep library and the Python/Node/JNI/PHP extension crates load into a host process
+// ~keep that already owns its allocator.
+// ~keep `jemalloc` deliberately wins over `mimalloc` rather than the two raising
+// ~keep `compile_error!`: cargo features are additive, so `--all-features` enables both,
+// ~keep and an error there makes the crate unbuildable under `cargo llvm-cov
+// ~keep --all-features` (four coverage tasks, one a CI gate) and `cargo doc
+// ~keep --all-features`. Precedence keeps every build path working; selecting an
+// ~keep allocator is a deployment choice, so the quieter resolution is the right one.
+#[cfg(all(feature = "mimalloc", not(feature = "jemalloc")))]
+#[global_allocator]
+static ALLOCATOR: mimalloc::MiMalloc = mimalloc::MiMalloc;
+
+#[cfg(feature = "jemalloc")]
+#[global_allocator]
+static ALLOCATOR: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+
 mod args;
 mod convert;
 mod output;

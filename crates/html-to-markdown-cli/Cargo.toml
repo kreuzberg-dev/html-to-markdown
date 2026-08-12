@@ -33,6 +33,12 @@ default = ["mcp"]
 mcp = ["html-to-markdown-rs/mcp", "dep:tokio"]
 mcp-http = ["mcp", "html-to-markdown-rs/mcp-http"]
 
+# ~keep A `#[global_allocator]` is a process-wide choice, so it belongs to this binary
+# ~keep and never to the library or the extension crates that load into a host runtime.
+# ~keep Enabling both at once is rejected by a `compile_error!` in `src/main.rs`.
+mimalloc = ["dep:mimalloc"]
+jemalloc = ["dep:tikv-jemallocator"]
+
 [dependencies]
 base64.workspace = true
 clap.workspace = true
@@ -40,6 +46,7 @@ clap_complete.workspace = true
 clap_mangen.workspace = true
 encoding_rs.workspace = true
 html-to-markdown-rs = { workspace = true, features = ["metadata", "inline-images", "visitor", "serde"] }
+mimalloc = { workspace = true, optional = true }
 reqwest = { version = "0.13.4", default-features = false, features = [
   "blocking",
   "rustls",
@@ -48,6 +55,7 @@ reqwest = { version = "0.13.4", default-features = false, features = [
   "charset",
 ] }
 serde_json = "1.0"
+tikv-jemallocator = { workspace = true, optional = true }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
 tracing.workspace = true
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
