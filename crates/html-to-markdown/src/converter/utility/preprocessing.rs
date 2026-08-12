@@ -217,6 +217,84 @@ fn is_self_closing_tag(tag_slice: &[u8], tag_name: &[u8]) -> bool {
             .any(|void_name| tag_name.eq_ignore_ascii_case(void_name))
 }
 
+/// Byte sequences delimiting the regions of an HTML document whose bytes are
+/// character data rather than markup.
+const COMMENT_OPEN: &[u8] = b"<!--";
+const COMMENT_CLOSE: &[u8] = b"-->";
+const CDATA_OPEN: &[u8] = b"<![CDATA[";
+const CDATA_CLOSE: &[u8] = b"]]>";
+
+/// Elements whose body is raw text: `<` inside them never starts a tag.
+const RAW_TEXT_ELEMENT_NAMES: [&[u8]; 2] = [b"script", b"style"];
+
+/// Index just past the first occurrence of `terminator` at or after `from`,
+/// or the input length when the region is never terminated.
+///
+/// ~keep An unterminated comment/CDATA region runs to EOF per HTML5, so
+/// ~keep returning `len` (rather than `None`) keeps the caller from resuming a
+/// ~keep tag scan inside text that will never be markup.
+#[inline]
+fn find_sequence_end(bytes: &[u8], from: usize, terminator: &[u8]) -> usize {
+    let len = bytes.len();
+    if from >= len {
+        return len;
+    }
+    match bytes[from..].windows(terminator.len()).position(|w| w == terminator) {
+        Some(offset) => from + offset + terminator.len(),
+        None => len,
+    }
+}
+
+/// If a `<` at `idx` opens a region that is NOT markup — an HTML comment, a
+/// CDATA section, or the body of a raw-text element — return the index just
+/// past that region. Returns `None` when `idx` does not open such a region.
+///
+/// ~keep A depth-counting close-tag scan MUST consult this before interpreting
+/// ~keep a `<`: `<!-- </div> -->` and `<script>{"a":"</div>"}</script>` contain
+/// ~keep byte sequences that look like tags but are text. Counting them ends the
+/// ~keep scan early (leaking the hidden element's tail into the output) or
+/// ~keep inflates the depth (swallowing the following visible sibling).
+#[inline]
+pub fn skip_opaque_region(bytes: &[u8], idx: usize) -> Option<usize> {
+    let len = bytes.len();
+    if idx >= len || bytes[idx] != b'<' {
+        return None;
+    }
+
+    if bytes[idx..].starts_with(COMMENT_OPEN) {
+        return Some(find_sequence_end(bytes, idx + COMMENT_OPEN.len(), COMMENT_CLOSE));
+    }
+
+    if bytes[idx..].starts_with(CDATA_OPEN) {
+        return Some(find_sequence_end(bytes, idx + CDATA_OPEN.len(), CDATA_CLOSE));
+    }
+
+    for raw_text_name in RAW_TEXT_ELEMENT_NAMES {
+        if matches_tag_start(bytes, idx + 1, raw_text_name) {
+            let open_end = find_tag_end(bytes, idx + 1 + raw_text_name.len())?;
+            // ~keep First-match close is the spec terminator for raw text — see
+            // ~keep the doc comment on `find_closing_tag_bytes`.
+            return Some(find_closing_tag_bytes(bytes, open_end, raw_text_name).unwrap_or(len));
+        }
+    }
+
+    None
+}
+
+/// Whether the `<` at `idx` starts a tag rather than a stray `<` in text.
+///
+/// ~keep Mirrors the `is_valid_tag` test in `preprocess_html`: without it a
+/// ~keep literal `<` in text (`a < b`) would make a scan jump to the next `>`,
+/// ~keep stepping over the real closing tag in between.
+#[inline]
+fn opens_a_tag(bytes: &[u8], idx: usize) -> bool {
+    match bytes.get(idx + 1) {
+        Some(b'/' | b'!') => bytes.get(idx + 2).is_some_and(u8::is_ascii_alphabetic),
+        Some(byte) => byte.is_ascii_alphabetic(),
+        None => false,
+    }
+}
+
 /// Find the closing tag that matches an opening `<tag>`, counting nested
 /// elements of the same name. Returns the position AFTER the closing tag
 /// (including the '>'), or `None` if the element is never closed.
@@ -226,6 +304,12 @@ fn is_self_closing_tag(tag_slice: &[u8], tag_name: &[u8]) -> bool {
 /// ~keep leaves the hidden element's tail in the document. Kept separate from
 /// ~keep that function because raw-text elements must NOT count depth — see its
 /// ~keep doc comment.
+///
+/// ~keep Only real markup may move the depth counter, so every `<` is first
+/// ~keep offered to `skip_opaque_region`, and a tag that is not the target is
+/// ~keep jumped via the quote-aware `find_tag_end` rather than byte-by-byte:
+/// ~keep otherwise `</tag>` written inside a comment, a quoted attribute value,
+/// ~keep or a raw-text body is mistaken for the element's terminator.
 #[inline]
 pub fn find_closing_tag_bytes_nested(bytes: &[u8], start: usize, tag: &[u8]) -> Option<usize> {
     let len = bytes.len();
@@ -244,6 +328,11 @@ pub fn find_closing_tag_bytes_nested(bytes: &[u8], start: usize, tag: &[u8]) -> 
             }
         }
 
+        if let Some(region_end) = skip_opaque_region(bytes, idx) {
+            idx = region_end;
+            continue;
+        }
+
         if matches_end_tag_start(bytes, idx + 1, tag) {
             if let Some(close_end) = find_tag_end(bytes, idx + 2 + tag.len()) {
                 depth -= 1;
@@ -259,6 +348,11 @@ pub fn find_closing_tag_bytes_nested(bytes: &[u8], start: usize, tag: &[u8]) -> 
                     depth += 1;
                 }
                 idx = open_end;
+                continue;
+            }
+        } else if opens_a_tag(bytes, idx) {
+            if let Some(unrelated_tag_end) = find_tag_end(bytes, idx + 1) {
+                idx = unrelated_tag_end;
                 continue;
             }
         }
@@ -1522,6 +1616,62 @@ mod tests {
     fn find_closing_tag_bytes_nested_returns_none_for_unbalanced_input() {
         let html = b"<div>a<div>b</div>";
         assert_eq!(find_closing_tag_bytes_nested(html, "<div>".len(), b"div"), None);
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_close_tag_inside_a_comment() {
+        let html = b"<div>a<!-- </div> -->b</div>tail";
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_open_tag_inside_a_comment() {
+        let html = b"<div>a<!-- <div> -->b</div>tail";
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_close_tag_inside_a_quoted_attribute() {
+        let html = br#"<div>a<span title="</div>">x</span>b</div>tail"#;
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_close_tag_inside_a_raw_text_body() {
+        let html = br#"<div>a<script>var s = "</div>";</script>b</div>tail"#;
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_close_tag_inside_a_cdata_section() {
+        let html = b"<div>a<![CDATA[ </div> ]]>b</div>tail";
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_does_not_skip_over_a_literal_less_than_in_text() {
+        let html = b"<div>a < b</div>tail";
+        let end = find_closing_tag_bytes_nested(html, "<div>".len(), b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn strip_hidden_elements_ignores_a_close_tag_written_inside_a_comment() {
+        let input = r#"<p>A</p><div style="display:none">SECRET<!-- </div> -->MORE</div><p>B</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>A</p><p>B</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_keeps_sibling_when_a_comment_holds_an_unbalanced_open_tag() {
+        let input = r#"<div id="wrap"><div style="display:none">S<!-- <div> --></div><p>VISIBLE</p></div><p>after</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), r#"<div id="wrap"><p>VISIBLE</p></div><p>after</p>"#);
     }
 
     #[test]
