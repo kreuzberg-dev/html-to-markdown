@@ -7,13 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrade note
+
+Rendered Markdown output changes in this release. The CSS-hidden/`hidden`-attribute fix below alone
+moved 56 of the 116 benchmark oracle snapshots when they were reblessed, and roughly a dozen other
+correctness fixes in this range shift output for the documents they affect — 64 of the 116
+snapshots changed in total. Consumers who pin byte-exact golden files against this library's
+output should expect to regenerate them when upgrading past this release.
+
 ### Added
 
 - Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.0 and checked for
   fixture-by-language coverage parity in local tasks and CI; strict validation is scoped to the generated root so
   the 85 maintained examples remain independently audited.
 
+### Changed
+
+- Table rendering: each cell's Markdown is now produced once and reused between the column-width
+  pre-pass and the render pass, instead of being rendered twice, for the common case (no nested
+  table, no visitor installed). Rendered Markdown is unchanged — reblessing the benchmark oracle
+  snapshots before and after produced byte-identical output. This also fixed the metadata
+  collector recording every element inside a `<td>` twice, once per pass, on the default
+  extraction path. See `crates/html-to-markdown/tests/table_cell_metadata_duplication_test.rs`.
+- Link handling: fewer anchor traversals and allocations per `<a>` element. Output-neutral.
+- DOM context building: the per-document context maps (parent, children, sibling-index, and
+  related lookup tables) are now sized once from the arena's node count up front instead of
+  growing incrementally as new node ids are seen. Output-neutral.
+- `alef` is pinned to `0.60.1` for binding generation.
+- Dependency upgrades, including `base64` and `tower-http` to their next major versions.
+- `html-to-markdown-cli` gained optional `mimalloc` and `jemalloc` global-allocator features
+  (`--features mimalloc` / `--features jemalloc`). Neither is enabled by default; if both are
+  enabled, `jemalloc` takes precedence, so `--all-features` builds continue to work.
+
 ### Fixed
+
+- Metadata extracted from inside a table cell (links, images) is now recorded exactly once in
+  every configuration. Previously a link in a `<td>` was recorded twice with
+  `link_style: Reference`, and three times with `include_document_structure: true`, because the
+  column-width pre-pass, the render pass, and the document-structure grid walk each re-walked the
+  cell through a shared collector. The internal passes no longer record; exactly one walk does.
+  Affects `metadata.links` / `metadata.images` counts for documents with tables — de-duplication
+  on the consumer side is no longer needed.
+- Content nested inside a CSS-hidden element (`style="display:none"` / `visibility:hidden`, or the
+  `hidden` attribute) no longer leaks into the output when the hidden element contains a nested
+  element of the *same* tag name (e.g. a hidden `<div>` containing another `<div>`). The stripper
+  previously matched the closing tag of the *inner* element rather than the outer one, so text
+  after the inner close tag — and, for deeper nesting, several more layers of "hidden" text — was
+  emitted as if it were visible. This affects any document with same-tag-name nesting inside a
+  hidden element, including a common Wikipedia infobox pattern; see
+  `crates/html-to-markdown/tests/hidden_element_nesting_test.rs` for the affected shapes. Output
+  changes for documents that hit this pattern.
 
 - Python visitor callbacks now honor the documented `type`/`output` action dictionaries for
   custom link output and image `skip`/`continue` actions ([#452]).
