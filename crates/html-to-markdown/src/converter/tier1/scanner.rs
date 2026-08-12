@@ -109,6 +109,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
     // ~keep tags are present in the source, which canonicalizes attribute
     // ~keep entities.  Mirror that for byte-equality.
     state.canonicalize_attr_entities = crate::converter::main_helpers::has_custom_element_tags(html);
+    let mut table_probes: Vec<TableLayoutProbe> = Vec::new();
     let mut pos = 0usize;
     let mut text_start = 0usize;
 
@@ -152,7 +153,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                         parse::find_tag_close(bytes, name_end).ok_or(BailReason::LiteralLt { offset: pos })?;
 
                     let tag_name_bytes = &bytes[name_start..name_end];
-                    emit_close(&mut state, tag_name_bytes, options)?;
+                    emit_close(&mut state, tag_name_bytes, options, &mut table_probes)?;
 
                     pos = close_bracket.0 + 1;
                     text_start = pos;
@@ -416,11 +417,18 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 // ~keep actually consult attributes.  `<abbr>` is `TagKind::Inline`
                 // ~keep but its `title` attribute is read at open time to mirror
                 // ~keep Tier-2's `handle_abbr` — include it in the collect-set.
+                // ~keep `Table` is in the collect-set for `border`, which feeds the
+                // ~keep `has_span && border="0"` leg of Tier-2's `looks_like_layout`.
+                // ~keep Omitting it silently disables that bail: `attrs` is empty, so the
+                // ~keep lookup returns None, `border_zero` stays false, and Tier-1 emits a
+                // ~keep GFM table where Tier-2 emits a bullet list. `TableCell` was already
+                // ~keep here for colspan, which is why only the border half was affected.
                 let needs_attrs = matches!(
                     spec.kind,
                     TagKind::Link
                         | TagKind::Image
                         | TagKind::List(ListKind::Ordered)
+                        | TagKind::Table
                         | TagKind::TableCell { .. }
                         | TagKind::Pre
                         | TagKind::Code
@@ -551,7 +559,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     });
                 }
 
-                emit_open(&mut state, spec, &attrs)?;
+                emit_open(&mut state, spec, &attrs, &mut table_probes)?;
 
                 // ~keep Record the content-start position AFTER emit_open so that
                 // ~keep close-side post-processing operates on the correct slice.
@@ -972,6 +980,7 @@ fn emit_open(
     state: &mut Tier1State,
     spec: &'static TagSpec,
     attrs: &[(&[u8], Option<&[u8]>)],
+    table_probes: &mut Vec<TableLayoutProbe>,
 ) -> Result<(), BailReason> {
     // ~keep Phase V: when a block-level tag opens inside a link, bail.  Tier-2's
     // ~keep link handler collapses block children (img alt, paragraph text) into
@@ -1044,13 +1053,13 @@ fn emit_open(
             }
         }
         TagKind::Link => open_link(state),
-        TagKind::Table => open_table(state),
+        TagKind::Table => open_table(state, attrs, table_probes),
         TagKind::TableCaption => open_table_caption(state),
         TagKind::TableHead => open_table_head(state)?,
         TagKind::TableBody => open_table_body(state)?,
         TagKind::TableFoot => open_table_foot(state),
         TagKind::TableRow => open_table_row(state),
-        TagKind::TableCell { is_header } => open_table_cell(state, attrs, is_header)?,
+        TagKind::TableCell { is_header } => open_table_cell(state, attrs, is_header, table_probes)?,
         // ~keep Block containers: emit a leading blank-line separator when there's
         // ~keep already preceding content.  Mirrors Tier-2's div/sectioning handlers
         // ~keep (`block/div.rs`'s `needs_leading_sep` branch and the separator push in
@@ -1260,7 +1269,36 @@ fn open_link(state: &mut Tier1State) {
     state.cell_or_output_mut().push('[');
 }
 
-fn open_table(state: &mut Tier1State) {
+/// Per-table inputs to Tier-2's layout-table heuristic that `TableState` does not
+/// already carry.
+///
+/// Mirrors the three `TableScan` fields (`block/table/scanner.rs`) that Tier-2's
+/// `looks_like_layout` reads in `block/table/builder.rs`:
+///
+/// ```text
+/// looks_like_layout = nested_table_count > 1 || distinct_counts.len() > 1
+///                                            || (has_span && has_border_zero)
+/// ```
+///
+/// Only the middle term is derivable from `TableState` (as `inconsistent_cols` in
+/// [`close_table`]); the other two are collected here.  One entry is pushed by
+/// [`open_table`] and popped by [`close_table`], in lockstep with
+/// `Tier1State::table_stack`, so `last_mut()` is always the innermost open table.
+#[derive(Debug, Clone, Copy, Default)]
+struct TableLayoutProbe {
+    /// Number of directly-nested `<table>` elements closed inside this table.
+    ///
+    /// Counts one level only: a table nested inside a nested table increments its
+    /// immediate parent, never this frame — matching Tier-2's `scan_own_structure`,
+    /// which stops its walk at each nested `<table>` boundary.
+    nested_table_count: usize,
+    /// True once any cell in this table carried a `colspan`/`rowspan` attribute.
+    has_span: bool,
+    /// True when the `<table>` tag carried `border="0"` exactly.
+    border_zero: bool,
+}
+
+fn open_table(state: &mut Tier1State, attrs: &[(&[u8], Option<&[u8]>)], table_probes: &mut Vec<TableLayoutProbe>) {
     // ~keep Phase HH: nested tables are no longer a bail; an inner table inherits
     // ~keep `inline_mode = true` so its final GFM rendering writes into the parent
     // ~keep cell buffer rather than `state.output`.  The parent cell's newline
@@ -1269,6 +1307,14 @@ fn open_table(state: &mut Tier1State) {
     state.table_stack.push(crate::converter::tier1::state::TableState {
         inline_mode,
         ..Default::default()
+    });
+    // ~keep Tier-2 compares the raw attribute value against the literal string "0"
+    // ~keep (`builder.rs`: `b.as_utf8_str() == "0"`), with no trimming and no numeric
+    // ~keep parse: `border="00"`, `border=" 0"` and a valueless `border` are all NOT
+    // ~keep border-zero there, so they must not be here either.
+    table_probes.push(TableLayoutProbe {
+        border_zero: find_attr(attrs, b"border").is_some_and(|value| value == b"0".as_slice()),
+        ..TableLayoutProbe::default()
     });
 }
 
@@ -1314,7 +1360,18 @@ fn open_table_cell(
     state: &mut Tier1State,
     attrs: &[(&[u8], Option<&[u8]>)],
     is_header: bool,
+    table_probes: &mut [TableLayoutProbe],
 ) -> Result<(), BailReason> {
+    // ~keep Tier-2's `has_span` (block/table/scanner.rs::scan_row_cells) is set by the
+    // ~keep mere *presence* of a `colspan`/`rowspan` attribute — `attrs.get(k).is_some()`
+    // ~keep — so `colspan="1"` and a valueless `colspan` both count.  Deliberately NOT
+    // ~keep `value > 1`: this feeds `looks_like_layout` in close_table and a tighter
+    // ~keep predicate would leave the byte-equality divergence in place for exactly the
+    // ~keep tables it excluded.
+    let spanning = has_attr(attrs, b"colspan") || has_attr(attrs, b"rowspan");
+    if let Some(probe) = table_probes.last_mut() {
+        probe.has_span |= spanning;
+    }
     // ~keep rowspan: accepted but not expanded (lossy — a spanned cell renders once,
     // ~keep matching mdream).  colspan: expanded by `close_table_cell` adding
     // ~keep `(colspan - 1)` empty cells so Tier-2's column-count expectations are
@@ -1544,7 +1601,12 @@ fn is_adjacent_rawtext_ignored_open(bytes: &[u8], pos: usize) -> bool {
     false
 }
 
-fn emit_close(state: &mut Tier1State, tag_name_bytes: &[u8], options: &ConversionOptions) -> Result<(), BailReason> {
+fn emit_close(
+    state: &mut Tier1State,
+    tag_name_bytes: &[u8],
+    options: &ConversionOptions,
+    table_probes: &mut Vec<TableLayoutProbe>,
+) -> Result<(), BailReason> {
     let mut name_buf = [0u8; MAX_TAG_NAME_BYTES];
     let name_lower = lowercase_into(tag_name_bytes, &mut name_buf);
 
@@ -1609,7 +1671,7 @@ fn emit_close(state: &mut Tier1State, tag_name_bytes: &[u8], options: &Conversio
         TagKind::DefinitionTerm => close_dt(state),
         TagKind::DefinitionDescription => close_dd(state),
         TagKind::Hr => {}
-        TagKind::Table => close_table(state)?,
+        TagKind::Table => close_table(state, table_probes)?,
         TagKind::TableHead => close_table_head(state),
         TagKind::TableBody => close_table_body(state),
         TagKind::TableFoot => {}
@@ -2431,11 +2493,15 @@ fn close_dl(state: &mut Tier1State, frame: &OpenTag) {
     buf.push_str("\n\n");
 }
 
-fn close_table(state: &mut Tier1State) -> Result<(), BailReason> {
+fn close_table(state: &mut Tier1State, table_probes: &mut Vec<TableLayoutProbe>) -> Result<(), BailReason> {
     // ~keep Pop the table state and (if safe) emit the GFM table to main output.
     let Some(ts) = state.table_stack.pop() else {
         return Ok(());
     };
+    // ~keep Popped together with the `TableState` it belongs to; the truncate re-syncs
+    // ~keep the two stacks if a malformed document ever pushed one without the other.
+    let probe = table_probes.pop().unwrap_or_default();
+    table_probes.truncate(state.table_stack.len());
 
     // ~keep Safety checks: ensure Tier-2 would also use the GFM path.
     // ~keep
@@ -2444,8 +2510,17 @@ fn close_table(state: &mut Tier1State) -> Result<(), BailReason> {
     // ~keep   (b) no <caption>, AND
     // ~keep   (c) looks_like_layout || is_blank || (row_count<=2 && link_count>=3)
     // ~keep
-    // ~keep Where looks_like_layout covers nested tables (already bailed),
-    // ~keep colspan/rowspan (already bailed), and inconsistent column counts.
+    // ~keep where (block/table/builder.rs)
+    // ~keep   looks_like_layout = nested_table_count > 1
+    // ~keep                    || distinct_counts.len() > 1
+    // ~keep                    || (has_span && has_border_zero)
+    // ~keep
+    // ~keep All three disjuncts are checked below — none of them is unreachable here.
+    // ~keep An earlier revision of this comment claimed nested tables and
+    // ~keep colspan/rowspan had "already bailed"; both claims were false (Phase HH
+    // ~keep renders a nested table inline into the parent cell, and open_table_cell
+    // ~keep expands colspan instead of bailing), and the resulting gap let Tier-1
+    // ~keep emit a GFM table for input Tier-2 renders as a bullet list.
     // ~keep
     // ~keep If those conditions could apply to this table, we bail rather than
     // ~keep emit a GFM table that Tier-2 would have rendered differently.
@@ -2472,7 +2547,16 @@ fn close_table(state: &mut Tier1State) -> Result<(), BailReason> {
         // ~keep Blank table → Tier-2 emits nothing (not a bail case).
         let is_blank = ts.rows.is_empty() || ts.rows.iter().all(|r| r.iter().all(|(c, _)| c.trim().is_empty()));
 
-        if inconsistent_cols || link_heavy || is_blank {
+        // ~keep Two or more directly-nested tables → layout table in Tier-2.  Tier-2
+        // ~keep counts one nesting level only, which is what the probe accumulates.
+        let multiple_nested_tables = probe.nested_table_count > 1;
+
+        // ~keep A spanning cell in a `border="0"` table → layout table in Tier-2.  Both
+        // ~keep halves are mirrored exactly: span = attribute presence, border = the
+        // ~keep literal value "0" (see open_table_cell / open_table).
+        let spanning_borderless = probe.has_span && probe.border_zero;
+
+        if inconsistent_cols || link_heavy || is_blank || multiple_nested_tables || spanning_borderless {
             // ~keep Tier-2 would not emit a GFM table here.  Bail so the fallback
             // ~keep produces the correct layout output.  Phase L's full layout
             // ~keep emit deferred — needs more careful per-cell content tracking
@@ -2487,6 +2571,12 @@ fn close_table(state: &mut Tier1State) -> Result<(), BailReason> {
     if ts.inline_mode {
         if let Some(outer) = state.table_stack.last_mut() {
             outer.had_nested_table = true;
+        }
+        // ~keep Mirrors Tier-2's `nested_table_count`: the enclosing table counts this
+        // ~keep one, and stops there — tables nested deeper already counted against
+        // ~keep their own immediate parent when they closed.
+        if let Some(outer_probe) = table_probes.last_mut() {
+            outer_probe.nested_table_count += 1;
         }
         let target = state.cell_or_output_mut();
         emit_gfm_table(target, ts);
@@ -3213,6 +3303,16 @@ fn apply_open_escape_ctx(state: &mut Tier1State, spec: &TagSpec) {
     };
 
     state.escape_ctx |= bit;
+}
+
+/// Report whether an attribute is present, with or without a value.
+///
+/// [`find_attr`] returns the attribute's *value* and so cannot tell an absent
+/// attribute from a valueless one (`<td colspan>`).  Tier-2's spanning-cell test
+/// (`block/table/scanner.rs`: `attrs.get("colspan").is_some()`) keys off presence
+/// alone, so mirroring it needs this distinction.
+fn has_attr(attrs: &[(&[u8], Option<&[u8]>)], key: &[u8]) -> bool {
+    attrs.iter().any(|(k, _)| k.eq_ignore_ascii_case(key))
 }
 
 /// Find an attribute value by (lowercase) key name.
