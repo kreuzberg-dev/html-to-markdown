@@ -9,23 +9,19 @@
 // local/e2e `build` (which builds for the host via `--platform`), never in the
 // cross-compiling publish pipeline.
 
-import {convert, OutputFormat} from "../index.js";
+import { convert, OutputFormat } from "../index.js";
 
 if (typeof convert !== "function") {
-  throw new Error(`#450 regression: named ESM export 'convert' is ${
-      typeof convert}, expected function`);
+  throw new Error(`#450 regression: named ESM export 'convert' is ${typeof convert}, expected function`);
 }
 if (typeof OutputFormat !== "object" || OutputFormat === null) {
-  throw new Error(
-      `#450 regression: named ESM export 'OutputFormat' did not resolve to an enum object`);
+  throw new Error(`#450 regression: named ESM export 'OutputFormat' did not resolve to an enum object`);
 }
 
 const result = convert("<h1>Hi</h1>");
 const markdown = result.markdown ?? result.content;
 if (markdown !== "# Hi\n") {
-  throw new Error(`#450 regression: convert('<h1>Hi</h1>') returned ${
-      JSON.stringify(markdown)}, expected "# Hi\\n"`);
+  throw new Error(`#450 regression: convert('<h1>Hi</h1>') returned ${JSON.stringify(markdown)}, expected "# Hi\\n"`);
 }
 
-console.log(
-    "verify-esm-exports: named ESM import of convert/OutputFormat works");
+console.log("verify-esm-exports: named ESM import of convert/OutputFormat works");

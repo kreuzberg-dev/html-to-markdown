@@ -14,12 +14,11 @@ namespace HtmlToMarkdown;
  */
 interface HtmlVisitorInterface
 {
-
     /**
      * Visit text nodes (most frequent callback - ~100+ per document).
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -29,7 +28,7 @@ interface HtmlVisitorInterface
      * Called before entering any element.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_element_start(NodeContext $context): VisitResult;
@@ -38,7 +37,7 @@ interface HtmlVisitorInterface
      * Called after exiting any element.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_output
      * @return VisitResult How to proceed with traversal
      */
@@ -48,7 +47,7 @@ interface HtmlVisitorInterface
      * Visit anchor links `<a href="...">`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_href
      * @param string $_text
      * @param ?string $_title
@@ -60,7 +59,7 @@ interface HtmlVisitorInterface
      * Visit images `<img src="...">`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_src
      * @param string $_alt
      * @param ?string $_title
@@ -72,7 +71,7 @@ interface HtmlVisitorInterface
      * Visit heading elements `<h1>` through `<h6>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param int $_level
      * @param string $_text
      * @param ?string $_id
@@ -84,7 +83,7 @@ interface HtmlVisitorInterface
      * Visit code blocks `<pre><code>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param ?string $_lang
      * @param string $_code
      * @return VisitResult How to proceed with traversal
@@ -95,7 +94,7 @@ interface HtmlVisitorInterface
      * Visit inline code `<code>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_code
      * @return VisitResult How to proceed with traversal
      */
@@ -105,7 +104,7 @@ interface HtmlVisitorInterface
      * Visit list items `<li>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param bool $_ordered
      * @param string $_marker
      * @param string $_text
@@ -117,7 +116,7 @@ interface HtmlVisitorInterface
      * Called before processing a list `<ul>` or `<ol>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param bool $_ordered
      * @return VisitResult How to proceed with traversal
      */
@@ -127,7 +126,7 @@ interface HtmlVisitorInterface
      * Called after processing a list `</ul>` or `</ol>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param bool $_ordered
      * @param string $_output
      * @return VisitResult How to proceed with traversal
@@ -138,7 +137,7 @@ interface HtmlVisitorInterface
      * Called before processing a table `<table>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_table_start(NodeContext $context): VisitResult;
@@ -147,7 +146,7 @@ interface HtmlVisitorInterface
      * Visit table rows `<tr>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param mixed $_cells
      * @param bool $_is_header
      * @return VisitResult How to proceed with traversal
@@ -158,7 +157,7 @@ interface HtmlVisitorInterface
      * Called after processing a table `</table>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_output
      * @return VisitResult How to proceed with traversal
      */
@@ -168,7 +167,7 @@ interface HtmlVisitorInterface
      * Visit blockquote elements `<blockquote>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_content
      * @param int $_depth
      * @return VisitResult How to proceed with traversal
@@ -179,7 +178,7 @@ interface HtmlVisitorInterface
      * Visit strong/bold elements `<strong>`, `<b>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -189,7 +188,7 @@ interface HtmlVisitorInterface
      * Visit emphasis/italic elements `<em>`, `<i>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -199,7 +198,7 @@ interface HtmlVisitorInterface
      * Visit strikethrough elements `<s>`, `<del>`, `<strike>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -209,7 +208,7 @@ interface HtmlVisitorInterface
      * Visit underline elements `<u>`, `<ins>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -219,7 +218,7 @@ interface HtmlVisitorInterface
      * Visit subscript elements `<sub>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -229,7 +228,7 @@ interface HtmlVisitorInterface
      * Visit superscript elements `<sup>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -239,7 +238,7 @@ interface HtmlVisitorInterface
      * Visit mark/highlight elements `<mark>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -249,7 +248,7 @@ interface HtmlVisitorInterface
      * Visit line break elements `<br>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_line_break(NodeContext $context): VisitResult;
@@ -258,7 +257,7 @@ interface HtmlVisitorInterface
      * Visit horizontal rule elements `<hr>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_horizontal_rule(NodeContext $context): VisitResult;
@@ -267,7 +266,7 @@ interface HtmlVisitorInterface
      * Visit custom elements (web components) or unknown tags.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_tag_name
      * @param string $_html
      * @return VisitResult How to proceed with traversal
@@ -278,7 +277,7 @@ interface HtmlVisitorInterface
      * Visit definition list `<dl>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_definition_list_start(NodeContext $context): VisitResult;
@@ -287,7 +286,7 @@ interface HtmlVisitorInterface
      * Visit definition term `<dt>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -297,7 +296,7 @@ interface HtmlVisitorInterface
      * Visit definition description `<dd>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -307,7 +306,7 @@ interface HtmlVisitorInterface
      * Called after processing a definition list `</dl>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_output
      * @return VisitResult How to proceed with traversal
      */
@@ -317,7 +316,7 @@ interface HtmlVisitorInterface
      * Visit form elements `<form>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param ?string $_action
      * @param ?string $_method
      * @return VisitResult How to proceed with traversal
@@ -328,19 +327,24 @@ interface HtmlVisitorInterface
      * Visit input elements `<input>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_input_type
      * @param ?string $_name
      * @param ?string $_value
      * @return VisitResult How to proceed with traversal
      */
-    public function visit_input(NodeContext $context, string $_input_type, ?string $_name, ?string $_value): VisitResult;
+    public function visit_input(
+        NodeContext $context,
+        string $_input_type,
+        ?string $_name,
+        ?string $_value,
+    ): VisitResult;
 
     /**
      * Visit button elements `<button>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -350,7 +354,7 @@ interface HtmlVisitorInterface
      * Visit audio elements `<audio>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param ?string $_src
      * @return VisitResult How to proceed with traversal
      */
@@ -360,7 +364,7 @@ interface HtmlVisitorInterface
      * Visit video elements `<video>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param ?string $_src
      * @return VisitResult How to proceed with traversal
      */
@@ -370,7 +374,7 @@ interface HtmlVisitorInterface
      * Visit iframe elements `<iframe>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param ?string $_src
      * @return VisitResult How to proceed with traversal
      */
@@ -380,7 +384,7 @@ interface HtmlVisitorInterface
      * Visit details elements `<details>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param bool $_open
      * @return VisitResult How to proceed with traversal
      */
@@ -390,7 +394,7 @@ interface HtmlVisitorInterface
      * Visit summary elements `<summary>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -400,7 +404,7 @@ interface HtmlVisitorInterface
      * Visit figure elements `<figure>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @return VisitResult How to proceed with traversal
      */
     public function visit_figure_start(NodeContext $context): VisitResult;
@@ -409,7 +413,7 @@ interface HtmlVisitorInterface
      * Visit figcaption elements `<figcaption>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_text
      * @return VisitResult How to proceed with traversal
      */
@@ -419,10 +423,9 @@ interface HtmlVisitorInterface
      * Called after processing a figure `</figure>`.
      *
      * @param NodeContext $context Visitor context information
-
+     *
      * @param string $_output
      * @return VisitResult How to proceed with traversal
      */
     public function visit_figure_end(NodeContext $context, string $_output): VisitResult;
-
 }
