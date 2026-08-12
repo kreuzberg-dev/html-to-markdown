@@ -161,7 +161,7 @@ PHP_FUNCTION_CALL_RE = re.compile(
 # Where PHP global-function probes live. Scoped deliberately: a repo-wide sweep
 # of *.php would match Composer vendor trees and the class-based binding's own
 # method names. ~keep
-PHP_PROBE_ROOTS = ("test_apps/php_ext", "test_apps/php-ext")
+PHP_PROBE_ROOTS = ("test_apps/php_ext",)
 
 NOT_CHECKED: tuple[NotChecked, ...] = (
     NotChecked(
