@@ -240,9 +240,17 @@ fn convert_inner(html: &str, options: ConversionOptions) -> Result<ConversionRes
 
     #[cfg(feature = "inline-images")]
     let image_collector = if wants_images {
-        use crate::inline_images::{DEFAULT_INLINE_IMAGE_LIMIT, InlineImageConfig as IIC};
+        use crate::inline_images::InlineImageConfig as IIC;
+        // ~keep `IIC::new` only seeds its own defaults, and two of them are the INVERSE of
+        // ~keep the documented `ConversionOptions` defaults (`capture_svg` true vs false,
+        // ~keep `infer_dimensions` false vs true). Forwarding is therefore not optional
+        // ~keep polish: without it every caller silently gets both flipped, and
+        // ~keep `max_image_size` is ignored because it only ever coincided with the constant.
+        let mut config = IIC::new(options.max_image_size);
+        config.capture_svg = options.capture_svg;
+        config.infer_dimensions = options.infer_dimensions;
         Some(Rc::new(RefCell::new(crate::inline_images::InlineImageCollector::new(
-            IIC::new(DEFAULT_INLINE_IMAGE_LIMIT),
+            config,
         )?)))
     } else {
         None
