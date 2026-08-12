@@ -145,9 +145,24 @@ pub fn strip_script_and_style_tags(input: &str) -> Cow<'_, str> {
     }
 }
 
-/// Find the position of a closing tag in bytes.
+/// Upper bound on how far a closing-tag scan may travel from its start offset.
+///
+/// ~keep DoS guard: hostile input can contain an unterminated element followed
+/// ~keep by hundreds of megabytes of text; the scan gives up rather than walking
+/// ~keep the whole document for every such tag.
+const MAX_CLOSING_TAG_SCAN: usize = 100_000_000;
+
+/// Find the position of the FIRST closing tag in bytes, ignoring nesting.
 /// Returns the position AFTER the closing tag (including the '>').
 /// This is highly optimized for performance and uses a fast-path scan.
+///
+/// ~keep First-match (not depth-aware) is correct ONLY for the HTML raw-text
+/// ~keep elements `<script>` and `<style>`: inside their bodies `<script` is
+/// ~keep text, not a tag, so the first `</script>` is the spec terminator.
+/// ~keep Counting depth here would treat `var s = "<script>"` as an opening tag
+/// ~keep and run past the real close, swallowing the rest of the document.
+/// ~keep Elements that can nest must use `find_closing_tag_bytes_nested`; do not
+/// ~keep unify the two functions.
 #[inline]
 pub fn find_closing_tag_bytes(bytes: &[u8], start: usize, tag: &[u8]) -> Option<usize> {
     let len = bytes.len();
@@ -155,9 +170,7 @@ pub fn find_closing_tag_bytes(bytes: &[u8], start: usize, tag: &[u8]) -> Option<
 
     let mut idx = start;
 
-    const MAX_SCAN: usize = 100_000_000;
-
-    while idx < len && (idx - start) < MAX_SCAN {
+    while idx < len && (idx - start) < MAX_CLOSING_TAG_SCAN {
         if bytes[idx] != b'<' {
             if let Some(pos) = memchr::memchr(b'<', &bytes[idx..]) {
                 idx += pos;
@@ -178,6 +191,75 @@ pub fn find_closing_tag_bytes(bytes: &[u8], start: usize, tag: &[u8]) -> Option<
                         return Some(close_idx + 1);
                     }
                 }
+            }
+        }
+
+        idx += 1;
+    }
+
+    None
+}
+
+/// Void elements that never carry a closing tag, so an occurrence of one inside
+/// a subtree must not raise the nesting depth of a closing-tag scan.
+const VOID_ELEMENT_NAMES: [&[u8]; 4] = [b"br", b"hr", b"img", b"input"];
+
+/// Whether an opening tag closes itself: XHTML-style `<tag/>` or a void element.
+///
+/// ~keep Shared by `strip_hidden_elements` and `find_closing_tag_bytes_nested`
+/// ~keep so the element the stripper treats as self-closing and the element the
+/// ~keep depth counter refuses to count can never disagree.
+#[inline]
+fn is_self_closing_tag(tag_slice: &[u8], tag_name: &[u8]) -> bool {
+    tag_slice.ends_with(b"/>")
+        || VOID_ELEMENT_NAMES
+            .iter()
+            .any(|void_name| tag_name.eq_ignore_ascii_case(void_name))
+}
+
+/// Find the closing tag that matches an opening `<tag>`, counting nested
+/// elements of the same name. Returns the position AFTER the closing tag
+/// (including the '>'), or `None` if the element is never closed.
+///
+/// ~keep Required for elements that can nest (`div`, `span`, ...): the
+/// ~keep first-match `find_closing_tag_bytes` stops at the INNER `</tag>`, which
+/// ~keep leaves the hidden element's tail in the document. Kept separate from
+/// ~keep that function because raw-text elements must NOT count depth — see its
+/// ~keep doc comment.
+#[inline]
+pub fn find_closing_tag_bytes_nested(bytes: &[u8], start: usize, tag: &[u8]) -> Option<usize> {
+    let len = bytes.len();
+    if tag.is_empty() {
+        return None;
+    }
+
+    let mut idx = start;
+    let mut depth = 1usize;
+
+    while idx < len && (idx - start) < MAX_CLOSING_TAG_SCAN {
+        if bytes[idx] != b'<' {
+            match memchr::memchr(b'<', &bytes[idx..]) {
+                Some(pos) => idx += pos,
+                None => break,
+            }
+        }
+
+        if matches_end_tag_start(bytes, idx + 1, tag) {
+            if let Some(close_end) = find_tag_end(bytes, idx + 2 + tag.len()) {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(close_end);
+                }
+                idx = close_end;
+                continue;
+            }
+        } else if matches_tag_start(bytes, idx + 1, tag) {
+            if let Some(open_end) = find_tag_end(bytes, idx + 1 + tag.len()) {
+                if !is_self_closing_tag(&bytes[idx..open_end], tag) {
+                    depth += 1;
+                }
+                idx = open_end;
+                continue;
             }
         }
 
@@ -972,16 +1054,10 @@ pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
                     }
                     let tag_name = &bytes[name_start..name_end];
 
-                    let is_self_closing = tag_slice.ends_with("/>")
-                        || tag_name.eq_ignore_ascii_case(b"br")
-                        || tag_name.eq_ignore_ascii_case(b"hr")
-                        || tag_name.eq_ignore_ascii_case(b"img")
-                        || tag_name.eq_ignore_ascii_case(b"input");
-
-                    let remove_end = if is_self_closing {
+                    let remove_end = if is_self_closing_tag(&bytes[idx..tag_end], tag_name) {
                         tag_end
                     } else {
-                        find_closing_tag_bytes(bytes, tag_end, tag_name).unwrap_or(tag_end)
+                        find_closing_tag_bytes_nested(bytes, tag_end, tag_name).unwrap_or(tag_end)
                     };
 
                     let out = output.get_or_insert_with(|| String::with_capacity(len));
@@ -1148,8 +1224,8 @@ fn scan_attribute_value<'a>(bytes: &[u8], tag: &'a str, start: usize) -> (&'a st
 #[cfg(test)]
 mod tests {
     use super::{
-        normalize_bogus_comment_endings, normalize_split_closing_tags, normalize_unclosed_list_items,
-        sanitize_markdown_url, strip_hidden_elements,
+        find_closing_tag_bytes, find_closing_tag_bytes_nested, normalize_bogus_comment_endings,
+        normalize_split_closing_tags, normalize_unclosed_list_items, sanitize_markdown_url, strip_hidden_elements,
     };
 
     #[test]
@@ -1389,5 +1465,70 @@ mod tests {
         let input = r#"<div style="display:none"><p>secret</p><span>also secret</span></div><p>visible</p>"#;
         let result = strip_hidden_elements(input);
         assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_removes_parent_that_nests_the_same_tag_name() {
+        let input = r#"<p>A<div style="display:none">S1<div>S2</div>LEAKED</div>B</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>AB</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_removes_deeply_nested_same_tag_subtree() {
+        let input = r#"<div style="display:none">L0<div>L1<div>L2</div>T2</div>T1</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_matches_closing_tag_case_insensitively() {
+        let input = r#"<DIV style="display:none">x<div>y</div>z</DIV><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_does_not_match_a_tag_with_a_longer_name() {
+        let input = r#"<div style="display:none">a<divider>b</divider>c</div><p>visible</p>"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>");
+    }
+
+    #[test]
+    fn strip_hidden_elements_drops_only_the_open_tag_when_never_closed() {
+        let input = r#"<p>visible</p><div style="display:none">dangling"#;
+        let result = strip_hidden_elements(input);
+        assert_eq!(result.as_ref(), "<p>visible</p>dangling");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_skips_inner_same_name_element() {
+        let html = b"<div>a<div>b</div>c</div>tail";
+        let start = "<div>".len();
+        let end = find_closing_tag_bytes_nested(html, start, b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_ignores_self_closing_inner_tag() {
+        let html = b"<div>a<div/>b</div>tail";
+        let start = "<div>".len();
+        let end = find_closing_tag_bytes_nested(html, start, b"div").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_nested_returns_none_for_unbalanced_input() {
+        let html = b"<div>a<div>b</div>";
+        assert_eq!(find_closing_tag_bytes_nested(html, "<div>".len(), b"div"), None);
+    }
+
+    #[test]
+    fn find_closing_tag_bytes_stays_first_match_for_raw_text_elements() {
+        let html = br#"<script>var s = "<script>";</script>tail"#;
+        let start = "<script>".len();
+        let end = find_closing_tag_bytes(html, start, b"script").expect("closing tag not found");
+        assert_eq!(&html[end..], b"tail");
     }
 }
