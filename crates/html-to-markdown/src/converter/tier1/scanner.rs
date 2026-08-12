@@ -380,7 +380,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 // ~keep When the user's preprocessing options request the strip,
                 // ~keep jump past the matching close tag without pushing any frame.
                 // ~keep Matches Tier-2's should_drop_for_preprocessing
-                // ~keep (preprocessing_helpers.rs:115).
+                // ~keep (preprocessing_helpers.rs).
                 if is_preprocessing_skip_candidate(name_lower) {
                     let close = parse::find_tag_close(bytes, name_end).ok_or(BailReason::LiteralLt { offset: pos })?;
                     let attrs_end = if close.1 { close.0.saturating_sub(1) } else { close.0 };
@@ -465,15 +465,15 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 // ~keep elements (e.g. a `<tr>` following an unclosed `<th>`) correctly
                 // ~keep collapse the cell state before the check runs.
                 // ~keep
-                // ~keep Allow `<p>`, `<div>/<section>/…` (TagKind::Block), `<ul>/<ol>`,
-                // ~keep and `<h1>-<h6>` inside cells — each has cell-aware open/close
-                // ~keep helpers that redirect their output to the cell accumulator and
-                // ~keep match Tier-2's `cell_text_content` normalisation
-                // ~keep (`text.replace('\n', " ")` when `br_in_tables` is false).
-                // ~keep
-                // ~keep All other block kinds (blockquote, pre, etc.) still bail because
-                // ~keep they produce multi-line content that would diverge from Tier-2's
-                // ~keep cell normalisation.
+                // ~keep The `inlineable` set below is the source of truth for what may
+                // ~keep appear in a cell; every kind in it has cell-aware open/close helpers
+                // ~keep that redirect output to the cell accumulator and match Tier-2's
+                // ~keep `cell_text_content` normalisation (`text.replace('\n', " ")` when
+                // ~keep `br_in_tables` is false).  Blockquote and Pre are included: their
+                // ~keep close helpers return early in a cell (Phase GG) rather than emitting
+                // ~keep a `> ` prefix or a code fence, which is what Tier-2 does too.
+                // ~keep A block kind bails only when it has no cell-aware helper, so adding
+                // ~keep one here without adding the helper will silently diverge from Tier-2.
                 if state.in_table_cell() && spec.is_block {
                     let inlineable = matches!(
                         spec.kind,
@@ -950,9 +950,12 @@ fn find_raw_text_close(bytes: &[u8], open_end: usize, tag_name: &[u8]) -> Option
 #[inline]
 const fn bail_unsupported(spec: &TagSpec, _offset: usize) -> Result<(), BailReason> {
     match spec.kind {
-        // ~keep Raw-text content tags are handled inline by the main scan loop
-        // ~keep (see find_raw_text_close).  They never reach this point in practice;
-        // ~keep listed here only to make the match exhaustive over TagKind::RawText.
+        // ~keep This arm IS load-bearing — do not delete it as unreachable.  The inline
+        // ~keep raw-text handling above is gated on `TagKind::Ignored && is_rawtext`, which
+        // ~keep is only `<script>`/`<style>`.  The seven genuine `TagKind::RawText` kinds
+        // ~keep (title / xmp / textarea / iframe / noscript / noembed / noframes) fall
+        // ~keep through to here, and this is the bail that keeps Tier-1 from emitting their
+        // ~keep text content incorrectly.  See the sibling note above `find_raw_text_close`.
         TagKind::RawText(_) => Err(BailReason::Classifier),
 
         // ~keep `Ignored` tags (head/meta/link/script/style) are now handled inline
@@ -1050,11 +1053,12 @@ fn emit_open(
         TagKind::TableCell { is_header } => open_table_cell(state, attrs, is_header)?,
         // ~keep Block containers: emit a leading blank-line separator when there's
         // ~keep already preceding content.  Mirrors Tier-2's div/sectioning handlers
-        // ~keep (block/div.rs:88, semantic/sectioning.rs:71) which prefix block
-        // ~keep content with `\n\n` to separate from siblings.
+        // ~keep (`block/div.rs`'s `needs_leading_sep` branch and the separator push in
+        // ~keep `semantic/sectioning.rs`) which prefix block content with `\n\n` to
+        // ~keep separate it from siblings.
         // ~keep
-        // ~keep Inside a table cell, Tier-2's div.rs:60 treats a sibling-div as a
-        // ~keep "table continuation" and emits `"  \n"` (two-space + newline) when
+        // ~keep Inside a table cell, Tier-2's `is_table_continuation` in `div.rs` treats
+        // ~keep a sibling-div as a "table continuation" and emits `"  \n"` when
         // ~keep the cell already has non-`|`/non-`<br>` content.  After
         // ~keep `close_table_cell`'s `replace('\n', ' ')` step, this becomes a 3-space
         // ~keep run between sibling divs — matching Tier-2's lists_timeline cell
@@ -2265,7 +2269,7 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
         if let Some(title) = title {
             // ~keep Tier-2 in production HTML fixtures HTML-encodes a literal `"`
             // ~keep in the title attribute to `&quot;` (rather than the
-            // ~keep `replace('"', "\\\"")` shown in `inline/link.rs:482-484`).  The
+            // ~keep `replace('"', "\\\"")` in `escape_markdown_title` in `inline/link.rs`).  The
             // ~keep backslash-escape branch of link.rs appears unreachable in
             // ~keep practice for the title attribute path on these fixtures.
             // ~keep Mirror the observed fixture behaviour to match expected output.
@@ -3228,7 +3232,7 @@ fn is_preprocessing_skip_candidate(name_lower: &[u8]) -> bool {
     matches!(name_lower, b"nav" | b"header" | b"footer" | b"aside" | b"form")
 }
 
-/// Mirrors `should_drop_for_preprocessing` (preprocessing_helpers.rs:115) for
+/// Mirrors `should_drop_for_preprocessing` (preprocessing_helpers.rs) for
 /// the Tier-1 byte scanner.
 ///
 /// Called only for tags that passed [`is_preprocessing_skip_candidate`].
