@@ -152,6 +152,16 @@ tasks:
     cmds:
       - poly fmt --check .
 
+  check:ffi-symbols:
+    desc: "Diff exported htm_* FFI symbols against the symbols bindings call"
+    cmds:
+      - python3 scripts/check_ffi_symbols.py {{.CLI_ARGS}}
+
+  check:ffi-symbols:known:
+    desc: "check:ffi-symbols, treating the known-missing allowlist as non-blocking"
+    cmds:
+      - python3 scripts/check_ffi_symbols.py --allow-known {{.CLI_ARGS}}
+
   check:
     desc: "Run all checks (format + lint, no modifications)"
     cmds:

@@ -1,0 +1,73 @@
+# ~keep This check lives in its own workflow rather than in ci-lint.yaml on purpose.
+# ~keep GitHub path filters are workflow-scoped, not job-scoped, so adding the C-ABI
+# ~keep consumer extensions to ci-lint would also start running its heavy reusable
+# ~keep `validate` job on C#/Zig-only changes. Keeping this separate lets the filter be
+# ~keep exactly the set of files that can invalidate the symbol diff, and nothing else.
+# ~keep The path list is duplicated below because GitHub Actions does not support YAML
+# ~keep anchors/aliases — keep the two lists in sync.
+name: FFI Symbols
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/html-to-markdown-ffi/**"
+      - "packages/csharp/**"
+      - "packages/zig/**"
+      - "packages/java/**"
+      - "packages/go/**"
+      - "crates/html-to-markdown-php/**"
+      - "test_apps/php_ext/**"
+      - "**/*.c"
+      - "**/*.h"
+      - "scripts/check_ffi_symbols.py"
+      - ".github/workflows/ci-ffi-symbols.yaml"
+      - "Taskfile.yaml"
+  pull_request:
+    paths:
+      - "crates/html-to-markdown-ffi/**"
+      - "packages/csharp/**"
+      - "packages/zig/**"
+      - "packages/java/**"
+      - "packages/go/**"
+      - "crates/html-to-markdown-php/**"
+      - "test_apps/php_ext/**"
+      - "**/*.c"
+      - "**/*.h"
+      - "scripts/check_ffi_symbols.py"
+      - ".github/workflows/ci-ffi-symbols.yaml"
+      - "Taskfile.yaml"
+
+concurrency:
+  group: ffi-symbols-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # ~keep Every other gate in this repo is parse-based (gofmt -e, cargo check,
+  # ~keep swiftc -parse, zig build). A P/Invoke or dlsym lookup naming a symbol the
+  # ~keep native library never exports parses perfectly and fails at the first call, in
+  # ~keep the consumer's process — which is how a public C# API shipped calling
+  # ~keep htm_register_html_visitor with every check green. This job is the different
+  # ~keep instrument: exported set minus called set.
+  ffi-symbols:
+    name: "Verify: FFI symbol exports vs callers"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@v1
+
+      # ~keep --allow-known keeps the upstream-blocked symbols from task #94 from
+      # ~keep failing the job while still printing them on every run. The allowlist
+      # ~keep lives in scripts/check_ffi_symbols.py and must shrink to empty; a symbol
+      # ~keep that gets fixed but is left listed fails this job as a stale entry, so the
+      # ~keep ratchet cannot slip backwards. Drop the flag once the allowlist is empty.
+      - name: Fail on called-but-not-exported FFI symbols
+        run: task check:ffi-symbols:known
+        shell: bash

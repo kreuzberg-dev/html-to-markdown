@@ -1,0 +1,495 @@
+#!/usr/bin/env python3
+"""Diff the native library's exported C-ABI symbols against the symbols the
+bindings actually call.
+
+Every other gate in this repo is *parse-based* (``gofmt -e``, ``cargo check``,
+``swiftc -parse``, ``zig build``). A P/Invoke declaration or a ``dlsym`` lookup
+naming a symbol that does not exist parses perfectly and only fails at the first
+call, at runtime, in the consumer's process. This check is a different
+instrument: build the exported set, build the called set, subtract.
+
+Two independent comparisons run:
+
+1. ``htm_*`` C-ABI exports (``crates/html-to-markdown-ffi``) vs. the symbols the
+   vendored-header bindings name as strings or ``extern`` declarations.
+2. PHP extension global functions (``#[php_function]`` in
+   ``crates/html-to-markdown-php``) vs. the global functions the PHP extension
+   smoke apps probe for.
+
+Usage:
+    python3 scripts/check_ffi_symbols.py               # strict: any gap fails
+    python3 scripts/check_ffi_symbols.py --allow-known # known gaps warn, unknown fail
+    python3 scripts/check_ffi_symbols.py --json        # machine-readable summary
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+from collections import defaultdict
+from dataclasses import dataclass, field
+from functools import cache
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+
+FFI_HEADER = ROOT / "crates" / "html-to-markdown-ffi" / "include" / "html_to_markdown.h"
+FFI_SRC = ROOT / "crates" / "html-to-markdown-ffi" / "src"
+PHP_SRC = ROOT / "crates" / "html-to-markdown-php" / "src"
+
+# Third-party sources that are checked in but are not ours to diff. Build output
+# and fetch caches need no denylist: the file set comes from `git ls-files`, so
+# anything gitignored (test_apps/zig/zig-pkg, target/, node_modules/) is already
+# out. Dropping that rule reintroduces stale released copies of our own bindings
+# as phantom call sites. ~keep
+EXCLUDED_DIR_NAMES = frozenset({"vendor", "third_party"})
+
+# The canonical header is the *source* of exports, not a consumer of them.
+# Vendored copies elsewhere in the tree are deliberately still scanned: a stale
+# copy that declares a removed symbol is exactly the drift this tool exists to
+# catch. ~keep
+EXPORT_SOURCE_PATHS = frozenset({FFI_HEADER})
+
+# Symbols the bindings call that the native library does not export, which we
+# have accepted as temporarily-broken rather than blocking on. Every entry must
+# cite why it is here and what removes it. This map MUST shrink to empty; a
+# stale entry (allowlisted symbol that is no longer missing) is itself a
+# failure, so entries cannot outlive their fix. ~keep
+KNOWN_MISSING_EXPORTS: dict[str, str] = {
+    "htm_register_html_visitor": "task #94 - visitor registration never landed in the FFI crate",
+    "htm_html_visitor_free": "task #94 - paired with htm_register_html_visitor",
+    "htm_node_type_from_json": "task #94 - NodeType has no JSON constructor export",
+    "htm_html_visitor_handle_from_callbacks": "task #94 - vtable handle constructor never exported",
+}
+
+KNOWN_MISSING_PHP_FUNCTIONS: dict[str, str] = {
+    "html_to_markdown_convert": "task #94 - ext registers 43 classes and zero global functions",
+}
+
+BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.DOTALL)
+LINE_COMMENT_RE = re.compile(r"//[^\n]*")
+PHP_LINE_COMMENT_RE = re.compile(r"(?://|#)[^\n]*")
+
+# How many call sites to print per missing symbol before summarising the rest.
+# One broken symbol can have dozens of sites; the cap keeps the report readable
+# without hiding the total. ``--verbose`` prints all of them. ~keep
+MAX_SITES_PER_SYMBOL = 6
+
+
+@dataclass(frozen=True)
+class Consumer:
+    """One language's way of naming a native symbol."""
+
+    language: str
+    suffixes: tuple[str, ...]
+    pattern: re.Pattern[str]
+    how: str
+    strip_comments: bool = True
+
+
+@dataclass(frozen=True)
+class NotChecked:
+    """A binding this tool deliberately does not diff, and why."""
+
+    language: str
+    status: str
+    reason: str
+
+
+@dataclass
+class Finding:
+    """One called-but-not-exported symbol at one call site."""
+
+    symbol: str
+    language: str
+    path: str
+    line: int
+
+
+@dataclass
+class Comparison:
+    """One exported-vs-called diff."""
+
+    title: str
+    exported: set[str] = field(default_factory=set)
+    call_sites: int = 0
+    languages: set[str] = field(default_factory=set)
+    findings: list[Finding] = field(default_factory=list)
+
+
+C_ABI_CONSUMERS: tuple[Consumer, ...] = (
+    Consumer(
+        language="csharp",
+        suffixes=(".cs",),
+        pattern=re.compile(r'EntryPoint\s*=\s*"(htm_[A-Za-z0-9_]+)"'),
+        how='[DllImport(..., EntryPoint = "htm_*")]',
+    ),
+    Consumer(
+        language="java",
+        suffixes=(".java",),
+        pattern=re.compile(r'\.find\(\s*"(htm_[A-Za-z0-9_]+)"\s*\)'),
+        how='Panama SymbolLookup.find("htm_*")',
+    ),
+    Consumer(
+        language="go",
+        suffixes=(".go",),
+        pattern=re.compile(r"\bC\.(htm_[A-Za-z0-9_]+)"),
+        how="cgo C.htm_*",
+    ),
+    Consumer(
+        language="zig",
+        suffixes=(".zig",),
+        pattern=re.compile(r"\bc\.(htm_[A-Za-z0-9_]+)"),
+        how="@cImport c.htm_*",
+    ),
+    Consumer(
+        language="c",
+        suffixes=(".c", ".h"),
+        pattern=re.compile(r"\b(htm_[A-Za-z0-9_]+)\s*\("),
+        how="direct htm_*() call or declaration",
+    ),
+)
+
+PHP_FUNCTION_CALL_RE = re.compile(
+    r"""(?:function_exists\(\s*['"](html_to_markdown_[A-Za-z0-9_]+)['"]|"""
+    r"""\b(html_to_markdown_[A-Za-z0-9_]+)\s*\()"""
+)
+
+# Where PHP global-function probes live. Scoped deliberately: a repo-wide sweep
+# of *.php would match Composer vendor trees and the class-based binding's own
+# method names. ~keep
+PHP_PROBE_ROOTS = ("test_apps/php_ext", "test_apps/php-ext")
+
+NOT_CHECKED: tuple[NotChecked, ...] = (
+    NotChecked(
+        "swift",
+        "not applicable",
+        "swift-bridge generates the Swift shims and the Rust exports from the same "
+        "#[swift_bridge::bridge] macro in the same build; the two cannot disagree",
+    ),
+    NotChecked(
+        "node",
+        "not applicable",
+        "#[napi] generates the JS binding and the native registration from one macro "
+        "expansion; exports are registered at module init, not looked up by name",
+    ),
+    NotChecked(
+        "dart",
+        "not applicable",
+        "flutter_rust_bridge codegen emits the Dart side and the Rust side together from the same source of truth",
+    ),
+    NotChecked(
+        "kotlin-android",
+        "not applicable",
+        "JNI symbols are derived from the Java class/method name by the jni crate's "
+        "#[no_mangle] naming rule; a mismatch is a link/registration error, not a "
+        "string lookup this tool could diff",
+    ),
+    NotChecked(
+        "python",
+        "unchecked",
+        "PyO3 dynamic dispatch - attribute access on the extension module cannot be "
+        "resolved statically without false positives",
+    ),
+    NotChecked(
+        "ruby",
+        "unchecked",
+        "Magnus dynamic dispatch - method names are resolved at call time by the VM",
+    ),
+    NotChecked(
+        "elixir",
+        "unchecked",
+        "Rustler NIF arity/name mismatches surface at module load, not via a symbol table this tool can read",
+    ),
+    NotChecked(
+        "r",
+        "unchecked",
+        "extendr dynamic registration - .Call targets are registered at package load",
+    ),
+    NotChecked(
+        "wasm",
+        "unchecked",
+        "wasm-bindgen emits the JS glue and the wasm exports from one macro expansion",
+    ),
+)
+
+
+@cache
+def tracked_files() -> tuple[Path, ...]:
+    """Every git-tracked file, as absolute paths.
+
+    Using git's index rather than a filesystem walk is what keeps fetch caches
+    and build output (which contain stale *copies of our own bindings*) from
+    being reported as call sites.
+    """
+    result = subprocess.run(
+        ["git", "-C", str(ROOT), "ls-files", "-z"],
+        capture_output=True,
+        check=True,
+        text=True,
+    )
+    return tuple(ROOT / name for name in result.stdout.split("\0") if name)
+
+
+def iter_source_files(suffixes: tuple[str, ...]) -> list[Path]:
+    """All first-party tracked files with any of ``suffixes``."""
+    found: list[Path] = []
+    for path in tracked_files():
+        if path.suffix not in suffixes or path in EXPORT_SOURCE_PATHS:
+            continue
+        if EXCLUDED_DIR_NAMES.isdisjoint(path.relative_to(ROOT).parts[:-1]):
+            found.append(path)
+    return sorted(found)
+
+
+def _blank(match: re.Match[str]) -> str:
+    """Replace a match with spaces, preserving newlines so line numbers hold."""
+    return re.sub(r"[^\n]", " ", match.group(0))
+
+
+def strip_comments(text: str) -> str:
+    """Blank out C-family comments, preserving line numbering.
+
+    A doc comment that mentions ``htm_foo(ptr)`` is not a call site; without this
+    the C scan reports every symbol named in cbindgen's own doc blocks.
+    """
+    return LINE_COMMENT_RE.sub(_blank, BLOCK_COMMENT_RE.sub(_blank, text))
+
+
+def strip_php_comments(text: str) -> str:
+    """Blank out PHP comments, including ``#`` line comments and docblocks."""
+    return PHP_LINE_COMMENT_RE.sub(_blank, BLOCK_COMMENT_RE.sub(_blank, text))
+
+
+def read_text(path: Path) -> str:
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def exported_from_header() -> set[str]:
+    """``htm_*`` declarations in the cbindgen-generated public header."""
+    text = strip_comments(read_text(FFI_HEADER))
+    return set(re.findall(r"\b(htm_[A-Za-z0-9_]+)\s*\(", text))
+
+
+def exported_from_rust() -> set[str]:
+    """``htm_*`` functions actually given C linkage in the FFI crate."""
+    symbols: set[str] = set()
+    for path in sorted(FFI_SRC.rglob("*.rs")):
+        symbols.update(re.findall(r'extern\s+"C"\s+fn\s+(htm_[A-Za-z0-9_]+)', read_text(path)))
+    return symbols
+
+
+def php_exported_functions() -> set[str]:
+    """Global functions the PHP extension registers via ``#[php_function]``."""
+    names: set[str] = set()
+    if not PHP_SRC.is_dir():
+        return names
+    for path in sorted(PHP_SRC.rglob("*.rs")):
+        text = read_text(path)
+        for match in re.finditer(r"#\[php_function[^\]]*\]\s*(?:pub\s+)?fn\s+([A-Za-z0-9_]+)", text):
+            names.add(match.group(1))
+        names.update(re.findall(r'#\[php_function\s*\(\s*name\s*=\s*"([^"]+)"', text))
+    return names
+
+
+def scan_consumer(consumer: Consumer, exported: set[str]) -> tuple[int, list[Finding]]:
+    """Return (call sites seen, findings for symbols not in ``exported``)."""
+    call_sites = 0
+    findings: list[Finding] = []
+    for path in iter_source_files(consumer.suffixes):
+        text = read_text(path)
+        if consumer.pattern.search(text) is None:
+            continue
+        if consumer.strip_comments:
+            text = strip_comments(text)
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            for match in consumer.pattern.finditer(line):
+                symbol = next(group for group in match.groups() if group)
+                call_sites += 1
+                if symbol not in exported:
+                    findings.append(Finding(symbol, consumer.language, str(path.relative_to(ROOT)), line_number))
+    return call_sites, findings
+
+
+def compare_c_abi() -> tuple[Comparison, list[str]]:
+    """Diff C-ABI exports against every statically analysable consumer."""
+    header = exported_from_header()
+    rust = exported_from_rust()
+    disagreements: list[str] = [
+        f'declared in html_to_markdown.h but no `extern "C" fn` in FFI src: {symbol}'
+        for symbol in sorted(header - rust)
+    ]
+    disagreements.extend(
+        f'`extern "C" fn` in FFI src but missing from html_to_markdown.h: {symbol}' for symbol in sorted(rust - header)
+    )
+
+    # Union, not intersection: a symbol present in only one source is already
+    # reported above, and treating it as unexported here would double-report it
+    # against every call site. ~keep
+    comparison = Comparison(title="C ABI (htm_*)", exported=header | rust)
+    for consumer in C_ABI_CONSUMERS:
+        call_sites, findings = scan_consumer(consumer, comparison.exported)
+        comparison.call_sites += call_sites
+        comparison.findings.extend(findings)
+        comparison.languages.add(consumer.language)
+    return comparison, disagreements
+
+
+def compare_php_functions() -> Comparison:
+    """Diff PHP extension global functions against the ext smoke apps' probes."""
+    comparison = Comparison(title="PHP extension global functions", exported=php_exported_functions())
+    for root_name in PHP_PROBE_ROOTS:
+        root = ROOT / root_name
+        if not root.is_dir():
+            continue
+        comparison.languages.add("php-ext")
+        for path in sorted(root.rglob("*.php")):
+            for line_number, line in enumerate(strip_php_comments(read_text(path)).splitlines(), start=1):
+                for match in PHP_FUNCTION_CALL_RE.finditer(line):
+                    symbol = next(group for group in match.groups() if group)
+                    comparison.call_sites += 1
+                    if symbol not in comparison.exported:
+                        comparison.findings.append(Finding(symbol, "php-ext", str(path.relative_to(ROOT)), line_number))
+    return comparison
+
+
+def group_by_symbol(findings: list[Finding]) -> dict[str, list[Finding]]:
+    grouped: dict[str, list[Finding]] = defaultdict(list)
+    for finding in findings:
+        grouped[finding.symbol].append(finding)
+    return dict(sorted(grouped.items()))
+
+
+def report_comparison(
+    comparison: Comparison,
+    allowlist: dict[str, str],
+    allow_known: bool,
+    verbose: bool,
+) -> tuple[int, int, list[str]]:
+    """Print one comparison. Returns (blocking, allowed, stale allowlist entries)."""
+    print(f"\n{comparison.title}")
+    print(
+        f"  {len(comparison.exported)} symbols exported, "
+        f"{comparison.call_sites} call sites checked across "
+        f"{len(comparison.languages)} languages ({', '.join(sorted(comparison.languages)) or 'none'})"
+    )
+
+    grouped = group_by_symbol(comparison.findings)
+    blocking = 0
+    allowed = 0
+    for symbol, findings in grouped.items():
+        known = allowlist.get(symbol)
+        sites = f"{len(findings)} call site{'' if len(findings) == 1 else 's'}"
+        if known is not None and allow_known:
+            allowed += 1
+            print(f"  ALLOWED  {symbol}  ({sites}; {known})")
+        else:
+            blocking += 1
+            suffix = f"  [allowlisted: {known}]" if known else ""
+            print(f"  MISSING  {symbol}  ({sites}){suffix}")
+        shown = findings if verbose else findings[:MAX_SITES_PER_SYMBOL]
+        for finding in shown:
+            print(f"             {finding.path}:{finding.line} ({finding.language})")
+        if len(shown) < len(findings):
+            print(f"             ... and {len(findings) - len(shown)} more (--verbose to list)")
+
+    stale = [symbol for symbol in allowlist if symbol not in grouped]
+    if not grouped:
+        print("  no called-but-not-exported symbols")
+    return blocking, allowed, stale
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument(
+        "--allow-known",
+        action="store_true",
+        help="downgrade the symbols in the known-missing allowlists to warnings",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="list every call site instead of the first few per symbol",
+    )
+    parser.add_argument("--json", action="store_true", help="emit a machine-readable summary on stdout")
+    args = parser.parse_args()
+
+    if not FFI_HEADER.is_file():
+        print(f"FATAL: canonical header not found: {FFI_HEADER}", file=sys.stderr)
+        return 2
+
+    c_abi, disagreements = compare_c_abi()
+    php = compare_php_functions()
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "exported_c_abi": len(c_abi.exported),
+                    "call_sites_c_abi": c_abi.call_sites,
+                    "languages_c_abi": sorted(c_abi.languages),
+                    "export_source_disagreements": disagreements,
+                    "missing": [
+                        {"symbol": f.symbol, "language": f.language, "path": f.path, "line": f.line}
+                        for f in c_abi.findings + php.findings
+                    ],
+                },
+                indent=2,
+            )
+        )
+
+    print("=" * 78)
+    print("FFI symbol export/caller diff")
+    print("=" * 78)
+
+    print("\nExport source cross-check")
+    print(f"  html_to_markdown.h declares {len(exported_from_header())} htm_* symbols")
+    print(f'  FFI crate defines {len(exported_from_rust())} htm_* `extern "C" fn`')
+    for line in disagreements:
+        print(f"  DISAGREEMENT  {line}")
+    if not disagreements:
+        print("  header and Rust sources agree")
+
+    c_blocking, c_allowed, c_stale = report_comparison(c_abi, KNOWN_MISSING_EXPORTS, args.allow_known, args.verbose)
+    php_blocking, php_allowed, php_stale = report_comparison(
+        php, KNOWN_MISSING_PHP_FUNCTIONS, args.allow_known, args.verbose
+    )
+
+    print("\nNot diffed")
+    for entry in NOT_CHECKED:
+        print(f"  {entry.language:<16} {entry.status}: {entry.reason}")
+
+    stale = c_stale + php_stale
+    if stale:
+        print("\nStale allowlist entries (symbol is no longer missing - delete the entry)")
+        for symbol in stale:
+            print(f"  STALE  {symbol}")
+
+    blocking = c_blocking + php_blocking
+    allowed = c_allowed + php_allowed
+    total_call_sites = c_abi.call_sites + php.call_sites
+    total_languages = len(c_abi.languages | php.languages)
+
+    print("\n" + "=" * 78)
+    print(
+        f"{len(c_abi.exported) + len(php.exported)} symbols exported, "
+        f"{total_call_sites} call sites checked across {total_languages} languages, "
+        f"{len(NOT_CHECKED)} bindings not diffed"
+    )
+    print(
+        f"{blocking} blocking, {allowed} allowlisted, "
+        f"{len(disagreements)} export-source disagreements, {len(stale)} stale allowlist entries"
+    )
+
+    failed = blocking + len(disagreements) + len(stale)
+    print("FAIL" if failed else "OK")
+    print("=" * 78)
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
