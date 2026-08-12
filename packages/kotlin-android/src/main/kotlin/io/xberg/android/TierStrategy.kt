@@ -46,21 +46,21 @@ enum class TierStrategy {
 
     @com.fasterxml.jackson.annotation.JsonValue
     fun toWire(): String =
-        when (this) {
-            AUTO -> "auto"
-            TIER2 -> "tier2"
-            TIER1 -> "tier1"
-        }
+    when (this) {
+        AUTO -> "auto"
+        TIER2 -> "tier2"
+        TIER1 -> "tier1"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
         fun fromWire(value: String): TierStrategy =
-            when (value) {
-                "auto" -> AUTO
-                "tier2" -> TIER2
-                "tier1" -> TIER1
-                else -> throw IllegalArgumentException("Unknown TierStrategy value: $value")
-            }
+        when (value) {
+            "auto" -> AUTO
+            "tier2" -> TIER2
+            "tier1" -> TIER1
+            else -> throw IllegalArgumentException("Unknown TierStrategy value: $value")
+        }
     }
 }

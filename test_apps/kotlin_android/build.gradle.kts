@@ -120,10 +120,10 @@ tasks.register("verifyAarPublished") {
             }
 
             val abiDirs = entries
-                .filter { it.name.startsWith("jni/") }
-                .map { it.name.substringAfter("jni/").substringBefore("/") }
-                .filter { it.isNotEmpty() }
-                .distinct()
+            .filter { it.name.startsWith("jni/") }
+            .map { it.name.substringAfter("jni/").substringBefore("/") }
+            .filter { it.isNotEmpty() }
+            .distinct()
 
             println("  + jni: YES")
             println("  + classes.jar: YES")

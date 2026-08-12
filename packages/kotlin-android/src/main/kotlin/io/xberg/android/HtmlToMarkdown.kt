@@ -74,18 +74,18 @@ object HtmlToMarkdown {
     }
 
     private val mapper = jacksonObjectMapper()
-        .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
-        .registerModule(byteArrayModule)
-        .registerModule(
-            com.fasterxml.jackson.module.kotlin.KotlinModule.Builder()
-                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullIsSameAsDefault, true)
-                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyCollection, true)
-                .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyMap, true)
-                .build(),
-        )
-        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
-        .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
-        .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    .registerModule(com.fasterxml.jackson.datatype.jdk8.Jdk8Module())
+    .registerModule(byteArrayModule)
+    .registerModule(
+        com.fasterxml.jackson.module.kotlin.KotlinModule.Builder()
+        .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullIsSameAsDefault, true)
+        .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyCollection, true)
+        .configure(com.fasterxml.jackson.module.kotlin.KotlinFeature.NullToEmptyMap, true)
+        .build(),
+    )
+    .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+    .setSerializationInclusion(com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL)
+    .configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
     /**
      * Convert HTML to Markdown, Djot, or plain text.
@@ -136,5 +136,5 @@ object HtmlToMarkdown {
      * application to observe these spans and events.
      */
     suspend fun convertAsync(html: String, options: ConversionOptions? = null): ConversionResult =
-        withContext(Dispatchers.IO) { convert(html, options) }
+    withContext(Dispatchers.IO) { convert(html, options) }
 }

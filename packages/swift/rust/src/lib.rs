@@ -14,8 +14,9 @@
     clippy::redundant_closure,
     clippy::useless_conversion,
     clippy::inherent_to_string,
-    clippy::new_without_default
+    clippy::new_without_default,
 )]
+
 
 /// Process-wide tokio runtime shared across every swift-bridge async wrapper.
 ///
@@ -31,6 +32,7 @@ fn __alef_tokio_runtime() -> &'static ::tokio::runtime::Runtime {
             .expect("build process-wide alef tokio runtime")
     })
 }
+
 
 /// Forces the FFI crate's compiled object code into this crate's staticlib output.
 ///
@@ -130,13 +132,7 @@ mod ffi {
     extern "Rust" {
         type HtmlMetadata;
         #[swift_bridge(init)]
-        fn new(
-            document: DocumentMetadata,
-            headers: Vec<HeaderMetadata>,
-            links: Vec<LinkMetadata>,
-            images: Vec<ImageMetadata>,
-            structured_data: Vec<StructuredData>,
-        ) -> HtmlMetadata;
+        fn new(document: DocumentMetadata, headers: Vec<HeaderMetadata>, links: Vec<LinkMetadata>, images: Vec<ImageMetadata>, structured_data: Vec<StructuredData>) -> HtmlMetadata;
         fn document(&self) -> DocumentMetadata;
         fn headers(&self) -> Vec<HeaderMetadata>;
         fn links(&self) -> Vec<LinkMetadata>;
@@ -148,52 +144,7 @@ mod ffi {
     extern "Rust" {
         type ConversionOptions;
         #[swift_bridge(init)]
-        fn new(
-            heading_style: HeadingStyle,
-            list_indent_type: ListIndentType,
-            list_indent_width: usize,
-            bullets: String,
-            strong_em_symbol: String,
-            escape_asterisks: bool,
-            escape_underscores: bool,
-            escape_misc: bool,
-            escape_ascii: bool,
-            code_language: String,
-            autolinks: bool,
-            default_title: bool,
-            br_in_tables: bool,
-            compact_tables: bool,
-            highlight_style: HighlightStyle,
-            extract_metadata: bool,
-            whitespace_mode: WhitespaceMode,
-            strip_newlines: bool,
-            wrap: bool,
-            wrap_width: usize,
-            convert_as_inline: bool,
-            sub_symbol: String,
-            sup_symbol: String,
-            newline_style: NewlineStyle,
-            code_block_style: CodeBlockStyle,
-            keep_inline_images_in: Vec<String>,
-            preprocessing: PreprocessingOptions,
-            encoding: String,
-            debug: bool,
-            strip_tags: Vec<String>,
-            preserve_tags: Vec<String>,
-            skip_images: bool,
-            url_escape_style: UrlEscapeStyle,
-            link_style: LinkStyle,
-            output_format: OutputFormat,
-            include_document_structure: bool,
-            extract_images: bool,
-            max_image_size: u64,
-            capture_svg: bool,
-            infer_dimensions: bool,
-            max_depth: Option<usize>,
-            exclude_selectors: Vec<String>,
-            tier_strategy: TierStrategy,
-            visitor: Option<VisitorHandle>,
-        ) -> ConversionOptions;
+        fn new(heading_style: HeadingStyle, list_indent_type: ListIndentType, list_indent_width: usize, bullets: String, strong_em_symbol: String, escape_asterisks: bool, escape_underscores: bool, escape_misc: bool, escape_ascii: bool, code_language: String, autolinks: bool, default_title: bool, br_in_tables: bool, compact_tables: bool, highlight_style: HighlightStyle, extract_metadata: bool, whitespace_mode: WhitespaceMode, strip_newlines: bool, wrap: bool, wrap_width: usize, convert_as_inline: bool, sub_symbol: String, sup_symbol: String, newline_style: NewlineStyle, code_block_style: CodeBlockStyle, keep_inline_images_in: Vec<String>, preprocessing: PreprocessingOptions, encoding: String, debug: bool, strip_tags: Vec<String>, preserve_tags: Vec<String>, skip_images: bool, url_escape_style: UrlEscapeStyle, link_style: LinkStyle, output_format: OutputFormat, include_document_structure: bool, extract_images: bool, max_image_size: u64, capture_svg: bool, infer_dimensions: bool, max_depth: Option<usize>, exclude_selectors: Vec<String>, tier_strategy: TierStrategy, visitor: Option<VisitorHandle>) -> ConversionOptions;
         #[swift_bridge(swift_name = "headingStyle")]
         fn heading_style(&self) -> String;
         #[swift_bridge(swift_name = "listIndentType")]
@@ -365,12 +316,7 @@ mod ffi {
     extern "Rust" {
         type PreprocessingOptions;
         #[swift_bridge(init)]
-        fn new(
-            enabled: bool,
-            preset: PreprocessingPreset,
-            remove_navigation: bool,
-            remove_forms: bool,
-        ) -> PreprocessingOptions;
+        fn new(enabled: bool, preset: PreprocessingPreset, remove_navigation: bool, remove_forms: bool) -> PreprocessingOptions;
         fn enabled(&self) -> bool;
         fn preset(&self) -> String;
         #[swift_bridge(swift_name = "removeNavigation")]
@@ -382,12 +328,7 @@ mod ffi {
     extern "Rust" {
         type PreprocessingOptionsUpdate;
         #[swift_bridge(init)]
-        fn new(
-            enabled: Option<bool>,
-            preset: Option<PreprocessingPreset>,
-            remove_navigation: Option<bool>,
-            remove_forms: Option<bool>,
-        ) -> PreprocessingOptionsUpdate;
+        fn new(enabled: Option<bool>, preset: Option<PreprocessingPreset>, remove_navigation: Option<bool>, remove_forms: Option<bool>) -> PreprocessingOptionsUpdate;
         fn enabled(&self) -> Option<bool>;
         fn preset(&self) -> Option<String>;
         #[swift_bridge(swift_name = "removeNavigation")]
@@ -437,13 +378,7 @@ mod ffi {
     extern "Rust" {
         type ConversionResult;
         #[swift_bridge(init)]
-        fn new(
-            content: Option<String>,
-            document: Option<DocumentStructure>,
-            metadata: HtmlMetadata,
-            tables: Vec<TableData>,
-            warnings: Vec<ProcessingWarning>,
-        ) -> ConversionResult;
+        fn new(content: Option<String>, document: Option<DocumentStructure>, metadata: HtmlMetadata, tables: Vec<TableData>, warnings: Vec<ProcessingWarning>) -> ConversionResult;
         fn content(&self) -> Option<String>;
         fn document(&self) -> Option<DocumentStructure>;
         fn metadata(&self) -> HtmlMetadata;
@@ -656,13 +591,7 @@ mod ffi {
         fn alef_visit_definition_description(&self, ctx: String, text: String) -> String;
         fn alef_visit_definition_list_end(&self, ctx: String, output: String) -> String;
         fn alef_visit_form(&self, ctx: String, action: Option<String>, method: Option<String>) -> String;
-        fn alef_visit_input(
-            &self,
-            ctx: String,
-            input_type: String,
-            name: Option<String>,
-            value: Option<String>,
-        ) -> String;
+        fn alef_visit_input(&self, ctx: String, input_type: String, name: Option<String>, value: Option<String>) -> String;
         fn alef_visit_button(&self, ctx: String, text: String) -> String;
         fn alef_visit_audio(&self, ctx: String, src: Option<String>) -> String;
         fn alef_visit_video(&self, ctx: String, src: Option<String>) -> String;
@@ -676,18 +605,15 @@ mod ffi {
 
     extern "Rust" {
 
-        #[swift_bridge(swift_name = "makeHtmlVisitorHandle")]
-        fn make_html_visitor_visitor_handle(swift_box: SwiftHtmlVisitorBox) -> VisitorHandle;
+         #[swift_bridge(swift_name = "makeHtmlVisitorHandle")]
+         fn make_html_visitor_visitor_handle(swift_box: SwiftHtmlVisitorBox) -> VisitorHandle;
 
     }
 
     extern "Rust" {
 
-        #[swift_bridge(swift_name = "conversionOptionsFromJsonWithVisitor")]
-        fn conversion_options_from_json_with_visitor(
-            json: String,
-            visitor: Option<VisitorHandle>,
-        ) -> Result<ConversionOptions, String>;
+         #[swift_bridge(swift_name = "conversionOptionsFromJsonWithVisitor")]
+         fn conversion_options_from_json_with_visitor(json: String, visitor: Option<VisitorHandle>) -> Result<ConversionOptions, String>;
 
     }
 
@@ -978,185 +904,104 @@ mod ffi {
         // These declarations are paired with phantom_impl functions below the bridge module.
         fn __alef_phantom_vec_node_type() -> Vec<NodeType>;
     }
+
 }
 
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_document_metadata() -> Vec<DocumentMetadata> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_document_metadata() -> Vec<DocumentMetadata> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_header_metadata() -> Vec<HeaderMetadata> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_header_metadata() -> Vec<HeaderMetadata> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_link_metadata() -> Vec<LinkMetadata> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_link_metadata() -> Vec<LinkMetadata> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_image_metadata() -> Vec<ImageMetadata> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_image_metadata() -> Vec<ImageMetadata> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_structured_data() -> Vec<StructuredData> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_structured_data() -> Vec<StructuredData> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_html_metadata() -> Vec<HtmlMetadata> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_html_metadata() -> Vec<HtmlMetadata> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_conversion_options() -> Vec<ConversionOptions> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_conversion_options() -> Vec<ConversionOptions> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_conversion_options_update() -> Vec<ConversionOptionsUpdate> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_conversion_options_update() -> Vec<ConversionOptionsUpdate> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_preprocessing_options() -> Vec<PreprocessingOptions> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_preprocessing_options() -> Vec<PreprocessingOptions> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_preprocessing_options_update() -> Vec<PreprocessingOptionsUpdate> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_preprocessing_options_update() -> Vec<PreprocessingOptionsUpdate> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_image_dimensions() -> Vec<ImageDimensions> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_image_dimensions() -> Vec<ImageDimensions> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_document_structure() -> Vec<DocumentStructure> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_document_structure() -> Vec<DocumentStructure> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_document_node() -> Vec<DocumentNode> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_document_node() -> Vec<DocumentNode> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_text_annotation() -> Vec<TextAnnotation> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_text_annotation() -> Vec<TextAnnotation> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_metadata_entry() -> Vec<MetadataEntry> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_metadata_entry() -> Vec<MetadataEntry> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_conversion_result() -> Vec<ConversionResult> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_conversion_result() -> Vec<ConversionResult> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_table_grid() -> Vec<TableGrid> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_table_grid() -> Vec<TableGrid> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_grid_cell() -> Vec<GridCell> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_grid_cell() -> Vec<GridCell> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_table_data() -> Vec<TableData> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_table_data() -> Vec<TableData> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_processing_warning() -> Vec<ProcessingWarning> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_processing_warning() -> Vec<ProcessingWarning> { Vec::new() }
 #[cfg(feature = "visitor")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_visitor_handle() -> Vec<VisitorHandle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_visitor_handle() -> Vec<VisitorHandle> { Vec::new() }
 #[cfg(feature = "visitor")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_node_context() -> Vec<NodeContext> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_node_context() -> Vec<NodeContext> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_text_direction() -> Vec<TextDirection> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_text_direction() -> Vec<TextDirection> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_link_type() -> Vec<LinkType> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_link_type() -> Vec<LinkType> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_image_type() -> Vec<ImageType> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_image_type() -> Vec<ImageType> { Vec::new() }
 #[cfg(feature = "metadata")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_structured_data_type() -> Vec<StructuredDataType> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_structured_data_type() -> Vec<StructuredDataType> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_tier_strategy() -> Vec<TierStrategy> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_tier_strategy() -> Vec<TierStrategy> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_preprocessing_preset() -> Vec<PreprocessingPreset> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_preprocessing_preset() -> Vec<PreprocessingPreset> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_heading_style() -> Vec<HeadingStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_heading_style() -> Vec<HeadingStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_list_indent_type() -> Vec<ListIndentType> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_list_indent_type() -> Vec<ListIndentType> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_whitespace_mode() -> Vec<WhitespaceMode> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_whitespace_mode() -> Vec<WhitespaceMode> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_newline_style() -> Vec<NewlineStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_newline_style() -> Vec<NewlineStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_code_block_style() -> Vec<CodeBlockStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_code_block_style() -> Vec<CodeBlockStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_highlight_style() -> Vec<HighlightStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_highlight_style() -> Vec<HighlightStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_link_style() -> Vec<LinkStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_link_style() -> Vec<LinkStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_url_escape_style() -> Vec<UrlEscapeStyle> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_url_escape_style() -> Vec<UrlEscapeStyle> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_output_format() -> Vec<OutputFormat> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_output_format() -> Vec<OutputFormat> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_node_content() -> Vec<NodeContent> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_node_content() -> Vec<NodeContent> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_annotation_kind() -> Vec<AnnotationKind> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_annotation_kind() -> Vec<AnnotationKind> { Vec::new() }
 #[doc(hidden)]
-pub fn __alef_phantom_vec_warning_kind() -> Vec<WarningKind> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_warning_kind() -> Vec<WarningKind> { Vec::new() }
 #[cfg(feature = "visitor")]
 #[doc(hidden)]
-pub fn __alef_phantom_vec_node_type() -> Vec<NodeType> {
-    Vec::new()
-}
+pub fn __alef_phantom_vec_node_type() -> Vec<NodeType> { Vec::new() }
 
 #[cfg(feature = "metadata")]
 pub struct DocumentMetadata(pub html_to_markdown_rs::metadata::DocumentMetadata);
@@ -1169,10 +1014,7 @@ impl DocumentMetadata {
         self.0.description.clone()
     }
     pub fn keywords(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.keywords)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.keywords).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn author(&self) -> Option<String> {
         self.0.author.clone()
@@ -1187,10 +1029,7 @@ impl DocumentMetadata {
         self.0.language.clone()
     }
     pub fn text_direction(&self) -> Option<String> {
-        self.0
-            .text_direction
-            .clone()
-            .map(|w| TextDirection::from(w).to_string())
+        self.0.text_direction.clone().map(|w| TextDirection::from(w).to_string())
     }
     pub fn open_graph(&self) -> String {
         serde_json::to_string(&self.0.open_graph).expect("serializable open_graph")
@@ -1208,10 +1047,7 @@ pub struct HeaderMetadata(pub html_to_markdown_rs::metadata::HeaderMetadata);
 #[cfg(feature = "metadata")]
 impl HeaderMetadata {
     pub fn level(&self) -> u8 {
-        ::serde_json::to_value(&self.0.level)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.level).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn text(&self) -> String {
         self.0.text.clone()
@@ -1220,24 +1056,19 @@ impl HeaderMetadata {
         self.0.id.clone()
     }
     pub fn depth(&self) -> usize {
-        ::serde_json::to_value(&self.0.depth)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.depth).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn html_offset(&self) -> usize {
-        ::serde_json::to_value(&self.0.html_offset)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.html_offset).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
 }
 
 pub fn header_metadata_is_valid_from_json(json: String) -> Result<String, String> {
-    let __self: html_to_markdown_rs::metadata::HeaderMetadata =
-        serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize HeaderMetadata: {}", e))?;
+    let __self: html_to_markdown_rs::metadata::HeaderMetadata = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to deserialize HeaderMetadata: {}", e))?;
     let __result = __self.is_valid();
-    serde_json::to_string(&__result).map_err(|e| format!("Failed to serialize result: {}", e))
+    serde_json::to_string(&__result)
+        .map_err(|e| format!("Failed to serialize result: {}", e))
 }
 
 #[cfg(feature = "metadata")]
@@ -1257,10 +1088,7 @@ impl LinkMetadata {
         LinkType::from(self.0.link_type.clone()).to_string()
     }
     pub fn rel(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.rel)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.rel).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn attributes(&self) -> String {
         serde_json::to_string(&self.0.attributes).expect("serializable attributes")
@@ -1310,13 +1138,7 @@ impl StructuredData {
 pub struct HtmlMetadata(pub html_to_markdown_rs::metadata::HtmlMetadata);
 #[cfg(feature = "metadata")]
 impl HtmlMetadata {
-    pub fn new(
-        document: DocumentMetadata,
-        headers: Vec<HeaderMetadata>,
-        links: Vec<LinkMetadata>,
-        images: Vec<ImageMetadata>,
-        structured_data: Vec<StructuredData>,
-    ) -> HtmlMetadata {
+    pub fn new(document: DocumentMetadata, headers: Vec<HeaderMetadata>, links: Vec<LinkMetadata>, images: Vec<ImageMetadata>, structured_data: Vec<StructuredData>) -> HtmlMetadata {
         let mut __target: html_to_markdown_rs::metadata::HtmlMetadata = ::std::default::Default::default();
         __target.document = document.0;
         __target.headers = headers.into_iter().map(|w| w.0).collect();
@@ -1338,62 +1160,13 @@ impl HtmlMetadata {
         self.0.images.iter().map(|elem| ImageMetadata(elem.clone())).collect()
     }
     pub fn structured_data(&self) -> Vec<StructuredData> {
-        self.0
-            .structured_data
-            .iter()
-            .map(|elem| StructuredData(elem.clone()))
-            .collect()
+        self.0.structured_data.iter().map(|elem| StructuredData(elem.clone())).collect()
     }
 }
 
 pub struct ConversionOptions(pub html_to_markdown_rs::options::ConversionOptions);
 impl ConversionOptions {
-    pub fn new(
-        heading_style: HeadingStyle,
-        list_indent_type: ListIndentType,
-        list_indent_width: usize,
-        bullets: String,
-        strong_em_symbol: String,
-        escape_asterisks: bool,
-        escape_underscores: bool,
-        escape_misc: bool,
-        escape_ascii: bool,
-        code_language: String,
-        autolinks: bool,
-        default_title: bool,
-        br_in_tables: bool,
-        compact_tables: bool,
-        highlight_style: HighlightStyle,
-        extract_metadata: bool,
-        whitespace_mode: WhitespaceMode,
-        strip_newlines: bool,
-        wrap: bool,
-        wrap_width: usize,
-        convert_as_inline: bool,
-        sub_symbol: String,
-        sup_symbol: String,
-        newline_style: NewlineStyle,
-        code_block_style: CodeBlockStyle,
-        keep_inline_images_in: Vec<String>,
-        preprocessing: PreprocessingOptions,
-        encoding: String,
-        debug: bool,
-        strip_tags: Vec<String>,
-        preserve_tags: Vec<String>,
-        skip_images: bool,
-        url_escape_style: UrlEscapeStyle,
-        link_style: LinkStyle,
-        output_format: OutputFormat,
-        include_document_structure: bool,
-        extract_images: bool,
-        max_image_size: u64,
-        capture_svg: bool,
-        infer_dimensions: bool,
-        max_depth: Option<usize>,
-        exclude_selectors: Vec<String>,
-        tier_strategy: TierStrategy,
-        visitor: Option<VisitorHandle>,
-    ) -> ConversionOptions {
+    pub fn new(heading_style: HeadingStyle, list_indent_type: ListIndentType, list_indent_width: usize, bullets: String, strong_em_symbol: String, escape_asterisks: bool, escape_underscores: bool, escape_misc: bool, escape_ascii: bool, code_language: String, autolinks: bool, default_title: bool, br_in_tables: bool, compact_tables: bool, highlight_style: HighlightStyle, extract_metadata: bool, whitespace_mode: WhitespaceMode, strip_newlines: bool, wrap: bool, wrap_width: usize, convert_as_inline: bool, sub_symbol: String, sup_symbol: String, newline_style: NewlineStyle, code_block_style: CodeBlockStyle, keep_inline_images_in: Vec<String>, preprocessing: PreprocessingOptions, encoding: String, debug: bool, strip_tags: Vec<String>, preserve_tags: Vec<String>, skip_images: bool, url_escape_style: UrlEscapeStyle, link_style: LinkStyle, output_format: OutputFormat, include_document_structure: bool, extract_images: bool, max_image_size: u64, capture_svg: bool, infer_dimensions: bool, max_depth: Option<usize>, exclude_selectors: Vec<String>, tier_strategy: TierStrategy, visitor: Option<VisitorHandle>) -> ConversionOptions {
         let mut __target: html_to_markdown_rs::options::ConversionOptions = ::std::default::Default::default();
         // alef: heading_style (HeadingStyle) is an enum; reverse From not generated — left at default
         // alef: list_indent_type (ListIndentType) is an enum; reverse From not generated — left at default
@@ -1405,9 +1178,7 @@ impl ConversionOptions {
             // valid JSON tokens (e.g. `tts-1`).
             let __v = ::serde_json::from_str::<::serde_json::Value>(&bullets)
                 .unwrap_or(::serde_json::Value::String(bullets.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.bullets = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.bullets = t; }
         }
         __target.strong_em_symbol = strong_em_symbol.chars().next().unwrap_or('\0');
         __target.escape_asterisks = escape_asterisks;
@@ -1421,9 +1192,7 @@ impl ConversionOptions {
             // valid JSON tokens (e.g. `tts-1`).
             let __v = ::serde_json::from_str::<::serde_json::Value>(&code_language)
                 .unwrap_or(::serde_json::Value::String(code_language.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.code_language = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.code_language = t; }
         }
         __target.autolinks = autolinks;
         __target.default_title = default_title;
@@ -1443,9 +1212,7 @@ impl ConversionOptions {
             // valid JSON tokens (e.g. `tts-1`).
             let __v = ::serde_json::from_str::<::serde_json::Value>(&sub_symbol)
                 .unwrap_or(::serde_json::Value::String(sub_symbol.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.sub_symbol = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.sub_symbol = t; }
         }
         {
             // Try JSON parse first (handles enum/object values); on parse failure
@@ -1454,16 +1221,12 @@ impl ConversionOptions {
             // valid JSON tokens (e.g. `tts-1`).
             let __v = ::serde_json::from_str::<::serde_json::Value>(&sup_symbol)
                 .unwrap_or(::serde_json::Value::String(sup_symbol.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.sup_symbol = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.sup_symbol = t; }
         }
         // alef: newline_style (NewlineStyle) is an enum; reverse From not generated — left at default
         // alef: code_block_style (CodeBlockStyle) is an enum; reverse From not generated — left at default
         if let Ok(__v) = ::serde_json::to_value(keep_inline_images_in) {
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.keep_inline_images_in = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.keep_inline_images_in = t; }
         }
         __target.preprocessing = preprocessing.0;
         {
@@ -1473,20 +1236,14 @@ impl ConversionOptions {
             // valid JSON tokens (e.g. `tts-1`).
             let __v = ::serde_json::from_str::<::serde_json::Value>(&encoding)
                 .unwrap_or(::serde_json::Value::String(encoding.clone()));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.encoding = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.encoding = t; }
         }
         __target.debug = debug;
         if let Ok(__v) = ::serde_json::to_value(strip_tags) {
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.strip_tags = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.strip_tags = t; }
         }
         if let Ok(__v) = ::serde_json::to_value(preserve_tags) {
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.preserve_tags = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.preserve_tags = t; }
         }
         __target.skip_images = skip_images;
         // alef: url_escape_style (UrlEscapeStyle) is an enum; reverse From not generated — left at default
@@ -1499,14 +1256,10 @@ impl ConversionOptions {
         __target.infer_dimensions = infer_dimensions;
         __target.max_depth = max_depth;
         if let Ok(__v) = ::serde_json::to_value(exclude_selectors) {
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.exclude_selectors = t;
-            }
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.exclude_selectors = t; }
         }
         // alef: tier_strategy (TierStrategy) is an enum; reverse From not generated — left at default
-        if let Some(w) = visitor {
-            __target.visitor = Some(w.0);
-        }
+        if let Some(w) = visitor { __target.visitor = Some(w.0); }
         ConversionOptions(__target)
     }
     pub fn heading_style(&self) -> String {
@@ -1516,10 +1269,7 @@ impl ConversionOptions {
         ListIndentType::from(self.0.list_indent_type.clone()).to_string()
     }
     pub fn list_indent_width(&self) -> usize {
-        ::serde_json::to_value(&self.0.list_indent_width)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.list_indent_width).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn bullets(&self) -> String {
         self.0.bullets.clone()
@@ -1528,91 +1278,52 @@ impl ConversionOptions {
         self.0.strong_em_symbol.to_string()
     }
     pub fn escape_asterisks(&self) -> bool {
-        ::serde_json::to_value(&self.0.escape_asterisks)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.escape_asterisks).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn escape_underscores(&self) -> bool {
-        ::serde_json::to_value(&self.0.escape_underscores)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.escape_underscores).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn escape_misc(&self) -> bool {
-        ::serde_json::to_value(&self.0.escape_misc)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.escape_misc).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn escape_ascii(&self) -> bool {
-        ::serde_json::to_value(&self.0.escape_ascii)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.escape_ascii).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn code_language(&self) -> String {
         self.0.code_language.clone()
     }
     pub fn autolinks(&self) -> bool {
-        ::serde_json::to_value(&self.0.autolinks)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.autolinks).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn default_title(&self) -> bool {
-        ::serde_json::to_value(&self.0.default_title)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.default_title).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn br_in_tables(&self) -> bool {
-        ::serde_json::to_value(&self.0.br_in_tables)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.br_in_tables).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn compact_tables(&self) -> bool {
-        ::serde_json::to_value(&self.0.compact_tables)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.compact_tables).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn highlight_style(&self) -> String {
         HighlightStyle::from(self.0.highlight_style.clone()).to_string()
     }
     pub fn extract_metadata(&self) -> bool {
-        ::serde_json::to_value(&self.0.extract_metadata)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.extract_metadata).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn whitespace_mode(&self) -> String {
         WhitespaceMode::from(self.0.whitespace_mode.clone()).to_string()
     }
     pub fn strip_newlines(&self) -> bool {
-        ::serde_json::to_value(&self.0.strip_newlines)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.strip_newlines).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn wrap(&self) -> bool {
-        ::serde_json::to_value(&self.0.wrap)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.wrap).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn wrap_width(&self) -> usize {
-        ::serde_json::to_value(&self.0.wrap_width)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.wrap_width).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn convert_as_inline(&self) -> bool {
-        ::serde_json::to_value(&self.0.convert_as_inline)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.convert_as_inline).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn sub_symbol(&self) -> String {
         self.0.sub_symbol.clone()
@@ -1627,10 +1338,7 @@ impl ConversionOptions {
         CodeBlockStyle::from(self.0.code_block_style.clone()).to_string()
     }
     pub fn keep_inline_images_in(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.keep_inline_images_in)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.keep_inline_images_in).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn preprocessing(&self) -> PreprocessingOptions {
         PreprocessingOptions(self.0.preprocessing.clone())
@@ -1639,28 +1347,16 @@ impl ConversionOptions {
         self.0.encoding.clone()
     }
     pub fn debug(&self) -> bool {
-        ::serde_json::to_value(&self.0.debug)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.debug).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn strip_tags(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.strip_tags)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.strip_tags).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn preserve_tags(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.preserve_tags)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.preserve_tags).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn skip_images(&self) -> bool {
-        ::serde_json::to_value(&self.0.skip_images)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.skip_images).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn url_escape_style(&self) -> String {
         UrlEscapeStyle::from(self.0.url_escape_style.clone()).to_string()
@@ -1672,47 +1368,25 @@ impl ConversionOptions {
         OutputFormat::from(self.0.output_format.clone()).to_string()
     }
     pub fn include_document_structure(&self) -> bool {
-        ::serde_json::to_value(&self.0.include_document_structure)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.include_document_structure).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn extract_images(&self) -> bool {
-        ::serde_json::to_value(&self.0.extract_images)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.extract_images).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn max_image_size(&self) -> u64 {
-        ::serde_json::to_value(&self.0.max_image_size)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.max_image_size).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn capture_svg(&self) -> bool {
-        ::serde_json::to_value(&self.0.capture_svg)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.capture_svg).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn infer_dimensions(&self) -> bool {
-        ::serde_json::to_value(&self.0.infer_dimensions)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.infer_dimensions).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn max_depth(&self) -> Option<usize> {
-        self.0.max_depth.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.max_depth.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn exclude_selectors(&self) -> Vec<String> {
-        ::serde_json::to_value(&self.0.exclude_selectors)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.exclude_selectors).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn tier_strategy(&self) -> String {
         TierStrategy::from(self.0.tier_strategy.clone()).to_string()
@@ -1728,17 +1402,10 @@ impl ConversionOptionsUpdate {
         self.0.heading_style.clone().map(|w| HeadingStyle::from(w).to_string())
     }
     pub fn list_indent_type(&self) -> Option<String> {
-        self.0
-            .list_indent_type
-            .clone()
-            .map(|w| ListIndentType::from(w).to_string())
+        self.0.list_indent_type.clone().map(|w| ListIndentType::from(w).to_string())
     }
     pub fn list_indent_width(&self) -> Option<usize> {
-        self.0.list_indent_width.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.list_indent_width.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn bullets(&self) -> Option<String> {
         self.0.bullets.clone()
@@ -1747,110 +1414,52 @@ impl ConversionOptionsUpdate {
         self.0.strong_em_symbol.map(|c| c.to_string())
     }
     pub fn escape_asterisks(&self) -> Option<bool> {
-        self.0.escape_asterisks.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.escape_asterisks.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn escape_underscores(&self) -> Option<bool> {
-        self.0.escape_underscores.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.escape_underscores.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn escape_misc(&self) -> Option<bool> {
-        self.0.escape_misc.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.escape_misc.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn escape_ascii(&self) -> Option<bool> {
-        self.0.escape_ascii.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.escape_ascii.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn code_language(&self) -> Option<String> {
         self.0.code_language.clone()
     }
     pub fn autolinks(&self) -> Option<bool> {
-        self.0.autolinks.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.autolinks.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn default_title(&self) -> Option<bool> {
-        self.0.default_title.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.default_title.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn br_in_tables(&self) -> Option<bool> {
-        self.0.br_in_tables.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.br_in_tables.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn compact_tables(&self) -> Option<bool> {
-        self.0.compact_tables.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.compact_tables.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn highlight_style(&self) -> Option<String> {
-        self.0
-            .highlight_style
-            .clone()
-            .map(|w| HighlightStyle::from(w).to_string())
+        self.0.highlight_style.clone().map(|w| HighlightStyle::from(w).to_string())
     }
     pub fn extract_metadata(&self) -> Option<bool> {
-        self.0.extract_metadata.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.extract_metadata.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn whitespace_mode(&self) -> Option<String> {
-        self.0
-            .whitespace_mode
-            .clone()
-            .map(|w| WhitespaceMode::from(w).to_string())
+        self.0.whitespace_mode.clone().map(|w| WhitespaceMode::from(w).to_string())
     }
     pub fn strip_newlines(&self) -> Option<bool> {
-        self.0.strip_newlines.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.strip_newlines.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn wrap(&self) -> Option<bool> {
-        self.0.wrap.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.wrap.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn wrap_width(&self) -> Option<usize> {
-        self.0.wrap_width.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.wrap_width.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn convert_as_inline(&self) -> Option<bool> {
-        self.0.convert_as_inline.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.convert_as_inline.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn sub_symbol(&self) -> Option<String> {
         self.0.sub_symbol.clone()
@@ -1862,10 +1471,7 @@ impl ConversionOptionsUpdate {
         self.0.newline_style.clone().map(|w| NewlineStyle::from(w).to_string())
     }
     pub fn code_block_style(&self) -> Option<String> {
-        self.0
-            .code_block_style
-            .clone()
-            .map(|w| CodeBlockStyle::from(w).to_string())
+        self.0.code_block_style.clone().map(|w| CodeBlockStyle::from(w).to_string())
     }
     pub fn keep_inline_images_in(&self) -> String {
         serde_json::to_string(&self.0.keep_inline_images_in).expect("serializable keep_inline_images_in")
@@ -1877,11 +1483,7 @@ impl ConversionOptionsUpdate {
         self.0.encoding.clone()
     }
     pub fn debug(&self) -> Option<bool> {
-        self.0.debug.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.debug.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn strip_tags(&self) -> String {
         serde_json::to_string(&self.0.strip_tags).expect("serializable strip_tags")
@@ -1890,17 +1492,10 @@ impl ConversionOptionsUpdate {
         serde_json::to_string(&self.0.preserve_tags).expect("serializable preserve_tags")
     }
     pub fn skip_images(&self) -> Option<bool> {
-        self.0.skip_images.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.skip_images.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn url_escape_style(&self) -> Option<String> {
-        self.0
-            .url_escape_style
-            .clone()
-            .map(|w| UrlEscapeStyle::from(w).to_string())
+        self.0.url_escape_style.clone().map(|w| UrlEscapeStyle::from(w).to_string())
     }
     pub fn link_style(&self) -> Option<String> {
         self.0.link_style.clone().map(|w| LinkStyle::from(w).to_string())
@@ -1909,39 +1504,19 @@ impl ConversionOptionsUpdate {
         self.0.output_format.clone().map(|w| OutputFormat::from(w).to_string())
     }
     pub fn include_document_structure(&self) -> Option<bool> {
-        self.0.include_document_structure.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.include_document_structure.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn extract_images(&self) -> Option<bool> {
-        self.0.extract_images.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.extract_images.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn max_image_size(&self) -> Option<u64> {
-        self.0.max_image_size.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.max_image_size.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn capture_svg(&self) -> Option<bool> {
-        self.0.capture_svg.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.capture_svg.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn infer_dimensions(&self) -> Option<bool> {
-        self.0.infer_dimensions.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.infer_dimensions.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn max_depth(&self) -> String {
         serde_json::to_string(&self.0.max_depth).expect("serializable max_depth")
@@ -1959,12 +1534,7 @@ impl ConversionOptionsUpdate {
 
 pub struct PreprocessingOptions(pub html_to_markdown_rs::options::PreprocessingOptions);
 impl PreprocessingOptions {
-    pub fn new(
-        enabled: bool,
-        preset: PreprocessingPreset,
-        remove_navigation: bool,
-        remove_forms: bool,
-    ) -> PreprocessingOptions {
+    pub fn new(enabled: bool, preset: PreprocessingPreset, remove_navigation: bool, remove_forms: bool) -> PreprocessingOptions {
         let mut __target: html_to_markdown_rs::options::PreprocessingOptions = ::std::default::Default::default();
         __target.enabled = enabled;
         // alef: preset (PreprocessingPreset) is an enum; reverse From not generated — left at default
@@ -1973,36 +1543,22 @@ impl PreprocessingOptions {
         PreprocessingOptions(__target)
     }
     pub fn enabled(&self) -> bool {
-        ::serde_json::to_value(&self.0.enabled)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.enabled).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn preset(&self) -> String {
         PreprocessingPreset::from(self.0.preset.clone()).to_string()
     }
     pub fn remove_navigation(&self) -> bool {
-        ::serde_json::to_value(&self.0.remove_navigation)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.remove_navigation).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn remove_forms(&self) -> bool {
-        ::serde_json::to_value(&self.0.remove_forms)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.remove_forms).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
 }
 
 pub struct PreprocessingOptionsUpdate(pub html_to_markdown_rs::options::PreprocessingOptionsUpdate);
 impl PreprocessingOptionsUpdate {
-    pub fn new(
-        enabled: Option<bool>,
-        preset: Option<PreprocessingPreset>,
-        remove_navigation: Option<bool>,
-        remove_forms: Option<bool>,
-    ) -> PreprocessingOptionsUpdate {
+    pub fn new(enabled: Option<bool>, preset: Option<PreprocessingPreset>, remove_navigation: Option<bool>, remove_forms: Option<bool>) -> PreprocessingOptionsUpdate {
         let mut __target: html_to_markdown_rs::options::PreprocessingOptionsUpdate = ::std::default::Default::default();
         __target.enabled = enabled;
         // alef: preset (PreprocessingPreset) is an enum; reverse From not generated — left at default
@@ -2011,47 +1567,32 @@ impl PreprocessingOptionsUpdate {
         PreprocessingOptionsUpdate(__target)
     }
     pub fn enabled(&self) -> Option<bool> {
-        self.0.enabled.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.enabled.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn preset(&self) -> Option<String> {
         self.0.preset.clone().map(|w| PreprocessingPreset::from(w).to_string())
     }
     pub fn remove_navigation(&self) -> Option<bool> {
-        self.0.remove_navigation.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.remove_navigation.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn remove_forms(&self) -> Option<bool> {
-        self.0.remove_forms.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.remove_forms.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
 }
 
 pub struct ImageDimensions(pub html_to_markdown_rs::ImageDimensions);
 impl ImageDimensions {
     pub fn new(width: u32, height: u32) -> ImageDimensions {
-        ImageDimensions(html_to_markdown_rs::ImageDimensions { width, height })
+        ImageDimensions(html_to_markdown_rs::ImageDimensions {
+            width,
+            height,
+        })
     }
     pub fn width(&self) -> u32 {
-        ::serde_json::to_value(&self.0.width)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.width).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn height(&self) -> u32 {
-        ::serde_json::to_value(&self.0.height)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.height).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
 }
 
@@ -2074,24 +1615,13 @@ impl DocumentNode {
         serde_json::to_string(&self.0.content).unwrap_or_else(|_| "null".to_string())
     }
     pub fn parent(&self) -> Option<u32> {
-        self.0.parent.as_ref().and_then(|v| {
-            ::serde_json::to_value(v)
-                .ok()
-                .and_then(|j| ::serde_json::from_value(j).ok())
-        })
+        self.0.parent.as_ref().and_then(|v| ::serde_json::to_value(v).ok().and_then(|j| ::serde_json::from_value(j).ok()))
     }
     pub fn children(&self) -> Vec<u32> {
-        ::serde_json::to_value(&self.0.children)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.children).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn annotations(&self) -> Vec<TextAnnotation> {
-        self.0
-            .annotations
-            .iter()
-            .map(|elem| TextAnnotation(elem.clone()))
-            .collect()
+        self.0.annotations.iter().map(|elem| TextAnnotation(elem.clone())).collect()
     }
     pub fn attributes(&self) -> String {
         serde_json::to_string(&self.0.attributes).expect("serializable attributes")
@@ -2101,16 +1631,10 @@ impl DocumentNode {
 pub struct TextAnnotation(pub html_to_markdown_rs::TextAnnotation);
 impl TextAnnotation {
     pub fn start(&self) -> u32 {
-        ::serde_json::to_value(&self.0.start)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.start).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn end(&self) -> u32 {
-        ::serde_json::to_value(&self.0.end)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.end).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn kind(&self) -> String {
         serde_json::to_string(&self.0.kind).unwrap_or_else(|_| "null".to_string())
@@ -2129,27 +1653,18 @@ impl MetadataEntry {
 
 pub struct ConversionResult(pub html_to_markdown_rs::ConversionResult);
 impl ConversionResult {
-    pub fn new(
-        content: Option<String>,
-        document: Option<DocumentStructure>,
-        metadata: HtmlMetadata,
-        tables: Vec<TableData>,
-        warnings: Vec<ProcessingWarning>,
-    ) -> ConversionResult {
+    pub fn new(content: Option<String>, document: Option<DocumentStructure>, metadata: HtmlMetadata, tables: Vec<TableData>, warnings: Vec<ProcessingWarning>) -> ConversionResult {
         let mut __target: html_to_markdown_rs::ConversionResult = ::std::default::Default::default();
         if let Some(s) = content {
             // Try JSON parse first (handles enum/object values); on parse failure
             // treat the raw input as a JSON string scalar so plain `String` /
             // string-like enum fields don't end up empty for inputs that aren't
             // valid JSON tokens (e.g. `tts-1`).
-            let __v = ::serde_json::from_str::<::serde_json::Value>(&s).unwrap_or(::serde_json::Value::String(s));
-            if let Ok(t) = ::serde_json::from_value(__v) {
-                __target.content = Some(t);
-            }
+            let __v = ::serde_json::from_str::<::serde_json::Value>(&s)
+                .unwrap_or(::serde_json::Value::String(s));
+            if let Ok(t) = ::serde_json::from_value(__v) { __target.content = Some(t); }
         }
-        if let Some(w) = document {
-            __target.document = Some(w.0);
-        }
+        if let Some(w) = document { __target.document = Some(w.0); }
         __target.metadata = metadata.0;
         __target.tables = tables.into_iter().map(|w| w.0).collect();
         __target.warnings = warnings.into_iter().map(|w| w.0).collect();
@@ -2168,11 +1683,7 @@ impl ConversionResult {
         self.0.tables.iter().map(|elem| TableData(elem.clone())).collect()
     }
     pub fn warnings(&self) -> Vec<ProcessingWarning> {
-        self.0
-            .warnings
-            .iter()
-            .map(|elem| ProcessingWarning(elem.clone()))
-            .collect()
+        self.0.warnings.iter().map(|elem| ProcessingWarning(elem.clone())).collect()
     }
 }
 
@@ -2186,23 +1697,13 @@ impl TableGrid {
         TableGrid(__target)
     }
     pub fn rows(&self) -> u32 {
-        ::serde_json::to_value(&self.0.rows)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.rows).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn cols(&self) -> u32 {
-        ::serde_json::to_value(&self.0.cols)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.cols).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn cells(&self) -> Vec<String> {
-        self.0
-            .cells
-            .iter()
-            .map(|elem| serde_json::to_string(elem).unwrap_or_else(|_| "null".to_string()))
-            .collect()
+        self.0.cells.iter().map(|elem| serde_json::to_string(elem).unwrap_or_else(|_| "null".to_string())).collect()
     }
 }
 
@@ -2212,34 +1713,19 @@ impl GridCell {
         self.0.content.clone()
     }
     pub fn row(&self) -> u32 {
-        ::serde_json::to_value(&self.0.row)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.row).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn col(&self) -> u32 {
-        ::serde_json::to_value(&self.0.col)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.col).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn row_span(&self) -> u32 {
-        ::serde_json::to_value(&self.0.row_span)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.row_span).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn col_span(&self) -> u32 {
-        ::serde_json::to_value(&self.0.col_span)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.col_span).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn is_header(&self) -> bool {
-        ::serde_json::to_value(&self.0.is_header)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.is_header).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
 }
 
@@ -2277,40 +1763,33 @@ impl NodeContext {
         self.0.tag_name.to_string()
     }
     pub fn depth(&self) -> usize {
-        ::serde_json::to_value(&self.0.depth)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.depth).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn index_in_parent(&self) -> usize {
-        ::serde_json::to_value(&self.0.index_in_parent)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.index_in_parent).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
     pub fn parent_tag(&self) -> Option<String> {
         self.0.parent_tag.as_ref().map(|v| v.to_string())
     }
     pub fn is_inline(&self) -> bool {
-        ::serde_json::to_value(&self.0.is_inline)
-            .ok()
-            .and_then(|j| ::serde_json::from_value(j).ok())
-            .unwrap_or_default()
+        ::serde_json::to_value(&self.0.is_inline).ok().and_then(|j| ::serde_json::from_value(j).ok()).unwrap_or_default()
     }
 }
 
 pub fn node_context_attributes_from_json(json: String) -> Result<String, String> {
-    let __self: html_to_markdown_rs::NodeContext =
-        serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize NodeContext: {}", e))?;
+    let __self: html_to_markdown_rs::NodeContext = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to deserialize NodeContext: {}", e))?;
     let __result = __self.attributes();
-    serde_json::to_string(&__result).map_err(|e| format!("Failed to serialize result: {}", e))
+    serde_json::to_string(&__result)
+        .map_err(|e| format!("Failed to serialize result: {}", e))
 }
 
 pub fn node_context_into_owned_from_json(json: String) -> Result<String, String> {
-    let __self: html_to_markdown_rs::NodeContext =
-        serde_json::from_str(&json).map_err(|e| format!("Failed to deserialize NodeContext: {}", e))?;
+    let __self: html_to_markdown_rs::NodeContext = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to deserialize NodeContext: {}", e))?;
     let __result = __self.into_owned();
-    serde_json::to_string(&__result).map_err(|e| format!("Failed to serialize result: {}", e))
+    serde_json::to_string(&__result)
+        .map_err(|e| format!("Failed to serialize result: {}", e))
 }
 
 #[cfg(feature = "visitor")]
@@ -2445,7 +1924,7 @@ impl From<html_to_markdown_rs::options::TierStrategy> for TierStrategy {
         match val {
             html_to_markdown_rs::options::TierStrategy::Auto => Self::Auto,
             html_to_markdown_rs::options::TierStrategy::Tier2 => Self::Tier2,
-            #[cfg(any(test, feature = "testkit"))]
+            #[cfg(any (test , feature = "testkit"))]
             html_to_markdown_rs::options::TierStrategy::Tier1 => Self::Tier1,
             _ => unreachable!("bridge enum variant of TierStrategy not exposed in binding"),
         }
@@ -3159,16 +2638,12 @@ impl VisitResult {
 }
 
 pub fn convert(html: String, options: Option<ConversionOptions>) -> Result<ConversionResult, String> {
-    html_to_markdown_rs::convert(&html, options.map(|w| w.0))
-        .map_err(|e| e.to_string())
-        .map(ConversionResult)
+    html_to_markdown_rs::convert(&html, options.map(|w| w.0)).map_err(|e| e.to_string()).map(ConversionResult)
 }
 
 pub struct HtmlVisitorBox(pub Box<dyn html_to_markdown_rs::visitor::HtmlVisitor + Send + Sync>);
 #[doc(hidden)]
-pub fn alef_phantom_vec_html_visitor() -> Vec<HtmlVisitorBox> {
-    Vec::new()
-}
+pub fn alef_phantom_vec_html_visitor() -> Vec<HtmlVisitorBox> { Vec::new() }
 
 /// Convert a stringified Swift error into the configured source-crate error type.
 #[allow(dead_code)]
@@ -3182,10 +2657,7 @@ fn plugin_error_from_string(message: String) -> html_to_markdown_rs::ConversionE
 #[allow(dead_code)]
 #[derive(::serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
-enum InboundEnvelope<T> {
-    Ok(T),
-    Err(String),
-}
+enum InboundEnvelope<T> { Ok(T), Err(String) }
 
 /// Deserialise a JSON envelope returned from a Swift FFI shim into a typed Result.
 #[allow(dead_code)]
@@ -3196,530 +2668,315 @@ where
     match ::serde_json::from_str::<InboundEnvelope<T>>(json) {
         Ok(InboundEnvelope::Ok(value)) => Ok(value),
         Ok(InboundEnvelope::Err(message)) => Err(plugin_error_from_string(message)),
-        Err(e) => Err(plugin_error_from_string(format!(
-            "swift returned malformed envelope: {e}"
-        ))),
+        Err(e) => Err(plugin_error_from_string(format!("swift returned malformed envelope: {e}"))),
     }
 }
-/// Rust-side wrapper around a Swift class implementing the `HtmlVisitor` protocol.
-///
-/// The Swift instance is held via a `swift-bridge` opaque handle that retains
-/// the underlying ARC reference for the lifetime of this struct. Send + Sync are
-/// asserted unsafely: Swift classes used as trait bridges must be thread-safe.
-pub struct SwiftHtmlVisitorWrapper {
-    inner: ffi::SwiftHtmlVisitorBox,
-}
-unsafe impl Send for SwiftHtmlVisitorWrapper {}
-unsafe impl Sync for SwiftHtmlVisitorWrapper {}
-
-impl SwiftHtmlVisitorWrapper {
-    /// Construct a new wrapper from a Swift `SwiftHtmlVisitorBox` handle.
-    pub fn new(inner: ffi::SwiftHtmlVisitorBox) -> Self {
-        Self { inner }
-    }
-}
+/// Rust-side wrapper around a Swift class implementing the `HtmlVisitor` protocol. /// /// The Swift instance is
+held via a `swift-bridge` opaque handle that retains /// the underlying ARC reference for the lifetime of this struct.
+Send + Sync are /// asserted unsafely: Swift classes used as trait bridges must be thread-safe. pub struct SwiftHtmlVisitorWrapper { inner: ffi::SwiftHtmlVisitorBox, } // SAFETY: ~keep The Swift API requires conformers to synchronize all shared mutable
+state. unsafe impl Send for SwiftHtmlVisitorWrapper {} // SAFETY: ~keep The same documented synchronization contract permits
+shared references. unsafe impl Sync for SwiftHtmlVisitorWrapper {} impl SwiftHtmlVisitorWrapper { /// Construct a new wrapper from
+a Swift `SwiftHtmlVisitorBox` handle. pub fn new(inner: ffi::SwiftHtmlVisitorBox) -> Self { Self { inner } } }
 impl ::std::fmt::Debug for SwiftHtmlVisitorWrapper {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         f.debug_struct("SwiftHtmlVisitorWrapper").finish_non_exhaustive()
     }
 }
 impl html_to_markdown_rs::visitor::HtmlVisitor for SwiftHtmlVisitorWrapper {
-    fn visit_text(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_text(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_text(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_text returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_text returned invalid JSON")
     }
 
     fn visit_element_start(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_element_start(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_element_start returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_element_start returned invalid JSON")
     }
 
-    fn visit_element_end(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        output: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_element_end(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, output: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let output = output.to_string();
         let json = self.inner.alef_visit_element_end(ctx, output);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_element_end returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_element_end returned invalid JSON")
     }
 
-    fn visit_link(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        href: &str,
-        text: &str,
-        title: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_link(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, href: &str, text: &str, title: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let href = href.to_string();
         let text = text.to_string();
         let title = title.map(|v| v.to_string());
         let json = self.inner.alef_visit_link(ctx, href, text, title);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_link returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_link returned invalid JSON")
     }
 
-    fn visit_image(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        src: &str,
-        alt: &str,
-        title: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_image(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, src: &str, alt: &str, title: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let src = src.to_string();
         let alt = alt.to_string();
         let title = title.map(|v| v.to_string());
         let json = self.inner.alef_visit_image(ctx, src, alt, title);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_image returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_image returned invalid JSON")
     }
 
-    fn visit_heading(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        level: u32,
-        text: &str,
-        id: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_heading(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, level: u32, text: &str, id: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let id = id.map(|v| v.to_string());
         let json = self.inner.alef_visit_heading(ctx, level, text, id);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_heading returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_heading returned invalid JSON")
     }
 
-    fn visit_code_block(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        lang: Option<&str>,
-        code: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_code_block(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, lang: Option<&str>, code: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let lang = lang.map(|v| v.to_string());
         let code = code.to_string();
         let json = self.inner.alef_visit_code_block(ctx, lang, code);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_code_block returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_code_block returned invalid JSON")
     }
 
-    fn visit_code_inline(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        code: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_code_inline(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, code: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let code = code.to_string();
         let json = self.inner.alef_visit_code_inline(ctx, code);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_code_inline returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_code_inline returned invalid JSON")
     }
 
-    fn visit_list_item(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        ordered: bool,
-        marker: &str,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_list_item(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, ordered: bool, marker: &str, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let marker = marker.to_string();
         let text = text.to_string();
         let json = self.inner.alef_visit_list_item(ctx, ordered, marker, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_list_item returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_list_item returned invalid JSON")
     }
 
-    fn visit_list_start(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        ordered: bool,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_list_start(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, ordered: bool) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_list_start(ctx, ordered);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_list_start returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_list_start returned invalid JSON")
     }
 
-    fn visit_list_end(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        ordered: bool,
-        output: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_list_end(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, ordered: bool, output: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let output = output.to_string();
         let json = self.inner.alef_visit_list_end(ctx, ordered, output);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_list_end returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_list_end returned invalid JSON")
     }
 
     fn visit_table_start(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_table_start(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_table_start returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_table_start returned invalid JSON")
     }
 
-    fn visit_table_row(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        cells: &[String],
-        is_header: bool,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_table_row(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, cells: &[String], is_header: bool) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let cells = cells.to_vec();
         let json = self.inner.alef_visit_table_row(ctx, cells, is_header);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_table_row returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_table_row returned invalid JSON")
     }
 
-    fn visit_table_end(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        output: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_table_end(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, output: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let output = output.to_string();
         let json = self.inner.alef_visit_table_end(ctx, output);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_table_end returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_table_end returned invalid JSON")
     }
 
-    fn visit_blockquote(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        content: &str,
-        depth: usize,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_blockquote(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, content: &str, depth: usize) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let content = content.to_string();
         let json = self.inner.alef_visit_blockquote(ctx, content, depth);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_blockquote returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_blockquote returned invalid JSON")
     }
 
-    fn visit_strong(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_strong(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_strong(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_strong returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_strong returned invalid JSON")
     }
 
-    fn visit_emphasis(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_emphasis(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_emphasis(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_emphasis returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_emphasis returned invalid JSON")
     }
 
-    fn visit_strikethrough(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_strikethrough(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_strikethrough(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_strikethrough returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_strikethrough returned invalid JSON")
     }
 
-    fn visit_underline(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_underline(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_underline(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_underline returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_underline returned invalid JSON")
     }
 
-    fn visit_subscript(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_subscript(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_subscript(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_subscript returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_subscript returned invalid JSON")
     }
 
-    fn visit_superscript(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_superscript(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_superscript(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_superscript returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_superscript returned invalid JSON")
     }
 
-    fn visit_mark(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_mark(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_mark(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_mark returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_mark returned invalid JSON")
     }
 
     fn visit_line_break(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_line_break(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_line_break returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_line_break returned invalid JSON")
     }
 
-    fn visit_horizontal_rule(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_horizontal_rule(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_horizontal_rule(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_horizontal_rule returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_horizontal_rule returned invalid JSON")
     }
 
-    fn visit_custom_element(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        tag_name: &str,
-        html: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_custom_element(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, tag_name: &str, html: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let tag_name = tag_name.to_string();
         let html = html.to_string();
         let json = self.inner.alef_visit_custom_element(ctx, tag_name, html);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_custom_element returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_custom_element returned invalid JSON")
     }
 
-    fn visit_definition_list_start(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_definition_list_start(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_definition_list_start(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_definition_list_start returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_definition_list_start returned invalid JSON")
     }
 
-    fn visit_definition_term(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_definition_term(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_definition_term(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_definition_term returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_definition_term returned invalid JSON")
     }
 
-    fn visit_definition_description(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_definition_description(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_definition_description(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_definition_description returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_definition_description returned invalid JSON")
     }
 
-    fn visit_definition_list_end(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        output: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_definition_list_end(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, output: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let output = output.to_string();
         let json = self.inner.alef_visit_definition_list_end(ctx, output);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_definition_list_end returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_definition_list_end returned invalid JSON")
     }
 
-    fn visit_form(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        action: Option<&str>,
-        method: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_form(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, action: Option<&str>, method: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let action = action.map(|v| v.to_string());
         let method = method.map(|v| v.to_string());
         let json = self.inner.alef_visit_form(ctx, action, method);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_form returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_form returned invalid JSON")
     }
 
-    fn visit_input(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        input_type: &str,
-        name: Option<&str>,
-        value: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_input(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, input_type: &str, name: Option<&str>, value: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let input_type = input_type.to_string();
         let name = name.map(|v| v.to_string());
         let value = value.map(|v| v.to_string());
         let json = self.inner.alef_visit_input(ctx, input_type, name, value);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_input returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_input returned invalid JSON")
     }
 
-    fn visit_button(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_button(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_button(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_button returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_button returned invalid JSON")
     }
 
-    fn visit_audio(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        src: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_audio(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, src: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let src = src.map(|v| v.to_string());
         let json = self.inner.alef_visit_audio(ctx, src);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_audio returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_audio returned invalid JSON")
     }
 
-    fn visit_video(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        src: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_video(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, src: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let src = src.map(|v| v.to_string());
         let json = self.inner.alef_visit_video(ctx, src);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_video returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_video returned invalid JSON")
     }
 
-    fn visit_iframe(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        src: Option<&str>,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_iframe(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, src: Option<&str>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let src = src.map(|v| v.to_string());
         let json = self.inner.alef_visit_iframe(ctx, src);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_iframe returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_iframe returned invalid JSON")
     }
 
-    fn visit_details(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        open: bool,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_details(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, open: bool) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_details(ctx, open);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_details returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_details returned invalid JSON")
     }
 
-    fn visit_summary(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_summary(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_summary(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_summary returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_summary returned invalid JSON")
     }
 
     fn visit_figure_start(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let json = self.inner.alef_visit_figure_start(ctx);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_figure_start returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_figure_start returned invalid JSON")
     }
 
-    fn visit_figcaption(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        text: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_figcaption(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, text: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let text = text.to_string();
         let json = self.inner.alef_visit_figcaption(ctx, text);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_figcaption returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_figcaption returned invalid JSON")
     }
 
-    fn visit_figure_end(
-        &mut self,
-        ctx: &html_to_markdown_rs::NodeContext<'_>,
-        output: &str,
-    ) -> html_to_markdown_rs::VisitResult {
+    fn visit_figure_end(&mut self, ctx: &html_to_markdown_rs::NodeContext<'_>, output: &str) -> html_to_markdown_rs::VisitResult {
         let ctx = ::serde_json::to_string(&ctx).expect("serializable param ctx");
         let output = output.to_string();
         let json = self.inner.alef_visit_figure_end(ctx, output);
-        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json)
-            .expect("swift html_visitor.visit_figure_end returned invalid JSON")
+        ::serde_json::from_str::<html_to_markdown_rs::VisitResult>(&json).expect("swift html_visitor.visit_figure_end returned invalid JSON")
     }
+
 }
 
+
 impl From<html_to_markdown_rs::VisitorHandle> for VisitorHandle {
-    fn from(v: html_to_markdown_rs::VisitorHandle) -> Self {
-        Self(v)
-    }
+    fn from(v: html_to_markdown_rs::VisitorHandle) -> Self { Self(v) }
 }
 impl From<VisitorHandle> for html_to_markdown_rs::VisitorHandle {
-    fn from(v: VisitorHandle) -> Self {
-        v.0
-    }
+    fn from(v: VisitorHandle) -> Self { v.0 }
 }
 impl From<html_to_markdown_rs::options::ConversionOptions> for ConversionOptions {
-    fn from(v: html_to_markdown_rs::options::ConversionOptions) -> Self {
-        Self(v)
-    }
+    fn from(v: html_to_markdown_rs::options::ConversionOptions) -> Self { Self(v) }
 }
 
 /// Construct a `VisitorHandle` from a Swift `SwiftHtmlVisitorBox` handle.
@@ -3734,12 +2991,8 @@ pub fn make_html_visitor_visitor_handle(swift_box: ffi::SwiftHtmlVisitorBox) -> 
 /// Deserialise a `ConversionOptions` from JSON and attach a visitor handle to its
 /// `visitor` field. Used by Swift e2e tests to thread a `VisitorHandle` into the
 /// conversion call without needing a mutable post-construction setter.
-pub fn conversion_options_from_json_with_visitor(
-    json: String,
-    visitor: Option<VisitorHandle>,
-) -> Result<ConversionOptions, String> {
-    let mut __core: html_to_markdown_rs::options::ConversionOptions =
-        ::serde_json::from_str(&json).map_err(|e| e.to_string())?;
+pub fn conversion_options_from_json_with_visitor(json: String, visitor: Option<VisitorHandle>) -> Result<ConversionOptions, String> {
+    let mut __core: html_to_markdown_rs::options::ConversionOptions = ::serde_json::from_str(&json).map_err(|e| e.to_string())?;
     __core.visitor = visitor.map(|h| <html_to_markdown_rs::VisitorHandle>::from(h));
     Ok(ConversionOptions::from(__core))
 }

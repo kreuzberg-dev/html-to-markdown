@@ -27,10 +27,10 @@
 package io.xberg.android
 
 /**
- * Structured data format type.
- *
- * Identifies the schema/format used for structured data markup.
- */
+* Structured data format type.
+*
+* Identifies the schema/format used for structured data markup.
+*/
 enum class StructuredDataType {
     /** JSON-LD (JSON for Linking Data) script blocks */
     @com.fasterxml.jackson.annotation.JsonProperty("json_ld") JSON_LD,
@@ -41,21 +41,21 @@ enum class StructuredDataType {
 
     @com.fasterxml.jackson.annotation.JsonValue
     fun toWire(): String =
-        when (this) {
-            JSON_LD -> "json_ld"
-            MICRODATA -> "microdata"
-            R_D_FA -> "rdfa"
-        }
+    when (this) {
+        JSON_LD -> "json_ld"
+        MICRODATA -> "microdata"
+        R_D_FA -> "rdfa"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
         fun fromWire(value: String): StructuredDataType =
-            when (value) {
-                "json_ld" -> JSON_LD
-                "microdata" -> MICRODATA
-                "rdfa" -> R_D_FA
-                else -> throw IllegalArgumentException("Unknown StructuredDataType value: $value")
-            }
+        when (value) {
+            "json_ld" -> JSON_LD
+            "microdata" -> MICRODATA
+            "rdfa" -> R_D_FA
+            else -> throw IllegalArgumentException("Unknown StructuredDataType value: $value")
+        }
     }
 }

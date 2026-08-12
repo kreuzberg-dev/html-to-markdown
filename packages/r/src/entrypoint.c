@@ -5,5 +5,5 @@
 void R_init_htmltomarkdown_extendr(void *dll);
 
 void attribute_visible R_init_htmltomarkdown(void *dll) {
-    R_init_htmltomarkdown_extendr(dll);
+  R_init_htmltomarkdown_extendr(dll);
 }

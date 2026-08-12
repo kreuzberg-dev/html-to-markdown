@@ -18,7 +18,7 @@ pub fn build(b: *std.Build) void {
         []const u8,
         "ffi_include_path",
         "Path to directory containing the FFI C header"
-    ) orelse "../../crates/html-to-markdown-ffi/include";
+    ) orelse "../../crates/html-to-markdown-rs-ffi/include";
 
     const module = b.addModule("html_to_markdown_rs", .{
         .root_source_file = b.path("src/html_to_markdown_rs.zig"),

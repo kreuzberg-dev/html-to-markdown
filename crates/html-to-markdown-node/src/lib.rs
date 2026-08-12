@@ -1742,8 +1742,7 @@ pub struct JsVisitResult {
     #[napi(js_name = "type")]
     #[serde(rename = "type")]
     pub type_tag: String,
-    pub custom: Option<String>,
-    pub error: Option<String>,
+    pub output: Option<String>,
 }
 
 #[allow(clippy::derivable_impls)]
@@ -1751,9 +1750,46 @@ impl Default for JsVisitResult {
     fn default() -> Self {
         Self {
             type_tag: String::new(),
-            custom: None,
-            error: None,
+            output: None,
         }
+    }
+}
+
+#[napi(namespace = "VisitResult", getter, js_name = "Continue")]
+pub fn visit_result_continue() -> JsVisitResult {
+    JsVisitResult {
+        type_tag: "continue".to_string(),
+        ..Default::default()
+    }
+}
+#[napi(namespace = "VisitResult", js_name = "Custom")]
+pub fn visit_result_custom(output: String) -> JsVisitResult {
+    JsVisitResult {
+        type_tag: "custom".to_string(),
+        output: Some(output),
+        ..Default::default()
+    }
+}
+#[napi(namespace = "VisitResult", getter, js_name = "Skip")]
+pub fn visit_result_skip() -> JsVisitResult {
+    JsVisitResult {
+        type_tag: "skip".to_string(),
+        ..Default::default()
+    }
+}
+#[napi(namespace = "VisitResult", getter, js_name = "PreserveHtml")]
+pub fn visit_result_preserve_html() -> JsVisitResult {
+    JsVisitResult {
+        type_tag: "preserve_html".to_string(),
+        ..Default::default()
+    }
+}
+#[napi(namespace = "VisitResult", js_name = "Error")]
+pub fn visit_result_error(output: String) -> JsVisitResult {
+    JsVisitResult {
+        type_tag: "error".to_string(),
+        output: Some(output),
+        ..Default::default()
     }
 }
 
@@ -7606,10 +7642,10 @@ impl From<JsVisitResult> for html_to_markdown_rs::VisitResult {
     fn from(val: JsVisitResult) -> Self {
         match val.type_tag.as_str() {
             "continue" => Self::Continue,
-            "custom" => Self::Custom(val.custom.unwrap_or_default()),
+            "custom" => Self::Custom(val.output.unwrap_or_default()),
             "skip" => Self::Skip,
             "preserve_html" => Self::PreserveHtml,
-            "error" => Self::Error(val.error.unwrap_or_default()),
+            "error" => Self::Error(val.output.unwrap_or_default()),
             _ => Self::Continue,
         }
     }
@@ -7620,28 +7656,23 @@ impl From<html_to_markdown_rs::VisitResult> for JsVisitResult {
         match val {
             html_to_markdown_rs::VisitResult::Continue => Self {
                 type_tag: "continue".to_string(),
-                custom: None,
-                error: None,
+                output: None,
             },
-            html_to_markdown_rs::VisitResult::Custom(custom) => Self {
+            html_to_markdown_rs::VisitResult::Custom(output) => Self {
                 type_tag: "custom".to_string(),
-                custom: Some(custom),
-                error: None,
+                output: Some(output),
             },
             html_to_markdown_rs::VisitResult::Skip => Self {
                 type_tag: "skip".to_string(),
-                custom: None,
-                error: None,
+                output: None,
             },
             html_to_markdown_rs::VisitResult::PreserveHtml => Self {
                 type_tag: "preserve_html".to_string(),
-                custom: None,
-                error: None,
+                output: None,
             },
-            html_to_markdown_rs::VisitResult::Error(error) => Self {
+            html_to_markdown_rs::VisitResult::Error(output) => Self {
                 type_tag: "error".to_string(),
-                custom: None,
-                error: Some(error),
+                output: Some(output),
             },
         }
     }

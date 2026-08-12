@@ -885,7 +885,7 @@ pub const OutputFormat = enum {
 pub const NodeContent = union(enum) {
     /// A heading element (h1-h6).
     heading: struct {
-        level: u8,
+    level: u8,
         text: []const u8,
     },
     /// A paragraph of text.
@@ -898,13 +898,13 @@ pub const NodeContent = union(enum) {
     table: TableGrid,
     /// An image element.
     image: struct {
-        description: ?[]const u8,
+    description: ?[]const u8,
         src: ?[]const u8,
         image_index: ?u32,
     },
     /// A code block or inline code.
     code: struct {
-        text: []const u8,
+    text: []const u8,
         language: ?[]const u8,
     },
     /// A block quote container.
@@ -913,19 +913,19 @@ pub const NodeContent = union(enum) {
     definition_list: void,
     /// A definition list entry with term and description.
     definition_item: struct {
-        term: []const u8,
+    term: []const u8,
         definition: []const u8,
     },
     /// A raw block preserved as-is (e.g. `<script>`, `<style>` content).
     raw_block: struct {
-        format: []const u8,
+    format: []const u8,
         content: []const u8,
     },
     /// A block of key-value metadata pairs (from `<head>` meta tags).
     metadata_block: []const MetadataEntry,
     /// A section grouping container (auto-generated from heading hierarchy).
     group: struct {
-        label: ?[]const u8,
+    label: ?[]const u8,
         heading_level: ?u8,
         heading_text: ?[]const u8,
     },
@@ -953,7 +953,7 @@ pub const AnnotationKind = union(enum) {
     highlight: void,
     /// A hyperlink sourced from an `<a href="...">` element.
     link: struct {
-        url: []const u8,
+    url: []const u8,
         title: ?[]const u8,
     },
 };
@@ -1230,7 +1230,7 @@ pub fn convert(html: []const u8, options: ?[]const u8) ConversionError![]u8 {
         const owned = try std.heap.c_allocator.dupe(u8, slice);
         break :blk owned;
     }
-;
+    ;
 }
 
 /// Vtable for a Zig implementation of the `HtmlVisitor` trait.
@@ -1383,15 +1383,8 @@ pub const IHtmlVisitor = extern struct {
     free_user_data: ?*const fn (user_data: ?*anyopaque) callconv(.c) void = null,
 };
 
-/// Wrap a `IHtmlVisitor` vtable into a `VisitorHandle` suitable for the
-/// generated options-field setter.
-/// The returned handle owns the vtable's function pointers and must be
-/// released with the matching `htm_visitor_handle_free` once the
-/// containing options object is no longer needed.
-pub fn html_visitor_handle_from_vtable(callbacks: c.HTMHtmVisitorCallbacks) ?VisitorHandle {
-    var _cb = callbacks;
-    return @ptrCast(c.htm_html_visitor_handle_from_callbacks(&_cb));
-}
+/// Create the native visitor accepted by the generated options-field setter. /// Passing the returned handle to that
+setter transfers ownership. pub fn html_visitor_handle_from_callbacks(callbacks: c.HtmVisitorCallbacks) ?*c.HtmVisitor { var _cb = callbacks; return c.htm_visitor_create(&_cb); }
 /// Build an `IHtmlVisitor` vtable for a concrete Zig type `T`.
 ///
 /// `T` must implement every method of `HtmlVisitor` as a plain Zig function.
@@ -1410,8 +1403,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_text(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1421,8 +1423,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_element_start(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1432,8 +1443,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _output: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_element_end(_ctx, _output);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1443,8 +1463,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _href: [*c]const u8, _text: [*c]const u8, _title: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_link(_ctx, _href, _text, _title);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1454,8 +1483,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _src: [*c]const u8, _alt: [*c]const u8, _title: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_image(_ctx, _src, _alt, _title);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1465,8 +1503,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _level: u32, _text: [*c]const u8, _id: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_heading(_ctx, _level, _text, _id);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1476,8 +1523,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _lang: [*c]const u8, _code: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_code_block(_ctx, _lang, _code);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1487,8 +1543,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _code: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_code_inline(_ctx, _code);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1498,8 +1563,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _ordered: i32, _marker: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_list_item(_ctx, _ordered, _marker, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1509,8 +1583,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _ordered: i32, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_list_start(_ctx, _ordered);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1520,8 +1603,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _ordered: i32, _output: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_list_end(_ctx, _ordered, _output);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1531,8 +1623,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_table_start(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1542,8 +1643,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _cells: [*c]const u8, _is_header: i32, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_table_row(_ctx, _cells, _is_header);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1553,8 +1663,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _output: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_table_end(_ctx, _output);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1564,8 +1683,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _content: [*c]const u8, _depth: usize, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_blockquote(_ctx, _content, _depth);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1575,8 +1703,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_strong(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1586,8 +1723,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_emphasis(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1597,8 +1743,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_strikethrough(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1608,8 +1763,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_underline(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1619,8 +1783,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_subscript(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1630,8 +1803,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_superscript(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1641,8 +1823,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_mark(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1652,8 +1843,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_line_break(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1663,8 +1863,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_horizontal_rule(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1674,8 +1883,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _tag_name: [*c]const u8, _html: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_custom_element(_ctx, _tag_name, _html);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1685,8 +1903,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_definition_list_start(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1696,8 +1923,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_definition_term(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1707,8 +1943,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_definition_description(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1718,8 +1963,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _output: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_definition_list_end(_ctx, _output);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1729,8 +1983,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _action: [*c]const u8, _method: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_form(_ctx, _action, _method);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1740,8 +2003,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _input_type: [*c]const u8, _name: [*c]const u8, _value: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_input(_ctx, _input_type, _name, _value);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1751,8 +2023,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_button(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1762,8 +2043,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _src: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_audio(_ctx, _src);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1773,8 +2063,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _src: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_video(_ctx, _src);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1784,8 +2083,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _src: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_iframe(_ctx, _src);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1795,8 +2103,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _open: i32, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_details(_ctx, _open);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1806,8 +2123,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_summary(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1817,8 +2143,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_figure_start(_ctx);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1828,8 +2163,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _text: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_figcaption(_ctx, _text);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1839,8 +2183,17 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
             fn thunk(ud: ?*anyopaque, _ctx: [*c]const u8, _output: [*c]const u8, out_result: ?*?[*c]u8) callconv(.c) i32 {
                 const self: *T = @ptrCast(@alignCast(ud));
                 const value = self.visit_figure_end(_ctx, _output);
+                if (value == null) {
+                    if (out_result) |ptr| ptr.* = null;
+                    return 0;
+                }
+                const _owned_result = std.heap.c_allocator.dupeZ(u8, std.mem.span(value)) catch {
+                    return 1;
+                };
                 if (out_result) |ptr| {
-                    ptr.* = @constCast(value);
+                    ptr.* = @ptrCast(_owned_result.ptr);
+                } else {
+                    std.heap.c_allocator.free(_owned_result);
                 }
                 return 0;
             }
@@ -1848,7 +2201,7 @@ pub fn make_html_visitor_vtable(comptime T: type, instance: *T) IHtmlVisitor {
 
         .free_string = struct {
             fn thunk(ptr: [*c]u8) callconv(.c) void {
-                _ = ptr;
+                if (ptr != null) std.heap.c_allocator.free(std.mem.span(ptr));
             }
         }.thunk,
         .free_user_data = struct {

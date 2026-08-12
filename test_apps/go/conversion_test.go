@@ -36,14 +36,14 @@ func Test_BlockquoteMultipleParagraphs(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `> First paragraph.`) {
-		t.Errorf("expected to contain %s", `> First paragraph.`)
-	}
+		if !strings.Contains(string(*result.Content), `> First paragraph.`) {
+			t.Errorf("expected to contain %s", `> First paragraph.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `> Second paragraph.`) {
-		t.Errorf("expected to contain %s", `> Second paragraph.`)
-	}
+		if !strings.Contains(string(*result.Content), `> Second paragraph.`) {
+			t.Errorf("expected to contain %s", `> Second paragraph.`)
+		}
 	}
 }
 
@@ -57,14 +57,14 @@ func Test_BlockquoteNested(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Outer quote.`) {
-		t.Errorf("expected to contain %s", `Outer quote.`)
-	}
+		if !strings.Contains(string(*result.Content), `Outer quote.`) {
+			t.Errorf("expected to contain %s", `Outer quote.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Inner quote.`) {
-		t.Errorf("expected to contain %s", `Inner quote.`)
-	}
+		if !strings.Contains(string(*result.Content), `Inner quote.`) {
+			t.Errorf("expected to contain %s", `Inner quote.`)
+		}
 	}
 }
 
@@ -92,9 +92,9 @@ func Test_BlockquoteSimple(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `> Quote text`) {
-		t.Errorf("expected to contain %s", `> Quote text`)
-	}
+		if !strings.Contains(string(*result.Content), `> Quote text`) {
+			t.Errorf("expected to contain %s", `> Quote text`)
+		}
 	}
 }
 
@@ -126,19 +126,19 @@ func Test_BlockquoteWithList(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Quote intro:`) {
-		t.Errorf("expected to contain %s", `Quote intro:`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Point one`) {
-		t.Errorf("expected to contain %s", `Point one`)
-	}
+		if !strings.Contains(string(*result.Content), `Quote intro:`) {
+			t.Errorf("expected to contain %s", `Quote intro:`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Point two`) {
-		t.Errorf("expected to contain %s", `Point two`)
+		if !strings.Contains(string(*result.Content), `Point one`) {
+			t.Errorf("expected to contain %s", `Point one`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Point two`) {
+			t.Errorf("expected to contain %s", `Point two`)
+		}
 	}
 }
 
@@ -149,9 +149,9 @@ func Test_BoldAndItalic(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `***both***`) {
-		t.Errorf("expected to contain %s", `***both***`)
-	}
+		if !strings.Contains(string(*result.Content), `***both***`) {
+			t.Errorf("expected to contain %s", `***both***`)
+		}
 	}
 }
 
@@ -162,9 +162,9 @@ func Test_BoldStrong(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `**bold**`) {
-		t.Errorf("expected to contain %s", `**bold**`)
-	}
+		if !strings.Contains(string(*result.Content), `**bold**`) {
+			t.Errorf("expected to contain %s", `**bold**`)
+		}
 	}
 }
 
@@ -178,9 +178,9 @@ func Test_CodeBlock(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `print('hello')`) {
-		t.Errorf("expected to contain %s", `print('hello')`)
-	}
+		if !strings.Contains(string(*result.Content), `print('hello')`) {
+			t.Errorf("expected to contain %s", `print('hello')`)
+		}
 	}
 }
 
@@ -194,9 +194,9 @@ func Test_CodeBlockNoLanguage(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `plain code here`) {
-		t.Errorf("expected to contain %s", `plain code here`)
-	}
+		if !strings.Contains(string(*result.Content), `plain code here`) {
+			t.Errorf("expected to contain %s", `plain code here`)
+		}
 	}
 }
 
@@ -207,9 +207,9 @@ func Test_CodeInlineInParagraph(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), "`initialize()`") {
-		t.Errorf("expected to contain %s", "`initialize()`")
-	}
+		if !strings.Contains(string(*result.Content), "`initialize()`") {
+			t.Errorf("expected to contain %s", "`initialize()`")
+		}
 	}
 }
 
@@ -223,9 +223,9 @@ func Test_CodeWithBackticksInContent(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `backtick`) {
-		t.Errorf("expected to contain %s", `backtick`)
-	}
+		if !strings.Contains(string(*result.Content), `backtick`) {
+			t.Errorf("expected to contain %s", `backtick`)
+		}
 	}
 }
 
@@ -314,9 +314,9 @@ func Test_EmphasisMarkHighlight(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `highlighted`) {
-		t.Errorf("expected to contain %s", `highlighted`)
-	}
+		if !strings.Contains(string(*result.Content), `highlighted`) {
+			t.Errorf("expected to contain %s", `highlighted`)
+		}
 	}
 }
 
@@ -327,9 +327,9 @@ func Test_EmphasisStrikethroughDel(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `~~deleted text~~`) {
-		t.Errorf("expected to contain %s", `~~deleted text~~`)
-	}
+		if !strings.Contains(string(*result.Content), `~~deleted text~~`) {
+			t.Errorf("expected to contain %s", `~~deleted text~~`)
+		}
 	}
 }
 
@@ -340,9 +340,9 @@ func Test_EmphasisStrikethroughS(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `~~strikethrough~~`) {
-		t.Errorf("expected to contain %s", `~~strikethrough~~`)
-	}
+		if !strings.Contains(string(*result.Content), `~~strikethrough~~`) {
+			t.Errorf("expected to contain %s", `~~strikethrough~~`)
+		}
 	}
 }
 
@@ -353,19 +353,19 @@ func Test_EmphasisSubscript(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `H`) {
-		t.Errorf("expected to contain %s", `H`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `2`) {
-		t.Errorf("expected to contain %s", `2`)
-	}
+		if !strings.Contains(string(*result.Content), `H`) {
+			t.Errorf("expected to contain %s", `H`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `O`) {
-		t.Errorf("expected to contain %s", `O`)
+		if !strings.Contains(string(*result.Content), `2`) {
+			t.Errorf("expected to contain %s", `2`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `O`) {
+			t.Errorf("expected to contain %s", `O`)
+		}
 	}
 }
 
@@ -376,14 +376,14 @@ func Test_EmphasisSuperscript(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `x`) {
-		t.Errorf("expected to contain %s", `x`)
-	}
+		if !strings.Contains(string(*result.Content), `x`) {
+			t.Errorf("expected to contain %s", `x`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `2`) {
-		t.Errorf("expected to contain %s", `2`)
-	}
+		if !strings.Contains(string(*result.Content), `2`) {
+			t.Errorf("expected to contain %s", `2`)
+		}
 	}
 }
 
@@ -394,9 +394,9 @@ func Test_EmphasisUnderlineU(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `underlined`) {
-		t.Errorf("expected to contain %s", `underlined`)
-	}
+		if !strings.Contains(string(*result.Content), `underlined`) {
+			t.Errorf("expected to contain %s", `underlined`)
+		}
 	}
 }
 
@@ -414,9 +414,9 @@ func Test_FormInputElements(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Name`) {
-		t.Errorf("expected to contain %s", `Name`)
-	}
+		if !strings.Contains(string(*result.Content), `Name`) {
+			t.Errorf("expected to contain %s", `Name`)
+		}
 	}
 }
 
@@ -434,9 +434,9 @@ func Test_FormSelectOptions(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Color`) {
-		t.Errorf("expected to contain %s", `Color`)
-	}
+		if !strings.Contains(string(*result.Content), `Color`) {
+			t.Errorf("expected to contain %s", `Color`)
+		}
 	}
 }
 
@@ -454,9 +454,9 @@ func Test_FormTextarea(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Message`) {
-		t.Errorf("expected to contain %s", `Message`)
-	}
+		if !strings.Contains(string(*result.Content), `Message`) {
+			t.Errorf("expected to contain %s", `Message`)
+		}
 	}
 }
 
@@ -557,14 +557,14 @@ func Test_ImageFigureFigcaption(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `![A sunset](sunset.jpg)`) {
-		t.Errorf("expected to contain %s", `![A sunset](sunset.jpg)`)
-	}
+		if !strings.Contains(string(*result.Content), `![A sunset](sunset.jpg)`) {
+			t.Errorf("expected to contain %s", `![A sunset](sunset.jpg)`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Beautiful sunset over the ocean`) {
-		t.Errorf("expected to contain %s", `Beautiful sunset over the ocean`)
-	}
+		if !strings.Contains(string(*result.Content), `Beautiful sunset over the ocean`) {
+			t.Errorf("expected to contain %s", `Beautiful sunset over the ocean`)
+		}
 	}
 }
 
@@ -575,14 +575,14 @@ func Test_ImageLinked(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `![Icon](icon.png)`) {
-		t.Errorf("expected to contain %s", `![Icon](icon.png)`)
-	}
+		if !strings.Contains(string(*result.Content), `![Icon](icon.png)`) {
+			t.Errorf("expected to contain %s", `![Icon](icon.png)`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `https://example.com`) {
-		t.Errorf("expected to contain %s", `https://example.com`)
-	}
+		if !strings.Contains(string(*result.Content), `https://example.com`) {
+			t.Errorf("expected to contain %s", `https://example.com`)
+		}
 	}
 }
 
@@ -596,9 +596,9 @@ func Test_ImageNoAlt(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `banner.jpg`) {
-		t.Errorf("expected to contain %s", `banner.jpg`)
-	}
+		if !strings.Contains(string(*result.Content), `banner.jpg`) {
+			t.Errorf("expected to contain %s", `banner.jpg`)
+		}
 	}
 }
 
@@ -609,9 +609,9 @@ func Test_ImageSimple(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `![A photo](photo.jpg)`) {
-		t.Errorf("expected to contain %s", `![A photo](photo.jpg)`)
-	}
+		if !strings.Contains(string(*result.Content), `![A photo](photo.jpg)`) {
+			t.Errorf("expected to contain %s", `![A photo](photo.jpg)`)
+		}
 	}
 }
 
@@ -622,14 +622,14 @@ func Test_ImageWithTitle(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `![Sales chart](chart.png`) {
-		t.Errorf("expected to contain %s", `![Sales chart](chart.png`)
-	}
+		if !strings.Contains(string(*result.Content), `![Sales chart](chart.png`) {
+			t.Errorf("expected to contain %s", `![Sales chart](chart.png`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Q3 Sales`) {
-		t.Errorf("expected to contain %s", `Q3 Sales`)
-	}
+		if !strings.Contains(string(*result.Content), `Q3 Sales`) {
+			t.Errorf("expected to contain %s", `Q3 Sales`)
+		}
 	}
 }
 
@@ -640,9 +640,9 @@ func Test_InlineCode(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), "`console.log()`") {
-		t.Errorf("expected to contain %s", "`console.log()`")
-	}
+		if !strings.Contains(string(*result.Content), "`console.log()`") {
+			t.Errorf("expected to contain %s", "`console.log()`")
+		}
 	}
 }
 
@@ -653,9 +653,9 @@ func Test_ItalicEm(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `*italic*`) {
-		t.Errorf("expected to contain %s", `*italic*`)
-	}
+		if !strings.Contains(string(*result.Content), `*italic*`) {
+			t.Errorf("expected to contain %s", `*italic*`)
+		}
 	}
 }
 
@@ -666,14 +666,14 @@ func Test_LineBreakBrTag(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `First line.`) {
-		t.Errorf("expected to contain %s", `First line.`)
-	}
+		if !strings.Contains(string(*result.Content), `First line.`) {
+			t.Errorf("expected to contain %s", `First line.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Second line.`) {
-		t.Errorf("expected to contain %s", `Second line.`)
-	}
+		if !strings.Contains(string(*result.Content), `Second line.`) {
+			t.Errorf("expected to contain %s", `Second line.`)
+		}
 	}
 }
 
@@ -687,14 +687,14 @@ func Test_LineBreakHrTag(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Before rule.`) {
-		t.Errorf("expected to contain %s", `Before rule.`)
-	}
+		if !strings.Contains(string(*result.Content), `Before rule.`) {
+			t.Errorf("expected to contain %s", `Before rule.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `After rule.`) {
-		t.Errorf("expected to contain %s", `After rule.`)
-	}
+		if !strings.Contains(string(*result.Content), `After rule.`) {
+			t.Errorf("expected to contain %s", `After rule.`)
+		}
 	}
 }
 
@@ -705,14 +705,14 @@ func Test_LineBreakMultipleBr(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Start.`) {
-		t.Errorf("expected to contain %s", `Start.`)
-	}
+		if !strings.Contains(string(*result.Content), `Start.`) {
+			t.Errorf("expected to contain %s", `Start.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `End.`) {
-		t.Errorf("expected to contain %s", `End.`)
-	}
+		if !strings.Contains(string(*result.Content), `End.`) {
+			t.Errorf("expected to contain %s", `End.`)
+		}
 	}
 }
 
@@ -723,9 +723,9 @@ func Test_LinkAnchorFragment(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `[Jump to section](#section)`) {
-		t.Errorf("expected to contain %s", `[Jump to section](#section)`)
-	}
+		if !strings.Contains(string(*result.Content), `[Jump to section](#section)`) {
+			t.Errorf("expected to contain %s", `[Jump to section](#section)`)
+		}
 	}
 }
 
@@ -736,9 +736,9 @@ func Test_LinkEmptyHref(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `No destination`) {
-		t.Errorf("expected to contain %s", `No destination`)
-	}
+		if !strings.Contains(string(*result.Content), `No destination`) {
+			t.Errorf("expected to contain %s", `No destination`)
+		}
 	}
 }
 
@@ -749,14 +749,14 @@ func Test_LinkImageInside(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `![Logo](logo.png)`) {
-		t.Errorf("expected to contain %s", `![Logo](logo.png)`)
-	}
+		if !strings.Contains(string(*result.Content), `![Logo](logo.png)`) {
+			t.Errorf("expected to contain %s", `![Logo](logo.png)`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `https://example.com`) {
-		t.Errorf("expected to contain %s", `https://example.com`)
-	}
+		if !strings.Contains(string(*result.Content), `https://example.com`) {
+			t.Errorf("expected to contain %s", `https://example.com`)
+		}
 	}
 }
 
@@ -767,9 +767,9 @@ func Test_LinkMailto(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `mailto:user@example.com`) {
-		t.Errorf("expected to contain %s", `mailto:user@example.com`)
-	}
+		if !strings.Contains(string(*result.Content), `mailto:user@example.com`) {
+			t.Errorf("expected to contain %s", `mailto:user@example.com`)
+		}
 	}
 }
 
@@ -780,9 +780,9 @@ func Test_LinkSimple(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `[Example](https://example.com)`) {
-		t.Errorf("expected to contain %s", `[Example](https://example.com)`)
-	}
+		if !strings.Contains(string(*result.Content), `[Example](https://example.com)`) {
+			t.Errorf("expected to contain %s", `[Example](https://example.com)`)
+		}
 	}
 }
 
@@ -793,14 +793,14 @@ func Test_LinkWithBoldText(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `**Bold link**`) {
-		t.Errorf("expected to contain %s", `**Bold link**`)
-	}
+		if !strings.Contains(string(*result.Content), `**Bold link**`) {
+			t.Errorf("expected to contain %s", `**Bold link**`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `https://example.com`) {
-		t.Errorf("expected to contain %s", `https://example.com`)
-	}
+		if !strings.Contains(string(*result.Content), `https://example.com`) {
+			t.Errorf("expected to contain %s", `https://example.com`)
+		}
 	}
 }
 
@@ -811,14 +811,14 @@ func Test_LinkWithTitle(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `[Example](https://example.com`) {
-		t.Errorf("expected to contain %s", `[Example](https://example.com`)
-	}
+		if !strings.Contains(string(*result.Content), `[Example](https://example.com`) {
+			t.Errorf("expected to contain %s", `[Example](https://example.com`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Example Site`) {
-		t.Errorf("expected to contain %s", `Example Site`)
-	}
+		if !strings.Contains(string(*result.Content), `Example Site`) {
+			t.Errorf("expected to contain %s", `Example Site`)
+		}
 	}
 }
 
@@ -829,24 +829,24 @@ func Test_ListDefinitionDl(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Term One`) {
-		t.Errorf("expected to contain %s", `Term One`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Definition of term one.`) {
-		t.Errorf("expected to contain %s", `Definition of term one.`)
-	}
+		if !strings.Contains(string(*result.Content), `Term One`) {
+			t.Errorf("expected to contain %s", `Term One`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Term Two`) {
-		t.Errorf("expected to contain %s", `Term Two`)
-	}
+		if !strings.Contains(string(*result.Content), `Definition of term one.`) {
+			t.Errorf("expected to contain %s", `Definition of term one.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Definition of term two.`) {
-		t.Errorf("expected to contain %s", `Definition of term two.`)
+		if !strings.Contains(string(*result.Content), `Term Two`) {
+			t.Errorf("expected to contain %s", `Term Two`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Definition of term two.`) {
+			t.Errorf("expected to contain %s", `Definition of term two.`)
+		}
 	}
 }
 
@@ -857,19 +857,19 @@ func Test_ListItemMultipleParagraphs(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `First paragraph in item.`) {
-		t.Errorf("expected to contain %s", `First paragraph in item.`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Second paragraph in item.`) {
-		t.Errorf("expected to contain %s", `Second paragraph in item.`)
-	}
+		if !strings.Contains(string(*result.Content), `First paragraph in item.`) {
+			t.Errorf("expected to contain %s", `First paragraph in item.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Simple item`) {
-		t.Errorf("expected to contain %s", `Simple item`)
+		if !strings.Contains(string(*result.Content), `Second paragraph in item.`) {
+			t.Errorf("expected to contain %s", `Second paragraph in item.`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Simple item`) {
+			t.Errorf("expected to contain %s", `Simple item`)
+		}
 	}
 }
 
@@ -880,24 +880,24 @@ func Test_ListMixedNested(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Item A`) {
-		t.Errorf("expected to contain %s", `Item A`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Sub 1`) {
-		t.Errorf("expected to contain %s", `Sub 1`)
-	}
+		if !strings.Contains(string(*result.Content), `Item A`) {
+			t.Errorf("expected to contain %s", `Item A`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Sub 2`) {
-		t.Errorf("expected to contain %s", `Sub 2`)
-	}
+		if !strings.Contains(string(*result.Content), `Sub 1`) {
+			t.Errorf("expected to contain %s", `Sub 1`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Item B`) {
-		t.Errorf("expected to contain %s", `Item B`)
+		if !strings.Contains(string(*result.Content), `Sub 2`) {
+			t.Errorf("expected to contain %s", `Sub 2`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Item B`) {
+			t.Errorf("expected to contain %s", `Item B`)
+		}
 	}
 }
 
@@ -908,24 +908,24 @@ func Test_ListNestedOrdered(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Step 1`) {
-		t.Errorf("expected to contain %s", `Step 1`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Step 1a`) {
-		t.Errorf("expected to contain %s", `Step 1a`)
-	}
+		if !strings.Contains(string(*result.Content), `Step 1`) {
+			t.Errorf("expected to contain %s", `Step 1`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Step 1b`) {
-		t.Errorf("expected to contain %s", `Step 1b`)
-	}
+		if !strings.Contains(string(*result.Content), `Step 1a`) {
+			t.Errorf("expected to contain %s", `Step 1a`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Step 2`) {
-		t.Errorf("expected to contain %s", `Step 2`)
+		if !strings.Contains(string(*result.Content), `Step 1b`) {
+			t.Errorf("expected to contain %s", `Step 1b`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Step 2`) {
+			t.Errorf("expected to contain %s", `Step 2`)
+		}
 	}
 }
 
@@ -936,24 +936,24 @@ func Test_ListNestedUnordered(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Parent A`) {
-		t.Errorf("expected to contain %s", `Parent A`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Child A1`) {
-		t.Errorf("expected to contain %s", `Child A1`)
-	}
+		if !strings.Contains(string(*result.Content), `Parent A`) {
+			t.Errorf("expected to contain %s", `Parent A`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Child A2`) {
-		t.Errorf("expected to contain %s", `Child A2`)
-	}
+		if !strings.Contains(string(*result.Content), `Child A1`) {
+			t.Errorf("expected to contain %s", `Child A1`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Parent B`) {
-		t.Errorf("expected to contain %s", `Parent B`)
+		if !strings.Contains(string(*result.Content), `Child A2`) {
+			t.Errorf("expected to contain %s", `Child A2`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Parent B`) {
+			t.Errorf("expected to contain %s", `Parent B`)
+		}
 	}
 }
 
@@ -967,14 +967,14 @@ func Test_ListTaskCheckboxes(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Done task`) {
-		t.Errorf("expected to contain %s", `Done task`)
-	}
+		if !strings.Contains(string(*result.Content), `Done task`) {
+			t.Errorf("expected to contain %s", `Done task`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Pending task`) {
-		t.Errorf("expected to contain %s", `Pending task`)
-	}
+		if !strings.Contains(string(*result.Content), `Pending task`) {
+			t.Errorf("expected to contain %s", `Pending task`)
+		}
 	}
 }
 
@@ -985,19 +985,19 @@ func Test_OrderedList(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `1. First`) {
-		t.Errorf("expected to contain %s", `1. First`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `2. Second`) {
-		t.Errorf("expected to contain %s", `2. Second`)
-	}
+		if !strings.Contains(string(*result.Content), `1. First`) {
+			t.Errorf("expected to contain %s", `1. First`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `3. Third`) {
-		t.Errorf("expected to contain %s", `3. Third`)
+		if !strings.Contains(string(*result.Content), `2. Second`) {
+			t.Errorf("expected to contain %s", `2. Second`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `3. Third`) {
+			t.Errorf("expected to contain %s", `3. Third`)
+		}
 	}
 }
 
@@ -1008,14 +1008,14 @@ func Test_ParagraphMultiple(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `First paragraph.`) {
-		t.Errorf("expected to contain %s", `First paragraph.`)
-	}
+		if !strings.Contains(string(*result.Content), `First paragraph.`) {
+			t.Errorf("expected to contain %s", `First paragraph.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Second paragraph.`) {
-		t.Errorf("expected to contain %s", `Second paragraph.`)
-	}
+		if !strings.Contains(string(*result.Content), `Second paragraph.`) {
+			t.Errorf("expected to contain %s", `Second paragraph.`)
+		}
 	}
 }
 
@@ -1026,9 +1026,9 @@ func Test_ParagraphNestedDivs(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Nested text`) {
-		t.Errorf("expected to contain %s", `Nested text`)
-	}
+		if !strings.Contains(string(*result.Content), `Nested text`) {
+			t.Errorf("expected to contain %s", `Nested text`)
+		}
 	}
 }
 
@@ -1054,19 +1054,19 @@ func Test_ParagraphWithInlineFormatting(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `**bold**`) {
-		t.Errorf("expected to contain %s", `**bold**`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `*italic*`) {
-		t.Errorf("expected to contain %s", `*italic*`)
-	}
+		if !strings.Contains(string(*result.Content), `**bold**`) {
+			t.Errorf("expected to contain %s", `**bold**`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `[link](https://example.com)`) {
-		t.Errorf("expected to contain %s", `[link](https://example.com)`)
+		if !strings.Contains(string(*result.Content), `*italic*`) {
+			t.Errorf("expected to contain %s", `*italic*`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `[link](https://example.com)`) {
+			t.Errorf("expected to contain %s", `[link](https://example.com)`)
+		}
 	}
 }
 
@@ -1080,19 +1080,19 @@ func Test_ParagraphWithLineBreaks(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Line one.`) {
-		t.Errorf("expected to contain %s", `Line one.`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Line two.`) {
-		t.Errorf("expected to contain %s", `Line two.`)
-	}
+		if !strings.Contains(string(*result.Content), `Line one.`) {
+			t.Errorf("expected to contain %s", `Line one.`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Line three.`) {
-		t.Errorf("expected to contain %s", `Line three.`)
+		if !strings.Contains(string(*result.Content), `Line two.`) {
+			t.Errorf("expected to contain %s", `Line two.`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Line three.`) {
+			t.Errorf("expected to contain %s", `Line three.`)
+		}
 	}
 }
 
@@ -1103,9 +1103,9 @@ func Test_SemanticAbbr(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `WWW`) {
-		t.Errorf("expected to contain %s", `WWW`)
-	}
+		if !strings.Contains(string(*result.Content), `WWW`) {
+			t.Errorf("expected to contain %s", `WWW`)
+		}
 	}
 }
 
@@ -1116,14 +1116,14 @@ func Test_SemanticArticle(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Article Title`) {
-		t.Errorf("expected to contain %s", `Article Title`)
-	}
+		if !strings.Contains(string(*result.Content), `Article Title`) {
+			t.Errorf("expected to contain %s", `Article Title`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Article body.`) {
-		t.Errorf("expected to contain %s", `Article body.`)
-	}
+		if !strings.Contains(string(*result.Content), `Article body.`) {
+			t.Errorf("expected to contain %s", `Article body.`)
+		}
 	}
 }
 
@@ -1134,24 +1134,24 @@ func Test_SemanticDefinitionList(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `HTML`) {
-		t.Errorf("expected to contain %s", `HTML`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `HyperText Markup Language`) {
-		t.Errorf("expected to contain %s", `HyperText Markup Language`)
-	}
+		if !strings.Contains(string(*result.Content), `HTML`) {
+			t.Errorf("expected to contain %s", `HTML`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `CSS`) {
-		t.Errorf("expected to contain %s", `CSS`)
-	}
+		if !strings.Contains(string(*result.Content), `HyperText Markup Language`) {
+			t.Errorf("expected to contain %s", `HyperText Markup Language`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Cascading Style Sheets`) {
-		t.Errorf("expected to contain %s", `Cascading Style Sheets`)
+		if !strings.Contains(string(*result.Content), `CSS`) {
+			t.Errorf("expected to contain %s", `CSS`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Cascading Style Sheets`) {
+			t.Errorf("expected to contain %s", `Cascading Style Sheets`)
+		}
 	}
 }
 
@@ -1165,9 +1165,9 @@ func Test_SemanticDetailsSummary(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Click to expand`) {
-		t.Errorf("expected to contain %s", `Click to expand`)
-	}
+		if !strings.Contains(string(*result.Content), `Click to expand`) {
+			t.Errorf("expected to contain %s", `Click to expand`)
+		}
 	}
 }
 
@@ -1181,14 +1181,14 @@ func Test_SemanticHr(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Above`) {
-		t.Errorf("expected to contain %s", `Above`)
-	}
+		if !strings.Contains(string(*result.Content), `Above`) {
+			t.Errorf("expected to contain %s", `Above`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Below`) {
-		t.Errorf("expected to contain %s", `Below`)
-	}
+		if !strings.Contains(string(*result.Content), `Below`) {
+			t.Errorf("expected to contain %s", `Below`)
+		}
 	}
 }
 
@@ -1202,9 +1202,9 @@ func Test_SemanticMarkHighlight(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `highlighted text`) {
-		t.Errorf("expected to contain %s", `highlighted text`)
-	}
+		if !strings.Contains(string(*result.Content), `highlighted text`) {
+			t.Errorf("expected to contain %s", `highlighted text`)
+		}
 	}
 }
 
@@ -1215,14 +1215,14 @@ func Test_SemanticSectionWithHeading(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Section Heading`) {
-		t.Errorf("expected to contain %s", `Section Heading`)
-	}
+		if !strings.Contains(string(*result.Content), `Section Heading`) {
+			t.Errorf("expected to contain %s", `Section Heading`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Section content.`) {
-		t.Errorf("expected to contain %s", `Section content.`)
-	}
+		if !strings.Contains(string(*result.Content), `Section content.`) {
+			t.Errorf("expected to contain %s", `Section content.`)
+		}
 	}
 }
 
@@ -1236,24 +1236,24 @@ func Test_SemanticSubSuperscript(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `H`) {
-		t.Errorf("expected to contain %s", `H`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `2`) {
-		t.Errorf("expected to contain %s", `2`)
-	}
+		if !strings.Contains(string(*result.Content), `H`) {
+			t.Errorf("expected to contain %s", `H`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `O`) {
-		t.Errorf("expected to contain %s", `O`)
-	}
+		if !strings.Contains(string(*result.Content), `2`) {
+			t.Errorf("expected to contain %s", `2`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `E=mc`) {
-		t.Errorf("expected to contain %s", `E=mc`)
+		if !strings.Contains(string(*result.Content), `O`) {
+			t.Errorf("expected to contain %s", `O`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `E=mc`) {
+			t.Errorf("expected to contain %s", `E=mc`)
+		}
 	}
 }
 
@@ -1264,34 +1264,34 @@ func Test_SimpleTable(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Name`) {
-		t.Errorf("expected to contain %s", `Name`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Age`) {
-		t.Errorf("expected to contain %s", `Age`)
-	}
+		if !strings.Contains(string(*result.Content), `Name`) {
+			t.Errorf("expected to contain %s", `Name`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Alice`) {
-		t.Errorf("expected to contain %s", `Alice`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `30`) {
-		t.Errorf("expected to contain %s", `30`)
-	}
+		if !strings.Contains(string(*result.Content), `Age`) {
+			t.Errorf("expected to contain %s", `Age`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `|`) {
-		t.Errorf("expected to contain %s", `|`)
-	}
+		if !strings.Contains(string(*result.Content), `Alice`) {
+			t.Errorf("expected to contain %s", `Alice`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `---`) {
-		t.Errorf("expected to contain %s", `---`)
+		if !strings.Contains(string(*result.Content), `30`) {
+			t.Errorf("expected to contain %s", `30`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `|`) {
+			t.Errorf("expected to contain %s", `|`)
+		}
+	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `---`) {
+			t.Errorf("expected to contain %s", `---`)
+		}
 	}
 }
 
@@ -1320,14 +1320,14 @@ func Test_TableNestedChainNotMisclassifiedAsLayout(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `leaf`) {
-		t.Errorf("expected to contain %s", `leaf`)
-	}
+		if !strings.Contains(string(*result.Content), `leaf`) {
+			t.Errorf("expected to contain %s", `leaf`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `| ---`) {
-		t.Errorf("expected to contain %s", `| ---`)
-	}
+		if !strings.Contains(string(*result.Content), `| ---`) {
+			t.Errorf("expected to contain %s", `| ---`)
+		}
 	}
 }
 
@@ -1341,29 +1341,29 @@ func Test_TableNoThead(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Product`) {
-		t.Errorf("expected to contain %s", `Product`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Price`) {
-		t.Errorf("expected to contain %s", `Price`)
-	}
+		if !strings.Contains(string(*result.Content), `Product`) {
+			t.Errorf("expected to contain %s", `Product`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Apple`) {
-		t.Errorf("expected to contain %s", `Apple`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `1.00`) {
-		t.Errorf("expected to contain %s", `1.00`)
-	}
+		if !strings.Contains(string(*result.Content), `Price`) {
+			t.Errorf("expected to contain %s", `Price`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `|`) {
-		t.Errorf("expected to contain %s", `|`)
+		if !strings.Contains(string(*result.Content), `Apple`) {
+			t.Errorf("expected to contain %s", `Apple`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `1.00`) {
+			t.Errorf("expected to contain %s", `1.00`)
+		}
+	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `|`) {
+			t.Errorf("expected to contain %s", `|`)
+		}
 	}
 }
 
@@ -1377,19 +1377,19 @@ func Test_TablePipeCharsInContent(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Expression`) {
-		t.Errorf("expected to contain %s", `Expression`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Result`) {
-		t.Errorf("expected to contain %s", `Result`)
-	}
+		if !strings.Contains(string(*result.Content), `Expression`) {
+			t.Errorf("expected to contain %s", `Expression`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `true`) {
-		t.Errorf("expected to contain %s", `true`)
+		if !strings.Contains(string(*result.Content), `Result`) {
+			t.Errorf("expected to contain %s", `Result`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `true`) {
+			t.Errorf("expected to contain %s", `true`)
+		}
 	}
 }
 
@@ -1439,39 +1439,39 @@ func Test_TableWithAlignment(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Left`) {
-		t.Errorf("expected to contain %s", `Left`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Center`) {
-		t.Errorf("expected to contain %s", `Center`)
-	}
+		if !strings.Contains(string(*result.Content), `Left`) {
+			t.Errorf("expected to contain %s", `Left`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Right`) {
-		t.Errorf("expected to contain %s", `Right`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `L`) {
-		t.Errorf("expected to contain %s", `L`)
-	}
+		if !strings.Contains(string(*result.Content), `Center`) {
+			t.Errorf("expected to contain %s", `Center`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `C`) {
-		t.Errorf("expected to contain %s", `C`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `R`) {
-		t.Errorf("expected to contain %s", `R`)
-	}
+		if !strings.Contains(string(*result.Content), `Right`) {
+			t.Errorf("expected to contain %s", `Right`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `|`) {
-		t.Errorf("expected to contain %s", `|`)
+		if !strings.Contains(string(*result.Content), `L`) {
+			t.Errorf("expected to contain %s", `L`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `C`) {
+			t.Errorf("expected to contain %s", `C`)
+		}
+	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `R`) {
+			t.Errorf("expected to contain %s", `R`)
+		}
+	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `|`) {
+			t.Errorf("expected to contain %s", `|`)
+		}
 	}
 }
 
@@ -1485,19 +1485,19 @@ func Test_TableWithColspan(t *testing.T) {
 		t.Errorf("expected non-empty value")
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Full Name`) {
-		t.Errorf("expected to contain %s", `Full Name`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `John`) {
-		t.Errorf("expected to contain %s", `John`)
-	}
+		if !strings.Contains(string(*result.Content), `Full Name`) {
+			t.Errorf("expected to contain %s", `Full Name`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `Doe`) {
-		t.Errorf("expected to contain %s", `Doe`)
+		if !strings.Contains(string(*result.Content), `John`) {
+			t.Errorf("expected to contain %s", `John`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `Doe`) {
+			t.Errorf("expected to contain %s", `Doe`)
+		}
 	}
 }
 
@@ -1508,18 +1508,18 @@ func Test_UnorderedList(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `- Item 1`) {
-		t.Errorf("expected to contain %s", `- Item 1`)
-	}
-	}
-	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `- Item 2`) {
-		t.Errorf("expected to contain %s", `- Item 2`)
-	}
+		if !strings.Contains(string(*result.Content), `- Item 1`) {
+			t.Errorf("expected to contain %s", `- Item 1`)
+		}
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `- Item 3`) {
-		t.Errorf("expected to contain %s", `- Item 3`)
+		if !strings.Contains(string(*result.Content), `- Item 2`) {
+			t.Errorf("expected to contain %s", `- Item 2`)
+		}
 	}
+	if result.Content != nil {
+		if !strings.Contains(string(*result.Content), `- Item 3`) {
+			t.Errorf("expected to contain %s", `- Item 3`)
+		}
 	}
 }

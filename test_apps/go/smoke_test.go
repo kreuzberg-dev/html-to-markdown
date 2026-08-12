@@ -34,9 +34,9 @@ func Test_SmokeSimpleHeading(t *testing.T) {
 		t.Fatalf("call failed: %v", err)
 	}
 	if result.Content != nil {
-	if !strings.Contains(string(*result.Content), `# Title`) {
-		t.Errorf("expected to contain %s", `# Title`)
-	}
+		if !strings.Contains(string(*result.Content), `# Title`) {
+			t.Errorf("expected to contain %s", `# Title`)
+		}
 	}
 }
 

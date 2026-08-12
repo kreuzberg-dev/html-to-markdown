@@ -14,14 +14,8 @@ Gem::Specification.new do |spec|
   spec.metadata["keywords"] = %w[converter html markdown].join(",")
   spec.metadata["rubygems_mfa_required"] = "true"
 
-  # ~keep A source gem must ship only sources: `gem build` runs against a working tree that
-  # may already hold a compiled extension, and any native artifact swept in here would be
-  # installed as-is on machines of a different platform, shadowing the one `gem install`
-  # compiles. Reject build output rather than enumerating sources so a new source file is
-  # picked up automatically.
-  build_artifacts    = %r{/(?:target|tmp)/|\.(?:bundle|so|dylib|dll|o|a|log)\z|\.dSYM/|(?:\A|/)Makefile\z}
   candidate_files    = Dir.glob(%w[README* LICENSE* lib/**/* ext/**/* sig/**/* Steepfile]).select { |f| File.file?(f) }
-  spec.files         = candidate_files.grep_v(build_artifacts)
+  spec.files         = candidate_files.reject { |f| f.include?("/native/target/") || f.include?("/native/tmp/") }
   spec.require_paths = ["lib"]
   spec.extensions    = ["ext/html_to_markdown_rb/native/extconf.rb"]
 

@@ -3807,14 +3807,14 @@ unsafe impl IntoValueFromNative for NodeType {}
 unsafe impl TryConvertOwned for NodeType {}
 
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", content = "output")]
 #[serde(rename_all = "snake_case")]
 pub enum VisitResult {
     Continue,
-    Custom { _0: String },
+    Custom(String),
     Skip,
     PreserveHtml,
-    Error { _0: String },
+    Error(String),
 }
 
 impl Default for VisitResult {
@@ -3869,13 +3869,13 @@ unsafe impl TryConvertOwned for VisitResult {}
 impl VisitResult {
     pub fn custom(&self) -> Option<&String> {
         match self {
-            Self::Custom { _0 } => Some(_0),
+            Self::Custom(_0) => Some(_0),
             _ => None,
         }
     }
     pub fn error(&self) -> Option<&String> {
         match self {
-            Self::Error { _0 } => Some(_0),
+            Self::Error(_0) => Some(_0),
             _ => None,
         }
     }

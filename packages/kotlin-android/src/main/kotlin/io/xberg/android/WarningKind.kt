@@ -44,27 +44,27 @@ enum class WarningKind {
 
     @com.fasterxml.jackson.annotation.JsonValue
     fun toWire(): String =
-        when (this) {
-            IMAGE_EXTRACTION_FAILED -> "image_extraction_failed"
-            ENCODING_FALLBACK -> "encoding_fallback"
-            TRUNCATED_INPUT -> "truncated_input"
-            MALFORMED_HTML -> "malformed_html"
-            SANITIZATION_APPLIED -> "sanitization_applied"
-            DEPTH_LIMIT_EXCEEDED -> "depth_limit_exceeded"
-        }
+    when (this) {
+        IMAGE_EXTRACTION_FAILED -> "image_extraction_failed"
+        ENCODING_FALLBACK -> "encoding_fallback"
+        TRUNCATED_INPUT -> "truncated_input"
+        MALFORMED_HTML -> "malformed_html"
+        SANITIZATION_APPLIED -> "sanitization_applied"
+        DEPTH_LIMIT_EXCEEDED -> "depth_limit_exceeded"
+    }
 
     companion object {
         @com.fasterxml.jackson.annotation.JsonCreator
         @JvmStatic
         fun fromWire(value: String): WarningKind =
-            when (value) {
-                "image_extraction_failed" -> IMAGE_EXTRACTION_FAILED
-                "encoding_fallback" -> ENCODING_FALLBACK
-                "truncated_input" -> TRUNCATED_INPUT
-                "malformed_html" -> MALFORMED_HTML
-                "sanitization_applied" -> SANITIZATION_APPLIED
-                "depth_limit_exceeded" -> DEPTH_LIMIT_EXCEEDED
-                else -> throw IllegalArgumentException("Unknown WarningKind value: $value")
-            }
+        when (value) {
+            "image_extraction_failed" -> IMAGE_EXTRACTION_FAILED
+            "encoding_fallback" -> ENCODING_FALLBACK
+            "truncated_input" -> TRUNCATED_INPUT
+            "malformed_html" -> MALFORMED_HTML
+            "sanitization_applied" -> SANITIZATION_APPLIED
+            "depth_limit_exceeded" -> DEPTH_LIMIT_EXCEEDED
+            else -> throw IllegalArgumentException("Unknown WarningKind value: $value")
+        }
     }
 }

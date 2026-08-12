@@ -161,7 +161,7 @@ tasks.register("validateJniLibsForRelease") {
             // System.loadLibrary("htm_jni") needs the JNI entry points.
             val expectedJniLib = "libhtm_jni.so"
             val abisMissingJniLib = (jniLibsDir.listFiles()?.filter { it.isDirectory } ?: emptyList())
-                .filter { abiDir -> !abiDir.resolve(expectedJniLib).exists() }
+            .filter { abiDir -> !abiDir.resolve(expectedJniLib).exists() }
             if (abisMissingJniLib.isNotEmpty()) {
                 throw GradleException(
                     "FATAL: " + expectedJniLib + " is missing from jniLibs ABI dir(s): " +
