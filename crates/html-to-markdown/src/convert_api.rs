@@ -79,7 +79,7 @@ pub fn convert(html: &str, options: impl Into<Option<ConversionOptions>>) -> Res
     span.record("tier_strategy", tracing::field::debug(options.tier_strategy));
 
     // ~keep Thin generic wrapper. Delegates to the non-generic `convert_inner` so the
-    // ~keep ~250-line body monomorphises exactly once instead of once per `Into` impl
+    // ~keep large body monomorphises exactly once instead of once per `Into` impl
     // ~keep the caller picks. See xberg-io/html-to-markdown#398.
     convert_inner(html, options)
 }

@@ -80,7 +80,7 @@ pub enum TagKind {
     /// emitted as `*…*\n\n` (italic-wrap). Mirrors Tier-2's
     /// `semantic/figure.rs::handle_figcaption`.
     Figcaption,
-    /// `<button>` — clickable button. Tier-2 (`form/elements.rs:592-594`)
+    /// `<button>` — clickable button. Tier-2 (`form/elements.rs`'s `handle_button`)
     /// emits `\n\n` after the button's content in block mode but no leading
     /// separator; mirror with close-only block-separator semantics.
     Button,
@@ -387,7 +387,7 @@ static TAGS: phf::Map<&'static [u8], TagSpec> = phf_map! {
         is_rawtext: false,
     },
     b"optgroup"  => inline(TagKind::Inline),
-    // ~keep <button>: Tier-2 form/elements.rs:592-594 emits `\n\n` after content in
+    // ~keep <button>: Tier-2 form/elements.rs's handle_button emits `\n\n` after content in
     // ~keep block mode but no leading separator.  TagKind::Button gives us
     // ~keep close-only block-separator semantics — distinct from Block which also
     // ~keep emits a leading `\n\n` on open.

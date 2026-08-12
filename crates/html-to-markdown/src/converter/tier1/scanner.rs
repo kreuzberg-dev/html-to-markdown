@@ -1623,7 +1623,7 @@ fn emit_close(state: &mut Tier1State, tag_name_bytes: &[u8], options: &Conversio
         // ~keep Figcaption: pop accumulation buffer, trim, emit `*…*\n\n` (Phase FF-2).
         TagKind::Figcaption => close_figcaption(state, &frame),
         // ~keep Button (Phase T): emit `\n\n` when content was produced — mirrors
-        // ~keep Tier-2 `form/elements.rs:592-594`.  No leading separator on open.
+        // ~keep Tier-2 `form/elements.rs`'s `handle_button`.  No leading separator on open.
         TagKind::Button => close_button(state, &frame),
         TagKind::Inline => {
             if name_lower == b"abbr" {
@@ -1789,7 +1789,7 @@ fn close_figcaption(state: &mut Tier1State, _frame: &OpenTag) {
 /// Close a `<button>` (Phase T).  When the button produced visible content,
 /// emit `\n\n` after.  Skipped in table cells (cells stay one logical line).
 ///
-/// Mirrors Tier-2 `form/elements.rs:592-594`:
+/// Mirrors the block-separator tail of Tier-2 `form/elements.rs`'s `handle_button`:
 /// ```text
 /// if !ctx.convert_as_inline && output.len() > start_len {
 ///     output.push_str("\n\n");

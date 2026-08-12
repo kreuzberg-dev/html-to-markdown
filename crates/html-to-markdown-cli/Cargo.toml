@@ -35,7 +35,8 @@ mcp-http = ["mcp", "html-to-markdown-rs/mcp-http"]
 
 # ~keep A `#[global_allocator]` is a process-wide choice, so it belongs to this binary
 # ~keep and never to the library or the extension crates that load into a host runtime.
-# ~keep Enabling both at once is rejected by a `compile_error!` in `src/main.rs`.
+# ~keep Enabling both at once is resolved by precedence in `src/main.rs` (jemalloc wins), not by
+# ~keep `compile_error!`: features are additive, so `--all-features` would otherwise be unbuildable.
 mimalloc = ["dep:mimalloc"]
 jemalloc = ["dep:tikv-jemallocator"]
 
