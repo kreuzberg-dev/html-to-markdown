@@ -119,7 +119,7 @@ pub use self::context::Context;
 pub use self::dom_context::DomContext;
 
 pub use self::main::{convert_html_impl, walk_node};
-pub use self::main_helpers::trim_trailing_whitespace;
+pub use self::main_helpers::{emit_table_cell_break, trim_trailing_whitespace};
 
 pub use crate::converter::utility::content::{chomp_inline, get_text_content, normalized_tag_name};
 // ~keep reason: serialize_node and serialize_node_to_html are only used when the visitor

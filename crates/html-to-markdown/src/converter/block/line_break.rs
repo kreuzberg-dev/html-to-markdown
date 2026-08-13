@@ -3,7 +3,7 @@
 //! Converts HTML line break tags to Markdown line breaks using the configured
 //! newline style (spaces, backslash, or plain newline).
 
-use crate::converter::main_helpers::trim_trailing_whitespace;
+use crate::converter::main_helpers::{emit_table_cell_break, trim_trailing_whitespace};
 use crate::options::{ConversionOptions, NewlineStyle};
 #[cfg(feature = "visitor")]
 use std::borrow::Cow;
@@ -84,21 +84,10 @@ pub fn handle(
         trim_trailing_whitespace(output);
         output.push_str("  ");
     } else if ctx.in_table_cell {
-        // ~keep Drop any source-whitespace run left by the preceding text node so
-        // ~keep source formatting (e.g. a "\n" before <br/>) can't leak an extra
-        // ~keep space into the output (issue #453).
-        trim_trailing_whitespace(output);
-        if options.br_in_tables {
-            // ~keep Inside a table cell with br_in_tables, emit a literal <br> so the
-            // ~keep GFM row stays on one physical line (issue #429). A hard break here
-            // ~keep would inject a raw newline mid-row and break the table.
-            output.push_str("<br>");
-        } else if !output.is_empty() {
-            // ~keep A table cell cannot contain a hard line break: neither newline_style
-            // ~keep form (two-space or backslash) is valid Markdown here, and a raw
-            // ~keep newline would corrupt the row, so collapse to one space (issue #453).
-            output.push(' ');
-        }
+        // ~keep Shared with div/p continuations inside a cell (issue #453, #454): a cell
+        // ~keep cannot contain a hard line break, so newline_style is never consulted and
+        // ~keep source whitespace before the <br> is trimmed rather than leaked.
+        emit_table_cell_break(output, options.br_in_tables);
     } else if output.is_empty() || output.ends_with('\n') {
         output.push('\n');
     } else {

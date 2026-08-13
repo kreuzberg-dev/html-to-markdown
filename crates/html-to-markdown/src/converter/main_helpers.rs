@@ -33,6 +33,25 @@ pub fn trim_trailing_whitespace(output: &mut String) {
     }
 }
 
+/// Emit a line break for a `<br>`, `<div>`, or `<p>` continuation inside a table cell.
+///
+/// A Markdown table cell cannot contain a hard line break: neither `newline_style` form
+/// (two-space or backslash) is valid there, and a raw newline corrupts the row by
+/// splitting its pipe syntax across physical lines. So this always trims trailing
+/// whitespace first, then emits a literal `<br>` when `br_in_tables` is true, or
+/// collapses to a single space otherwise — `newline_style` is never consulted inside a
+/// cell (issue #453, issue #454). The `output.is_empty()` guard suppresses a leading
+/// space when the continuation is the first content in the cell; a leading `<br>` is
+/// still emitted under `br_in_tables`, preserving the pre-existing `<br>` behaviour.
+pub fn emit_table_cell_break(output: &mut String, br_in_tables: bool) {
+    trim_trailing_whitespace(output);
+    if br_in_tables {
+        output.push_str("<br>");
+    } else if !output.is_empty() {
+        output.push(' ');
+    }
+}
+
 /// Collapse runs of three or more consecutive newlines into exactly two.
 ///
 /// Block-level emitters append their own trailing newlines and the next block

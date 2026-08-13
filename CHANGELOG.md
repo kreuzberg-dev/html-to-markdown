@@ -68,6 +68,12 @@ being stripped in full. If you saw links or sections disappear from converted pa
   syntax across physical lines, corrupting the table. A cell cannot contain a hard line break, so
   `<br>` now collapses to a single space, or renders as a literal `<br>` when `br_in_tables` is
   enabled, in every combination of the two options and regardless of source formatting.
+- `<div>` and `<p>` continuations inside a table cell follow the same rule as `<br>`
+  ([#454](https://github.com/Goldziher/html-to-markdown/issues/454)). The two disagreed with each
+  other: a `<div>` continuation honoured `br_in_tables` but emitted `newline_style` bytes, which are
+  not valid inside a cell, while a `<p>` continuation always emitted `<br>` and ignored
+  `br_in_tables` entirely. Both now emit a literal `<br>` when `br_in_tables` is enabled and collapse
+  to a single space otherwise, sharing one code path with the `<br>` handler.
 - Document-structure and inline-image collectors also record table-cell content exactly once.
   Images, code blocks and nested tables inside a `<td>` were recorded up to three times with
   `include_document_structure: true`, and inline images twice with `extract_images: true`. Note the

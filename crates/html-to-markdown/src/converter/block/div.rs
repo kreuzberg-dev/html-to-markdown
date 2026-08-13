@@ -6,7 +6,7 @@
 //! - List continuations: Uses list indentation
 //! - Block context: Adds surrounding newlines for proper block separation
 
-use crate::converter::main_helpers::trim_trailing_whitespace;
+use crate::converter::main_helpers::{emit_table_cell_break, trim_trailing_whitespace};
 use crate::options::ConversionOptions;
 use tl::{NodeHandle, Parser};
 
@@ -70,16 +70,7 @@ pub fn handle(
         && !output.ends_with("\n\n");
 
     if is_table_continuation {
-        trim_trailing_whitespace(output);
-        if options.br_in_tables {
-            output.push_str("<br>");
-        } else {
-            use crate::options::NewlineStyle;
-            match options.newline_style {
-                NewlineStyle::Spaces => output.push_str("  \n"),
-                NewlineStyle::Backslash => output.push_str("\\\n"),
-            }
-        }
+        emit_table_cell_break(output, options.br_in_tables);
     } else if is_list_continuation {
         add_list_continuation_indent(output, ctx.list_depth, false, options);
     } else if needs_leading_sep {

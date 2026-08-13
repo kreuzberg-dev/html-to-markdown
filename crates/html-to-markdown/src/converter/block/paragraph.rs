@@ -60,8 +60,7 @@ pub fn handle(
         };
 
     if is_table_continuation {
-        crate::converter::trim_trailing_whitespace(output);
-        output.push_str("<br>");
+        crate::converter::emit_table_cell_break(output, options.br_in_tables);
     } else if is_list_continuation {
         add_list_continuation_indent(output, ctx.list_indent_columns, true, options);
     } else if needs_leading_sep {
