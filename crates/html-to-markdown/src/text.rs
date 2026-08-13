@@ -325,6 +325,34 @@ pub fn normalize_cell_whitespace_cow(text: &str) -> Cow<'_, str> {
     Cow::Owned(normalize_whitespace(&folded))
 }
 
+/// Fold raw line breaks to a single space inside verbatim (code/ruby) table-cell content.
+///
+/// A GFM table cell cannot contain a literal newline, but code and ruby content must
+/// otherwise stay byte-for-byte verbatim (issue #455): unlike
+/// [`normalize_cell_whitespace_cow`], this does not collapse any other whitespace run —
+/// only `"\r\n"`, `"\n"`, and `"\r"` are each replaced with one ASCII space.
+#[must_use]
+pub fn fold_cell_line_breaks_verbatim_cow(text: &str) -> Cow<'_, str> {
+    if !text.contains('\n') && !text.contains('\r') {
+        return Cow::Borrowed(text);
+    }
+    let mut folded = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(ch) = chars.next() {
+        match ch {
+            '\r' => {
+                if chars.peek() == Some(&'\n') {
+                    chars.next();
+                }
+                folded.push(' ');
+            }
+            '\n' => folded.push(' '),
+            other => folded.push(other),
+        }
+    }
+    Cow::Owned(folded)
+}
+
 /// Decode common HTML entities.
 ///
 /// Decodes the most common HTML entities to their character equivalents:

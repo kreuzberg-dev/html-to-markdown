@@ -119,7 +119,13 @@ pub fn process_text_node(
         return;
     }
 
-    let processed_text = if ctx.in_code || ctx.in_ruby {
+    let processed_text = if (ctx.in_code || ctx.in_ruby) && ctx.in_table_cell {
+        // ~keep Code/ruby content is verbatim by design, but a GFM table cell cannot
+        // ~keep contain a raw newline: fold line breaks to a space without touching any
+        // ~keep other whitespace, and regardless of whitespace_mode — this is a structural
+        // ~keep constraint of the cell, not a stylistic normalization (issue #455).
+        text::fold_cell_line_breaks_verbatim_cow(text.as_ref()).into_owned()
+    } else if ctx.in_code || ctx.in_ruby {
         text.into_owned()
     } else if ctx.in_table_cell {
         // ~keep Always escape * and _ in table cells to prevent unintended emphasis.

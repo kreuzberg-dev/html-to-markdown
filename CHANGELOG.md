@@ -74,6 +74,14 @@ being stripped in full. If you saw links or sections disappear from converted pa
   not valid inside a cell, while a `<p>` continuation always emitted `<br>` and ignored
   `br_in_tables` entirely. Both now emit a literal `<br>` when `br_in_tables` is enabled and collapse
   to a single space otherwise, sharing one code path with the `<br>` handler.
+- A `<code>` span inside a table cell no longer corrupts the row
+  ([#455](https://github.com/Goldziher/html-to-markdown/issues/455)). Verbatim content — `<code>`,
+  and `<kbd>`/`<samp>`, which share the same path — skipped cell whitespace handling entirely, so a
+  newline inside the span reached the output and split the row's pipe syntax across physical lines
+  whenever `br_in_tables` was enabled. Line breaks in that content are now folded to a single space,
+  independent of `whitespace_mode`, because a raw newline in a cell is a structural impossibility in
+  GFM rather than a formatting preference. All other whitespace, including repeated spaces, is still
+  preserved byte-for-byte, and code spans outside a table cell are unaffected.
 - Document-structure and inline-image collectors also record table-cell content exactly once.
   Images, code blocks and nested tables inside a `<td>` were recorded up to three times with
   `include_document_structure: true`, and inline images twice with `extract_images: true`. Note the
