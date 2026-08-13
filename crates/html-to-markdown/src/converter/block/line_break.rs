@@ -83,11 +83,22 @@ pub fn handle(
     if ctx.in_heading {
         trim_trailing_whitespace(output);
         output.push_str("  ");
-    } else if ctx.in_table_cell && options.br_in_tables {
-        // ~keep Inside a table cell with br_in_tables, emit a literal <br> so the
-        // ~keep GFM row stays on one physical line (issue #429). A hard break here
-        // ~keep would inject a raw newline mid-row and break the table.
-        output.push_str("<br>");
+    } else if ctx.in_table_cell {
+        // ~keep Drop any source-whitespace run left by the preceding text node so
+        // ~keep source formatting (e.g. a "\n" before <br/>) can't leak an extra
+        // ~keep space into the output (issue #453).
+        trim_trailing_whitespace(output);
+        if options.br_in_tables {
+            // ~keep Inside a table cell with br_in_tables, emit a literal <br> so the
+            // ~keep GFM row stays on one physical line (issue #429). A hard break here
+            // ~keep would inject a raw newline mid-row and break the table.
+            output.push_str("<br>");
+        } else if !output.is_empty() {
+            // ~keep A table cell cannot contain a hard line break: neither newline_style
+            // ~keep form (two-space or backslash) is valid Markdown here, and a raw
+            // ~keep newline would corrupt the row, so collapse to one space (issue #453).
+            output.push(' ');
+        }
     } else if output.is_empty() || output.ends_with('\n') {
         output.push('\n');
     } else {

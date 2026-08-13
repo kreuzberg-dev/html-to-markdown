@@ -310,6 +310,21 @@ fn normalize_whitespace_cow_slow(text: &str) -> Cow<'_, str> {
     Cow::Borrowed(text)
 }
 
+/// Normalize whitespace inside a Markdown table cell.
+///
+/// A table cell cannot contain a hard line break, so unlike
+/// [`normalize_whitespace_cow`] — which preserves `\n` for block-level
+/// rendering — this also folds `\n` and `\r` into the run before collapsing
+/// consecutive whitespace to a single ASCII space (issue #453).
+#[must_use]
+pub fn normalize_cell_whitespace_cow(text: &str) -> Cow<'_, str> {
+    if !text.contains('\n') && !text.contains('\r') {
+        return normalize_whitespace_cow(text);
+    }
+    let folded = text.replace(['\n', '\r'], " ");
+    Cow::Owned(normalize_whitespace(&folded))
+}
+
 /// Decode common HTML entities.
 ///
 /// Decodes the most common HTML entities to their character equivalents:

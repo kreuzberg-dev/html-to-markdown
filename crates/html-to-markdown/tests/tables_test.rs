@@ -8,7 +8,7 @@ fn convert(
     html_to_markdown_rs::convert(html, opts).map(|r| r.content.unwrap_or_default())
 }
 
-use html_to_markdown_rs::ConversionOptions;
+use html_to_markdown_rs::{ConversionOptions, NewlineStyle};
 
 #[test]
 fn test_basic_table() {
@@ -755,5 +755,84 @@ fn should_not_misclassify_a_deep_nested_table_chain_as_a_layout_table() {
     assert!(
         result.matches("| ---").count() >= 1,
         "expected pipe-table separator syntax, got: {result}"
+    );
+}
+
+/// Regression test for issue #453: a `<br>` inside a table cell must render identically
+/// regardless of `newline_style` and regardless of whether the source HTML has a literal
+/// newline before the `<br>`. Neither the two-space nor the backslash hard-break form is
+/// valid Markdown inside a table cell, and source whitespace must never leak into cell
+/// output. Covers the full `br_in_tables` x `newline_style` x with/without-source-LF matrix.
+#[test]
+fn should_ignore_newline_style_and_source_whitespace_for_br_in_table_cell() {
+    let without_source_lf = "<table><tr><td>A<br/>B";
+    let with_source_lf = "<table><tr><td>A\n<br/>B";
+
+    for (html, has_source_lf) in [(without_source_lf, false), (with_source_lf, true)] {
+        for newline_style in [NewlineStyle::Spaces, NewlineStyle::Backslash] {
+            let options = ConversionOptions {
+                br_in_tables: false,
+                newline_style,
+                compact_tables: true,
+                ..Default::default()
+            };
+            let result = convert(html, Some(options)).unwrap();
+            assert_eq!(
+                result, "| A B |\n| --- |\n",
+                "br_in_tables=false, newline_style={newline_style:?}, source_lf={has_source_lf}: {result}"
+            );
+
+            let options = ConversionOptions {
+                br_in_tables: true,
+                newline_style,
+                compact_tables: true,
+                ..Default::default()
+            };
+            let result = convert(html, Some(options)).unwrap();
+            assert_eq!(
+                result, "| A<br>B |\n| --- |\n",
+                "br_in_tables=true, newline_style={newline_style:?}, source_lf={has_source_lf}: {result}"
+            );
+        }
+    }
+}
+
+/// Regression test for issue #453: with `br_in_tables=false` and `newline_style=Backslash`,
+/// a `<br>` used to fall through to the paragraph-level hard-break code, leaking a literal
+/// `\` into the cell text. A table cell must collapse `<br>` to a single space instead.
+#[test]
+fn should_not_leak_literal_backslash_from_backslash_newline_style_in_table_cell() {
+    let html = "<table><tr><td>A<br/>B";
+    let options = ConversionOptions {
+        br_in_tables: false,
+        newline_style: NewlineStyle::Backslash,
+        compact_tables: true,
+        ..Default::default()
+    };
+    let result = convert(html, Some(options)).unwrap();
+    assert_eq!(result, "| A B |\n| --- |\n");
+    assert!(
+        !result.contains('\\'),
+        "no literal backslash should leak into the cell: {result}"
+    );
+}
+
+/// Regression test for issue #453: with `br_in_tables=true`, a source newline preceding
+/// `<br>` used to survive into the rendered cell as a real `\n`, splitting the row's pipe
+/// syntax across physical lines and corrupting the table structure.
+#[test]
+fn should_not_leak_real_newline_from_source_whitespace_when_br_in_tables_is_true() {
+    let html = "<table><tr><td>A\n<br/>B";
+    let options = ConversionOptions {
+        br_in_tables: true,
+        compact_tables: true,
+        ..Default::default()
+    };
+    let result = convert(html, Some(options)).unwrap();
+    assert_eq!(result, "| A<br>B |\n| --- |\n");
+    assert_eq!(
+        result.lines().count(),
+        2,
+        "a source newline must not split the table row across physical lines: {result}"
     );
 }

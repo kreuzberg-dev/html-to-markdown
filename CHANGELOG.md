@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.11.0] - 2026-08-05
+## [3.11.0] - 2026-08-13
 
 ### Upgrade note
 
@@ -59,6 +59,15 @@ being stripped in full. If you saw links or sections disappear from converted pa
 
 ### Fixed
 
+- `<br>` inside a table cell no longer depends on `newline_style` or on the source HTML's own
+  whitespace ([#453](https://github.com/Goldziher/html-to-markdown/issues/453)). Two separate
+  defects: with `br_in_tables: false` the `<br>` fell through to the paragraph hard-break path and
+  emitted `newline_style` bytes into the cell, leaking a literal `\` under `Backslash` and a stray
+  extra space under `Spaces`; and a newline in the source before the `<br>` survived normalization,
+  so with `br_in_tables: true` it reached the output as a real newline and split the row's pipe
+  syntax across physical lines, corrupting the table. A cell cannot contain a hard line break, so
+  `<br>` now collapses to a single space, or renders as a literal `<br>` when `br_in_tables` is
+  enabled, in every combination of the two options and regardless of source formatting.
 - Document-structure and inline-image collectors also record table-cell content exactly once.
   Images, code blocks and nested tables inside a `<td>` were recorded up to three times with
   `include_document_structure: true`, and inline images twice with `extract_images: true`. Note the

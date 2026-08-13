@@ -128,7 +128,7 @@ pub fn process_text_node(
         // ~keep into the misc set so the byte-loop handles it in the same walk,
         // ~keep avoiding a second allocation.
         let normalized_text = if options.whitespace_mode == crate::options::WhitespaceMode::Normalized {
-            text::normalize_whitespace_cow(text.as_ref())
+            text::normalize_cell_whitespace_cow(text.as_ref())
         } else {
             Cow::Borrowed(text.as_ref())
         };

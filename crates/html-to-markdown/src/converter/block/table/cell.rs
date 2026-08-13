@@ -161,7 +161,7 @@ pub fn render_cell_text(
         } else {
             let raw = dom_ctx.text_content(*node_handle, parser);
             let normalized = if options.whitespace_mode == crate::options::WhitespaceMode::Normalized {
-                crate::text::normalize_whitespace_cow(raw.as_str())
+                crate::text::normalize_cell_whitespace_cow(raw.as_str())
             } else {
                 Cow::Borrowed(raw.as_str())
             };
