@@ -1252,13 +1252,11 @@ fn strip_css_comments(declaration: &str) -> Cow<'_, str> {
     let mut rest = declaration;
     while let Some(start) = rest.find("/*") {
         out.push_str(&rest[..start]);
-        match rest[start + 2..].find("*/") {
-            Some(end) => rest = &rest[start + 2 + end + 2..],
-            None => {
-                rest = "";
-                break;
-            }
-        }
+        let Some(end) = rest[start + 2..].find("*/") else {
+            rest = "";
+            break;
+        };
+        rest = &rest[start + 2 + end + 2..];
     }
     out.push_str(rest);
     Cow::Owned(out)
