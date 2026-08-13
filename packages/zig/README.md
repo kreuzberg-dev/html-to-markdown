@@ -1,30 +1,260 @@
-# html_to_markdown_rs
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.jsdelivr.net/gh/xberg-io/assets@v1/banner/readme-banner-dark.svg">
+    <img alt="Xberg" width="420" src="https://cdn.jsdelivr.net/gh/xberg-io/assets@v1/banner/readme-banner-light.svg">
+  </picture>
+</p>
 
-High-performance HTML to Markdown converter
+# html-to-markdown
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 20px 0;">
+  <a href="https://github.com/xberg-io/alef">
+    <img src="https://img.shields.io/badge/built%20with-alef%20%D7%90-007ec6" alt="Built with alef">
+  </a>
+  <!-- Language Bindings -->
+  <a href="https://crates.io/crates/html-to-markdown-rs">
+    <img src="https://img.shields.io/crates/v/html-to-markdown-rs?label=Rust&color=007ec6" alt="Rust">
+  </a>
+  <a href="https://pypi.org/project/html-to-markdown/">
+    <img src="https://img.shields.io/pypi/v/html-to-markdown?label=Python&color=007ec6" alt="Python">
+  </a>
+  <a href="https://www.npmjs.com/package/@xberg-io/html-to-markdown">
+    <img src="https://img.shields.io/npm/v/@xberg-io/html-to-markdown?label=Node.js&color=007ec6" alt="Node.js">
+  </a>
+  <a href="https://www.npmjs.com/package/@xberg-io/html-to-markdown-wasm">
+    <img src="https://img.shields.io/npm/v/@xberg-io/html-to-markdown-wasm?label=WASM&color=007ec6" alt="WASM">
+  </a>
+  <a href="https://central.sonatype.com/artifact/io.xberg/html-to-markdown">
+    <img src="https://img.shields.io/maven-central/v/io.xberg/html-to-markdown?label=Java&color=007ec6" alt="Java">
+  </a>
+  <a href="https://pkg.go.dev/github.com/xberg-io/html-to-markdown/packages/go/v3">
+    <img src="https://img.shields.io/github/v/tag/xberg-io/html-to-markdown?label=Go&color=007ec6&filter=v3*" alt="Go">
+  </a>
+  <a href="https://www.nuget.org/packages/XbergIo.HtmlToMarkdown/">
+    <img src="https://img.shields.io/nuget/v/XbergIo.HtmlToMarkdown?label=C%23&color=007ec6" alt="C#">
+  </a>
+  <a href="https://packagist.org/packages/xberg-io/html-to-markdown">
+    <img src="https://img.shields.io/packagist/v/xberg-io/html-to-markdown?label=PHP&color=007ec6" alt="PHP">
+  </a>
+  <a href="https://rubygems.org/gems/html-to-markdown">
+    <img src="https://img.shields.io/gem/v/html-to-markdown?label=Ruby&color=007ec6" alt="Ruby">
+  </a>
+  <a href="https://hex.pm/packages/html_to_markdown">
+    <img src="https://img.shields.io/hexpm/v/html_to_markdown?label=Elixir&color=007ec6" alt="Elixir">
+  </a>
+  <a href="https://xberg-io.r-universe.dev/htmltomarkdown">
+    <img src="https://img.shields.io/badge/R-htmltomarkdown-007ec6" alt="R">
+  </a>
+  <a href="https://pub.dev/packages/h2m">
+    <img src="https://img.shields.io/pub/v/h2m?label=Dart&color=007ec6" alt="Dart">
+  </a>
+  <a href="https://central.sonatype.com/artifact/io.xberg/html-to-markdown-android">
+    <img src="https://img.shields.io/maven-central/v/io.xberg/html-to-markdown-android?label=Kotlin&color=007ec6" alt="Kotlin">
+  </a>
+  <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/swift">
+    <img src="https://img.shields.io/badge/Swift-SPM-007ec6" alt="Swift">
+  </a>
+  <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/zig">
+    <img src="https://img.shields.io/badge/Zig-package-007ec6" alt="Zig">
+  </a>
+  <a href="https://github.com/xberg-io/html-to-markdown/releases">
+    <img src="https://img.shields.io/badge/C-FFI-007ec6" alt="C FFI">
+  </a>
+
+  <!-- Project Info -->
+  <a href="https://github.com/xberg-io/html-to-markdown/blob/main/LICENSE">
+    <img src="https://img.shields.io/badge/License-MIT-007ec6" alt="License">
+  </a>
+  <a href="https://docs.html-to-markdown.xberg.io">
+    <img src="https://img.shields.io/badge/Docs-html--to--markdown-007ec6" alt="Documentation">
+  </a>
+</div>
+
+<div align="center" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin: 28px 0 24px;">
+  <a href="https://discord.gg/xt9WY3GnKR">
+    <img height="22" src="https://img.shields.io/badge/Discord-Chat-007ec6?logo=discord&logoColor=white" alt="Join Discord">
+  </a>
+  <a href="https://docs.html-to-markdown.xberg.io/demo/">
+    <img height="22" src="https://img.shields.io/badge/Live%20Demo-Open-007ec6?logo=webassembly&logoColor=white" alt="Live Demo">
+  </a>
+</div>
+
+High-performance HTML to Markdown converter for Zig, consuming the existing C FFI surface (`libhtml_to_markdown_ffi`) via `linkSystemLibrary`. Idiomatic error sets, slice-based memory management, requires Zig 0.16+.
+Distributed via GitHub Releases — pin a tag in `build.zig.zon` and `zig fetch` handles the rest.
+
+## What This Package Provides
+
+- **Same renderer as every binding** — output matches Rust, Python, Node.js, Ruby, PHP, Go, Java, .NET, Elixir, R, Dart, Swift, Zig, C FFI, and WASM.
+- **Structured conversion result** — Markdown plus metadata, links, headings, images, tables, and warnings where the binding exposes them.
+- **Production defaults** — HTML is parsed with the Rust core, sanitized by default, and rendered without runtime-specific Markdown drift.
+- **Zig package** — thin wrapper over the C FFI with explicit allocation and error handling.
 
 ## Installation
 
-Install Zig from [ziglang.org](https://ziglang.org/download/).
-
-## Building
-
-```sh
-zig build
-zig build test
+```bash
+zig fetch --save https://github.com/xberg-io/html-to-markdown/releases/download/v3.11.0/zig.tar.gz
 ```
 
-## Usage
+## Performance Snapshot
 
-Add to your `build.zig.zon`:
+## Quick Start
 
-```text
-.dependencies = .{
-    .html_to_markdown_rs = .{
-        .path = "path/to/html_to_markdown_rs",
-    },
-},
+Basic conversion:
+
+```zig
+const std = @import("std");
+const html_to_markdown = @import("html_to_markdown_rs");
+
+pub fn main() !void {
+    const html = "<h1>Hello</h1><p>This is <strong>fast</strong>!</p>";
+    const result_json = try html_to_markdown.convert(html, null);
+    defer std.heap.c_allocator.free(result_json);
+
+    // result_json is the ConversionResult serialised as JSON; parse with
+    // std.json or read the `content` field directly.
+    std.debug.print("{s}\n", .{result_json});
+}
 ```
+
+With conversion options:
+
+```zig
+const std = @import("std");
+const html_to_markdown = @import("html_to_markdown_rs");
+
+pub fn main() !void {
+    const html = "<h1>Hello</h1><p>This is <strong>formatted</strong> content.</p>";
+    const options_json =
+        \\{"heading_style":"atx","list_indent_width":2,"wrap":true}
+    ;
+
+    const result_json = try html_to_markdown.convert(html, options_json);
+    defer std.heap.c_allocator.free(result_json);
+
+    std.debug.print("{s}\n", .{result_json});
+}
+```
+
+## Architecture
+
+The converter routes each input through one of three tiers based on a fast prescan of the byte stream:
+
+1. **Tier-1 — single-pass byte scanner.** Handles 110+ HTML tags directly. Bails on any construct it cannot prove byte-equivalent to Tier-2.
+2. **Tier-2 — DOM walker.** Picks up Tier-1 bails and inputs the classifier rejected up front.
+3. **Tier-3 — standards-conformant parser.** Engaged for malformed HTML requiring full HTML5 repair.
+
+The dispatcher is invisible to the caller. Output is byte-identical across tiers — enforced by a 116-snapshot oracle.
+
+## Capabilities
+
+- **16 languages, one Rust core.** Rust, Python, Node.js, WASM, Java, Go, C#, PHP, Ruby, Elixir, R, Dart, Kotlin (Android), Swift, Zig, C ABI.
+- **CommonMark-compatible Markdown** with GFM-style tables.
+- **Djot output**: set `output_format = "djot"` (see Djot Output Format section below).
+- **Real-HTML robust**: unclosed tags, CDATA, custom elements, malformed entities, nested tables, mixed encodings handled without losing content.
+- **Metadata extraction**, **visitor API**, **inline images**, **configurable preprocessing presets**.
+- **Per-group regression gates in CI**: every PR runs the bench harness against per-group thresholds.
+
+## API Reference
+
+### Core Function
+
+### Options
+
+**`ConversionOptions`** – Key configuration fields:
+
+- `heading_style`: Heading format (`"underlined"` | `"atx"` | `"atx_closed"`) — default: `"atx"`
+- `list_indent_width`: Spaces per indent level — default: `2`
+- `bullets`: Bullet characters cycle — default: `"-*+"`
+- `wrap`: Enable text wrapping — default: `false`
+- `wrap_width`: Wrap at column — default: `80`
+- `code_language`: Default fenced code block language — default: none
+- `extract_metadata`: Enable metadata extraction into `result.metadata` — default: `true`
+- `output_format`: Output markup format (`"markdown"` | `"djot"` | `"plain"`) — default: `"markdown"`
+
+## Djot Output Format
+
+The library supports converting HTML to [Djot](https://djot.net/), a lightweight markup language similar to Markdown but with a different syntax for some elements. Set `output_format` to `"djot"` to use this format.
+
+### Syntax Differences
+
+| Element        | Markdown   | Djot       |
+| -------------- | ---------- | ---------- |
+| Strong         | `**text**` | `*text*`   |
+| Emphasis       | `*text*`   | `_text_`   |
+| Strikethrough  | `~~text~~` | `{-text-}` |
+| Inserted/Added | N/A        | `{+text+}` |
+| Highlighted    | N/A        | `{=text=}` |
+| Subscript      | N/A        | `~text~`   |
+| Superscript    | N/A        | `^text^`   |
+
+### Example Usage
+
+Djot's extended syntax allows you to express more semantic meaning in lightweight text, making it useful for documents that require strikethrough, insertion tracking, or mathematical notation.
+
+## Plain Text Output
+
+Set `output_format` to `"plain"` to strip all markup and return only visible text. This bypasses the Markdown conversion pipeline entirely for maximum speed.
+
+Plain text mode is useful for search indexing, text extraction, and feeding content to LLMs.
+
+## Visitor Pattern
+
+The visitor pattern enables custom HTML→Markdown conversion logic by providing callbacks for specific HTML elements during traversal. Pass a visitor as the third argument to `convert()`.
+
+**Use Cases:**
+
+- **Custom Markdown dialects** – Convert to Obsidian, Notion, or other flavors
+- **Content filtering** – Remove tracking pixels, ads, or unwanted elements
+- **URL rewriting** – Rewrite CDN URLs, add query parameters, validate links
+- **Accessibility validation** – Check alt text, heading hierarchy, link text
+- **Analytics** – Track element usage, link destinations, image sources
+
+**Supported Visitor Methods:** 40+ callbacks for text, inline elements, links, images, headings, lists, blocks, and tables.
+
+### Example: Quick Start
+
+## Examples
+
+## Links
+
+- **GitHub:** [github.com/xberg-io/html-to-markdown](https://github.com/xberg-io/html-to-markdown)
+- **Discord:** [discord.gg/xt9WY3GnKR](https://discord.gg/xt9WY3GnKR)
+
+## Part of Xberg.io
+
+- [Xberg](https://github.com/xberg-io/xberg) — the open-source content-intelligence engine: text, tables, and metadata from 101 formats (115 file extensions), with OCR, transcription, and code intelligence. MIT.
+- [Xberg Pro](https://xberg.io) — a complete self-hosted content-intelligence backend in a single container. Commercial.
+- [Xberg Enterprise](https://xberg.io) — the distributed, governed content-intelligence platform, scaled on Kubernetes with team governance and support. Commercial.
+- [crawlberg](https://github.com/xberg-io/crawlberg) — web crawling and scraping with HTML→Markdown and headless-Chrome fallback.
+- [html-to-markdown](https://github.com/xberg-io/html-to-markdown) — fast, lossless HTML→Markdown engine.
+- [liter-llm](https://github.com/xberg-io/liter-llm) — universal LLM API client with native bindings for 14 languages and 165 providers.
+- [tree-sitter-language-pack](https://github.com/xberg-io/tree-sitter-language-pack) — tree-sitter grammars and code-intelligence primitives.
+- [alef](https://github.com/xberg-io/alef) — the polyglot binding generator that produces every per-language binding across the 5 polyglot repos.
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](https://github.com/xberg-io/html-to-markdown/blob/main/CONTRIBUTING.md) for details on:
+
+- Setting up the development environment
+- Running tests locally
+- Submitting pull requests
+- Reporting issues
+
+All contributions must follow our code quality standards (enforced via pre-commit hooks):
+
+- Proper test coverage (Rust 95%+, language bindings 80%+)
+- Formatting and linting checks
+- Documentation for public APIs
 
 ## License
 
-MIT
+MIT License – see [LICENSE](https://github.com/xberg-io/html-to-markdown/blob/main/LICENSE). Copyright © Kreuzberg, Inc.
+
+## Support
+
+If you find this library useful, consider [sponsoring the project](https://github.com/sponsors/xberg-io).
+
+Have questions or run into issues? We're here to help:
+
+- **GitHub Issues:** [github.com/xberg-io/html-to-markdown/issues](https://github.com/xberg-io/html-to-markdown/issues)
+- **Discord Community:** [discord.gg/xt9WY3GnKR](https://discord.gg/xt9WY3GnKR)

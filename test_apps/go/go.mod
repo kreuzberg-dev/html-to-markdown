@@ -2,4 +2,4 @@ module github.com/xberg-io/html-to-markdown/packages/go/v3-e2e
 
 go 1.26
 
-require github.com/xberg-io/html-to-markdown/packages/go/v3 v3.10.6
+require github.com/xberg-io/html-to-markdown/packages/go/v3 v3.11.0

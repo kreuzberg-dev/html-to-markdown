@@ -92,7 +92,7 @@ Ship identical Markdown across every runtime while enjoying native performance w
 ## Installation
 
 ```bash
-Add {:html_to_markdown, "~> 3.10.6"} to mix.exs deps
+Add {:html_to_markdown, "~> 3.11.0"} to mix.exs deps
 ```
 
 Requires Elixir 1.14+. Add to your `mix.exs`:
@@ -100,7 +100,7 @@ Requires Elixir 1.14+. Add to your `mix.exs`:
 ```elixir
 def deps do
   [
-    {:html_to_markdown, "~> 3.10.6"}
+    {:html_to_markdown, "~> 3.11.0"}
   ]
 end
 ```

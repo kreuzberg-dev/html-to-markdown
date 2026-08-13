@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.0] - 2026-08-05
+
 ### Upgrade note
 
 Rendered Markdown output changes in this release. The CSS-hidden/`hidden`-attribute fix below alone
@@ -22,7 +24,7 @@ being stripped in full. If you saw links or sections disappear from converted pa
 
 ### Added
 
-- Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.0 and checked for
+- Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.2 and checked for
   fixture-by-language coverage parity in local tasks and CI; strict validation is scoped to the generated root so
   the 85 maintained examples remain independently audited.
 
@@ -42,7 +44,14 @@ being stripped in full. If you saw links or sections disappear from converted pa
 - DOM context building: the per-document context maps (parent, children, sibling-index, and
   related lookup tables) are now sized once from the arena's node count up front instead of
   growing incrementally as new node ids are seen. Output-neutral.
-- `alef` is pinned to `0.60.1` for binding generation.
+- `alef` is pinned to `0.60.2` for binding generation, in `alef.toml` and in the CI lint workflow.
+  The two had drifted apart (`0.60.2` locally, `0.60.1` in CI), so CI generated with a different
+  generator than every developer.
+- `poly`'s whole-project lint phase is now disabled through `[workspace.poly] lint-workspace` in
+  `alef.toml` rather than a hand-edit to the generated `poly.toml`. The shared CI validate job
+  installs only Rust/Python/Java, so the remaining whole-workspace linters cannot run there; they
+  run via the pre-commit hooks and each language's own CI job. The previous hand-edit did not
+  survive `alef all --clean`.
 - Dependency upgrades, including `base64` and `tower-http` to their next major versions.
 - `html-to-markdown-cli` gained optional `mimalloc` and `jemalloc` global-allocator features
   (`--features mimalloc` / `--features jemalloc`). Neither is enabled by default; if both are
@@ -95,6 +104,20 @@ being stripped in full. If you saw links or sections disappear from converted pa
   mid-step — the Windows Node e2e job had never once completed. `CI Rust` already runs the suite on
   ubuntu, windows and macos via `task rust:test:ci` and compile-checks `--no-default-features`
   separately, and no other language's e2e job ran it. The job now passes in 925s.
+
+- Node: the named ESM re-exports that work around napi's `module.exports = nativeBinding` tail
+  (#450) are now committed in `crates/html-to-markdown-node/index.js`, not only appended at publish
+  time. `cjs-module-lexer` cannot analyse that tail, so `import { convert } from ...` broke for
+  anyone consuming the repo directly. Published packages were already correct — both
+  `task alef:generate` and the publish workflow run the fixup script — but the committed file was
+  not, which also meant a regenerate-and-diff freshness check could never pass.
+
+- The Dart, Swift and Zig package READMEs are full documents again (276 / 271 / 260 lines). A
+  partial generator run had replaced all three with fallback stubs of ~30 lines; Dart's stub was
+  the pub.dev landing page rather than the package README.
+
+- Internal: `strip_css_comments` uses `let ... else` instead of a single-arm `match`, which was a
+  `clippy::single-match-else` error under `-D warnings` and failed the workspace clippy gate.
 
 ## [3.10.6] - 2026-08-05
 
