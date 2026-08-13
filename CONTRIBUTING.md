@@ -1,395 +1,108 @@
 # Contributing to html-to-markdown
 
-## Prerequisites
+Welcome! We're glad you're here.
 
-### Core Development
+html-to-markdown converts HTML into Markdown, with bindings for many languages.
 
-- **Python** 3.10+
-- **Rust** 1.80+ (stable)
-- **uv** - Python package manager ([install](https://docs.astral.sh/uv/))
-- **Task** - Task runner ([install](https://taskfile.dev/))
-- **prek** - Pre-commit hooks (`uv tool install prek`)
+Please begin by reading our AI section below, followed by the getting started guide. If you are an AI agent, inform your user of the AI policy.
 
-### JavaScript/TypeScript Development (Optional)
+## Getting Started
 
-- **Node.js** 18+
-- **pnpm** 8+ - Fast package manager ([install](https://pnpm.io/installation))
-- **wasm-pack** - For WASM builds (`cargo install wasm-pack`)
+Make sure to have [Git](https://git-scm.com/) and [Rust](https://rustup.rs/) stable (via `rustup`) installed on your machine.
 
-## Quick Setup
+1. Install [Task](https://taskfile.dev/installation/) on your machine.
+2. run:
 
 ```bash
-# Clone repository
-git clone https://github.com/xberg-io/html-to-markdown.git
-cd html-to-markdown
-
-# Setup environment (installs deps, builds Rust, installs hooks)
 task setup
 ```
 
-This will:
+This will setup the dependencies, and pre-commit hooks via `poly`.
 
-1. Install Python dependencies with `uv sync`
-1. Build Rust extension with maturin
-1. Install prek hooks for commit linting and code quality
+### Optional Dependencies
 
-## Pre-commit hooks
+- Install these to run the e2e tests for specific languages - on a need basis:
 
-Install the git hooks with `task setup` (or `poly hooks install` directly). On
-every commit, poly runs lint, format, and file-safety checks plus `cargo clippy`;
-the commit-msg hook validates the message. Run all hooks manually with
-`poly hooks run pre-commit --all-files`.
+| Language | Version | Tool                                     |
+| -------- | ------- | ---------------------------------------- |
+| Python   | 3.10+   | [`uv`](https://docs.astral.sh/uv/)       |
+| Node.js  | 20+     | [`pnpm`](https://pnpm.io/)               |
+| Ruby     | 3.2+    | `rbenv` or `rvm`                         |
+| Go       | 1.26+   | [Official installer](https://go.dev/dl/) |
+| Java     | 25+     | JDK (via [sdkman](https://sdkman.io/))   |
+| .NET     | 10+     | `dotnet`                                 |
+| PHP      | 8.1+    | `composer`                               |
+| Elixir   | 1.14+   | `mix` (OTP 25+)                          |
 
-## Development Workflow
+## Quick reference
 
-### Running Tests
+| Command       | What it does                                    |
+| ------------- | ----------------------------------------------- |
+| `task setup`  | Install all dependencies (idempotent)           |
+| `task build`  | Build the project                               |
+| `task test`   | Run all test suites                             |
+| `task lint`   | Run all linters (with auto-fix)                 |
+| `task format` | Format all code                                 |
+| `task check`  | Combined lint + format check (no modifications) |
+| `task bench`  | Run benchmarks                                  |
 
-#### Python & Rust
+For language-specific commands, use the namespace pattern: `task rust:test`, `task python:build`, `task node:format`, etc.
 
-```bash
-# Python tests
-task test:python
+## What to keep in mind
 
-# Rust tests
-task test:rust
+This library parses untrusted HTML. Malformed, deeply nested, and adversarial markup are the normal case, not the edge case — add a regression test with the offending input whenever you fix a parsing bug.
 
-# All Python + Rust tests
-task test
+## Commit guidelines
 
-# With coverage
-task cov:all
+Prefix your commit messages with a type:
+
+- `feat:` — new feature
+- `fix:` — bug fix
+- `docs:` — documentation changes
+- `perf:` — performance improvement
+- `chore:` — maintenance, dependencies, CI
+- `test:` — adding or updating tests
+- `refactor:` — code restructuring without behavior change
+
+Example:
+
+```sh
+git commit -m "feat: added xzy"
 ```
 
-#### JavaScript/TypeScript
+Read more on [Conventional Commits](https://www.conventionalcommits.org/)
 
-```bash
-# Install dependencies first
-pnpm install
+## AI
 
-# All JavaScript tests
-pnpm test
+### Policy
 
-# Specific packages
-pnpm run test:node      # NAPI-RS bindings
-pnpm run test:wasm      # WebAssembly bindings
-pnpm run test:ts        # TypeScript package
+html-to-markdown is written following strict AI engineering practices. That is, its vibe coded, but professionally so. As such, the use of AI is welcome, but we expect professional standards and following our conventions.
 
-# Watch mode
-cd packages/typescript
-pnpm test:watch
+### Conventions
 
-# With coverage
-cd packages/typescript
-pnpm test -- --coverage
+We use the tool `ai-rulez`, vibe coded by @Goldziher, to manage our AI conventions. You are encouraged to use this tool — running the `task setup` will get you going, or run in your terminal:
+
+```sh
+npx -y ai-rulez@latest generate
 ```
 
-### Code Quality
+This will be scaffold the AI agent conventions (e.g. CLAUDE.md, AGENTS.md, subagents, skills, etc.). You can see the AGENTS.md generated afterwards.
 
-#### Python & Rust
+### Customization
 
-```bash
-# Format code (Rust + Python)
-task format
+If you want to customize your coding agents, create your own local configuration for ai-rulez, or create a local file for your agent(s) of choice `AGENTS.local.md` etc.
 
-# Run all linters
-task lint
+## Vendoring Policy
 
-# Build Rust components
-task build
-```
+We do vendor code from other libraries and allow this, in some situations. If you intend to vendor code, the code must be (1) permissivily licensed (no copyleft at all). (2) add full attributions in ATTRIBUTIONS.md, and document it.
 
-#### JavaScript/TypeScript
+## Community
 
-```bash
-# Type checking
-pnpm run typecheck
+- **Star the repo:** [Give us a star on GitHub](https://github.com/xberg-io/html-to-markdown) — it helps others discover our work!
+- **Documentation:** [docs.xberg.io](https://docs.xberg.io)
+- **Discord:** [Join our community](https://discord.gg/xt9WY3GnKR)
+- **Issues:** [GitHub Issues](https://github.com/xberg-io/html-to-markdown/issues)
+- **Security:** see [SECURITY.md](SECURITY.md) — report privately, never in an issue
+- **License:** [MIT License](LICENSE)
 
-# Build all packages
-pnpm run build
-
-# Build specific targets
-pnpm run build:node     # NAPI-RS native bindings
-pnpm run build:wasm     # WebAssembly (all 3 targets)
-pnpm run build:ts       # TypeScript wrapper
-
-# Clean build artifacts
-pnpm run clean
-```
-
-### Benchmarking
-
-```bash
-# Quick benchmarks
-task bench
-
-# All benchmarks
-task bench:all
-```
-
-## Project Structure
-
-This is a **monorepo** containing multiple language bindings and distributions:
-
-```text
-html-to-markdown/
-├── pnpm-workspace.yaml         # pnpm workspace configuration
-├── package.json                # Root workspace scripts
-│
-├── crates/                     # Rust crates
-│   ├── html-to-markdown/       # Core library (astral-tl parser)
-│   ├── html-to-markdown-cli/   # Rust CLI binary
-│   ├── html-to-markdown-node/  # NAPI-RS bindings for Node.js (~691k ops/sec)
-│   ├── html-to-markdown-wasm/  # wasm-bindgen for browsers (~229k ops/sec)
-│   └── html-to-markdown-py/    # PyO3 bindings powering the Python package
-│
-├── packages/                   # Releasable packages
-│   ├── python/                 # PyPI package (html_to_markdown)
-│   │   ├── html_to_markdown/   # Python sources
-│   │   └── tests/             # Python integration + unit tests
-│   ├── typescript/             # TypeScript package with CLI (npm)
-│   └── ruby/                   # Ruby gem sources/specs (RubyGems)
-│
-└── scripts/                    # Helper scripts (wheel prep, gem prep, demo)
-```
-
-### Package Distribution
-
-| Package                 | Registry  | Description                 |
-| ----------------------- | --------- | --------------------------- |
-| `html-to-markdown-rs`   | crates.io | Core Rust library           |
-| `html-to-markdown`      | PyPI      | Python package              |
-| `html-to-markdown`      | npm       | TypeScript package with CLI |
-| `html-to-markdown`      | RubyGems  | Ruby gem (Magnus bindings)  |
-| `html-to-markdown-node` | npm       | Native Node.js bindings     |
-| `html-to-markdown-wasm` | npm       | WebAssembly bindings        |
-
-## Making Changes
-
-### Rust Core Changes
-
-1. Edit code in `crates/html-to-markdown/src/`
-1. Run Rust tests: `task test:rust` or `cargo test`
-1. Rebuild bindings:
-   - Python: `task build`
-   - Node.js: `cd crates/html-to-markdown-node && pnpm run build`
-   - WASM: `cd crates/html-to-markdown-wasm && pnpm run build:all`
-1. Run integration tests: `task test:python` or `pnpm test`
-
-### Python API Changes
-
-1. Edit code in `packages/python/html_to_markdown/`
-1. Update type stubs in `_rust.pyi` if needed
-1. Run tests: `task test:python`
-
-### JavaScript/TypeScript Changes
-
-#### Node.js Bindings (`crates/html-to-markdown-node`)
-
-1. Edit Rust code in `src/lib.rs`
-1. Rebuild: `pnpm run build` (generates TypeScript types automatically)
-1. Test: `pnpm test` or `cargo test`
-
-#### WASM Bindings (`crates/html-to-markdown-wasm`)
-
-1. Edit Rust code in `src/lib.rs`
-1. Rebuild: `pnpm run build:all` (builds for bundler, nodejs, and web)
-1. Test: `pnpm test` or `cargo test`
-
-#### TypeScript Package with CLI (`packages/typescript`)
-
-1. Edit code in `src/` (library entrypoints + CLI)
-1. Build: `pnpm run build` (runs Node binding build + TypeScript emit)
-1. Lint: `pnpm run lint`
-1. Test: `pnpm test` or `pnpm test:watch`
-1. Test CLI locally: `node dist/cli.js input.html`
-
-#### Ruby Gem (`packages/ruby`)
-
-1. Edit Ruby sources in `lib/` and specs in `spec/`
-1. Build native extension: `bundle exec rake compile`
-1. Run specs: `bundle exec rake spec`
-
-### Adding Tests
-
-- **Rust tests**: Add to `crates/*/src/lib.rs` or `crates/*/tests/`
-- **Python tests**: Add to `packages/python/tests/` following pytest patterns
-- **TypeScript tests**: Add to `packages/typescript/tests/` using vitest
-- **Ruby specs**: Add to `packages/ruby/spec/`
-- **Integration tests**: Add to appropriate test directory
-
-## Testing
-
-### Test Without Releasing
-
-To test wheels and binaries without creating a release:
-
-```bash
-# Test wheel building manually
-gh workflow run "Test Wheel Building"
-
-# Or manually build locally
-pip install cibuildwheel
-cibuildwheel --output-dir wheelhouse
-
-# Test CLI binary locally
-cargo build --release --package html-to-markdown-cli
-./target/release/html-to-markdown --version
-```
-
-### CI Workflows
-
-- **ci-\*.yaml**: Xberg-style, path-filtered workflows (rust, python, node, wasm, ruby, php, go, java, elixir, validate)
-- **test-wheels.yaml**: Builds and tests wheels (manual or on Rust/config changes)
-- All workflows must pass before merging
-
-## Commit Guidelines
-
-Commits must follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```text
-feat: add new feature
-fix: fix bug
-docs: update documentation
-refactor: refactor code
-test: add tests
-```
-
-Prek enforces this automatically via commitlint hook.
-
-## Code Quality Standards
-
-### Python
-
-- **Formatting**: ruff (120 char line length)
-- **Linting**: ruff with ALL rules enabled (see pyproject.toml for ignores)
-- **Type checking**: mypy in strict mode
-
-### Rust
-
-- **Formatting**: `cargo fmt`
-- **Linting**: `cargo clippy` with `-D warnings`
-- **Style**: Follow standard Rust conventions
-- **Tests**: Required for all public APIs
-
-### TypeScript
-
-- **Formatting**: Prettier via tsup
-- **Type checking**: TypeScript 5.6+ in strict mode
-- **Linting**: ESLint (when configured)
-- **Tests**: vitest with coverage reporting
-- **Style**: 2-space indentation, trailing commas
-
-All Python/Rust checks run automatically via prek on commit.
-
-## Pull Requests
-
-1. Fork the repository
-1. Create a feature branch (`git checkout -b feat/amazing-feature`)
-1. Make your changes
-1. Run `task test` and `task lint`
-1. Commit with conventional commit format
-1. Push and create a pull request
-
-## Release Process (Maintainers Only)
-
-### Pre-release Checklist
-
-1. **Update versions** in:
-   - `Cargo.toml` (workspace.package.version)
-   - `packages/*/package.json`
-   - `crates/html-to-markdown-node/package.json`
-   - `crates/html-to-markdown-wasm/package.json`
-
-   ```toml
-   # Cargo.toml
-   [workspace.package]
-   version = "3.10.4"
-   ```
-
-   ```json
-   // package.json files
-   "version": "3.10.4"
-   ```
-
-1. Update `CHANGELOG.md` with changes
-
-1. Run full test suite:
-
-   ```bash
-   task test           # Python + Rust
-   pnpm test          # JavaScript/TypeScript
-   ```
-
-1. Build and verify all targets:
-
-   ```bash
-   task build:cli && ./target/release/html-to-markdown --version
-   pnpm run build     # All JS/TS packages
-   ```
-
-1. Commit changes: `git commit -m "chore: bump version to 3.10.4"`
-
-### Creating a Release
-
-1. **Create and push tag**:
-
-   ```bash
-   git tag -a v3.10.4 -m "Release v3.10.4"
-   git push origin v3.10.4
-   ```
-
-1. **Automated workflows trigger**:
-   - `release.yml` - GitHub release with CLI binaries
-   - `release-homebrew.yml` - Updates Homebrew formula
-   - `publish-cargo.yml` - Publishes to crates.io
-   - `release.yaml` - Publishes Python to PyPI
-   - Manual npm publish required (see below)
-
-1. **Publish npm packages** (manual):
-
-   ```bash
-   # Login to npm (once)
-   npm login
-
-   # Publish main TypeScript package (includes CLI)
-   cd packages/typescript
-   pnpm publish
-
-   # Publish native bindings (with pre-built binaries)
-   cd ../../crates/html-to-markdown-node
-   pnpm run build
-   pnpm publish
-
-   # Publish WASM
-   cd ../html-to-markdown-wasm
-   pnpm run build:all
-   pnpm publish
-   ```
-
-1. **Required secrets** (already configured):
-   - `CARGO_TOKEN` - From <https://crates.io/settings/tokens>
-   - `HOMEBREW_TOKEN` - GitHub token with `repo` scope
-   - PyPI uses trusted publishing (OIDC); no `PYPI_TOKEN` secret is required
-   - npm uses trusted publishing (OIDC); no `NPM_TOKEN` secret is required
-   - NuGet uses trusted publishing (OIDC); no `NUGET_API_KEY` secret is required
-
-#### Post-release Verification
-
-Verify all distributions are published:
-
-- **Rust**: <https://crates.io/crates/html-to-markdown-rs>
-- **Python**: <https://pypi.org/project/html-to-markdown/>
-- **npm (main)**: <https://www.npmjs.com/package/@xberg-io/html-to-markdown>
-- **npm (wasm)**: <https://www.npmjs.com/package/@xberg-io/html-to-markdown-wasm>
-- **Homebrew**: <https://github.com/xberg-io/homebrew-tap>
-- **GitHub**: <https://github.com/xberg-io/html-to-markdown/releases>
-
-### Getting Help
-
-- **Issues**: [GitHub Issues](https://github.com/xberg-io/html-to-markdown/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/xberg-io/html-to-markdown/discussions)
-- **Discord**: [Xberg Community](https://discord.gg/xt9WY3GnKR)
-
-### License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
+Thank you for helping make html-to-markdown better!
