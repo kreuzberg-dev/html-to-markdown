@@ -108,6 +108,7 @@ import (
 	"sync/atomic"
 	"unsafe"
 )
+
 // NodeContext carries context information passed to every visitor callback.
 // It is decoded from the JSON-encoded context string passed by the C layer.
 type NodeContext struct {
@@ -137,18 +138,22 @@ type VisitResult struct {
 func VisitResultContinue() VisitResult {
 	return VisitResult{Code: 0}
 }
+
 // VisitResultCustom returns a Custom VisitResult.
 func VisitResultCustom(value string) VisitResult {
 	return VisitResult{Code: 1, Value: &value}
 }
+
 // VisitResultSkip returns a Skip VisitResult.
 func VisitResultSkip() VisitResult {
 	return VisitResult{Code: 2}
 }
+
 // VisitResultPreserveHTML returns a PreserveHTML VisitResult.
 func VisitResultPreserveHTML() VisitResult {
 	return VisitResult{Code: 3}
 }
+
 // VisitResultError returns a Error VisitResult.
 func VisitResultError(value string) VisitResult {
 	return VisitResult{Code: 4, Value: &value}
@@ -569,36 +574,61 @@ func decodeNodeContext(ctx *C.HTMHtmContext) NodeContext {
 	if ctx == nil {
 		return nc
 	}
-if ctx.tag_name != nil {
+	if ctx.tag_name != nil {
 		nc.TagName = C.GoString(ctx.tag_name)
 	}
-nc.Depth = uint(ctx.depth)
-nc.IndexInParent = uint(ctx.index_in_parent)
-if ctx.parent_tag != nil {
+	nc.Depth = uint(ctx.depth)
+	nc.IndexInParent = uint(ctx.index_in_parent)
+	if ctx.parent_tag != nil {
 		_v := C.GoString(ctx.parent_tag)
 		nc.ParentTag = &_v
 	}
-nc.IsInline = ctx.is_inline != 0
-return nc
+	nc.IsInline = ctx.is_inline != 0
+	return nc
 }
 
-// encodeVisitResult forwards a Go VisitResult to the FFI's HtmVisitorCallbacks // out_custom/out_len protocol. For
-payload-bearing variants the visitor's // string payload is heap-allocated via C.CString and released through the //
-allocator-matched free_string callback installed in the callback table. func encodeVisitResult(r VisitResult,
-outCustom **C.char, outLen *C.uintptr_t) C.int32_t { switch r.Code {
-  case 0:
-    return 0
-  case 1:
-    var payload string if r.Value != nil { payload = *r.Value } if outCustom != nil { cStr := C.CString(payload)
-    *outCustom = cStr if outLen != nil { *outLen = C.uintptr_t(len(payload)) } } return 1
-  case 2:
-    return 2
-  case 3:
-    return 3
-  case 4:
-    var payload string if r.Value != nil { payload = *r.Value } if outCustom != nil { cStr := C.CString(payload)
-    *outCustom = cStr if outLen != nil { *outLen = C.uintptr_t(len(payload)) } } return 4
-default: return C.int32_t(r.Code) } }
+// encodeVisitResult forwards a Go VisitResult to the FFI's HtmVisitorCallbacks
+// out_custom/out_len protocol. For payload-bearing variants the visitor's
+// string payload is heap-allocated via C.CString and released through the
+// allocator-matched free_string callback installed in the callback table.
+func encodeVisitResult(r VisitResult, outCustom **C.char, outLen *C.uintptr_t) C.int32_t {
+	switch r.Code {
+	case 0:
+		return 0
+	case 1:
+		var payload string
+		if r.Value != nil {
+			payload = *r.Value
+		}
+		if outCustom != nil {
+			cStr := C.CString(payload)
+			*outCustom = cStr
+			if outLen != nil {
+				*outLen = C.uintptr_t(len(payload))
+			}
+		}
+		return 1
+	case 2:
+		return 2
+	case 3:
+		return 3
+	case 4:
+		var payload string
+		if r.Value != nil {
+			payload = *r.Value
+		}
+		if outCustom != nil {
+			cStr := C.CString(payload)
+			*outCustom = cStr
+			if outLen != nil {
+				*outLen = C.uintptr_t(len(payload))
+			}
+		}
+		return 4
+	default:
+		return C.int32_t(r.Code)
+	}
+}
 
 func optGoString(p *C.char) *string {
 	if p == nil {
@@ -1160,25 +1190,72 @@ func goVisitFigureEnd(ctx *C.HTMHtmContext, userData unsafe.Pointer, output *C.c
 	return encodeVisitResult(r, outCustom, outLen)
 }
 
-// convertWithVisitorHelper calls the FFI function with visitor support. func convertWithVisitorHelper(html string, options *ConversionOptions, visitor Visitor) (*ConversionResult, error) {
+// convertWithVisitorHelper calls the FFI function with visitor support.
+func convertWithVisitorHelper(html string, options *ConversionOptions, visitor Visitor) (*ConversionResult, error) {
 	chtml := C.CString(html)
 	defer C.free(unsafe.Pointer(chtml))
 
-
-var cOptions *C.HTMConversionOptions
-if options != nil { optionsBytes, err := json.Marshal(options) if err != nil { return nil,
-fmt.Errorf("failed to marshal options: %w", err) } optionsJSON := C.CString(string(optionsBytes)) defer
-C.free(unsafe.Pointer(optionsJSON)) cOptions = C.htm_conversion_options_from_json(optionsJSON) if cOptions == nil { if err :=
-lastError(); err != nil { return nil, err } return nil, fmt.Errorf("failed to decode ConversionOptions") } defer C.htm_conversion_options_free(cOptions) } if cOptions == nil { // Allocate a default options struct so we can attach the visitor. defaultJSON :=
-C.CString("{}") cOptions = C.htm_conversion_options_from_json(defaultJSON) C.free(unsafe.Pointer(defaultJSON)) if cOptions ==
-nil { if err := lastError(); err != nil { return nil, err } return nil, fmt.Errorf("failed to create default ConversionOptions") } defer C.htm_conversion_options_free(cOptions) } // Register visitor and build the C callbacks struct via the static C
-helper. // The visitor ID is forwarded as user_data to every callback so the // trampolines can look the visitor up at
-dispatch time. id := registerVisitor(visitor) defer unregisterVisitor(id) cb :=
-C.makeVisitorCallbacks(unsafe.Pointer(id)) // htm_visitor_create copies the callbacks struct into an opaque handle
-// whose memory layout matches what htm_convert dispatches against. No // pointer cast — this is the canonical
-visitor-handle ABI. visitorHandle := C.htm_visitor_create(&cb) if visitorHandle == nil { return nil,
-fmt.Errorf("failed to create visitor handle") } // Attach transfers ownership of visitorHandle to the options struct.
-C.htm_options_set_visitor(cOptions, visitorHandle) ptr := C.htm_convert(chtml, cOptions) if ptr == nil
-{ if err := lastError(); err != nil { return nil, err } return nil, fmt.Errorf("conversion returned nil") } defer C.htm_conversion_result_free(ptr) jsonPtr := C.htm_conversion_result_to_json(ptr) if jsonPtr == nil { return nil, fmt.Errorf("conversion result
-serialisation failed") } defer C.free(unsafe.Pointer(jsonPtr)) var result ConversionResult
-if err := json.Unmarshal([]byte(C.GoString(jsonPtr)), &result); err != nil { return nil, fmt.Errorf("failed to decode ConversionResult: %w", err) } return &result, nil }
+	var cOptions *C.HTMConversionOptions
+	if options != nil {
+		optionsBytes, err := json.Marshal(options)
+		if err != nil {
+			return nil, fmt.Errorf("failed to marshal options: %w", err)
+		}
+		optionsJSON := C.CString(string(optionsBytes))
+		defer C.free(unsafe.Pointer(optionsJSON))
+		cOptions = C.htm_conversion_options_from_json(optionsJSON)
+		if cOptions == nil {
+			if err := lastError(); err != nil {
+				return nil, err
+			}
+			return nil, fmt.Errorf("failed to decode ConversionOptions")
+		}
+		defer C.htm_conversion_options_free(cOptions)
+	}
+	if cOptions == nil {
+		// Allocate a default options struct so we can attach the visitor.
+		defaultJSON := C.CString("{}")
+		cOptions = C.htm_conversion_options_from_json(defaultJSON)
+		C.free(unsafe.Pointer(defaultJSON))
+		if cOptions == nil {
+			if err := lastError(); err != nil {
+				return nil, err
+			}
+			return nil, fmt.Errorf("failed to create default ConversionOptions")
+		}
+		defer C.htm_conversion_options_free(cOptions)
+	}
+	// Register visitor and build the C callbacks struct via the static C
+	// helper. The visitor ID is forwarded as user_data to every callback so the
+	// trampolines can look the visitor up at dispatch time.
+	id := registerVisitor(visitor)
+	defer unregisterVisitor(id)
+	cb := C.makeVisitorCallbacks(unsafe.Pointer(id))
+	// htm_visitor_create copies the callbacks struct into an opaque handle
+	// whose memory layout matches what htm_convert dispatches against. No
+	// pointer cast — this is the canonical visitor-handle ABI.
+	visitorHandle := C.htm_visitor_create(&cb)
+	if visitorHandle == nil {
+		return nil, fmt.Errorf("failed to create visitor handle")
+	}
+	// Attach transfers ownership of visitorHandle to the options struct.
+	C.htm_options_set_visitor(cOptions, visitorHandle)
+	ptr := C.htm_convert(chtml, cOptions)
+	if ptr == nil {
+		if err := lastError(); err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("conversion returned nil")
+	}
+	defer C.htm_conversion_result_free(ptr)
+	jsonPtr := C.htm_conversion_result_to_json(ptr)
+	if jsonPtr == nil {
+		return nil, fmt.Errorf("conversion result serialisation failed")
+	}
+	defer C.free(unsafe.Pointer(jsonPtr))
+	var result ConversionResult
+	if err := json.Unmarshal([]byte(C.GoString(jsonPtr)), &result); err != nil {
+		return nil, fmt.Errorf("failed to decode ConversionResult: %w", err)
+	}
+	return &result, nil
+}
