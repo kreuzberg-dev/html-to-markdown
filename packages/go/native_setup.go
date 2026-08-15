@@ -6,4 +6,4 @@ package htmltomarkdown
 // module is upgraded without re-running `cmd/setup`, the previously written shim (built
 // against the old version) references an identifier that no longer exists here, turning
 // silent native-library skew into a compile-time error instead of a runtime crash.
-const RequireNativeSetup_3_11_0 = "3.11.0"
+const RequireNativeSetup_3_11_1 = "3.11.1"

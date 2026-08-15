@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.1] - 2026-08-15
+
+### Upgrade note — the C ABI changed
+
+This release changes the C header, so it is not drop-in for C, Go (cgo) or any other consumer that
+links the native library directly. Rebuild against the new header rather than reusing an existing
+build. Managed bindings (Python, Node, Ruby, PHP, Java, C#, Elixir, R, WASM) are unaffected.
+
+- `HTMHtmHtmlVisitorBridge` and `HTMHtmHtmlVisitorVTable` are gone. Borrowed types that cannot enter
+  the process-global handle registry are no longer exported, so the bridge entry points
+  `htm_htm_html_visitor_bridge_new` and `htm_htm_html_visitor_bridge_free` are removed with them.
+  Use the `HTMHtmVisitorCallbacks` vtable instead.
+- `htm_free_bytes` is removed. The exported function count goes from 307 to 304.
+- `HTMHtmVisitorCallbacks` gains a `void (*free_string)(char*)` member, which changes the struct
+  layout. Any code that constructs this struct must be recompiled, and callers that hand out heap
+  strings from a callback should set it so the library releases them with the matching allocator.
+
+The header previously in the tree described a surface the sources had already stopped providing;
+it is now regenerated from them.
+
+### Fixed
+
+- The generated FFI, Swift and Node sources did not compile, so the native library, the Swift
+  package and the Node addon could not be built from a checkout. A comment-reflow pass had merged
+  `unsafe {` into the preceding `// SAFETY:` comment at 40 sites in the FFI bridge and collapsed a
+  doc block in the Swift bridge over the `SwiftHtmlVisitorWrapper` declaration, so neither file
+  parsed; the Node addon applied a napi `getter` to three free functions, which napi allows only
+  inside an `impl` block. This also blocked every commit to the repository, because the pre-commit
+  hook compiles the staged snapshot and the FFI build script runs cbindgen over `lib.rs`.
+- The FFI null-safety test called `htm_htm_html_visitor_bridge_free`, a symbol the crate had
+  deliberately stopped exporting, so the test target did not build.
+
 ## [3.11.0] - 2026-08-13
 
 ### Upgrade note
