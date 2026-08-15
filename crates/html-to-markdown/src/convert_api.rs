@@ -548,7 +548,10 @@ fn fast_text_only(html: &str, options: &ConversionOptions) -> Option<String> {
         decoded = Cow::Owned(decoded.replace(&['\r', '\n'][..], " "));
     }
     let trimmed = decoded.trim_end_matches('\n');
-    if trimmed.is_empty() {
+    // ~keep Whitespace-only input renders as nothing in a browser, so it converts to "" —
+    // ~keep not to the lone "\n" the trailing-space pop plus unconditional newline below
+    // ~keep would otherwise emit.
+    if trimmed.bytes().all(|byte| byte.is_ascii_whitespace()) {
         return Some(String::new());
     }
 

@@ -88,9 +88,15 @@ pub fn trim_line_end_whitespace(output: &mut String) {
 
     let mut cleaned = String::with_capacity(output.len());
     for line in output.split('\n') {
-        let (line, suffix) = line.strip_suffix("  ").map_or((line, "\n"), |line| (line, "  \n"));
-        cleaned.push_str(line.trim_end_matches([' ', '\t']));
-        cleaned.push_str(suffix);
+        let content = line.trim_end_matches([' ', '\t']);
+        cleaned.push_str(content);
+        // ~keep The two-space hard break is only meaningful after content on the same line;
+        // ~keep on a blank line CommonMark treats it as ordinary trailing whitespace. Keeping
+        // ~keep it there made whitespace-only documents render as "  \n" instead of "".
+        if !content.is_empty() && line.ends_with("  ") {
+            cleaned.push_str("  ");
+        }
+        cleaned.push('\n');
     }
 
     let trimmed = cleaned.trim_end_matches('\n');
