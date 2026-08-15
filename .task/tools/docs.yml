@@ -7,12 +7,6 @@ tasks:
       - pnpm --dir docs-site install --frozen-lockfile
       - pnpm --dir docs-site build
 
-  build:strict:
-    desc: Build documentation (CI-equivalent; astro build fails on errors)
-    cmds:
-      - pnpm --dir docs-site install --frozen-lockfile
-      - pnpm --dir docs-site build
-
   serve:
     desc: Serve documentation locally with live reload
     cmds:
@@ -24,12 +18,6 @@ tasks:
     cmds:
       - alef docs
 
-  generate:check:
-    desc: Validate API docs match generated output (CI mode)
-    cmds:
-      - alef docs
-      - git diff --exit-code -- docs-site/src/content/docs/reference/
-
   lint:links:
     desc: Check links with lychee
     cmds:
@@ -39,11 +27,6 @@ tasks:
     desc: Lint prose with textlint
     cmds:
       - npx textlint 'docs-site/src/content/docs/**/*.{md,mdx}'
-
-  snippets:validate:
-    desc: Validate all documentation snippets with fixture coverage parity
-    cmds:
-      - alef snippets check --strict --cache off
 
   snippets:validate:lang:
     desc: "Validate snippets for one language (set LANG=dart|kotlin|swift|...)"

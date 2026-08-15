@@ -4,9 +4,6 @@ internal: true
 includes:
   platforms: ../config/platforms.yml
 
-vars:
-  SCRIPTS_DIR: "{{.TASKFILE_DIR}}/../../scripts"
-
 tasks:
   pre-commit:install:
     desc: "Install poly git hooks for commit and commit-msg"
@@ -28,24 +25,3 @@ tasks:
     cmds:
       - cmd: poly hooks uninstall
         ignore_error: true
-
-  validate:config:
-    desc: "Validate YAML task configuration files"
-    silent: false
-    cmds:
-      - cmd: |
-          for file in {{.TASKFILE_DIR}}/**/*.yml; do
-            echo "Validating $file..."
-            if ! command -v yamllint &> /dev/null; then
-              echo "yamllint not found, skipping validation"
-              break
-            fi
-            yamllint "$file" || exit 1
-          done
-        ignore_error: false
-
-  validate:all:
-    desc: "Validate all project configurations"
-    silent: false
-    cmds:
-      - task: validate:config

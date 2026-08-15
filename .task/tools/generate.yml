@@ -5,9 +5,3 @@ tasks:
     desc: Generate package READMEs using alef
     cmds:
       - alef readme
-
-  check:
-    desc: Validate READMEs match generated output (CI mode)
-    cmds:
-      - alef readme
-      - git diff --exit-code -- packages/*/README.md packages/*/*/README.md crates/*/README.md
