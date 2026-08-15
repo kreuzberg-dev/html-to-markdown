@@ -87,6 +87,21 @@ jobs:
           cargo check -p html-to-markdown-rs --no-default-features --features metadata
           cargo check -p html-to-markdown-rs --no-default-features --features inline-images
 
+  # ~keep Runs as its own job, not a step in validate-rust. When it lived there it never
+  # executed once: `Check Rust Formatting` failed first and aborted the job, so 246 drifted
+  # files went unreported while CI was red for an unrelated reason. A gate that cannot be
+  # reached is indistinguishable from one that cannot fail.
+  verify-bindings:
+    name: "Validate: binding freshness"
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
 
