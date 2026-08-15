@@ -1843,6 +1843,13 @@ jobs:
             crates/html-to-markdown-node/package.json > "$tmp_pkg_json"
           mv "$tmp_pkg_json" crates/html-to-markdown-node/package.json
 
+      - name: Verify platform package binaries
+        uses: xberg-io/actions/verify-platform-packages@v1
+        with:
+          manifest-path: crates/html-to-markdown-node/package.json
+          mode: binaries
+          version: ${{ needs.prepare.outputs.version }}
+
       - name: Publish platform sub-packages
         uses: xberg-io/actions/publish-npm@v1
         with:
@@ -1850,21 +1857,13 @@ jobs:
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
 
-      - name: Wait for npm indexing (linux-x64-gnu)
+      - name: Verify platform packages on npm
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: xberg-io/actions/wait-for-package@v1
+        uses: xberg-io/actions/verify-platform-packages@v1
         with:
+          manifest-path: crates/html-to-markdown-node/package.json
+          mode: registry
           registry: npm
-          package: "@xberg-io/html-to-markdown-linux-x64-gnu"
-          version: ${{ needs.prepare.outputs.version }}
-          max-attempts: "60"
-
-      - name: Wait for npm indexing (linux-arm64-gnu)
-        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
-        uses: xberg-io/actions/wait-for-package@v1
-        with:
-          registry: npm
-          package: "@xberg-io/html-to-markdown-linux-arm64-gnu"
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "60"
 
