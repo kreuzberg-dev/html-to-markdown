@@ -136,7 +136,11 @@ pub fn process_text_node(
         let normalized_text = if options.whitespace_mode == crate::options::WhitespaceMode::Normalized {
             text::normalize_cell_whitespace_cow(text.as_ref())
         } else {
-            Cow::Borrowed(text.as_ref())
+            // ~keep Strict still preserves every other whitespace byte, but a raw newline in a
+            // ~keep GFM cell splits the row across physical lines — a structural impossibility
+            // ~keep rather than a formatting preference, so it folds in every mode (issue #457,
+            // ~keep same reasoning as the verbatim fold above for #455).
+            text::fold_cell_line_breaks_verbatim_cow(text.as_ref())
         };
         let src = normalized_text.as_ref();
         let mut out = String::with_capacity(src.len());

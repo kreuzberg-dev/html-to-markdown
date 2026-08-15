@@ -3,8 +3,6 @@
 //! Handles conversion of table cell (td/th) elements to Markdown format,
 //! including colspan support and content normalization.
 
-use std::borrow::Cow;
-
 /// Maximum allowed table columns to prevent unbounded memory usage.
 const MAX_TABLE_COLS: usize = 1000;
 
@@ -163,14 +161,21 @@ pub fn render_cell_text(
             let normalized = if options.whitespace_mode == crate::options::WhitespaceMode::Normalized {
                 crate::text::normalize_cell_whitespace_cow(raw.as_str())
             } else {
-                Cow::Borrowed(raw.as_str())
+                // ~keep A cell whose children are all text never reaches text_node.rs, so the
+                // ~keep same structural line-break fold has to be applied here too (issue #457).
+                crate::text::fold_cell_line_breaks_verbatim_cow(raw.as_str())
             };
             text = escape_cell_text(normalized.as_ref(), options);
         }
     }
 
     trim_in_place(&mut text);
-    if !options.br_in_tables && text.contains('\n') {
+    // ~keep Final invariant: a rendered cell never contains a newline, in any mode. This used
+    // ~keep to be gated on `!br_in_tables`, which is what let issues #456 and #457 reach the
+    // ~keep output — `br_in_tables` selects how a *line break* is represented (`<br>` vs a
+    // ~keep space), it does not make a raw newline legal between two pipes. Handlers that know
+    // ~keep they are in a cell still emit `<br>` themselves; this only catches what they miss.
+    if text.contains('\n') {
         text = text.replace('\n', " ");
     }
     text

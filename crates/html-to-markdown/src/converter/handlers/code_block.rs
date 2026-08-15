@@ -405,6 +405,18 @@ fn format_code_block(
     options: &ConversionOptions,
     ctx: &Context,
 ) {
+    if ctx.in_table_cell {
+        // ~keep Neither code-block style can exist inside a GFM pipe cell: the fence (or the
+        // ~keep 4-space indent) is line-structured and both styles bracket the block with blank
+        // ~keep lines, so the row would be split across physical lines (issue #456). Emit the
+        // ~keep content inline with the block syntax dropped — the same degradation Tier-1's
+        // ~keep `close_pre` already performs, and consistent with headings and list items
+        // ~keep shedding their markers in a cell. Line breaks fold to a space rather than to
+        // ~keep `<br>` so that the two tiers stay byte-equal.
+        output.push_str(crate::text::fold_cell_line_breaks_verbatim_cow(content.trim_matches('\n')).as_ref());
+        return;
+    }
+
     match options.code_block_style {
         crate::options::CodeBlockStyle::Indented => {
             if !ctx.convert_as_inline && !output.is_empty() && !output.ends_with("\n\n") {
