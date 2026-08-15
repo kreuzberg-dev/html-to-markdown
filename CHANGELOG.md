@@ -23,6 +23,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Tier-1 could render `<br>` in a cell differently from the same document routed through Tier-2.
   Tier-1 also folds a text node's trailing newline the way Tier-2 does, fixing cells that were
   double-spaced against Tier-2 when the source HTML was pretty-printed across several lines.
+- A literal backslash in HTML prose is no longer silently lost when the Markdown is read back
+  ([#458](https://github.com/xberg-io/html-to-markdown/issues/458)). CommonMark consumes a backslash
+  that precedes ASCII punctuation, so emitting `3\*4` from `<p>3\*4</p>` produced Markdown that
+  reparsed as `3*4` — the source character was gone. Such a backslash is now doubled, and so is one
+  that sits immediately before a line ending (where CommonMark would read it as a hard line break)
+  or at the end of a text run (where whatever the emitter appends next would become its escape
+  target). This changes output under default options: any document whose prose contains a backslash
+  in one of those three positions gains a second backslash there. A backslash before anything else
+  is already literal and is still emitted bare, so Windows paths such as `C:\Users\Alice` are
+  unchanged. Code spans, code blocks and link titles are also unaffected — the first two are
+  verbatim by design and the third already escaped backslashes through its own rule. The escape is
+  deliberately not gated behind `escape_misc` or `escape_ascii`, because it preserves a character
+  the source actually contained rather than neutralising Markdown syntax the way those flags do.
 
 ## [3.11.1] - 2026-08-15
 

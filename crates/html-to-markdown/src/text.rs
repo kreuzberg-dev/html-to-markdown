@@ -12,6 +12,38 @@ const fn is_misc_escape(b: u8) -> bool {
     )
 }
 
+/// Returns true when a literal backslash at `bytes[i]` must be doubled so a
+/// `CommonMark` parser reading the output back sees a literal backslash rather than
+/// an escape-sequence trigger.
+///
+/// `CommonMark` only assigns meaning to a backslash when it precedes ASCII punctuation
+/// (spec §2.4, "Backslash escapes") — there the backslash is *consumed* by the parser,
+/// so leaving it bare silently loses a character from the source text. A backslash
+/// before anything else is already literal and is left alone, with two exceptions
+/// where the run boundary itself gives the byte a meaning it did not have in the
+/// source:
+///
+/// - immediately before a line ending, which is `CommonMark`'s hard-line-break syntax
+///   (and this crate's own `\\\n` hard-break marker under
+///   [`NewlineStyle::Backslash`](crate::options::NewlineStyle));
+/// - at the very end of the run, where whatever the emitter appends next (a closing
+///   delimiter, a table cell separator, a line ending) would otherwise become the
+///   backslash's escape target.
+///
+/// The rule is deliberately independent of `escape_misc`/`escape_asterisks`/
+/// `escape_underscores`/`escape_ascii`: those flags choose how aggressively to
+/// neutralise Markdown syntax, whereas this one preserves a byte that was present in
+/// the source. `escape_markdown_title` in `converter/inline/link.rs` already escapes
+/// backslashes unconditionally for the same reason. ~keep
+#[inline]
+pub const fn backslash_needs_escape(bytes: &[u8], i: usize) -> bool {
+    if i + 1 >= bytes.len() {
+        return true;
+    }
+    let next = bytes[i + 1];
+    matches!(next, b'\n' | b'\r') || is_ascii_punct(next)
+}
+
 /// Returns true when the byte is one of the CommonMark ASCII-punctuation
 /// characters that `escape_ascii` requests backslash-escaping for.
 #[inline]
@@ -85,7 +117,8 @@ pub fn escape_into(
         let needs_numbered = escape_misc && (b == b'.' || b == b')') && i > 0 && bytes[i - 1].is_ascii_digit();
         let needs_star = escape_asterisks && b == b'*';
         let needs_under = escape_underscores && b == b'_';
-        if needs_misc || needs_numbered || needs_star || needs_under {
+        let needs_backslash = b == b'\\' && backslash_needs_escape(bytes, i);
+        if needs_misc || needs_numbered || needs_star || needs_under || needs_backslash {
             if i > run_start {
                 dest.push_str(&text[run_start..i]);
             }
@@ -132,6 +165,10 @@ fn escape_ascii_into(dest: &mut String, text: &str) {
 
 /// Escape Markdown special characters in text.
 ///
+/// A literal backslash is escaped regardless of every flag below whenever leaving it
+/// bare would change its meaning once the output is re-parsed as `CommonMark` — see
+/// [`backslash_needs_escape`] for the exact rule.
+///
 /// # Arguments
 ///
 /// * `text` - Text to escape
@@ -156,17 +193,21 @@ pub fn escape(
         return Cow::Borrowed("");
     }
 
-    if !escape_misc && !escape_asterisks && !escape_underscores && !escape_ascii {
+    // ~keep Backslash escaping is not gated by any flag, so the all-flags-false
+    // ~keep shortcut must first confirm there is no backslash to consider.
+    if !escape_misc && !escape_asterisks && !escape_underscores && !escape_ascii && !text.contains('\\') {
         return Cow::Borrowed(text);
     }
 
-    let needs_any = text.as_bytes().iter().any(|&b| {
+    let bytes = text.as_bytes();
+    let needs_any = bytes.iter().enumerate().any(|(i, &b)| {
         if escape_ascii {
             return is_ascii_punct(b);
         }
         (escape_misc && (is_misc_escape(b) || b == b'.' || b == b')'))
             || (escape_asterisks && b == b'*')
             || (escape_underscores && b == b'_')
+            || (b == b'\\' && backslash_needs_escape(bytes, i))
     });
     if !needs_any {
         return Cow::Borrowed(text);
@@ -459,6 +500,66 @@ mod tests {
         assert_eq!(escape("<=>?@", false, false, false, true), r"\<\=\>\?\@");
         assert_eq!(escape(r"[\]^_`", false, false, false, true), r"\[\\\]\^\_\`");
         assert_eq!(escape("{|}~", false, false, false, true), r"\{\|\}\~");
+    }
+
+    #[test]
+    fn should_escape_backslash_before_ascii_punctuation_even_with_all_flags_false() {
+        // ~keep CommonMark example 15: a bare `\` before punctuation is consumed by the
+        // ~keep parser on re-parse, so the source character is lost unless it is doubled.
+        assert_eq!(escape(r"a\*b", false, false, false, false), r"a\\*b");
+        assert_eq!(escape(r"3\.14", false, false, false, false), r"3\\.14");
+        assert_eq!(escape(r"a\[b\]c", false, false, false, false), r"a\\[b\\]c");
+    }
+
+    #[test]
+    fn should_not_escape_backslash_before_non_punctuation() {
+        // ~keep CommonMark example 13: a `\` before a non-punctuation, non-line-ending
+        // ~keep character is already literal, so doubling it would be pure noise.
+        assert_eq!(escape(r"a\3b", false, false, false, false), r"a\3b");
+        assert_eq!(escape(r"C:\Users\Alice", false, false, false, false), r"C:\Users\Alice");
+        assert_eq!(escape("a\\ b", false, false, false, false), "a\\ b");
+    }
+
+    #[test]
+    fn should_escape_backslash_at_end_of_text_run() {
+        assert_eq!(escape(r"abc\", false, false, false, false), r"abc\\");
+        assert_eq!(escape(r"\", false, false, false, false), r"\\");
+    }
+
+    #[test]
+    fn should_escape_backslash_before_line_ending_to_avoid_hard_break_collision() {
+        // ~keep A bare `\` immediately before a line ending is CommonMark's own
+        // ~keep hard-line-break syntax, and is also this crate's `\\\n` hard-break marker
+        // ~keep under NewlineStyle::Backslash.
+        assert_eq!(escape("abc\\\ndef", false, false, false, false), "abc\\\\\ndef");
+        assert_eq!(escape("abc\\\r\ndef", false, false, false, false), "abc\\\\\r\ndef");
+    }
+
+    #[test]
+    fn should_escape_consecutive_backslashes_pairwise() {
+        assert_eq!(escape(r"a\\b", false, false, false, false), r"a\\\b");
+    }
+
+    #[test]
+    fn should_escape_backslash_independently_of_escape_misc() {
+        // ~keep escape_misc does not gate `*`, so the result must equal the
+        // ~keep all-flags-false one — proving the backslash rule is not folded into it.
+        assert_eq!(escape(r"a\*b", true, false, false, false), r"a\\*b");
+        // ~keep escape_misc still escapes every backslash on top of the rule; that
+        // ~keep pre-existing behaviour is unchanged for callers that opt into it.
+        assert_eq!(escape(r"a\3b", true, false, false, false), r"a\\3b");
+    }
+
+    #[test]
+    fn should_borrow_unchanged_when_no_backslash_needs_escaping() {
+        assert!(matches!(
+            escape(r"a\3b", false, false, false, false),
+            std::borrow::Cow::Borrowed(_)
+        ));
+        assert!(matches!(
+            escape("plain", false, false, false, false),
+            std::borrow::Cow::Borrowed(_)
+        ));
     }
 
     #[test]

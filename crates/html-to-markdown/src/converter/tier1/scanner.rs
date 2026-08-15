@@ -3112,6 +3112,37 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
     }
     let has_entities = raw.contains('&');
 
+    // ~keep Issue #458: Tier-2 escapes a literal `\` in prose whether or not any
+    // ~keep `escape_*` flag is set (`text::backslash_needs_escape`), so Tier-1 has to
+    // ~keep apply the same rule or the two tiers disagree on every document containing
+    // ~keep one.  The rule runs over the bytes this call appends rather than over `raw`,
+    // ~keep because its target must be the *decoded* text with whitespace already
+    // ~keep collapsed — exactly what Tier-2 hands to `text::escape`.
+    let in_cell = state.in_table_cell();
+
+    // ~keep A link label and a `<summary>` body are the exception: Tier-1 folds their
+    // ~keep newlines into spaces while collapsing, but Tier-2 escapes the text node
+    // ~keep first and only then folds (`normalize_link_label` / the summary
+    // ~keep accumulator).  A `\` that sat before a newline in the source is escaped by
+    // ~keep Tier-2 and would not be by a pass reading the already-folded text, so escape
+    // ~keep the decoded-but-unfolded text and let the collapse run over the result.
+    // ~keep Entities are resolved up front, hence `has_entities: false` below — the
+    // ~keep collapse pass must not decode a second time.
+    if inside_inline && !in_cell && raw.contains('\\') {
+        let mut staged = String::with_capacity(raw.len() + 8);
+        if has_entities {
+            decode_entities_into(&mut staged, raw, base_offset)?;
+        } else {
+            staged.push_str(raw);
+        }
+        escape_backslash_run(&mut staged, 0, false);
+        let dest = state.cell_or_output_mut();
+        return decode_and_collapse_into_inline(dest, &staged, false, base_offset);
+    }
+
+    let dest = state.cell_or_output_mut();
+    let emitted_from = dest.len();
+
     if !has_entities {
         let needle_present = if inside_inline {
             memchr3(b' ', b'\t', b'\n', raw.as_bytes()).is_some()
@@ -3119,23 +3150,62 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
             memchr::memchr2(b' ', b'\t', raw.as_bytes()).is_some()
         };
         if !needle_present {
-            state.cell_or_output_mut().push_str(raw);
-            return Ok(());
-        }
-        let dest = state.cell_or_output_mut();
-        return if inside_inline {
-            decode_and_collapse_into_inline(dest, raw, false, base_offset)
+            dest.push_str(raw);
+        } else if inside_inline {
+            decode_and_collapse_into_inline(dest, raw, false, base_offset)?;
         } else {
-            decode_and_collapse_into(dest, raw, false, base_offset)
-        };
+            decode_and_collapse_into(dest, raw, false, base_offset)?;
+        }
+    } else if inside_inline {
+        decode_and_collapse_into_inline(dest, raw, has_entities, base_offset)?;
+    } else {
+        decode_and_collapse_into(dest, raw, has_entities, base_offset)?;
     }
 
-    let dest = state.cell_or_output_mut();
-    if inside_inline {
-        decode_and_collapse_into_inline(dest, raw, has_entities, base_offset)
-    } else {
-        decode_and_collapse_into(dest, raw, has_entities, base_offset)
+    escape_backslash_run(dest, emitted_from, in_cell);
+    Ok(())
+}
+
+/// Apply `text::backslash_needs_escape` to the run `buffer[from..]`.
+///
+/// `run_ends_at_last_byte` selects where the run ends, which genuinely differs between
+/// the two Tier-2 call sites this mirrors:
+///
+/// - Prose (`text_node.rs`'s normalized branch) escapes `chomp()`'s *core*, the text
+///   node with its boundary whitespace stripped — so a trailing `\` counts as
+///   end-of-run even when spaces or a newline follow it in the emitted bytes. Pass
+///   `false`.
+/// - A table cell (`text_node.rs`'s `in_table_cell` branch) escapes the whole
+///   normalized text node with no chomp, so the run ends at the last byte whatever it
+///   is. Pass `true`.
+///
+/// Getting this backwards flips `<p>a\ </p>` or `<td>a\ </td>` by one byte against
+/// Tier-2. ~keep
+fn escape_backslash_run(buffer: &mut String, from: usize, run_ends_at_last_byte: bool) {
+    if memchr::memchr(b'\\', &buffer.as_bytes()[from..]).is_none() {
+        return;
     }
+    let run = buffer[from..].to_owned();
+    let run_end = if run_ends_at_last_byte {
+        run.len()
+    } else {
+        run.trim_end().len()
+    };
+    let bytes = &run.as_bytes()[..run_end];
+
+    let mut rewritten = String::with_capacity(run.len() + 4);
+    let mut copied_to = 0usize;
+    for i in memchr::memchr_iter(b'\\', bytes) {
+        if crate::text::backslash_needs_escape(bytes, i) {
+            rewritten.push_str(&run[copied_to..i]);
+            rewritten.push_str(r"\\");
+            copied_to = i + 1;
+        }
+    }
+    rewritten.push_str(&run[copied_to..]);
+
+    buffer.truncate(from);
+    buffer.push_str(&rewritten);
 }
 
 /// Decode HTML entities directly into `out` (no intermediate allocation).

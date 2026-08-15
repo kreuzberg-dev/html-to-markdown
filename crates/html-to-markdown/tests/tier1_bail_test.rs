@@ -94,6 +94,53 @@ fn scanner_bails_on_cdata_direct() {
     assert!(matches!(err, BailReason::Cdata { .. }), "expected Cdata, got {err:?}");
 }
 
+// ~keep ── issue #458: a literal backslash stays on the Tier-1 fast path ──────────
+// ~keep
+// ~keep Tier-2 escapes a source backslash unconditionally, so Tier-1 has to apply the
+// ~keep same rule at emission time rather than bail — a backslash is not rare enough
+// ~keep in prose to justify surrendering the fast path for a whole document. These
+// ~keep assertions are the byte-equality contract for that rule.
+
+#[test]
+fn literal_backslash_stays_native_and_matches_tier2_across_contexts() {
+    for html in &[
+        r"<p>3\*4</p>",
+        r"<p>a\3b</p>",
+        r"<p>abc\</p>",
+        "<p>abc\\\ndef</p>",
+        r"<p>C:\Users\Alice</p>",
+        r"<p><strong>abc\</strong></p>",
+        r"<p><em>a\*b</em></p>",
+        r#"<p><a href="https://e.com">a\*b</a></p>"#,
+        r"<ul><li>a\*b</li></ul>",
+        r"<blockquote><p>a\*b</p></blockquote>",
+        r"<p><code>a\*b</code></p>",
+        "<pre><code>a\\*b</code></pre>",
+        // ~keep A cell without `*`/`_`: Tier-1 does not escape those in cells at all
+        // ~keep (a pre-existing divergence unrelated to #458), which would mask the
+        // ~keep backslash comparison this test is making.
+        r"<table><tr><td>abc\</td></tr></table>",
+        r"<table><tr><td>a\3b</td></tr></table>",
+        r"<p>a&#92;*b</p>",
+    ] {
+        // ~keep Assert the scanner completed natively first: `force_tier1` falls back to
+        // ~keep Tier-2 on a bail, so a byte-equality check on its own would pass even if
+        // ~keep the fast path had silently given up on every one of these inputs.
+        assert!(tier1_run(html).is_ok(), "tier-1 bailed on {html:?}");
+        assert_eq!(force_tier1(html), tier2(html), "tier mismatch for {html:?}");
+    }
+}
+
+#[test]
+fn backslash_inside_code_and_pre_is_left_verbatim_by_tier1() {
+    // ~keep Tier-2 bypasses `text::escape` entirely for code/pre content, so Tier-1
+    // ~keep must not apply the escape there either.
+    let code = tier1_run(r"<p><code>a\*b</code></p>").expect("code span should stay on tier-1");
+    assert!(code.contains(r"`a\*b`"), "expected verbatim code span, got {code:?}");
+    let pre = tier1_run("<pre><code>a\\*b</code></pre>").expect("code block should stay on tier-1");
+    assert!(pre.contains(r"a\*b"), "expected verbatim code block, got {pre:?}");
+}
+
 #[test]
 fn svg_with_cdata_handled_natively_via_prescan() {
     // ~keep After prescanning, CDATA inside SVG is escaped to `&lt;![CDATA[...]` so

@@ -563,7 +563,15 @@ fn fast_text_only(html: &str, options: &ConversionOptions) -> Option<String> {
 
     let escaped = if options.output_format == crate::options::OutputFormat::Plain {
         normalized.into_owned()
-    } else if options.escape_misc || options.escape_asterisks || options.escape_underscores || options.escape_ascii {
+    } else if options.escape_misc
+        || options.escape_asterisks
+        || options.escape_underscores
+        || options.escape_ascii
+        // ~keep `text::escape` escapes a literal backslash regardless of the flags above,
+        // ~keep so this gate must open on a bare backslash too or the tag-free fast path
+        // ~keep would silently skip it under default options.
+        || normalized.contains('\\')
+    {
         text::escape(
             normalized.as_ref(),
             options.escape_misc,
