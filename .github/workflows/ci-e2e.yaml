@@ -240,6 +240,11 @@ jobs:
           fi
         shell: bash
 
+  # ~keep The FFI crate is the shared cross-compile base for the C, Go, Java, and
+  # C# publish legs, all of which build it for macos-15-intel (darwin x64) and
+  # windows-11-arm (windows arm64) too. Those two targets were previously only
+  # ever compiled at publish time — cover them here so a cross-compile break
+  # surfaces on the commit that causes it, not at tag time.
   build-ffi:
     needs: [changes]
     name: "Build: FFI (${{ matrix.runner }})"
@@ -256,7 +261,9 @@ jobs:
           - ubuntu-latest
           - ubuntu-24.04-arm
           - macos-latest
+          - macos-15-intel
           - windows-latest
+          - windows-11-arm
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -276,7 +283,7 @@ jobs:
           use-sccache: false
 
       - name: Build html-to-markdown-ffi (release, Unix)
-        if: matrix.runner != 'windows-latest'
+        if: "!startsWith(matrix.runner, 'windows')"
         run: cargo build --release --locked -p html-to-markdown-ffi
         shell: bash
         env:
@@ -285,7 +292,7 @@ jobs:
           RUST_BACKTRACE: short
 
       - name: Build html-to-markdown-ffi (debug, Windows)
-        if: matrix.runner == 'windows-latest'
+        if: startsWith(matrix.runner, 'windows')
         run: cargo build --locked -p html-to-markdown-ffi
         shell: bash
         env:
@@ -307,7 +314,7 @@ jobs:
           echo "Header verified fresh: $HEADER"
 
       - name: Upload FFI artifacts
-        if: matrix.runner != 'windows-latest'
+        if: "!startsWith(matrix.runner, 'windows')"
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: ffi-${{ matrix.runner }}
@@ -520,6 +527,63 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         uses: xberg-io/actions/cleanup-rust-cache@v1
 
+  # ~keep aarch64-unknown-linux-gnu is cross-compiled through the docker-based
+  # @napi-rs/cross-toolchain (napi build --use-napi-cross), a different code path
+  # than the host-native builds above and the zig cross-compile below. It was only
+  # ever exercised at publish time (same publish-only-leg class as the musl job
+  # above) — mirror it here so a broken cross-toolchain surfaces on the commit
+  # that causes it instead of at tag time.
+  build-node-linux-arm64-gnu:
+    needs: [changes]
+    name: "Build: Node (aarch64-unknown-linux-gnu, napi-cross)"
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      needs.changes.outputs.core == 'true' ||
+      needs.changes.outputs.node == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        id: checkout
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@v1
+        with:
+          target: aarch64-unknown-linux-gnu
+          cache-key-prefix: node-linux-arm64-gnu
+
+      - name: Setup Node.js workspace
+        uses: xberg-io/actions/setup-node-workspace@v1
+        with:
+          node-version: "24"
+
+      - name: Build native module (napi-cross, docker toolchain)
+        uses: xberg-io/actions/build-node-napi@v1
+        with:
+          crate-dir: crates/html-to-markdown-node
+          target: aarch64-unknown-linux-gnu
+          use-napi-cross: true
+          install-deps: "false"
+
+      - name: Verify the platform package holds a native module
+        shell: bash
+        working-directory: crates/html-to-markdown-node
+        run: |
+          set -euo pipefail
+          node_file=$(find npm -maxdepth 2 -name "*.node" -type f | head -1)
+          if [ -z "${node_file}" ]; then
+            echo "::error::No .node file found under npm/ for aarch64-unknown-linux-gnu"
+            find npm -maxdepth 2 -type f
+            exit 1
+          fi
+          file "${node_file}"
+          echo "Verified: $(basename "$(dirname "${node_file}")") contains $(basename "${node_file}")"
+
+      - name: Cleanup Rust cache
+        if: always() && steps.checkout.outcome == 'success'
+        uses: xberg-io/actions/cleanup-rust-cache@v1
+
   build-ruby:
     needs: [changes]
     name: "Build: Ruby (${{ matrix.os }}, ruby-${{ matrix.ruby }})"
@@ -580,15 +644,29 @@ jobs:
         if: always() && steps.checkout.outcome == 'success'
         uses: xberg-io/actions/cleanup-rust-cache@v1
 
+  # ~keep Publish builds the PHP extension across linux-x86_64, linux-arm64,
+  # macos-arm64, and windows-x86_64 for every supported PHP version (16 legs
+  # total), but until now only ubuntu/php8.4 was ever exercised before tag
+  # time. Mirror the per-platform build (one php version, not the full 4x4
+  # matrix) so a total per-platform failure surfaces in CI instead of at
+  # publish. Cross-PHP-version coverage stays publish-only — see the audit.
   build-php:
     needs: [changes]
-    name: "Build: PHP"
+    name: "Build: PHP (${{ matrix.platform.label }})"
     if: |
       github.event_name == 'workflow_dispatch' ||
       needs.changes.outputs.core == 'true' ||
       needs.changes.outputs.php == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { os: ubuntu-latest, label: linux-x86_64 }
+          - { os: ubuntu-24.04-arm, label: linux-arm64 }
+          - { os: macos-latest, label: macos-arm64 }
+          - { os: windows-latest, label: windows-x86_64 }
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -605,7 +683,7 @@ jobs:
       - name: Setup Rust
         uses: xberg-io/actions/setup-rust@v1
         with:
-          cache-key-prefix: php
+          cache-key-prefix: php-${{ matrix.platform.label }}
 
       - name: Capture php-config path
         run: scripts/ci/php/set-php-config.sh
@@ -636,7 +714,7 @@ jobs:
       - name: Upload PHP extension artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: php-extension-ubuntu
+          name: php-extension-${{ matrix.platform.label }}
           path: ${{ steps.build-php-extension.outputs.extension-path }}
           retention-days: 7
 
