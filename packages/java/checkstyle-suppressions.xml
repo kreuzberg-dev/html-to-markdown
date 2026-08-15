@@ -12,4 +12,13 @@
   <suppress checks="AvoidStarImport" files=".*Test\.java" />
   <suppress checks="MagicNumber" files=".*Test\.java" />
   <suppress checks="MethodLength" files=".*Test\.java" />
+
+  <!-- sourceDirectory is the project basedir, so checkstyle walks alef's snippet
+       scratch tree. It is gitignored, but Maven does not read .gitignore. -->
+  <suppress checks=".*" files="(^|[\\/])\.alef[\\/]" />
+
+  <!-- NativeLib.java:37 is a single 398-char generated symbol table, past even the
+       200 limit raised for the FFM shims. Unfixable here: the file is alef-emitted
+       and carries a DO-NOT-EDIT header. Remove once the emitter wraps it. -->
+  <suppress checks="LineLength" files=".*NativeLib\.java" />
 </suppressions>
