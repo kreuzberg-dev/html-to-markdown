@@ -1755,7 +1755,7 @@ impl Default for JsVisitResult {
     }
 }
 
-#[napi(namespace = "VisitResult", getter, js_name = "Continue")]
+#[napi(namespace = "VisitResult", js_name = "Continue")]
 pub fn visit_result_continue() -> JsVisitResult {
     JsVisitResult {
         type_tag: "continue".to_string(),
@@ -1767,17 +1767,16 @@ pub fn visit_result_custom(output: String) -> JsVisitResult {
     JsVisitResult {
         type_tag: "custom".to_string(),
         output: Some(output),
-        ..Default::default()
     }
 }
-#[napi(namespace = "VisitResult", getter, js_name = "Skip")]
+#[napi(namespace = "VisitResult", js_name = "Skip")]
 pub fn visit_result_skip() -> JsVisitResult {
     JsVisitResult {
         type_tag: "skip".to_string(),
         ..Default::default()
     }
 }
-#[napi(namespace = "VisitResult", getter, js_name = "PreserveHtml")]
+#[napi(namespace = "VisitResult", js_name = "PreserveHtml")]
 pub fn visit_result_preserve_html() -> JsVisitResult {
     JsVisitResult {
         type_tag: "preserve_html".to_string(),
@@ -1789,7 +1788,6 @@ pub fn visit_result_error(output: String) -> JsVisitResult {
     JsVisitResult {
         type_tag: "error".to_string(),
         output: Some(output),
-        ..Default::default()
     }
 }
 

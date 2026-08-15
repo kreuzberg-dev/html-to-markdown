@@ -62,7 +62,6 @@ fn should_not_crash_when_freeing_null_pointer_for_every_owned_type() {
         htm_warning_kind_free(ptr::null_mut());
         htm_node_type_free(ptr::null_mut());
         htm_visitor_free(ptr::null_mut());
-        htm_htm_html_visitor_bridge_free(ptr::null_mut());
     }
     // Reaching this point without a crash is the assertion: every free above tolerated null.
 }

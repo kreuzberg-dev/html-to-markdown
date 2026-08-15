@@ -470,13 +470,6 @@ typedef struct HTMWhitespaceMode HTMWhitespaceMode;
 #define HTMHTM_VISIT_ERROR 4
 
 /**
- * Rust-side bridge that holds a C vtable pointer and opaque `user_data`.
- *
- * Implements `HtmlVisitor` by forwarding calls through the vtable.
- */
-typedef struct HTMHtmHtmlVisitorBridge HTMHtmHtmlVisitorBridge;
-
-/**
  * Opaque handle wrapping a `HtmVisitorCallbacks` and implementing
  * the Rust `HtmlVisitor` trait.
  *
@@ -552,6 +545,10 @@ typedef struct HTMHtmVisitorCallbacks {
    * Arbitrary caller context forwarded to every callback.
    */
   void *user_data;
+  /**
+   * Releases callback-owned strings with the allocator that created them.
+   */
+  void (*free_string)(char*);
   /**
    * Visit text nodes (most frequent callback - ~100+ per document).
    *
@@ -944,414 +941,6 @@ typedef struct HTMHtmVisitorCallbacks {
 } HTMHtmVisitorCallbacks;
 
 /**
- * VTable for C plugin bridges implementing the `HtmlVisitor` trait.
- *
- * # Safety
- *
- * All function pointers must be valid for the lifetime of any bridge created from
- * this vtable.  `free_user_data`, when non-null, is called once with `user_data`
- * when the bridge is dropped.
- */
-typedef struct HTMHtmHtmlVisitorVTable {
-  /**
-   * Visit text nodes (most frequent callback - ~100+ per document).
-   *
-   * # Arguments
-   * - `ctx`: Node context (will have `node_type: NodeType::Text`)
-   * - `text`: The raw text content (HTML entities already decoded)
-   */
-  int32_t (*visit_text)(const void *user_data,
-                        const char *_ctx,
-                        const char *_text,
-                        char **out_result,
-                        char **out_error);
-  /**
-   * Called before entering any element.
-   *
-   * This is the first callback invoked for every HTML element, allowing
-   * visitors to implement generic element handling before tag-specific logic.
-   */
-  int32_t (*visit_element_start)(const void *user_data,
-                                 const char *_ctx,
-                                 char **out_result,
-                                 char **out_error);
-  /**
-   * Called after exiting any element.
-   *
-   * Receives the default markdown output that would be generated.
-   * Visitors can inspect or replace this output.
-   */
-  int32_t (*visit_element_end)(const void *user_data,
-                               const char *_ctx,
-                               const char *_output,
-                               char **out_result,
-                               char **out_error);
-  /**
-   * Visit anchor links `<a href="...">`.
-   *
-   * # Arguments
-   * - `ctx`: Node context with link element metadata
-   * - `href`: The link URL (from `href` attribute)
-   * - `text`: The link text content (already converted to markdown)
-   * - `title`: Optional title attribute
-   */
-  int32_t (*visit_link)(const void *user_data,
-                        const char *_ctx,
-                        const char *_href,
-                        const char *_text,
-                        const char *_title,
-                        char **out_result,
-                        char **out_error);
-  /**
-   * Visit images `<img src="...">`.
-   *
-   * # Arguments
-   * - `ctx`: Node context with image element metadata
-   * - `src`: The image source URL
-   * - `alt`: The alt text
-   * - `title`: Optional title attribute
-   */
-  int32_t (*visit_image)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         const char *_alt,
-                         const char *_title,
-                         char **out_result,
-                         char **out_error);
-  /**
-   * Visit heading elements `<h1>` through `<h6>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context with heading metadata
-   * - `level`: Heading level (1-6)
-   * - `text`: The heading text content
-   * - `id`: Optional id attribute (for anchor links)
-   */
-  int32_t (*visit_heading)(const void *user_data,
-                           const char *_ctx,
-                           uint32_t _level,
-                           const char *_text,
-                           const char *_id,
-                           char **out_result,
-                           char **out_error);
-  /**
-   * Visit code blocks `<pre><code>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `lang`: Optional language specifier (from class attribute)
-   * - `code`: The code content
-   */
-  int32_t (*visit_code_block)(const void *user_data,
-                              const char *_ctx,
-                              const char *_lang,
-                              const char *_code,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Visit inline code `<code>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `code`: The code content
-   */
-  int32_t (*visit_code_inline)(const void *user_data,
-                               const char *_ctx,
-                               const char *_code,
-                               char **out_result,
-                               char **out_error);
-  /**
-   * Visit list items `<li>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `ordered`: Whether this is an ordered list item
-   * - `marker`: The list marker (e.g., "-", "1.", "a)")
-   * - `text`: The list item content (already converted)
-   */
-  int32_t (*visit_list_item)(const void *user_data,
-                             const char *_ctx,
-                             int32_t _ordered,
-                             const char *_marker,
-                             const char *_text,
-                             char **out_result,
-                             char **out_error);
-  /**
-   * Called before processing a list `<ul>` or `<ol>`.
-   */
-  int32_t (*visit_list_start)(const void *user_data,
-                              const char *_ctx,
-                              int32_t _ordered,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Called after processing a list `</ul>` or `</ol>`.
-   */
-  int32_t (*visit_list_end)(const void *user_data,
-                            const char *_ctx,
-                            int32_t _ordered,
-                            const char *_output,
-                            char **out_result,
-                            char **out_error);
-  /**
-   * Called before processing a table `<table>`.
-   */
-  int32_t (*visit_table_start)(const void *user_data,
-                               const char *_ctx,
-                               char **out_result,
-                               char **out_error);
-  /**
-   * Visit table rows `<tr>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `cells`: Cell contents (already converted to markdown)
-   * - `is_header`: Whether this row is in `<thead>`
-   */
-  int32_t (*visit_table_row)(const void *user_data,
-                             const char *_ctx,
-                             const char *_cells,
-                             int32_t _is_header,
-                             char **out_result,
-                             char **out_error);
-  /**
-   * Called after processing a table `</table>`.
-   */
-  int32_t (*visit_table_end)(const void *user_data,
-                             const char *_ctx,
-                             const char *_output,
-                             char **out_result,
-                             char **out_error);
-  /**
-   * Visit blockquote elements `<blockquote>`.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `content`: The blockquote content (already converted)
-   * - `depth`: Nesting depth (for nested blockquotes)
-   */
-  int32_t (*visit_blockquote)(const void *user_data,
-                              const char *_ctx,
-                              const char *_content,
-                              uintptr_t _depth,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Visit strong/bold elements `<strong>`, `<b>`.
-   */
-  int32_t (*visit_strong)(const void *user_data,
-                          const char *_ctx,
-                          const char *_text,
-                          char **out_result,
-                          char **out_error);
-  /**
-   * Visit emphasis/italic elements `<em>`, `<i>`.
-   */
-  int32_t (*visit_emphasis)(const void *user_data,
-                            const char *_ctx,
-                            const char *_text,
-                            char **out_result,
-                            char **out_error);
-  /**
-   * Visit strikethrough elements `<s>`, `<del>`, `<strike>`.
-   */
-  int32_t (*visit_strikethrough)(const void *user_data,
-                                 const char *_ctx,
-                                 const char *_text,
-                                 char **out_result,
-                                 char **out_error);
-  /**
-   * Visit underline elements `<u>`, `<ins>`.
-   */
-  int32_t (*visit_underline)(const void *user_data,
-                             const char *_ctx,
-                             const char *_text,
-                             char **out_result,
-                             char **out_error);
-  /**
-   * Visit subscript elements `<sub>`.
-   */
-  int32_t (*visit_subscript)(const void *user_data,
-                             const char *_ctx,
-                             const char *_text,
-                             char **out_result,
-                             char **out_error);
-  /**
-   * Visit superscript elements `<sup>`.
-   */
-  int32_t (*visit_superscript)(const void *user_data,
-                               const char *_ctx,
-                               const char *_text,
-                               char **out_result,
-                               char **out_error);
-  /**
-   * Visit mark/highlight elements `<mark>`.
-   */
-  int32_t (*visit_mark)(const void *user_data,
-                        const char *_ctx,
-                        const char *_text,
-                        char **out_result,
-                        char **out_error);
-  /**
-   * Visit line break elements `<br>`.
-   */
-  int32_t (*visit_line_break)(const void *user_data,
-                              const char *_ctx,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Visit horizontal rule elements `<hr>`.
-   */
-  int32_t (*visit_horizontal_rule)(const void *user_data,
-                                   const char *_ctx,
-                                   char **out_result,
-                                   char **out_error);
-  /**
-   * Visit custom elements (web components) or unknown tags.
-   *
-   * # Arguments
-   * - `ctx`: Node context
-   * - `tag_name`: The custom element's tag name
-   * - `html`: The raw HTML of this element
-   */
-  int32_t (*visit_custom_element)(const void *user_data,
-                                  const char *_ctx,
-                                  const char *_tag_name,
-                                  const char *_html,
-                                  char **out_result,
-                                  char **out_error);
-  /**
-   * Visit definition list `<dl>`.
-   */
-  int32_t (*visit_definition_list_start)(const void *user_data,
-                                         const char *_ctx,
-                                         char **out_result,
-                                         char **out_error);
-  /**
-   * Visit definition term `<dt>`.
-   */
-  int32_t (*visit_definition_term)(const void *user_data,
-                                   const char *_ctx,
-                                   const char *_text,
-                                   char **out_result,
-                                   char **out_error);
-  /**
-   * Visit definition description `<dd>`.
-   */
-  int32_t (*visit_definition_description)(const void *user_data,
-                                          const char *_ctx,
-                                          const char *_text,
-                                          char **out_result,
-                                          char **out_error);
-  /**
-   * Called after processing a definition list `</dl>`.
-   */
-  int32_t (*visit_definition_list_end)(const void *user_data,
-                                       const char *_ctx,
-                                       const char *_output,
-                                       char **out_result,
-                                       char **out_error);
-  /**
-   * Visit form elements `<form>`.
-   */
-  int32_t (*visit_form)(const void *user_data,
-                        const char *_ctx,
-                        const char *_action,
-                        const char *_method,
-                        char **out_result,
-                        char **out_error);
-  /**
-   * Visit input elements `<input>`.
-   */
-  int32_t (*visit_input)(const void *user_data,
-                         const char *_ctx,
-                         const char *_input_type,
-                         const char *_name,
-                         const char *_value,
-                         char **out_result,
-                         char **out_error);
-  /**
-   * Visit button elements `<button>`.
-   */
-  int32_t (*visit_button)(const void *user_data,
-                          const char *_ctx,
-                          const char *_text,
-                          char **out_result,
-                          char **out_error);
-  /**
-   * Visit audio elements `<audio>`.
-   */
-  int32_t (*visit_audio)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         char **out_result,
-                         char **out_error);
-  /**
-   * Visit video elements `<video>`.
-   */
-  int32_t (*visit_video)(const void *user_data,
-                         const char *_ctx,
-                         const char *_src,
-                         char **out_result,
-                         char **out_error);
-  /**
-   * Visit iframe elements `<iframe>`.
-   */
-  int32_t (*visit_iframe)(const void *user_data,
-                          const char *_ctx,
-                          const char *_src,
-                          char **out_result,
-                          char **out_error);
-  /**
-   * Visit details elements `<details>`.
-   */
-  int32_t (*visit_details)(const void *user_data,
-                           const char *_ctx,
-                           int32_t _open,
-                           char **out_result,
-                           char **out_error);
-  /**
-   * Visit summary elements `<summary>`.
-   */
-  int32_t (*visit_summary)(const void *user_data,
-                           const char *_ctx,
-                           const char *_text,
-                           char **out_result,
-                           char **out_error);
-  /**
-   * Visit figure elements `<figure>`.
-   */
-  int32_t (*visit_figure_start)(const void *user_data,
-                                const char *_ctx,
-                                char **out_result,
-                                char **out_error);
-  /**
-   * Visit figcaption elements `<figcaption>`.
-   */
-  int32_t (*visit_figcaption)(const void *user_data,
-                              const char *_ctx,
-                              const char *_text,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Called after processing a figure `</figure>`.
-   */
-  int32_t (*visit_figure_end)(const void *user_data,
-                              const char *_ctx,
-                              const char *_output,
-                              char **out_result,
-                              char **out_error);
-  /**
-   * Optional string destructor: called for strings returned by vtable callbacks.
-   */
-  void (*free_string)(char*);
-  /**
-   * Optional destructor: called once with `user_data` when the bridge is dropped.
-   */
-  void (*free_user_data)(void*);
-} HTMHtmHtmlVisitorVTable;
-
-/**
  * Return the last error code (0 means no error).
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -1373,18 +962,6 @@ const char *htm_last_error_context(void);
  * Pointer must have been returned by this library, or be null.
  */
 void htm_free_string(char *ptr);
-
-/**
- * Free a byte buffer previously returned by this library via out-params.
- * `ptr`, `len`, and `cap` must match the values written by the library function,
- * or the call must pass `ptr = null` (in which case it is a no-op).
- * # Safety
- * Pointer must have been returned by this library (via out_ptr / out_len / out_cap
- * out-params), and ownership must not already have been released.
- */
-void htm_free_bytes(uint8_t *ptr,
-                    uintptr_t len,
-                    uintptr_t cap);
 
 /**
  * Return the library version string. The pointer is static and must NOT be freed.
@@ -1419,6 +996,8 @@ void htm_document_metadata_free(HTMDocumentMetadata *ptr);
 
 /**
  * Get the `title` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1426,6 +1005,8 @@ char *htm_document_metadata_title(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `description` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1433,6 +1014,8 @@ char *htm_document_metadata_description(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `keywords` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1440,6 +1023,8 @@ char *htm_document_metadata_keywords(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `author` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1447,6 +1032,8 @@ char *htm_document_metadata_author(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `canonical_url` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1454,6 +1041,8 @@ char *htm_document_metadata_canonical_url(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `base_href` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1461,6 +1050,8 @@ char *htm_document_metadata_base_href(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `language` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1468,6 +1059,8 @@ char *htm_document_metadata_language(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `text_direction` field from a `DocumentMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_text_direction_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1475,6 +1068,8 @@ HTMTextDirection *htm_document_metadata_text_direction(const HTMDocumentMetadata
 
 /**
  * Get the `open_graph` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1482,6 +1077,8 @@ char *htm_document_metadata_open_graph(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `twitter_card` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1489,6 +1086,8 @@ char *htm_document_metadata_twitter_card(const HTMDocumentMetadata *ptr);
 
 /**
  * Get the `meta_tags` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1526,6 +1125,8 @@ uint8_t htm_header_metadata_level(const HTMHeaderMetadata *ptr);
 
 /**
  * Get the `text` field from a `HeaderMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1533,6 +1134,8 @@ char *htm_header_metadata_text(const HTMHeaderMetadata *ptr);
 
 /**
  * Get the `id` field from a `HeaderMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1604,6 +1207,8 @@ void htm_link_metadata_free(HTMLinkMetadata *ptr);
 
 /**
  * Get the `href` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1611,6 +1216,8 @@ char *htm_link_metadata_href(const HTMLinkMetadata *ptr);
 
 /**
  * Get the `text` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1618,6 +1225,8 @@ char *htm_link_metadata_text(const HTMLinkMetadata *ptr);
 
 /**
  * Get the `title` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1625,6 +1234,8 @@ char *htm_link_metadata_title(const HTMLinkMetadata *ptr);
 
 /**
  * Get the `link_type` field from a `LinkMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_link_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1632,6 +1243,8 @@ HTMLinkType *htm_link_metadata_link_type(const HTMLinkMetadata *ptr);
 
 /**
  * Get the `rel` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1639,6 +1252,8 @@ char *htm_link_metadata_rel(const HTMLinkMetadata *ptr);
 
 /**
  * Get the `attributes` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1669,6 +1284,8 @@ void htm_image_metadata_free(HTMImageMetadata *ptr);
 
 /**
  * Get the `src` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1676,6 +1293,8 @@ char *htm_image_metadata_src(const HTMImageMetadata *ptr);
 
 /**
  * Get the `alt` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1683,6 +1302,8 @@ char *htm_image_metadata_alt(const HTMImageMetadata *ptr);
 
 /**
  * Get the `title` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1690,6 +1311,8 @@ char *htm_image_metadata_title(const HTMImageMetadata *ptr);
 
 /**
  * Get the `dimensions` field from a `ImageMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_image_dimensions_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1697,6 +1320,8 @@ HTMImageDimensions *htm_image_metadata_dimensions(const HTMImageMetadata *ptr);
 
 /**
  * Get the `image_type` field from a `ImageMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_image_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1704,6 +1329,8 @@ HTMImageType *htm_image_metadata_image_type(const HTMImageMetadata *ptr);
 
 /**
  * Get the `attributes` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1734,6 +1361,8 @@ void htm_structured_data_free(HTMStructuredData *ptr);
 
 /**
  * Get the `data_type` field from a `StructuredData`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_structured_data_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1741,6 +1370,8 @@ HTMStructuredDataType *htm_structured_data_data_type(const HTMStructuredData *pt
 
 /**
  * Get the `raw_json` field from a `StructuredData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1748,6 +1379,8 @@ char *htm_structured_data_raw_json(const HTMStructuredData *ptr);
 
 /**
  * Get the `schema_type` field from a `StructuredData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1778,6 +1411,8 @@ void htm_html_metadata_free(HTMHtmlMetadata *ptr);
 
 /**
  * Get the `document` field from a `HtmlMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_document_metadata_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1785,6 +1420,8 @@ HTMDocumentMetadata *htm_html_metadata_document(const HTMHtmlMetadata *ptr);
 
 /**
  * Get the `headers` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1792,6 +1429,8 @@ char *htm_html_metadata_headers(const HTMHtmlMetadata *ptr);
 
 /**
  * Get the `links` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1799,6 +1438,8 @@ char *htm_html_metadata_links(const HTMHtmlMetadata *ptr);
 
 /**
  * Get the `images` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1806,6 +1447,8 @@ char *htm_html_metadata_images(const HTMHtmlMetadata *ptr);
 
 /**
  * Get the `structured_data` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1836,6 +1479,8 @@ void htm_conversion_options_free(HTMConversionOptions *ptr);
 
 /**
  * Get the `heading_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_heading_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1843,6 +1488,8 @@ HTMHeadingStyle *htm_conversion_options_heading_style(const HTMConversionOptions
 
 /**
  * Get the `list_indent_type` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_list_indent_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1857,6 +1504,8 @@ uintptr_t htm_conversion_options_list_indent_width(const HTMConversionOptions *p
 
 /**
  * Get the `bullets` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1864,6 +1513,8 @@ char *htm_conversion_options_bullets(const HTMConversionOptions *ptr);
 
 /**
  * Get the `strong_em_symbol` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1899,6 +1550,8 @@ int32_t htm_conversion_options_escape_ascii(const HTMConversionOptions *ptr);
 
 /**
  * Get the `code_language` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1934,6 +1587,8 @@ int32_t htm_conversion_options_compact_tables(const HTMConversionOptions *ptr);
 
 /**
  * Get the `highlight_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_highlight_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1948,6 +1603,8 @@ int32_t htm_conversion_options_extract_metadata(const HTMConversionOptions *ptr)
 
 /**
  * Get the `whitespace_mode` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_whitespace_mode_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1983,6 +1640,8 @@ int32_t htm_conversion_options_convert_as_inline(const HTMConversionOptions *ptr
 
 /**
  * Get the `sub_symbol` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1990,6 +1649,8 @@ char *htm_conversion_options_sub_symbol(const HTMConversionOptions *ptr);
 
 /**
  * Get the `sup_symbol` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -1997,6 +1658,8 @@ char *htm_conversion_options_sup_symbol(const HTMConversionOptions *ptr);
 
 /**
  * Get the `newline_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_newline_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2004,6 +1667,8 @@ HTMNewlineStyle *htm_conversion_options_newline_style(const HTMConversionOptions
 
 /**
  * Get the `code_block_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_code_block_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2011,6 +1676,8 @@ HTMCodeBlockStyle *htm_conversion_options_code_block_style(const HTMConversionOp
 
 /**
  * Get the `keep_inline_images_in` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2018,6 +1685,8 @@ char *htm_conversion_options_keep_inline_images_in(const HTMConversionOptions *p
 
 /**
  * Get the `preprocessing` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_options_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2025,6 +1694,8 @@ HTMPreprocessingOptions *htm_conversion_options_preprocessing(const HTMConversio
 
 /**
  * Get the `encoding` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2039,6 +1710,8 @@ int32_t htm_conversion_options_debug(const HTMConversionOptions *ptr);
 
 /**
  * Get the `strip_tags` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2046,6 +1719,8 @@ char *htm_conversion_options_strip_tags(const HTMConversionOptions *ptr);
 
 /**
  * Get the `preserve_tags` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2060,6 +1735,8 @@ int32_t htm_conversion_options_skip_images(const HTMConversionOptions *ptr);
 
 /**
  * Get the `url_escape_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_url_escape_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2067,6 +1744,8 @@ HTMUrlEscapeStyle *htm_conversion_options_url_escape_style(const HTMConversionOp
 
 /**
  * Get the `link_style` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_link_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2074,6 +1753,8 @@ HTMLinkStyle *htm_conversion_options_link_style(const HTMConversionOptions *ptr)
 
 /**
  * Get the `output_format` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_output_format_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2123,6 +1804,8 @@ uintptr_t htm_conversion_options_max_depth(const HTMConversionOptions *ptr);
 
 /**
  * Get the `exclude_selectors` field from a `ConversionOptions`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2130,6 +1813,8 @@ char *htm_conversion_options_exclude_selectors(const HTMConversionOptions *ptr);
 
 /**
  * Get the `tier_strategy` field from a `ConversionOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_tier_strategy_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2165,6 +1850,8 @@ void htm_conversion_options_update_free(HTMConversionOptionsUpdate *ptr);
 
 /**
  * Get the `heading_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_heading_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2172,6 +1859,8 @@ HTMHeadingStyle *htm_conversion_options_update_heading_style(const HTMConversion
 
 /**
  * Get the `list_indent_type` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_list_indent_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2186,6 +1875,8 @@ uintptr_t htm_conversion_options_update_list_indent_width(const HTMConversionOpt
 
 /**
  * Get the `bullets` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2193,6 +1884,8 @@ char *htm_conversion_options_update_bullets(const HTMConversionOptionsUpdate *pt
 
 /**
  * Get the `strong_em_symbol` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2228,6 +1921,8 @@ int32_t htm_conversion_options_update_escape_ascii(const HTMConversionOptionsUpd
 
 /**
  * Get the `code_language` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2263,6 +1958,8 @@ int32_t htm_conversion_options_update_compact_tables(const HTMConversionOptionsU
 
 /**
  * Get the `highlight_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_highlight_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2277,6 +1974,8 @@ int32_t htm_conversion_options_update_extract_metadata(const HTMConversionOption
 
 /**
  * Get the `whitespace_mode` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_whitespace_mode_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2312,6 +2011,8 @@ int32_t htm_conversion_options_update_convert_as_inline(const HTMConversionOptio
 
 /**
  * Get the `sub_symbol` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2319,6 +2020,8 @@ char *htm_conversion_options_update_sub_symbol(const HTMConversionOptionsUpdate 
 
 /**
  * Get the `sup_symbol` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2326,6 +2029,8 @@ char *htm_conversion_options_update_sup_symbol(const HTMConversionOptionsUpdate 
 
 /**
  * Get the `newline_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_newline_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2333,6 +2038,8 @@ HTMNewlineStyle *htm_conversion_options_update_newline_style(const HTMConversion
 
 /**
  * Get the `code_block_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_code_block_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2340,6 +2047,8 @@ HTMCodeBlockStyle *htm_conversion_options_update_code_block_style(const HTMConve
 
 /**
  * Get the `keep_inline_images_in` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2347,6 +2056,8 @@ char *htm_conversion_options_update_keep_inline_images_in(const HTMConversionOpt
 
 /**
  * Get the `preprocessing` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_options_update_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2354,6 +2065,8 @@ HTMPreprocessingOptionsUpdate *htm_conversion_options_update_preprocessing(const
 
 /**
  * Get the `encoding` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2368,6 +2081,8 @@ int32_t htm_conversion_options_update_debug(const HTMConversionOptionsUpdate *pt
 
 /**
  * Get the `strip_tags` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2375,6 +2090,8 @@ char *htm_conversion_options_update_strip_tags(const HTMConversionOptionsUpdate 
 
 /**
  * Get the `preserve_tags` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2389,6 +2106,8 @@ int32_t htm_conversion_options_update_skip_images(const HTMConversionOptionsUpda
 
 /**
  * Get the `url_escape_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_url_escape_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2396,6 +2115,8 @@ HTMUrlEscapeStyle *htm_conversion_options_update_url_escape_style(const HTMConve
 
 /**
  * Get the `link_style` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_link_style_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2403,6 +2124,8 @@ HTMLinkStyle *htm_conversion_options_update_link_style(const HTMConversionOption
 
 /**
  * Get the `output_format` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_output_format_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2452,6 +2175,8 @@ uintptr_t htm_conversion_options_update_max_depth(const HTMConversionOptionsUpda
 
 /**
  * Get the `exclude_selectors` field from a `ConversionOptionsUpdate`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2459,6 +2184,8 @@ char *htm_conversion_options_update_exclude_selectors(const HTMConversionOptions
 
 /**
  * Get the `tier_strategy` field from a `ConversionOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_tier_strategy_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2503,6 +2230,8 @@ int32_t htm_preprocessing_options_enabled(const HTMPreprocessingOptions *ptr);
 
 /**
  * Get the `preset` field from a `PreprocessingOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_preset_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2552,6 +2281,8 @@ int32_t htm_preprocessing_options_update_enabled(const HTMPreprocessingOptionsUp
 
 /**
  * Get the `preset` field from a `PreprocessingOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_preset_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2633,6 +2364,8 @@ void htm_document_structure_free(HTMDocumentStructure *ptr);
 
 /**
  * Get the `nodes` field from a `DocumentStructure`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2640,6 +2373,8 @@ char *htm_document_structure_nodes(const HTMDocumentStructure *ptr);
 
 /**
  * Get the `source_format` field from a `DocumentStructure`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2670,6 +2405,8 @@ void htm_document_node_free(HTMDocumentNode *ptr);
 
 /**
  * Get the `id` field from a `DocumentNode`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2677,6 +2414,8 @@ char *htm_document_node_id(const HTMDocumentNode *ptr);
 
 /**
  * Get the `content` field from a `DocumentNode`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_node_content_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2691,6 +2430,8 @@ uint32_t htm_document_node_parent(const HTMDocumentNode *ptr);
 
 /**
  * Get the `children` field from a `DocumentNode`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2698,6 +2439,8 @@ char *htm_document_node_children(const HTMDocumentNode *ptr);
 
 /**
  * Get the `annotations` field from a `DocumentNode`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2705,6 +2448,8 @@ char *htm_document_node_annotations(const HTMDocumentNode *ptr);
 
 /**
  * Get the `attributes` field from a `DocumentNode`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2749,6 +2494,8 @@ uint32_t htm_text_annotation_end(const HTMTextAnnotation *ptr);
 
 /**
  * Get the `kind` field from a `TextAnnotation`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_annotation_kind_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2779,6 +2526,8 @@ void htm_metadata_entry_free(HTMMetadataEntry *ptr);
 
 /**
  * Get the `key` field from a `MetadataEntry`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2786,6 +2535,8 @@ char *htm_metadata_entry_key(const HTMMetadataEntry *ptr);
 
 /**
  * Get the `value` field from a `MetadataEntry`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2816,6 +2567,8 @@ void htm_conversion_result_free(HTMConversionResult *ptr);
 
 /**
  * Get the `content` field from a `ConversionResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2823,6 +2576,8 @@ char *htm_conversion_result_content(const HTMConversionResult *ptr);
 
 /**
  * Get the `document` field from a `ConversionResult`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_document_structure_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2830,6 +2585,8 @@ HTMDocumentStructure *htm_conversion_result_document(const HTMConversionResult *
 
 /**
  * Get the `metadata` field from a `ConversionResult`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_html_metadata_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2837,6 +2594,8 @@ HTMHtmlMetadata *htm_conversion_result_metadata(const HTMConversionResult *ptr);
 
 /**
  * Get the `tables` field from a `ConversionResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2844,6 +2603,8 @@ char *htm_conversion_result_tables(const HTMConversionResult *ptr);
 
 /**
  * Get the `warnings` field from a `ConversionResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2888,6 +2649,8 @@ uint32_t htm_table_grid_cols(const HTMTableGrid *ptr);
 
 /**
  * Get the `cells` field from a `TableGrid`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2918,6 +2681,8 @@ void htm_grid_cell_free(HTMGridCell *ptr);
 
 /**
  * Get the `content` field from a `GridCell`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2983,6 +2748,8 @@ void htm_table_data_free(HTMTableData *ptr);
 
 /**
  * Get the `grid` field from a `TableData`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_table_grid_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -2990,6 +2757,8 @@ HTMTableGrid *htm_table_data_grid(const HTMTableData *ptr);
 
 /**
  * Get the `markdown` field from a `TableData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3020,6 +2789,8 @@ void htm_processing_warning_free(HTMProcessingWarning *ptr);
 
 /**
  * Get the `message` field from a `ProcessingWarning`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3027,6 +2798,8 @@ char *htm_processing_warning_message(const HTMProcessingWarning *ptr);
 
 /**
  * Get the `kind` field from a `ProcessingWarning`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_warning_kind_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3064,6 +2837,8 @@ void htm_node_context_free(HTMNodeContext *ptr);
 
 /**
  * Get the `node_type` field from a `NodeContext`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_node_type_free`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3071,6 +2846,8 @@ HTMNodeType *htm_node_context_node_type(const HTMNodeContext *ptr);
 
 /**
  * Get the `tag_name` field from a `NodeContext`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3092,6 +2869,8 @@ uintptr_t htm_node_context_index_in_parent(const HTMNodeContext *ptr);
 
 /**
  * Get the `parent_tag` field from a `NodeContext`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
@@ -3799,33 +3578,5 @@ struct HTMHtmVisitor *htm_visitor_create(const struct HTMHtmVisitorCallbacks *ca
  * Passing a null pointer is safe and has no effect.
  */
 void htm_visitor_free(struct HTMHtmVisitor *visitor);
-
-/**
- * Create a new `HtmHtmlVisitorBridge` from a vtable and opaque user_data pointer.
- *
- * Returns a heap-allocated `HtmHtmlVisitorBridge` on success, or null if `vtable` is null.
- * The caller is responsible for calling `htm_htm_html_visitor_bridge_free` exactly once when the bridge is
- * no longer needed.
- *
- * # Safety
- *
- * `vtable` must be a non-null pointer to a fully initialised `HtmHtmlVisitorVTable` that
- * remains valid for the lifetime of the returned bridge.  `user_data` must be valid
- * for any thread that calls methods on this bridge.
- */
-struct HTMHtmHtmlVisitorBridge *htm_htm_html_visitor_bridge_new(const struct HTMHtmHtmlVisitorVTable *vtable,
-                                                                const void *user_data);
-
-/**
- * Free a `HtmHtmlVisitorBridge` created by `htm_htm_html_visitor_bridge_new`.
- *
- * After this call `ptr` is invalid. Passing null is a no-op.
- *
- * # Safety
- *
- * `ptr` must be either null or a non-null pointer returned by `htm_htm_html_visitor_bridge_new` that has
- * not yet been freed.
- */
-void htm_htm_html_visitor_bridge_free(struct HTMHtmHtmlVisitorBridge *ptr);
 
 #endif  /* HTM_H */
