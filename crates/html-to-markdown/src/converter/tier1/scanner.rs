@@ -1423,17 +1423,24 @@ fn emit_void(
             // ~keep     `normalize_link_label` (utility/content.rs ~145) collapses
             // ~keep     whitespace runs in link labels, so multiple spaces or
             // ~keep     `  \n` would normalize back to one space.
-            // ~keep   - Inside a table cell (not in a link): emit a single sentinel
-            // ~keep     `\u{0001}`.  `close_table_cell` collapses whitespace runs
-            // ~keep     before normalising the sentinel to three spaces — matches
-            // ~keep     Tier-2 walking `<br>` to `"  \n"` and `replace('\n', ' ')`
-            // ~keep     producing `"   "` (three spaces).
+            // ~keep   - Inside a table cell (not in a link): mirrors Tier-2's
+            // ~keep     `emit_table_cell_break` (main_helpers.rs) — trim trailing
+            // ~keep     spaces/tabs, then emit a literal `<br>` when `br_in_tables`
+            // ~keep     is true, or collapse to a single space (guarded against a
+            // ~keep     leading space on an empty cell) otherwise.  `newline_style`
+            // ~keep     is never consulted inside a cell (issue #453, issue #454).
             // ~keep   - Inside a regular block (paragraph, div, etc.): `"  \n"`.
             let in_link = state.stack.iter().any(|f| matches!(f.spec.kind, TagKind::Link));
             if in_link {
                 state.cell_or_output_mut().push(' ');
             } else if state.in_table_cell() {
-                state.cell_or_output_mut().push('\u{0001}');
+                let dest = state.cell_or_output_mut();
+                crate::converter::main_helpers::trim_trailing_whitespace(dest);
+                if options.br_in_tables {
+                    dest.push_str("<br>");
+                } else if !dest.is_empty() {
+                    dest.push(' ');
+                }
             } else if state.stack.is_empty() {
                 // ~keep bare `<br>` at top level — Tier-2 emits nothing
             } else {
@@ -2646,19 +2653,12 @@ fn close_table_cell(state: &mut Tier1State, is_implicit: bool) -> Result<(), Bai
     let cell_text_raw = ts.current_cell.trim().to_owned();
     // ~keep Replace newlines with spaces — mirrors Tier-2's `cell_text_content`
     // ~keep which calls `text.replace('\n', " ")` when `br_in_tables` is false.
+    // ~keep `<br>` itself is handled at emission time (see `TagKind::LineBreak`
+    // ~keep in `emit_void`), so no sentinel expansion is needed here.
     let cell_text = if cell_text_raw.contains('\n') {
         cell_text_raw.replace('\n', " ")
     } else {
         cell_text_raw
-    };
-    // ~keep Expand the `<br>` sentinel `\u{0001}` to three literal spaces — Tier-2
-    // ~keep emits `<br>` as `"  \n"` and the cell-level `replace('\n', ' ')` yields
-    // ~keep `"   "` (three spaces).  Using a sentinel keeps multi-space runs from
-    // ~keep inter-tag whitespace distinguishable from `<br>`-derived padding.
-    let cell_text = if cell_text.contains('\u{0001}') {
-        cell_text.replace('\u{0001}', "   ")
-    } else {
-        cell_text
     };
     let cell_text = cell_text.trim().to_owned();
     // ~keep Bail if the cell contains a pipe: Tier-2 escapes `|` → `\|`
@@ -3038,7 +3038,20 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
     // ~keep collapses internal newline runs to single spaces before emission.
     // ~keep Without this, summary content with multi-line inline children leaks
     // ~keep `\n  \n  ` between text runs.
-    let inside_inline = state.in_summary() || state.stack.iter().any(|frame| matches!(frame.spec.kind, TagKind::Link));
+    // ~keep Table cells fold newlines the same way: Tier-2's `process_text_node`
+    // ~keep has a dedicated `ctx.in_table_cell` branch (text_node.rs) that runs
+    // ~keep `normalize_cell_whitespace_cow` per text node — folding `\n`/`\r` into
+    // ~keep the whitespace run before collapsing to a single space — rather than
+    // ~keep the generic non-cell chomp path.  Without this, a text node whose
+    // ~keep trailing run is `\n` + indentation (pretty-printed HTML, e.g. a
+    // ~keep multi-line `<td>` around an `<ins>`/`<span>`) leaves the `\n` byte
+    // ~keep un-collapsed here; `close_table_cell`'s later blanket
+    // ~keep `replace('\n', " ")` then turns that leftover `\n` into a SECOND
+    // ~keep space next to the one already collapsed from the trailing run,
+    // ~keep double-spacing the cell relative to Tier-2.
+    let inside_inline = state.in_table_cell()
+        || state.in_summary()
+        || state.stack.iter().any(|frame| matches!(frame.spec.kind, TagKind::Link));
 
     // ~keep Phase Y: text-node chomp.  Tier-2's text_node.rs runs `chomp()` on
     // ~keep every text node and substitutes the leading and trailing whitespace

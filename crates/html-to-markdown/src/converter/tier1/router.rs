@@ -142,7 +142,7 @@ pub enum RouterDecision {
 /// | `link_style`         | `LinkStyle::Inline`                     | Yes — Reference                          |
 /// | `url_escape_style`   | `UrlEscapeStyle::Angle` (raw href)      | Yes — Percent                            |
 /// | `compact_tables`     | `false` (padded cells: `\| cell \|`)    | Yes — `true`                             |
-/// | `br_in_tables`       | bails on `<br>` in cells                | No — covered by scanner bail             |
+/// | `br_in_tables`       | honored in cells (literal `<br>` vs space) | No — scanner reads the option directly |
 /// | `hocr_spatial_tables`| Tier-2 only (structural gate)           | Already gated above                      |
 ///
 /// # Practical reachability & benchmark findings
