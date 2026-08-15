@@ -18,6 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   already render in cells; and under `WhitespaceMode::Strict` a newline inside a cell now folds to a
   single space. Every other whitespace byte is still preserved exactly under `Strict`, and text
   outside table cells is unaffected.
+- The Tier-1 fast path now honours `br_in_tables` inside table cells. It previously emitted a
+  sentinel that always expanded to three spaces, ignoring the option, so a document routed through
+  Tier-1 could render `<br>` in a cell differently from the same document routed through Tier-2.
+  Tier-1 also folds a text node's trailing newline the way Tier-2 does, fixing cells that were
+  double-spaced against Tier-2 when the source HTML was pretty-printed across several lines.
 
 ## [3.11.1] - 2026-08-15
 
