@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Newlines inside a table cell no longer leak into the rendered row when `br_in_tables` is enabled
+  ([#456](https://github.com/xberg-io/html-to-markdown/issues/456),
+  [#457](https://github.com/xberg-io/html-to-markdown/issues/457)). The whole-cell newline backstop
+  was gated on `!br_in_tables`, so enabling `br_in_tables` disabled the last-resort guarantee that a
+  raw newline never reaches a cell. Two consequences: a `<pre>` inside a cell now renders inline,
+  dropping its fence, indentation and language info string, matching how headings and list items
+  already render in cells; and under `WhitespaceMode::Strict` a newline inside a cell now folds to a
+  single space. Every other whitespace byte is still preserved exactly under `Strict`, and text
+  outside table cells is unaffected.
+
 ## [3.11.1] - 2026-08-15
 
 ### Upgrade note — the C ABI changed
