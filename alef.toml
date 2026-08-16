@@ -51,6 +51,7 @@ manifest = "crates/html-to-markdown-node/package.json"
 [workspace.docs.snippets.sessions.wasm]
 cwd = "crates/html-to-markdown-wasm"
 manifest = "crates/html-to-markdown-wasm/package.json"
+before = ["pnpm run build:all"]
 
 [workspace.docs.snippets.sessions.ruby]
 cwd = "packages/ruby"
@@ -66,9 +67,14 @@ manifest = "packages/go/go.mod"
 [workspace.docs.snippets.sessions.java]
 cwd = "packages/java"
 manifest = "packages/java/pom.xml"
+before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-ffi", "mvn package -DskipTests -q"]
 
 [workspace.docs.snippets.sessions.csharp]
 cwd = "packages/csharp"
+before = [
+  "cd ../.. && cargo build --release --locked -p html-to-markdown-ffi",
+  "cd ../.. && scripts/ci/csharp/copy-ffi.sh",
+]
 
 [workspace.docs.snippets.sessions.elixir]
 cwd = "packages/elixir"
@@ -81,6 +87,7 @@ manifest = "crates/html-to-markdown/Cargo.toml"
 [workspace.docs.snippets.sessions.kotlin_android]
 cwd = "packages/kotlin-android"
 manifest = "packages/kotlin-android/build.gradle.kts"
+before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-rs-jni"]
 
 [workspace.docs.snippets.sessions.swift]
 cwd = "packages/swift"
