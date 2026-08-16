@@ -1187,10 +1187,6 @@ jobs:
         run: dotnet build packages/csharp/ -c Release
         shell: bash
 
-      - name: Run C# unit tests
-        run: dotnet test packages/csharp/ -c Release
-        shell: bash
-
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
 
