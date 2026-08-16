@@ -233,9 +233,15 @@ jobs:
         shell: bash
 
       - name: Fail if generated e2e/ drifted from committed output
+        # ~keep `git diff` reports only tracked paths, so a regeneration that ADDS a new suite
+        # left the gate at exit 0 — it could not fail on the defect it exists to catch. Use
+        # `git status --porcelain -uall`, which reports additions, modifications and deletions.
         run: |
-          if ! git diff --exit-code -- e2e/; then
-            echo "::error::e2e/ is stale — regenerating from fixtures/ produced a diff. Run 'task e2e:generate' and commit the result."
+          drift="$(git status --porcelain --untracked-files=all -- e2e/)"
+          if [ -n "$drift" ]; then
+            echo "::error::e2e/ is stale — regenerating from fixtures/ changed the tree. Run 'task e2e:generate' and commit the result."
+            printf '%s\n' "$drift"
+            git diff -- e2e/
             exit 1
           fi
         shell: bash
