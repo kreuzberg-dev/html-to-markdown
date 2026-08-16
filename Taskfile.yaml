@@ -294,10 +294,19 @@ tasks:
     cmds:
       - alef docs
 
+  node:verify-esm:
+    desc: "Assert named ESM imports resolve from the built Node binding (#450 guard)"
+    # Requires an already-built host binding: the guard loads the real `.node`, so it cannot run
+    # after a bare `alef:generate` (nothing built) or in the cross-compiling publish pipeline
+    # (artifact targets a foreign platform). ~keep
+    cmds:
+      - node crates/html-to-markdown-node/scripts/verify-esm-exports.mjs
+
   node:e2e:
     desc: "Build Node binding and run e2e/node fixture tests"
     cmds:
       - alef test --e2e --lang node
+      - task: node:verify-esm
 
   ruby:e2e:
     desc: "Build Ruby binding and run e2e/ruby fixture tests"
