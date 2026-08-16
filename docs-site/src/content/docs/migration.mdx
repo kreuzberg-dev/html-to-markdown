@@ -208,10 +208,53 @@ char *markdown = htm_convert(html, NULL);
 htm_free(markdown);
 
 /* v3 */
-HTMConversionResult *result = htm_convert(html, NULL);
+HTMAlefHandle result = htm_convert(html, 0);
 char *markdown = htm_conversion_result_content(result);
 htm_free_string(markdown);
 htm_conversion_result_free(result);
 ```
+
+## C ABI: handles replace pointers
+
+Separate from the v2 to v3 API change above, the C ABI itself changed. Objects no longer cross the
+boundary as opaque struct pointers. They are now `HTMAlefHandle`, a `uint64_t` handle into a
+registry owned by the library. The null handle is `0`, so comparisons against `NULL` on these types
+become comparisons against `0`.
+
+Strings are unaffected: they are still `char *` and are still released with `htm_free_string`. The
+visitor callback struct `HTMHtmVisitorCallbacks` and the `HTM_VISIT_*` status codes are unchanged.
+
+Only code that includes `html_to_markdown.h` and links the native library directly needs to change.
+The shipped language bindings are regenerated against the new ABI and their public APIs are the
+same.
+
+```c
+/* before */
+HTMConversionOptions *options = htm_conversion_options_from_json("{}");
+HTMConversionResult *result = htm_convert(html, options);
+if (result == NULL) {
+    fprintf(stderr, "%s\n", htm_last_error_context());
+    return 1;
+}
+char *markdown = htm_conversion_result_content(result);
+htm_free_string(markdown);
+htm_conversion_result_free(result);
+htm_conversion_options_free(options);
+
+/* after */
+HTMAlefHandle options = htm_conversion_options_from_json("{}");
+HTMAlefHandle result = htm_convert(html, options);
+if (result == 0) {
+    fprintf(stderr, "%s\n", htm_last_error_context());
+    return 1;
+}
+char *markdown = htm_conversion_result_content(result);  /* unchanged: still char* */
+htm_free_string(markdown);
+htm_conversion_result_free(result);
+htm_conversion_options_free(options);
+```
+
+Where you declared `T *`, declare `HTMAlefHandle`. Where you compared against `NULL`, compare
+against `0`. A bare truth test such as `if (result)` keeps working, because the null handle is zero.
 
 <Snip_feedback />

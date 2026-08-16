@@ -336,8 +336,8 @@ cargo build --release -p html-to-markdown-ffi
 #include <stdio.h>
 
 int main(void) {
-    HTMConversionResult *result = htm_convert("<h1>Hello</h1>", NULL);
-    if (result == NULL) {
+    HTMAlefHandle result = htm_convert("<h1>Hello</h1>", 0);
+    if (result == 0) {
         fprintf(stderr, "convert failed: %s\n", htm_last_error_context());
         return 1;
     }

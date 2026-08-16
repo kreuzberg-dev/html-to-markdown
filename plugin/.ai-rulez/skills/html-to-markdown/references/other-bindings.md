@@ -356,10 +356,10 @@ Used internally by Go, Java, and C# bindings. All exported symbols use the `htm_
 ```c
 #include "html_to_markdown.h"
 
-// htm_convert() — returns an opaque HTMConversionResult handle
+// htm_convert() — returns an HTMAlefHandle (uint64_t); 0 means failure
 // JSON keys are the snake_case Rust field names; unknown keys are rejected.
-HTMConversionOptions *opts = htm_conversion_options_from_json("{\"heading_style\":\"atx\"}");
-HTMConversionResult *result = htm_convert(html_cstr, opts);
+HTMAlefHandle opts = htm_conversion_options_from_json("{\"heading_style\":\"atx\"}");
+HTMAlefHandle result = htm_convert(html_cstr, opts);
 htm_conversion_options_free(opts);
 
 if (result) {

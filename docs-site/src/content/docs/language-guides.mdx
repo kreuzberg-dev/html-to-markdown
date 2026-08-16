@@ -218,8 +218,8 @@ Download a pre-built release archive for your platform from the [GitHub releases
 ```c
 #include "html_to_markdown.h"
 
-HTMConversionResult *result = htm_convert("<h1>Title</h1>", NULL);
-if (result != NULL) {
+HTMAlefHandle result = htm_convert("<h1>Title</h1>", 0);
+if (result != 0) {
     char *content = htm_conversion_result_content(result);
     if (content != NULL) {
         printf("%s\n", content);
@@ -229,7 +229,7 @@ if (result != NULL) {
 }
 ```
 
-Every heap-allocated string must be released with `htm_free_string` and every handle with the matching `htm_*_free` function. The C API is a thin synchronous FFI layer. No async mode, no thread-local state. Conversion errors return `NULL` and set the thread-local error accessible via `htm_last_error_code` / `htm_last_error_context`.
+Every heap-allocated string must be released with `htm_free_string` and every handle with the matching `htm_*_free` function. The C API is a thin synchronous FFI layer. No async mode, no thread-local state. Conversion errors return `0` and set the thread-local error accessible via `htm_last_error_code` / `htm_last_error_context`.
 
 ## WASM
 
