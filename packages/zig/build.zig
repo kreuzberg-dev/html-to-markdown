@@ -31,11 +31,12 @@ pub fn build(b: *std.Build) void {
     module.linkSystemLibrary("html_to_markdown_ffi", .{});
 
     const test_module = b.createModule(.{
-        .root_source_file = b.path("src/html_to_markdown_rs.zig"),
+        .root_source_file = b.path("test/html_to_markdown_rs_test.zig"),
         .target = target,
         .optimize = optimize,
         .link_libc = true,
     });
+    test_module.addImport("html_to_markdown_rs", module);
     test_module.addLibraryPath(.{ .cwd_relative = ffi_path });
     test_module.addIncludePath(.{ .cwd_relative = ffi_include });
     test_module.linkSystemLibrary("html_to_markdown_ffi", .{});
