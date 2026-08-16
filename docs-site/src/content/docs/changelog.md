@@ -7,6 +7,324 @@ All notable changes to html-to-markdown will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.11.1] - 2026-08-15
+
+### Upgrade note — the C ABI changed
+
+This release changes the C header, so it is not drop-in for C, Go (cgo) or any other consumer that
+links the native library directly. Rebuild against the new header rather than reusing an existing
+build. Managed bindings (Python, Node, Ruby, PHP, Java, C#, Elixir, R, WASM) are unaffected.
+
+- `HTMHtmHtmlVisitorBridge` and `HTMHtmHtmlVisitorVTable` are gone. Borrowed types that cannot enter
+  the process-global handle registry are no longer exported, so the bridge entry points
+  `htm_htm_html_visitor_bridge_new` and `htm_htm_html_visitor_bridge_free` are removed with them.
+  Use the `HTMHtmVisitorCallbacks` vtable instead.
+- `htm_free_bytes` is removed. The exported function count goes from 307 to 304.
+- `HTMHtmVisitorCallbacks` gains a `void (*free_string)(char*)` member, which changes the struct
+  layout. Any code that constructs this struct must be recompiled, and callers that hand out heap
+  strings from a callback should set it so the library releases them with the matching allocator.
+
+The header previously in the tree described a surface the sources had already stopped providing;
+it is now regenerated from them.
+
+### Fixed
+
+- The generated FFI, Swift and Node sources did not compile, so the native library, the Swift
+  package and the Node addon could not be built from a checkout. A comment-reflow pass had merged
+  `unsafe {` into the preceding `// SAFETY:` comment at 40 sites in the FFI bridge and collapsed a
+  doc block in the Swift bridge over the `SwiftHtmlVisitorWrapper` declaration, so neither file
+  parsed; the Node addon applied a napi `getter` to three free functions, which napi allows only
+  inside an `impl` block. This also blocked every commit to the repository, because the pre-commit
+  hook compiles the staged snapshot and the FFI build script runs cbindgen over `lib.rs`.
+- The FFI null-safety test called `htm_htm_html_visitor_bridge_free`, a symbol the crate had
+  deliberately stopped exporting, so the test target did not build.
+
+## [3.11.0] - 2026-08-13
+
+### Upgrade note
+
+Rendered Markdown output changes in this release. The CSS-hidden/`hidden`-attribute fix below alone
+moved 56 of the 116 benchmark oracle snapshots when they were reblessed, and roughly a dozen other
+correctness fixes in this range shift output for the documents they affect — 64 of the 116
+snapshots changed in total. Consumers who pin byte-exact golden files against this library's
+output should expect to regenerate them when upgrading past this release.
+
+A further 16 snapshots moved when hidden-element detection was corrected to read attribute
+structure instead of scanning raw tag text. Every one of those 16 **restores content that was
+previously deleted**: a Wikipedia link whose `title` attribute contained the word "hidden" was
+being stripped in full. If you saw links or sections disappear from converted pages, this is why.
+
+### Added
+
+- Documentation snippets are generated from the complete E2E fixture corpus with Alef 0.60.2 and checked for
+  fixture-by-language coverage parity in local tasks and CI; strict validation is scoped to the generated root so
+  the 85 maintained examples remain independently audited.
+- The MCP server validates its inputs, bounds its HTTP surface and is instrumented. It previously
+  had no instrumentation at all despite being a public RPC surface: a failed request returned an
+  error to the client and left no trace. There are now debug spans on `convert_html` and
+  `extract_metadata` (re-entered inside `spawn_blocking`, which does not inherit the caller's
+  span), warnings on rejected enum values and conversion errors, and an error event on a panicking
+  blocking task. Behaviorally, unknown enum values from a client are rejected instead of silently
+  falling back to a default, a `max_depth` that does not fit `usize` warns instead of silently
+  becoming `usize::MAX`, five serialization fallbacks that returned `null`/`[]` on failure now
+  report the failure, and the HTTP transport gained a body-size limit, a concurrency cap, a request
+  timeout, and Origin/Host checks.
+- `VisitResult` now serializes with an adjacently tagged, snake_case wire schema
+  (`{"type": …, "output": …}`), so every binding encodes against one documented shape instead of
+  inventing its own. The field names are public API and a conformance test pins them.
+
+### Changed
+
+- Table rendering: each cell's Markdown is now produced once and reused between the column-width
+  pre-pass and the render pass, instead of being rendered twice, for the common case (no nested
+  table, no visitor installed). Rendered Markdown is unchanged — reblessing the benchmark oracle
+  snapshots before and after produced byte-identical output. This also fixed the metadata
+  collector recording every element inside a `<td>` twice, once per pass, on the default
+  extraction path. See `crates/html-to-markdown/tests/table_cell_metadata_duplication_test.rs`.
+- Link handling: fewer anchor traversals and allocations per `<a>` element. Output-neutral.
+- Removed the internal `text_content` LRU cache and with it the `lru` dependency. Because every
+  caller needs an owned `String`, a cache hit still cloned, so the cache cost an allocation per
+  miss and saved none; after the table change above, the dominant table path cannot hit it at all.
+  Measured 3.7% faster across the 29-fixture benchmark. Output-neutral.
+- DOM context building: the per-document context maps (parent, children, sibling-index, and
+  related lookup tables) are now sized once from the arena's node count up front instead of
+  growing incrementally as new node ids are seen. Output-neutral.
+- `alef` is pinned to `0.60.2` for binding generation, in `alef.toml` and in the CI lint workflow.
+  The two had drifted apart (`0.60.2` locally, `0.60.1` in CI), so CI generated with a different
+  generator than every developer.
+- `poly`'s whole-project lint phase is now disabled through `[workspace.poly] lint-workspace` in
+  `alef.toml` rather than a hand-edit to the generated `poly.toml`. The shared CI validate job
+  installs only Rust/Python/Java, so the remaining whole-workspace linters cannot run there; they
+  run via the pre-commit hooks and each language's own CI job. The previous hand-edit did not
+  survive `alef all --clean`.
+- Dependency upgrades, including `base64` and `tower-http` to their next major versions.
+- `html-to-markdown-cli` gained optional `mimalloc` and `jemalloc` global-allocator features
+  (`--features mimalloc` / `--features jemalloc`). Neither is enabled by default; if both are
+  enabled, `jemalloc` takes precedence, so `--all-features` builds continue to work.
+- `mcp-http` is no longer a default feature of `html-to-markdown-cli`. It was on by default, so a
+  CLI installed via brew, cargo, npm or pip shipped the ability to start an unauthenticated HTTP
+  service. Build with `--features mcp-http` if you need it; stdio `mcp` stays on by default, since
+  it opens no listening socket.
+
+### Fixed
+
+- `<br>` inside a table cell no longer depends on `newline_style` or on the source HTML's own
+  whitespace ([#453](https://github.com/xberg-io/html-to-markdown/issues/453)). Two separate
+  defects: with `br_in_tables: false` the `<br>` fell through to the paragraph hard-break path and
+  emitted `newline_style` bytes into the cell, leaking a literal `\` under `Backslash` and a stray
+  extra space under `Spaces`; and a newline in the source before the `<br>` survived normalization,
+  so with `br_in_tables: true` it reached the output as a real newline and split the row's pipe
+  syntax across physical lines, corrupting the table. A cell cannot contain a hard line break, so
+  `<br>` now collapses to a single space, or renders as a literal `<br>` when `br_in_tables` is
+  enabled, in every combination of the two options and regardless of source formatting.
+- `<div>` and `<p>` continuations inside a table cell follow the same rule as `<br>`
+  ([#454](https://github.com/xberg-io/html-to-markdown/issues/454)). The two disagreed with each
+  other: a `<div>` continuation honoured `br_in_tables` but emitted `newline_style` bytes, which are
+  not valid inside a cell, while a `<p>` continuation always emitted `<br>` and ignored
+  `br_in_tables` entirely. Both now emit a literal `<br>` when `br_in_tables` is enabled and collapse
+  to a single space otherwise, sharing one code path with the `<br>` handler.
+- A `<code>` span inside a table cell no longer corrupts the row
+  ([#455](https://github.com/xberg-io/html-to-markdown/issues/455)). Verbatim content — `<code>`,
+  and `<kbd>`/`<samp>`, which share the same path — skipped cell whitespace handling entirely, so a
+  newline inside the span reached the output and split the row's pipe syntax across physical lines
+  whenever `br_in_tables` was enabled. Line breaks in that content are now folded to a single space,
+  independent of `whitespace_mode`, because a raw newline in a cell is a structural impossibility in
+  GFM rather than a formatting preference. All other whitespace, including repeated spaces, is still
+  preserved byte-for-byte, and code spans outside a table cell are unaffected.
+- Document-structure and inline-image collectors also record table-cell content exactly once.
+  Images, code blocks and nested tables inside a `<td>` were recorded up to three times with
+  `include_document_structure: true`, and inline images twice with `extract_images: true`. Note the
+  companion change: a table that renders to nothing (a blank table, or one a visitor skips) now
+  contributes nothing to `document` or the inline-image set, matching what it emits; `result.tables`
+  still reports its grid.
+- Metadata extracted from inside a table cell (links, images) is now recorded exactly once in
+  every configuration. Previously a link in a `<td>` was recorded twice with
+  `link_style: Reference`, and three times with `include_document_structure: true`, because the
+  column-width pre-pass, the render pass, and the document-structure grid walk each re-walked the
+  cell through a shared collector. The internal passes no longer record; exactly one walk does.
+  Affects `metadata.links` / `metadata.images` counts for documents with tables — de-duplication
+  on the consumer side is no longer needed.
+- Rows with more cells than the header no longer lose them. The separator row was sized from the
+  first row alone, so any later row with more cells had the surplus silently dropped by compliant
+  renderers; it is now sized from the table-wide maximum and every row is padded to match.
+  Separately, `scan_table_node` counted nested tables and rows transitively across nested `<table>`
+  boundaries, so the layout-table heuristic misfired for every level of a nested chain except the
+  innermost, turning real table structure into a mix of bullet lists and stray pipe text.
+- Consecutive `<li>` elements inside a table cell no longer fuse into one word. A cell strips list
+  markers, and nothing separated the items, so `<li>a</li><li>b</li>` rendered as the fabricated
+  word `ab`. Both tiers now emit the same `<br>` boundary already used between sibling `<p>`/`<div>`
+  in a cell.
+- Content that a browser never renders is no longer emitted. `<template>` and `<noscript>` fell
+  through to the unknown-element handler, which recurses into children and renders their text — a
+  template's contents are inert per spec and must never appear in the output — and
+  `strip_hidden_elements` honoured only the `hidden` attribute, so `style="display:none"` and
+  `visibility:hidden` leaked in full. This is the single largest source of output drift in this
+  release: it alone moved 56 of the 116 benchmark oracle snapshots. `aria-hidden` is deliberately
+  untouched, because that content is visually rendered and hidden only from assistive technology.
+- Hidden-element detection no longer misreads the tag it is inspecting, in three separate ways.
+  `declaration_hides_element` split each declaration on the first `:`, so a CSS comment ahead of the
+  property name left `/* note */ display` as the property and never matched —
+  `<div style="/* note */ display:none">SECRET</div>` emitted its content; comments are now
+  stripped before the split. `tag_has_hidden_attribute` scanned the raw tag text for the word
+  `hidden` and matched inside quoted values, so a perfectly visible
+  `<div title="… hidden from search engines">` was deleted whole; it now walks `name=value` pairs
+  and matches attribute *names*. And `tag_has_hidden_style` used `.any()` over declarations,
+  ignoring the CSS cascade, so `display:none; display:block` was stripped even though the last
+  declaration wins; it now resolves per property. The second of these is why 16 oracle snapshots
+  gained content back — see the Upgrade note.
+- Content nested inside a CSS-hidden element (`style="display:none"` / `visibility:hidden`, or the
+  `hidden` attribute) no longer leaks into the output when the hidden element contains a nested
+  element of the *same* tag name (e.g. a hidden `<div>` containing another `<div>`). The stripper
+  previously matched the closing tag of the *inner* element rather than the outer one, so text
+  after the inner close tag — and, for deeper nesting, several more layers of "hidden" text — was
+  emitted as if it were visible. This affects any document with same-tag-name nesting inside a
+  hidden element, including a common Wikipedia infobox pattern; see
+  `crates/html-to-markdown/tests/hidden_element_nesting_test.rs` for the affected shapes. Output
+  changes for documents that hit this pattern.
+- Hidden content no longer escapes through a `</tag>` sequence that is not really markup. The
+  depth-counting stripper still treated any `</tag>` byte sequence as a close tag, so four measured
+  shapes leaked against the release binary on default options: a `<!-- </div> -->` end-of-block
+  marker (an ordinary authoring idiom, requiring no crafting) leaked the trailing text, a quoted
+  attribute value containing `</div>` leaked, a `</div>` inside a preserved `application/ld+json`
+  raw-text body leaked, and an unbalanced `<div>` inside a comment inflated the depth counter far
+  enough that the scan overshot and dropped the following visible sibling. The scan now skips
+  comments, CDATA and raw-text bodies, and advances non-target tags through a quote-aware
+  tag-end search.
+- Alt text, titles and media URLs are escaped before they are spliced into Markdown. The hardening
+  applied to `<a href>` was never propagated to images, graphics or embedded media, so inert input
+  produced live output: an alt of `a](https://evil.example)` emitted a real image pointing at that
+  URL; `<audio>`, `<video>` and `<iframe>` used `src` as both label and destination with no
+  escaping at all; `<graphic>` had no paren handling whatsoever; and a bare quote in a title closed
+  the Markdown title early, leaving the remainder to parse as document text. The `<a>` path's
+  `append_url_destination` and `escape_markdown_title` are now shared by all of them, so
+  balanced-paren checking (which had treated `)(` as balanced) guards image destinations too. Alt
+  and title text containing brackets or quotes is now escaped, which changes output for benign
+  documents as well.
+- The HTML serializers are depth-bounded and quote-safe. `serialize_element`/`serialize_node` in
+  the SVG and utility paths mutually recursed over arbitrary-depth subtrees with no depth parameter
+  at all — a remote stack overflow, reproduced as a SIGABRT with 50k nested `<g>` or `<mrow>` — and
+  are reachable from roughly twenty call sites via `preserve_tags` and the visitor's `PreserveHtml`
+  result. They now truncate with a warning at the native stack-safe depth. Both also re-quoted
+  every reconstructed attribute with double quotes without escaping an embedded one, so a
+  single-quoted attribute holding a literal quote — valid, inert HTML — reconstructed into extra
+  live attributes, turning an inert `title` into a real `onclick` handler. Values are now escaped
+  regardless of the source delimiter.
+- Deeply nested documents no longer exhaust the machine. Three separate defects made the depth
+  guard ineffective: roughly two dozen call sites forwarded the recursion depth unchanged while
+  descending into a child, every table-cell walk passed a literal `0` and so reset the budget at
+  each cell boundary (a remote stack-overflow SIGSEGV from repeated `<table><tr><td>`), and two
+  passes outside the depth-bounded walk were quadratic in nesting depth —
+  `has_inline_block_misnest` ran once per block node and walked to the root each time, and
+  `scan_table_node` re-walked the whole remaining nested-table chain from every table. A 220KB
+  document of 20k nested `<div>`s went from 30.5s to 0.06s, and 50k-deep table, div, svg, ol and
+  blockquote payloads — three of which previously ran past two minutes — now all finish in under a
+  second. This was remote resource exhaustion: the guard bounded the walk but not these passes.
+- A code block containing a run of three or more backticks — an embedded Markdown sample, say — no
+  longer closes early and corrupts everything after it. The opening fence was hardcoded to three
+  characters; its length is now `max(3, longest_run + 1)`. Inline code spans use a different rule
+  on purpose: the smallest delimiter length not present in the content, because CommonMark closes a
+  span at a backtick string of the *same* length, so `max_run + 1` would over-escape (CommonMark
+  examples 330 and 331).
+- An out-of-range `<ol start>` no longer panics the whole conversion. `start` was parsed as `usize`
+  with an unchecked per-item increment, so `start="18446744073709551615"` with a single `<li>`
+  overflowed and failed the entire document rather than just the list. The counter is now `i64`,
+  so a negative start counts down as browsers do, out-of-range magnitudes clamp with a warning, and
+  the increment pins at `i64::MAX` instead of wrapping. The saturation warning fires once per list
+  rather than once per item, so a long list cannot flood the logs.
+- Blockquotes preserve significant leading whitespace. The per-line loop trimmed every content
+  line, so indented code blocks and nested-list continuations inside a `<blockquote>` lost their
+  indentation entirely; only whitespace-only lines are blanked now. Nested blockquotes also pushed
+  a hardcoded three newlines regardless of what preceded them, emitting stray blank `>` lines, and
+  a paragraph following bare inline text inside a blockquote merged onto the same line because the
+  separator was gated off inside blockquotes altogether. The gate is now depth-aware, which leaves
+  the compact heading-then-paragraph style alone (CommonMark example 228 depends on it).
+- A list nested inside an ordered list is now indented to its parent marker's content column
+  instead of a uniform `list_depth * list_indent_width`. That uniform width happens to match `"- "`
+  but not `"1. "` (3 columns) or `"10. "` (4), so a nested ordered list was indented 2 columns and
+  CommonMark parsed the child as a sibling of its parent. The indent is now the cumulative width of
+  the ancestors' own markers, with `list_indent_width` as the floor.
+- A panicking visitor callback no longer poisons the handle for every later call. The panic
+  unwound out of `convert()` and left the visitor's `Mutex` poisoned, so every subsequent
+  conversion reusing that handle failed permanently. The pipeline now runs under `catch_unwind` and
+  clears the poison flag, confining the failure to the call that caused it.
+- Three inline-image options finally do something. `InlineImageConfig::new` seeded its own
+  defaults and the conversion path never overwrote them, so `capture_svg`, `infer_dimensions` and
+  `max_image_size` were inert despite each having both a builder setter and an update field — and
+  two of those internal defaults were the inverse of the documented ones: `capture_svg` documented
+  `false` but always behaved as `true`, and `infer_dimensions` documented `true` but always behaved
+  as `false`. `max_image_size` was ignored outright and only ever coincided with the internal
+  constant. Callers who set any of the three will see behavior change to what the documentation
+  always promised.
+- The Tier-1 byte-scanner path agrees with Tier-2 again. It carried independently duplicated
+  copies of the code-fence and inline-delimiter bugs fixed above, had no depth ceiling, silently
+  returned an empty `result.metadata`, emitted hidden elements that Tier-2 strips, and left link,
+  image and SVG-title labels unescaped — the last being the injection vector Tier-2 has guarded for
+  some time. It also evaluated only one of Tier-2's three layout-table conditions, so a
+  `<table border="0">` with a `colspan`, or two nested tables, produced a GFM table (in the nested
+  case, a malformed one) where Tier-2 produced a bullet list. Tier-1 now bails on both shapes
+  rather than reimplementing them, and the router defers to Tier-2 for metadata rather than
+  maintaining a second collector — a second implementation of that collector is precisely what
+  produced the duplicated fence bugs. Default options never reach Tier-1, so this affects only
+  callers who force `TierStrategy::Tier1` or disable metadata extraction.
+
+- Python visitor callbacks now honor the documented `type`/`output` action dictionaries for
+  custom link output and image `skip`/`continue` actions ([#452]).
+
+- Dart: the native loader downloads and caches the library again on a cold cache. It only read
+  the versioned cache and then threw a `StateError`, even though `nativeDownloadAndCacheLibrary()`
+  was defined and exported for exactly that case — so a machine that had never run
+  `dart run h2m:download_libs` could not self-heal. The loader also now searches for the
+  `_dart`-suffixed cdylib that is actually built, opens every candidate by absolute path (a
+  hardened runtime rejects a relative `dlopen`), walks up from `Platform.script` to find the
+  package root as a last resort, and names the real environment variable in its error message
+  instead of printing the identifier `$nativeLibDirEnv` literally. Fixed upstream in alef 0.55.6.
+
+  Behavior change: an unresolvable native now throws a descriptive `StateError` naming the asset
+  URL and the download command, where it previously returned `null` and let flutter_rust_bridge
+  attempt its own relative-path `dlopen` — which would fail anyway, but later and less legibly.
+
+- Java: `TierStrategy` serializes to the wire names the core actually accepts. Alef 0.55.7 changed
+  the Java backend's no-`rename_all` fallback to emit variants verbatim, but it could not see
+  `rename_all` when it sat behind a `cfg_attr` with an `any(...)` condition — exactly how
+  `TierStrategy` declares it. The generated Java therefore sent `Auto` to a core that deserializes
+  `auto`, and every Java conversion failed with `unknown variant`. Fixed upstream in alef 0.55.8,
+  which parses the `cfg_attr` condition structurally.
+
+- CI: the Node e2e job no longer runs the Rust test suite. It invoked `task rust:test`
+  (`cargo test --release --no-default-features --workspace`), a full release-mode build that took
+  3047s of the job's 60-minute budget on `windows-latest` and left `Install alef` to be cancelled
+  mid-step — the Windows Node e2e job had never once completed. `CI Rust` already runs the suite on
+  ubuntu, windows and macos via `task rust:test:ci` and compile-checks `--no-default-features`
+  separately, and no other language's e2e job ran it. The job now passes in 925s.
+
+- Node: the named ESM re-exports that work around napi's `module.exports = nativeBinding` tail
+  (#450) are now committed in `crates/html-to-markdown-node/index.js`, not only appended at publish
+  time. `cjs-module-lexer` cannot analyse that tail, so `import { convert } from ...` broke for
+  anyone consuming the repo directly. Published packages were already correct — both
+  `task alef:generate` and the publish workflow run the fixup script — but the committed file was
+  not, which also meant a regenerate-and-diff freshness check could never pass.
+
+- `--newline-style`, `--code-block-style` and `--bullets` all documented the wrong default in the
+  CLI's `--help`, so users following the help text got output they did not expect. Tests now
+  assert the real defaults, so help text and behavior cannot drift apart silently again.
+
+- The CLI's outbound User-Agent is derived from the crate version. It was a literal pinned at
+  `2.10` while the crate shipped `3.10.x`, so every fetch advertised a version four majors stale.
+
+- The coding-agent plugin's launcher downloads the right asset and verifies it. It fetched
+  `html-to-markdown-<triple>` while releases publish `cli-<triple>`, so every download 404'd and
+  silently fell through to the slow path — the fast path had never once worked — and it then
+  executed whatever it did fetch, with only TLS vouching for the bytes. It now resolves the
+  checksum from `cli-SHA256SUMS`, retries while GitHub propagates release assets, and refuses to
+  execute a binary it cannot verify.
+
+- The Dart, Swift and Zig package READMEs are full documents again (276 / 271 / 260 lines). A
+  partial generator run had replaced all three with fallback stubs of ~30 lines; Dart's stub was
+  the pub.dev landing page rather than the package README.
+
+- Internal: `strip_css_comments` uses `let ... else` instead of a single-arm `match`, which was a
+  `clippy::single-match-else` error under `-D warnings` and failed the workspace clippy gate.
+
 ## [3.10.6] - 2026-08-05
 
 ### Fixed
