@@ -18,6 +18,7 @@ exclude = [
     "packages/elixir/native/html_to_markdown_nif",
     "packages/r/src/rust",
     "packages/ruby/ext/html_to_markdown_rb",
+    "packages/ruby/ext/html_to_markdown_rb/native",
     "packages/ruby/vendor",
     "test_apps/rust",
     "tests/test_apps/elixir/deps",
