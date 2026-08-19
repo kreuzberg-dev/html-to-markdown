@@ -1,239 +1,239 @@
 {
   "schema": 1,
-  "sha": "a4d315f",
+  "sha": "a6447af",
   "host": "unknown",
-  "created_at": "2026-06-08T16:05:53.163685761Z",
+  "created_at": "2026-08-19T12:34:28.739868907Z",
   "runs": [
     {
       "fixture": "mdream/nuxt-example.html",
       "group": "clean_small",
       "bytes": 3577,
-      "ms_best": 0.04688176638176638,
-      "mb_per_s": 72.76374789308073,
-      "output_bytes": 1921
+      "ms_best": 0.05335297356828194,
+      "mb_per_s": 63.93819878510299,
+      "output_bytes": 1917
     },
     {
       "fixture": "mdream/vuejs-docs.html",
       "group": "clean_medium",
       "bytes": 112232,
-      "ms_best": 8.202285714285713,
-      "mb_per_s": 13.049140155224048,
-      "output_bytes": 26038
+      "ms_best": 10.444600000000001,
+      "mb_per_s": 10.247666342311456,
+      "output_bytes": 26014
     },
     {
       "fixture": "mdream/wikipedia-small.html",
       "group": "clean_medium",
       "bytes": 166054,
-      "ms_best": 8.693333333333333,
-      "mb_per_s": 18.21642273042831,
-      "output_bytes": 44814
+      "ms_best": 10.547,
+      "mb_per_s": 15.01483217374831,
+      "output_bytes": 40572
     },
     {
       "fixture": "mdream/mdn-array.html",
       "group": "clean_medium",
       "bytes": 231446,
-      "ms_best": 9.577166666666667,
-      "mb_per_s": 23.046910794942235,
-      "output_bytes": 70966
+      "ms_best": 11.679799999999998,
+      "mb_per_s": 18.897935395722612,
+      "output_bytes": 70962
     },
     {
       "fixture": "mdream/react-learn.html",
       "group": "clean_medium",
       "bytes": 265127,
-      "ms_best": 16.636333333333333,
-      "mb_per_s": 15.198349625468744,
+      "ms_best": 22.388333333333332,
+      "mb_per_s": 11.2935968355173,
       "output_bytes": 59483
     },
     {
       "fixture": "mdream/github-markdown-complete.html",
       "group": "clean_medium",
       "bytes": 429661,
-      "ms_best": 16.249,
-      "mb_per_s": 25.217346326630917,
-      "output_bytes": 51748
+      "ms_best": 19.910666666666668,
+      "mb_per_s": 20.57975593290493,
+      "output_bytes": 51702
     },
     {
       "fixture": "real-world/wikipedia/small_html.html",
       "group": "clean_large",
       "bytes": 972853,
-      "ms_best": 46.993,
-      "mb_per_s": 19.743045128822793,
-      "output_bytes": 772561
+      "ms_best": 47.42,
+      "mb_per_s": 19.565266126924705,
+      "output_bytes": 191023
     },
     {
       "fixture": "real-world/wikipedia/lists_timeline.html",
       "group": "clean_large",
       "bytes": 251962,
-      "ms_best": 13.938,
-      "mb_per_s": 17.239897267208462,
-      "output_bytes": 42163
+      "ms_best": 17.244,
+      "mb_per_s": 13.934683838456946,
+      "output_bytes": 22667
     },
     {
       "fixture": "real-world/wikipedia/tables_countries.html",
       "group": "clean_large",
       "bytes": 756394,
-      "ms_best": 31.633,
-      "mb_per_s": 22.80382925690858,
-      "output_bytes": 238130
+      "ms_best": 34.5355,
+      "mb_per_s": 20.8873052622313,
+      "output_bytes": 184288
     },
     {
       "fixture": "real-world/wikipedia/medium_python.html",
       "group": "clean_large",
       "bytes": 1244134,
-      "ms_best": 79.575,
-      "mb_per_s": 14.910444762397402,
-      "output_bytes": 350113
+      "ms_best": 96.631,
+      "mb_per_s": 12.278654282453596,
+      "output_bytes": 257533
     },
     {
       "fixture": "real-world/wikipedia/large_rust.html",
       "group": "clean_large",
       "bytes": 1065167,
-      "ms_best": 46.885,
-      "mb_per_s": 21.66625595784358,
-      "output_bytes": 663265
+      "ms_best": 51.972,
+      "mb_per_s": 19.54557089554945,
+      "output_bytes": 190726
     },
     {
       "fixture": "real-world/issues/gh-190/mitrade.html",
       "group": "clean_small",
       "bytes": 2346,
-      "ms_best": 0.06481944444444444,
-      "mb_per_s": 34.51618515809139,
+      "ms_best": 0.066753591954023,
+      "mb_per_s": 33.516098247267834,
       "output_bytes": 458
     },
     {
       "fixture": "real-world/issues/gh-190/flex2025.html",
       "group": "clean_small",
       "bytes": 6304,
-      "ms_best": 0.10702796420581656,
-      "mb_per_s": 56.171888676345326,
-      "output_bytes": 2584
+      "ms_best": 0.12019424460431655,
+      "mb_per_s": 50.018725192845814,
+      "output_bytes": 2469
     },
     {
       "fixture": "real-world/issues/gh-190/insight.html",
       "group": "clean_medium",
       "bytes": 12340,
-      "ms_best": 0.18109962406015037,
-      "mb_per_s": 64.98269185000844,
-      "output_bytes": 1987
+      "ms_best": 0.18702962962962963,
+      "mb_per_s": 62.9223352885727,
+      "output_bytes": 1426
     },
     {
       "fixture": "real-world/issues/gh-190/plusblog.html",
       "group": "clean_medium",
       "bytes": 29182,
-      "ms_best": 1.747448275862069,
-      "mb_per_s": 15.92615031059374,
-      "output_bytes": 6953
+      "ms_best": 2.2273478260869566,
+      "mb_per_s": 12.494736374542649,
+      "output_bytes": 6949
     },
     {
       "fixture": "real-world/issues/gh-190/rbloggers.html",
       "group": "fallthrough_bare_lt",
       "bytes": 47085,
-      "ms_best": 1.0876304347826087,
-      "mb_per_s": 41.285857541273636,
-      "output_bytes": 20303
+      "ms_best": 1.2795,
+      "mb_per_s": 35.09476763422296,
+      "output_bytes": 20161
     },
     {
       "fixture": "real-world/issues/gh-190/ozonekorea.html",
       "group": "clean_medium",
       "bytes": 67037,
-      "ms_best": 2.865,
-      "mb_per_s": 22.31464752144006,
-      "output_bytes": 25686
+      "ms_best": 3.5304,
+      "mb_per_s": 18.10884464902724,
+      "output_bytes": 25541
     },
     {
       "fixture": "real-world/issues/gh-190/firsteigen.html",
       "group": "clean_medium",
       "bytes": 69450,
-      "ms_best": 1.7940714285714288,
-      "mb_per_s": 36.91752748504187,
-      "output_bytes": 25784
+      "ms_best": 1.9413461538461538,
+      "mb_per_s": 34.11688386596861,
+      "output_bytes": 25612
     },
     {
       "fixture": "real-world/issues/gh-190/sjsu.html",
       "group": "clean_medium",
       "bytes": 134697,
-      "ms_best": 2.170695652173913,
-      "mb_per_s": 59.177835118582934,
-      "output_bytes": 7784
+      "ms_best": 2.8828888888888886,
+      "mb_per_s": 44.55845311696423,
+      "output_bytes": 7794
     },
     {
       "fixture": "real-world/issues/gh-190/kimbrain.html",
       "group": "clean_medium",
       "bytes": 163213,
-      "ms_best": 2.62325,
-      "mb_per_s": 59.335574651143915,
-      "output_bytes": 40351
+      "ms_best": 3.0642352941176467,
+      "mb_per_s": 50.79637536399881,
+      "output_bytes": 40082
     },
     {
       "fixture": "real-world/issues/gh-121-hacker-news.html",
       "group": "clean_medium",
       "bytes": 56676,
-      "ms_best": 1.3911621621621622,
-      "mb_per_s": 38.85272833516024,
+      "ms_best": 1.5435757575757576,
+      "mb_per_s": 35.0163866537583,
       "output_bytes": 11937
     },
     {
       "fixture": "real-world/issues/gh-127-issue.html",
       "group": "fallthrough_custom_elements",
       "bytes": 650928,
-      "ms_best": 20.518666666666668,
-      "mb_per_s": 30.254076715333394,
-      "output_bytes": 44176
+      "ms_best": 24.3065,
+      "mb_per_s": 25.539395446884065,
+      "output_bytes": 42143
     },
     {
       "fixture": "synthetic/optional_li.html",
       "group": "spec_rules",
       "bytes": 25,
-      "ms_best": 0.003705143630621146,
-      "mb_per_s": 6.434799912509545,
+      "ms_best": 0.005940699246667954,
+      "mb_per_s": 4.013308353141893,
       "output_bytes": 12
     },
     {
       "fixture": "synthetic/table_no_tbody.html",
       "group": "spec_rules",
       "bytes": 46,
-      "ms_best": 0.004865524093392946,
-      "mb_per_s": 9.016298699303261,
+      "ms_best": 0.007193312101910828,
+      "mb_per_s": 6.09858406436086,
       "output_bytes": 15
     },
     {
       "fixture": "synthetic/bare_fragment.html",
       "group": "adversarial",
       "bytes": 19,
-      "ms_best": 0.0003929661993892834,
-      "mb_per_s": 46.11035768439909,
+      "ms_best": 0.0020617687884195916,
+      "mb_per_s": 8.788479151247671,
       "output_bytes": 12
     },
     {
       "fixture": "synthetic/unescaped_lt.html",
       "group": "adversarial",
       "bytes": 27,
-      "ms_best": 0.002320682750071517,
-      "mb_per_s": 11.095530633032554,
+      "ms_best": 0.004640661252900232,
+      "mb_per_s": 5.548607222058387,
       "output_bytes": 20
     },
     {
       "fixture": "synthetic/unclosed_p.html",
       "group": "adversarial",
       "bytes": 21,
-      "ms_best": 0.0029731478681584516,
-      "mb_per_s": 6.736012311737439,
+      "ms_best": 0.005195746662527165,
+      "mb_per_s": 3.854529857849192,
       "output_bytes": 16
     },
     {
       "fixture": "synthetic/unclosed_at_eof.html",
       "group": "adversarial",
       "bytes": 18,
-      "ms_best": 0.002263793511721525,
-      "mb_per_s": 7.5829078961615775,
+      "ms_best": 0.004500810731132075,
+      "mb_per_s": 3.8140101241259607,
       "output_bytes": 16
     },
     {
       "fixture": "synthetic/cdata_in_svg.html",
       "group": "adversarial",
       "bytes": 47,
-      "ms_best": 0.009574110868269422,
-      "mb_per_s": 4.681655924796672,
+      "ms_best": 0.026921813031161472,
+      "mb_per_s": 1.6649210370494871,
       "output_bytes": 120
     }
   ]
