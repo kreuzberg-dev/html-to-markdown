@@ -209,6 +209,19 @@ jobs:
         run: task bench:run
         shell: bash
 
+      # ~keep Uploaded before the comparison and with always(), because the run this job
+      # produces is the only way to re-cut baselines/baseline.json: `bench:compare` runs here
+      # on ubuntu-latest, so a baseline captured on a developer machine is being compared
+      # against CI hardware and the percentages mean nothing. Without this the results file is
+      # discarded on every run, including the failing ones worth inspecting.
+      - name: Upload benchmark results
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: benchmark-results
+          path: tools/benchmark-harness/results/latest.json
+          retention-days: 14
+
       - name: Compare against baseline (fails on regression beyond threshold)
         run: task bench:compare
         shell: bash
