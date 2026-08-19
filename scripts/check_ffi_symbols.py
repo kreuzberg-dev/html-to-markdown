@@ -60,9 +60,6 @@ EXPORT_SOURCE_PATHS = frozenset({FFI_HEADER})
 # failure, so entries cannot outlive their fix. ~keep
 KNOWN_MISSING_EXPORTS: dict[str, str] = {
     "htm_register_html_visitor": "task #94 - visitor registration never landed in the FFI crate",
-    "htm_html_visitor_free": "task #94 - paired with htm_register_html_visitor",
-    "htm_node_type_from_json": "task #94 - NodeType has no JSON constructor export",
-    "htm_html_visitor_handle_from_callbacks": "task #94 - vtable handle constructor never exported",
 }
 
 KNOWN_MISSING_PHP_FUNCTIONS: dict[str, str] = {
