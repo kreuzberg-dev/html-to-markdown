@@ -17,9 +17,6 @@ part 'lib.freezed.dart';
 /// document structure, table data, inline images, and warnings depending on the
 /// enabled features and conversion options.
 ///
-///   `Some(options)`, or `null`. Language bindings expose the same option
-///   fields through native constructors or optional parameters.
-///
 /// **Errors:**
 ///
 /// Returns an error if HTML parsing fails or if the input contains invalid UTF-8.

@@ -300,8 +300,93 @@ values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051"
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "lint.php.mago.ignore"
+values = ["strict-assertions", "use-specific-assertions", "no-redundant-variable", "sensitive-parameter"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "lint.php.mago.select"
+values = ["correctness", "security"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "lint.python.ruff.ignore"
+values = [
+  "ANN401",
+  "ASYNC109",
+  "ASYNC110",
+  "D100",
+  "D104",
+  "D107",
+  "D205",
+  "E501",
+  "ISC001",
+  "PGH003",
+  "PLR2004",
+  "PLW0603",
+  "S104",
+  "S110",
+  "S603",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "lint.python.ruff.select"
+values = [
+  "F",
+  "E",
+  "W",
+  "I",
+  "N",
+  "D",
+  "UP",
+  "ANN",
+  "ASYNC",
+  "S",
+  "B",
+  "A",
+  "C4",
+  "DTZ",
+  "T10",
+  "T20",
+  "ISC",
+  "ICN",
+  "PIE",
+  "PT",
+  "Q",
+  "RSE",
+  "RET",
+  "SIM",
+  "TID",
+  "TC",
+  "ARG",
+  "PTH",
+  "PGH",
+  "PL",
+  "PERF",
+  "FURB",
+  "RUF",
+]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "lint.uncomment.preserve_patterns"
 values = ["SAFETY", "SPDX", "Copyright", "License", "licensed under"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/*.pyi"
+values = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/__init__.py"
+values = ["I001"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/api.py"
+values = ["F401", "I001", "TC006", "UP035"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -347,6 +432,11 @@ values = [
   "A001",
   "N801",
 ]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/options.py"
+values = ["F401", "I001", "RUF100"]
 
 [[entries]]
 relative_path = "poly.toml"
