@@ -118,5 +118,6 @@ module.exports.TextDirection = nativeBinding.TextDirection;
 module.exports.TierStrategy = nativeBinding.TierStrategy;
 module.exports.UrlEscapeStyle = nativeBinding.UrlEscapeStyle;
 module.exports.VisitorHandle = nativeBinding.VisitorHandle;
+module.exports.VisitResult = nativeBinding.VisitResult;
 module.exports.WarningKind = nativeBinding.WarningKind;
 module.exports.WhitespaceMode = nativeBinding.WhitespaceMode;
