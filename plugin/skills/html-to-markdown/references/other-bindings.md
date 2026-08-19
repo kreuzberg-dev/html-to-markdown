@@ -1,7 +1,7 @@
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:31b5c023a80e32ec7cf7fb817ca6fdd59555c7d75fc3a50cdfb92a1fcae740dd
-Source-Hash: blake3:b2f13825df5b840cc04a4f54a267c6bfa18a4146b2e9e9ceaea0f4e45268ebf0
+Content-Hash: blake3:16e6451fac12f8494f6b7c279b03be8eb50f4b823b7cb3113298b653cb2f519d
+Source-Hash: blake3:81720b7b3cde96617ee6bd29d153e9486d6b150d1d5e98b94930a16a414f8730
 Schema-Version: v1
 -->
 
@@ -363,10 +363,10 @@ Used internally by Go, Java, and C# bindings. All exported symbols use the `htm_
 ```c
 #include "html_to_markdown.h"
 
-// htm_convert() — returns an opaque HTMConversionResult handle
+// htm_convert() — returns an HTMAlefHandle (uint64_t); 0 means failure
 // JSON keys are the snake_case Rust field names; unknown keys are rejected.
-HTMConversionOptions *opts = htm_conversion_options_from_json("{\"heading_style\":\"atx\"}");
-HTMConversionResult *result = htm_convert(html_cstr, opts);
+HTMAlefHandle opts = htm_conversion_options_from_json("{\"heading_style\":\"atx\"}");
+HTMAlefHandle result = htm_convert(html_cstr, opts);
 htm_conversion_options_free(opts);
 
 if (result) {

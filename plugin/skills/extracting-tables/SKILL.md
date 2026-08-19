@@ -6,7 +6,7 @@ description: Use when extracting tabular data from HTML. Covers GFM Markdown tab
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
 Content-Hash: blake3:9ecb90f7b724e95fc689cc1501dfe079d2b0c6be9c11dd0f0a78ace9293866d1
-Source-Hash: blake3:b2f13825df5b840cc04a4f54a267c6bfa18a4146b2e9e9ceaea0f4e45268ebf0
+Source-Hash: blake3:81720b7b3cde96617ee6bd29d153e9486d6b150d1d5e98b94930a16a414f8730
 Schema-Version: v1
 -->
 

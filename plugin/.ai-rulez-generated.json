@@ -1,6 +1,6 @@
 {
   "schema_version": "v1",
-  "source_hash": "blake3:b2f13825df5b840cc04a4f54a267c6bfa18a4146b2e9e9ceaea0f4e45268ebf0",
+  "source_hash": "blake3:81720b7b3cde96617ee6bd29d153e9486d6b150d1d5e98b94930a16a414f8730",
   "outputs": {
     ".claude-plugin/plugin.json": {
       "content_hash": "blake3:b89c7f53a72b5dd663756189b5fe4358131ab9bca215d594a7e62680b40d7e24"
@@ -33,7 +33,7 @@
       "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
     },
     ".cursor-plugin/skills/html-to-markdown/references/other-bindings.md": {
-      "content_hash": "blake3:31b5c023a80e32ec7cf7fb817ca6fdd59555c7d75fc3a50cdfb92a1fcae740dd"
+      "content_hash": "blake3:16e6451fac12f8494f6b7c279b03be8eb50f4b823b7cb3113298b653cb2f519d"
     },
     ".cursor-plugin/skills/html-to-markdown/references/python-api.md": {
       "content_hash": "blake3:a4b50fdb10a58c59ec38a25a1ca9114cc7e765be961aa39adb702d0c343f6431"
@@ -84,7 +84,7 @@
       "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
     },
     ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/other-bindings.md": {
-      "content_hash": "blake3:31b5c023a80e32ec7cf7fb817ca6fdd59555c7d75fc3a50cdfb92a1fcae740dd"
+      "content_hash": "blake3:16e6451fac12f8494f6b7c279b03be8eb50f4b823b7cb3113298b653cb2f519d"
     },
     ".hermes/package/src/html_to_markdown_hermes_plugin/skills/html-to-markdown/references/python-api.md": {
       "content_hash": "blake3:a4b50fdb10a58c59ec38a25a1ca9114cc7e765be961aa39adb702d0c343f6431"
@@ -129,7 +129,7 @@
       "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
     },
     ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/other-bindings.md": {
-      "content_hash": "blake3:31b5c023a80e32ec7cf7fb817ca6fdd59555c7d75fc3a50cdfb92a1fcae740dd"
+      "content_hash": "blake3:16e6451fac12f8494f6b7c279b03be8eb50f4b823b7cb3113298b653cb2f519d"
     },
     ".hermes/plugins/html-to-markdown/skills/html-to-markdown/references/python-api.md": {
       "content_hash": "blake3:a4b50fdb10a58c59ec38a25a1ca9114cc7e765be961aa39adb702d0c343f6431"
@@ -186,7 +186,7 @@
       "content_hash": "blake3:168d1877b8d939de9dd469e64aa849066cf25437c7beb0e735cf2dd7eb48e26d"
     },
     "skills/html-to-markdown/references/other-bindings.md": {
-      "content_hash": "blake3:31b5c023a80e32ec7cf7fb817ca6fdd59555c7d75fc3a50cdfb92a1fcae740dd"
+      "content_hash": "blake3:16e6451fac12f8494f6b7c279b03be8eb50f4b823b7cb3113298b653cb2f519d"
     },
     "skills/html-to-markdown/references/python-api.md": {
       "content_hash": "blake3:a4b50fdb10a58c59ec38a25a1ca9114cc7e765be961aa39adb702d0c343f6431"
