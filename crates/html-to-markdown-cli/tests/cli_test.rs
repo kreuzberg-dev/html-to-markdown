@@ -764,7 +764,9 @@ fn test_generate_completion_bash() {
         .arg("bash")
         .assert()
         .success()
-        .stdout(predicate::str::contains("_html-to-markdown()"));
+        .stdout(predicate::str::contains(
+            "complete -F _html__to__markdown -o bashdefault -o default html-to-markdown",
+        ));
 }
 
 #[test]
