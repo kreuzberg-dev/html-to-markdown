@@ -720,6 +720,9 @@ jobs:
         id: build-php-extension
         uses: xberg-io/actions/build-php-extension@v1
         with:
+          # Non-release e2e CI builds the extension against the local workspace path-dep;
+          # skip the registry rewrite that hard-fails until core is on crates.io. ~keep
+          rewrite-native-deps: "false"
           crate-name: html-to-markdown-php
           lib-name: html_to_markdown_php
 
@@ -1122,6 +1125,9 @@ jobs:
         id: build-php-extension
         uses: xberg-io/actions/build-php-extension@v1
         with:
+          # Non-release e2e CI builds the extension against the local workspace path-dep;
+          # skip the registry rewrite that hard-fails until core is on crates.io. ~keep
+          rewrite-native-deps: "false"
           crate-name: html-to-markdown-php
           lib-name: html_to_markdown_php
 
