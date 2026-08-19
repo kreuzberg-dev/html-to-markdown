@@ -7,7 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.2] - 2026-08-19
+
 ### Fixed
+
+- The R package now builds against the vendored core crate instead of failing to resolve it.
+  `configure` stripped the `path = ...` clause from `src/rust/Cargo.toml` and wrote a cargo source
+  replacement to `src/rust/.cargo/config.toml`, but cargo reads `.cargo/config.toml` only from the
+  working directory and its ancestors, and `Makevars.in` runs cargo from `packages/r/src` — so
+  `src/rust/.cargo` is a descendant and that config was never read on any build. With the path
+  clause gone the dependency fell through to crates.io, which did not have the workspace version.
+  The path is now rewritten to point at the vendored copy, which needs no cargo config, no
+  `.cargo-checksum.json`, and no complete vendor tree.
 
 - Newlines inside a table cell no longer leak into the rendered row when `br_in_tables` is enabled
   ([#456](https://github.com/xberg-io/html-to-markdown/issues/456),
@@ -38,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the source actually contained rather than neutralising Markdown syntax the way those flags do.
 
 ## [3.11.1] - 2026-08-15
+
+> Prepared but never published: no `v3.11.1` tag was pushed and no 3.11.1 reached crates.io,
+> so 3.11.0 is followed directly by 3.11.2. The entries below ship as part of 3.11.2.
 
 ### Upgrade note — the C ABI changed
 
