@@ -140,6 +140,14 @@ jobs:
         uses: xberg-io/actions/validate-versions@v1
         with:
           version: ${{ needs.prepare.outputs.version }}
+          # ~keep Pinned ahead of alef.toml (0.62.0) on purpose. test_apps/rust/Cargo.lock pins
+          # the core crate at the version being released and resolves it from the registry, so
+          # cargo cannot refresh it until that version is live -- which cannot happen while this
+          # gate blocks publish-crates. alef 0.62.1 stops counting such `blocked_on_publish`
+          # checks against `ok` (it still reports them). Pinning only this step avoids bumping
+          # alef.toml, which would restamp every generated file's hash for a release that changed
+          # no codegen. Drop this line at the next regen, once alef.toml is >= 0.62.1.
+          alef-version: "0.62.1"
 
   check-pypi:
     name: Check PyPI for existing version
