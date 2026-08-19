@@ -71,6 +71,7 @@ before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-ffi", 
 
 [workspace.docs.snippets.sessions.csharp]
 cwd = "packages/csharp"
+manifest = "packages/csharp/HtmlToMarkdown/HtmlToMarkdown.csproj"
 before = [
   "cd ../.. && cargo build --release --locked -p html-to-markdown-ffi",
   "cd ../.. && scripts/ci/csharp/copy-ffi.sh",
@@ -87,7 +88,10 @@ manifest = "crates/html-to-markdown/Cargo.toml"
 [workspace.docs.snippets.sessions.kotlin_android]
 cwd = "packages/kotlin-android"
 manifest = "packages/kotlin-android/build.gradle.kts"
-before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-rs-jni"]
+before = [
+  "cd ../.. && cargo build --release --locked -p html-to-markdown-rs-jni",
+  "./gradlew assembleDebug -Palef.skipHostJni=true",
+]
 
 [workspace.docs.snippets.sessions.swift]
 cwd = "packages/swift"
