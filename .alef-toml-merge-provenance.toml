@@ -1,0 +1,569 @@
+# alef toml-merge provenance record -- COMMIT THIS FILE, do not add it to .gitignore.
+#
+# Records, per merge target and key path, the array values alef itself generated on
+# the most recent `alef generate` run -- the baseline the poly.toml merge's prune step
+# diffs against to tell "alef proposed this and later stopped" from "the consumer
+# wrote this by hand." Without this file committed, a fresh clone has no baseline, so
+# a value alef stops generating can never be pruned there -- it accumulates forever.
+#
+# Nothing here is inferred by comparing bytes -- an entry is only ever a copy of
+# alef's own past `generated` output for the given key path, captured before merging
+# with consumer content. Do not hand-edit; it is rewritten on every `alef generate`.
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "discovery.exclude"
+values = [
+  "**/*.freezed.dart",
+  "**/*.g.dart",
+  "**/*.jinja",
+  "**/*.lock",
+  "**/Cargo.lock",
+  "**/go.sum",
+  "**/package-lock.json",
+  "**/pnpm-lock.yaml",
+  "**/uv.lock",
+  ".alef/**",
+  "**/artifacts/**",
+  "**/dist/**",
+  "fixtures/**",
+  "**/node_modules/**",
+  "readme_templates/**",
+  "**/target/**",
+  "templates/readme/**",
+  "test_documents/**",
+  "**/vendor/**",
+  "**/Cargo.toml",
+  "docs-site/src/snippets/generated/**",
+  "docs-site/src/snippets/**",
+  "**/_generated/**",
+  "**/coverage/**",
+  "**/pkg/**",
+  "**/.next/**",
+  "**/*.min.js",
+  "**/vendored/**",
+  "**/stopwords/**",
+  "**/testdata/**",
+  "e2e/**",
+  "**/*.diff",
+  "**/*.patch",
+  "**/frb_generated.rs",
+  "charts/**",
+  "**/tsconfig*.json",
+  "**/*_bridge_generated/**",
+  "crates/html-to-markdown-node/index.js",
+  "test_apps/wasm/tests/**",
+  "crates/html-to-markdown-ffi/include/html_to_markdown.h",
+  "packages/go/include/html_to_markdown.h",
+  "packages/csharp/**/*.cs",
+  "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
+  "docs-site/public/demo/html_to_markdown_wasm*",
+  "plugin/.claude-plugin/**",
+  "plugin/.codex-plugin/**",
+  "plugin/.cursor-plugin/**",
+  "plugin/.factory-plugin/**",
+  "plugin/.opencode/**",
+  "plugin/.hermes/**",
+  "plugin/skills/**",
+  "plugin/.mcp.json",
+  "plugin/gemini-extension.json",
+  "plugin/kimi.plugin.json",
+  "plugin/package.json",
+  "plugin/.ai-rulez-generated.json",
+  ".claude-plugin/marketplace.json",
+  ".agents/plugins/marketplace.json",
+  "/.ai-rulez-generated.json",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "fmt.markdown.rumdl.disable"
+values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "hooks.builtin.commit.stages"
+values = ["commit-msg"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "hooks.builtin.file_safety.exclude"
+values = [
+  "**/*.freezed.dart",
+  "**/*.g.dart",
+  "**/*.jinja",
+  "**/*.lock",
+  "**/Cargo.lock",
+  "**/go.sum",
+  "**/package-lock.json",
+  "**/pnpm-lock.yaml",
+  "**/uv.lock",
+  ".alef/**",
+  "**/artifacts/**",
+  "**/dist/**",
+  "fixtures/**",
+  "**/node_modules/**",
+  "readme_templates/**",
+  "**/target/**",
+  "templates/readme/**",
+  "test_documents/**",
+  "**/vendor/**",
+  "**/Cargo.toml",
+  "docs-site/src/snippets/generated/**",
+  "docs-site/src/snippets/**",
+  "**/_generated/**",
+  "**/coverage/**",
+  "**/pkg/**",
+  "**/.next/**",
+  "**/*.min.js",
+  "**/vendored/**",
+  "**/stopwords/**",
+  "**/testdata/**",
+  "e2e/**",
+  "**/*.diff",
+  "**/*.patch",
+  "**/frb_generated.rs",
+  "charts/**",
+  "**/tsconfig*.json",
+  "**/*_bridge_generated/**",
+  "crates/html-to-markdown-node/index.js",
+  "test_apps/wasm/tests/**",
+  "crates/html-to-markdown-ffi/include/html_to_markdown.h",
+  "packages/go/include/html_to_markdown.h",
+  "packages/csharp/**/*.cs",
+  "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
+  "docs-site/public/demo/html_to_markdown_wasm*",
+  "plugin/.claude-plugin/**",
+  "plugin/.codex-plugin/**",
+  "plugin/.cursor-plugin/**",
+  "plugin/.factory-plugin/**",
+  "plugin/.opencode/**",
+  "plugin/.hermes/**",
+  "plugin/skills/**",
+  "plugin/.mcp.json",
+  "plugin/gemini-extension.json",
+  "plugin/kimi.plugin.json",
+  "plugin/package.json",
+  "plugin/.ai-rulez-generated.json",
+  ".claude-plugin/marketplace.json",
+  ".agents/plugins/marketplace.json",
+  ".ai-rulez-generated.json",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "hooks.builtin.fmt.exclude"
+values = [
+  "**/*.freezed.dart",
+  "**/*.g.dart",
+  "**/*.jinja",
+  "**/*.lock",
+  "**/Cargo.lock",
+  "**/go.sum",
+  "**/package-lock.json",
+  "**/pnpm-lock.yaml",
+  "**/uv.lock",
+  ".alef/**",
+  "**/artifacts/**",
+  "**/dist/**",
+  "fixtures/**",
+  "**/node_modules/**",
+  "readme_templates/**",
+  "**/target/**",
+  "templates/readme/**",
+  "test_documents/**",
+  "**/vendor/**",
+  "**/Cargo.toml",
+  "docs-site/src/snippets/generated/**",
+  "docs-site/src/snippets/**",
+  "**/_generated/**",
+  "**/coverage/**",
+  "**/pkg/**",
+  "**/.next/**",
+  "**/*.min.js",
+  "**/vendored/**",
+  "**/stopwords/**",
+  "**/testdata/**",
+  "e2e/**",
+  "**/*.diff",
+  "**/*.patch",
+  "**/frb_generated.rs",
+  "charts/**",
+  "**/tsconfig*.json",
+  "**/*_bridge_generated/**",
+  "crates/html-to-markdown-node/index.js",
+  "test_apps/wasm/tests/**",
+  "crates/html-to-markdown-ffi/include/html_to_markdown.h",
+  "packages/go/include/html_to_markdown.h",
+  "packages/csharp/**/*.cs",
+  "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
+  "docs-site/public/demo/html_to_markdown_wasm*",
+  "plugin/.claude-plugin/**",
+  "plugin/.codex-plugin/**",
+  "plugin/.cursor-plugin/**",
+  "plugin/.factory-plugin/**",
+  "plugin/.opencode/**",
+  "plugin/.hermes/**",
+  "plugin/skills/**",
+  "plugin/.mcp.json",
+  "plugin/gemini-extension.json",
+  "plugin/kimi.plugin.json",
+  "plugin/package.json",
+  "plugin/.ai-rulez-generated.json",
+  ".claude-plugin/marketplace.json",
+  ".agents/plugins/marketplace.json",
+  ".ai-rulez-generated.json",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "hooks.builtin.lint.exclude"
+values = [
+  "**/*.freezed.dart",
+  "**/*.g.dart",
+  "**/*.jinja",
+  "**/*.lock",
+  "**/Cargo.lock",
+  "**/go.sum",
+  "**/package-lock.json",
+  "**/pnpm-lock.yaml",
+  "**/uv.lock",
+  ".alef/**",
+  "**/artifacts/**",
+  "**/dist/**",
+  "fixtures/**",
+  "**/node_modules/**",
+  "readme_templates/**",
+  "**/target/**",
+  "templates/readme/**",
+  "test_documents/**",
+  "**/vendor/**",
+  "**/Cargo.toml",
+  "docs-site/src/snippets/generated/**",
+  "docs-site/src/snippets/**",
+  "**/_generated/**",
+  "**/coverage/**",
+  "**/pkg/**",
+  "**/.next/**",
+  "**/*.min.js",
+  "**/vendored/**",
+  "**/stopwords/**",
+  "**/testdata/**",
+  "e2e/**",
+  "**/*.diff",
+  "**/*.patch",
+  "**/frb_generated.rs",
+  "charts/**",
+  "**/tsconfig*.json",
+  "**/*_bridge_generated/**",
+  "crates/html-to-markdown-node/index.js",
+  "test_apps/wasm/tests/**",
+  "crates/html-to-markdown-ffi/include/html_to_markdown.h",
+  "packages/go/include/html_to_markdown.h",
+  "packages/csharp/**/*.cs",
+  "packages/java/**/*.java",
+  "test_apps/csharp/**/*.cs",
+  "test_apps/java/**/*.java",
+  "docs-site/public/demo/html_to_markdown_wasm*",
+  "plugin/.claude-plugin/**",
+  "plugin/.codex-plugin/**",
+  "plugin/.cursor-plugin/**",
+  "plugin/.factory-plugin/**",
+  "plugin/.opencode/**",
+  "plugin/.hermes/**",
+  "plugin/skills/**",
+  "plugin/.mcp.json",
+  "plugin/gemini-extension.json",
+  "plugin/kimi.plugin.json",
+  "plugin/package.json",
+  "plugin/.ai-rulez-generated.json",
+  ".claude-plugin/marketplace.json",
+  ".agents/plugins/marketplace.json",
+  ".ai-rulez-generated.json",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "hooks.stages"
+values = ["pre-commit"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "lint.markdown.rumdl.disable"
+values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "lint.uncomment.preserve_patterns"
+values = ["SAFETY", "SPDX", "Copyright", "License", "licensed under"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/e2e/**"
+values = [
+  "ANN",
+  "D103",
+  "PLR2004",
+  "PLR0915",
+  "PLR0913",
+  "S101",
+  "S105",
+  "S106",
+  "S108",
+  "S310",
+  "S311",
+  "PT011",
+  "PT012",
+  "PERF401",
+  "PTH123",
+  "T201",
+  "TC001",
+  "TC002",
+  "TC003",
+  "INP001",
+  "no-unused-vars",
+  "no-literal-password",
+  "no-unescaped-output",
+  "RUF100",
+  "F401",
+  "F811",
+  "I001",
+  "PT018",
+  "ARG001",
+  "ARG002",
+  "D403",
+  "E713",
+  "UP035",
+  "UP012",
+  "RUF015",
+  "F541",
+  "EXE001",
+  "A001",
+  "N801",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/skills/**/SKILL.md"
+values = ["MD032"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/test_apps/**"
+values = [
+  "ANN",
+  "D103",
+  "PLR2004",
+  "PLR0915",
+  "PLR0913",
+  "S101",
+  "S105",
+  "S106",
+  "S108",
+  "S310",
+  "S311",
+  "PT011",
+  "PT012",
+  "PERF401",
+  "PTH123",
+  "T201",
+  "TC001",
+  "TC002",
+  "TC003",
+  "INP001",
+  "no-unused-vars",
+  "no-literal-password",
+  "no-unescaped-output",
+  "RUF100",
+  "F401",
+  "F811",
+  "I001",
+  "PT018",
+  "ARG001",
+  "ARG002",
+  "D403",
+  "E713",
+  "UP035",
+  "UP012",
+  "RUF015",
+  "F541",
+  "EXE001",
+  "A001",
+  "N801",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/tests/**"
+values = [
+  "ANN",
+  "D103",
+  "PLR2004",
+  "PLR0915",
+  "PLR0913",
+  "S101",
+  "S105",
+  "S106",
+  "S108",
+  "S310",
+  "S311",
+  "PT011",
+  "PT012",
+  "PERF401",
+  "PTH123",
+  "T201",
+  "TC001",
+  "TC002",
+  "TC003",
+  "INP001",
+  "no-unused-vars",
+  "no-literal-password",
+  "no-unescaped-output",
+  "RUF100",
+  "F401",
+  "F811",
+  "I001",
+  "PT018",
+  "ARG001",
+  "ARG002",
+  "D403",
+  "E713",
+  "UP035",
+  "UP012",
+  "RUF015",
+  "F541",
+  "EXE001",
+  "A001",
+  "N801",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.**/tests/**/*.py"
+values = ["PT019", "PLC0415", "SLF001"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores..cargo/config.toml"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores..github/workflows/publish.yaml"
+values = ["typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.Package.swift"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.cli-proxy/**/*.py"
+values = ["PLR0917", "RUF100"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-ffi/build.rs"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-ffi/cbindgen.toml"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-ffi/include/html_to_markdown.h"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-ffi/src/lib.rs"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-node/**"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-php/**"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-py/src/lib.rs"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-rs-jni/**"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-wasm/src/lib.rs"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/visitor/types.rs"
+values = ["typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.e2e/**/*.py"
+values = ["Q000"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/**"
+values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/kotlin-android/src/main/kotlin/**/*.kt"
+values = ["typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/python/**/api.py"
+values = ["RET504"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/python/html_to_markdown/options.py"
+values = ["F821"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/r/R/version.R"
+values = ["empty_file"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.packages/swift/Sources/RustBridge*/**"
+values = ["trailing-whitespace"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.readme_templates/**"
+values = ["MD057"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.scripts/**/*.py"
+values = ["INP001", "S607", "T201", "D103", "D212"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.test_apps/**"
+values = ["comment", "doc-comment"]

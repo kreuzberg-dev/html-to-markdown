@@ -1,0 +1,72 @@
+# alef ownership record -- COMMIT THIS FILE, do not add it to .gitignore.
+#
+# Lists the alef-generated paths whose format cannot carry an `alef:hash:`
+# provenance marker (`package.json`, `*.jar`, ...). Every other format proves
+# alef's ownership from the marker in the file itself and never appears here.
+# Without this list committed, a fresh clone cannot tell an alef-generated
+# `package.json` from a hand-written one and refuses to regenerate it.
+#
+# Ownership is a fact about history, not about content: a path lands here only
+# because alef created the file, or because a human ran `alef adopt` on it.
+# Nothing here is inferred by comparing bytes against generated output -- a
+# hand-written file that happens to match must never be claimed. Do not hand-add
+# entries; run `alef adopt <path>`, read the diff it prints, and let it write.
+
+owned_paths = [
+  ".agents/skills/api/SKILL.md",
+  ".agents/skills/cli/SKILL.md",
+  ".agents/skills/mcp/SKILL.md",
+  ".claude/skills/api/SKILL.md",
+  ".claude/skills/cli/SKILL.md",
+  ".claude/skills/mcp/SKILL.md",
+  ".codex/skills/api/SKILL.md",
+  ".codex/skills/cli/SKILL.md",
+  ".codex/skills/mcp/SKILL.md",
+  ".github/skills/api/SKILL.md",
+  ".github/skills/cli/SKILL.md",
+  ".github/skills/mcp/SKILL.md",
+  "crates/html-to-markdown-ffi/README.md",
+  "docs-site/src/content/docs/reference/api-c.md",
+  "docs-site/src/content/docs/reference/api-csharp.md",
+  "docs-site/src/content/docs/reference/api-dart.md",
+  "docs-site/src/content/docs/reference/api-elixir.md",
+  "docs-site/src/content/docs/reference/api-go.md",
+  "docs-site/src/content/docs/reference/api-java.md",
+  "docs-site/src/content/docs/reference/api-kotlin-android.md",
+  "docs-site/src/content/docs/reference/api-php.md",
+  "docs-site/src/content/docs/reference/api-python.md",
+  "docs-site/src/content/docs/reference/api-r.md",
+  "docs-site/src/content/docs/reference/api-ruby.md",
+  "docs-site/src/content/docs/reference/api-rust.md",
+  "docs-site/src/content/docs/reference/api-swift.md",
+  "docs-site/src/content/docs/reference/api-typescript.md",
+  "docs-site/src/content/docs/reference/api-wasm.md",
+  "docs-site/src/content/docs/reference/api-zig.md",
+  "docs-site/src/content/docs/reference/cli.md",
+  "docs-site/src/content/docs/reference/configuration.md",
+  "docs-site/src/content/docs/reference/errors.md",
+  "docs-site/src/content/docs/reference/mcp.md",
+  "docs-site/src/content/docs/reference/types.md",
+  "docs-site/src/snippets/generated/.alef-snippet-coverage.json",
+  "e2e/c/Makefile",
+  "e2e/r/run_tests.R",
+  "e2e/r/tests/setup-fixtures.R",
+  "e2e/r/tests/test_conversion.R",
+  "e2e/r/tests/test_edge_cases.R",
+  "e2e/r/tests/test_metadata.R",
+  "e2e/r/tests/test_options.R",
+  "e2e/r/tests/test_real_world.R",
+  "e2e/r/tests/test_result.R",
+  "e2e/r/tests/test_smoke.R",
+  "e2e/r/tests/test_structure.R",
+  "e2e/r/tests/test_visitor.R",
+  "packages/kotlin-android/src/main/AndroidManifest.xml",
+  "packages/python/html_to_markdown/_html_to_markdown.pyi",
+  "packages/r/R/htmltomarkdown.R",
+  "packages/ruby/sig/types.rbs",
+  "test_apps/c/Makefile",
+  "test_apps/r/run_tests.R",
+  "test_apps/r/tests/setup-fixtures.R",
+  "test_apps/r/tests/test_conversion.R",
+  "test_apps/r/tests/test_smoke.R",
+]

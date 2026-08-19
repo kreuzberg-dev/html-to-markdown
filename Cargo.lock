@@ -1439,6 +1439,7 @@ dependencies = [
  "async-trait",
  "cbindgen",
  "html-to-markdown-rs",
+ "serde",
  "serde_json",
  "tempfile",
  "tokio",

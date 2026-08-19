@@ -17,6 +17,15 @@
   "main": "pkg/nodejs/html_to_markdown_wasm.js",
   "module": "pkg/web/html_to_markdown_wasm.js",
   "types": "pkg/nodejs/html_to_markdown_wasm.d.ts",
+  "exports": {
+    ".": {
+      "types": "./pkg/nodejs/html_to_markdown_wasm.d.ts",
+      "browser": "./pkg/web/html_to_markdown_wasm.js",
+      "import": "./pkg/nodejs/html_to_markdown_wasm.js",
+      "require": "./pkg/nodejs/html_to_markdown_wasm.js",
+      "default": "./pkg/nodejs/html_to_markdown_wasm.js"
+    }
+  },
   "engines": {
     "node": ">= 22"
   },

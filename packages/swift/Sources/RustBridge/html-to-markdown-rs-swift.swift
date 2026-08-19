@@ -225,12 +225,6 @@ public func makeHtmlVisitorHandle(_ swift_box: SwiftHtmlVisitorBox) -> VisitorHa
 public func conversionOptionsFromJsonWithVisitor<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString, _ visitor: Optional<VisitorHandle>) throws -> ConversionOptions {
     try { let val = __swift_bridge__$conversion_options_from_json_with_visitor({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }(), { if let val = visitor { val.isOwned = false; return val.ptr } else { return nil } }()); if val.is_ok { return ConversionOptions(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func conversionOptionsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ConversionOptions {
-    try { let val = __swift_bridge__$conversion_options_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ConversionOptions(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
-public func nodeContextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> NodeContext {
-    try { let val = __swift_bridge__$node_context_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return NodeContext(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
 public func documentMetadataFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> DocumentMetadata {
     try { let val = __swift_bridge__$document_metadata_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return DocumentMetadata(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -249,8 +243,8 @@ public func structuredDataFromJson<GenericIntoRustString: IntoRustString>(_ json
 public func htmlMetadataFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> HtmlMetadata {
     try { let val = __swift_bridge__$html_metadata_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return HtmlMetadata(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func conversionOptionsUpdateFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ConversionOptionsUpdate {
-    try { let val = __swift_bridge__$conversion_options_update_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ConversionOptionsUpdate(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+public func conversionOptionsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ConversionOptions {
+    try { let val = __swift_bridge__$conversion_options_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ConversionOptions(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func preprocessingOptionsFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> PreprocessingOptions {
     try { let val = __swift_bridge__$preprocessing_options_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return PreprocessingOptions(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -270,9 +264,6 @@ public func documentNodeFromJson<GenericIntoRustString: IntoRustString>(_ json: 
 public func textAnnotationFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> TextAnnotation {
     try { let val = __swift_bridge__$text_annotation_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return TextAnnotation(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
-public func metadataEntryFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> MetadataEntry {
-    try { let val = __swift_bridge__$metadata_entry_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return MetadataEntry(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
-}
 public func conversionResultFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ConversionResult {
     try { let val = __swift_bridge__$conversion_result_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ConversionResult(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
@@ -287,6 +278,15 @@ public func tableDataFromJson<GenericIntoRustString: IntoRustString>(_ json: Gen
 }
 public func processingWarningFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ProcessingWarning {
     try { let val = __swift_bridge__$processing_warning_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ProcessingWarning(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func nodeContextFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> NodeContext {
+    try { let val = __swift_bridge__$node_context_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return NodeContext(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func conversionOptionsUpdateFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> ConversionOptionsUpdate {
+    try { let val = __swift_bridge__$conversion_options_update_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return ConversionOptionsUpdate(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
+}
+public func metadataEntryFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> MetadataEntry {
+    try { let val = __swift_bridge__$metadata_entry_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return MetadataEntry(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
 }
 public func textDirectionFromJson<GenericIntoRustString: IntoRustString>(_ json: GenericIntoRustString) throws -> TextDirection {
     try { let val = __swift_bridge__$text_direction_from_json({ let rustString = json.intoRustString(); rustString.isOwned = false; return rustString.ptr }()); if val.is_ok { return TextDirection(ptr: val.ok_or_err!) } else { throw RustString(ptr: val.ok_or_err!) } }()
@@ -4428,3 +4428,6 @@ extension HtmlVisitorBox: Vectorizable {
 func __swift_bridge__SwiftHtmlVisitorBox__free (ptr: UnsafeMutableRawPointer) {
     let _ = Unmanaged<SwiftHtmlVisitorBox>.fromOpaque(ptr).takeRetainedValue()
 }
+
+
+

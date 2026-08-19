@@ -1,10 +1,13 @@
 const std = @import("std");
 
 pub fn main() !void {
-    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
-    defer _ = gpa.deinit();
-    const allocator = gpa.allocator();
+    var threaded: std.Io.Threaded = .init(std.heap.smp_allocator, .{});
+    defer threaded.deinit();
 
-    const stdout = std.io.getStdOut().writer();
+    var stdout_buffer: [64]u8 = undefined;
+    var stdout_writer = std.Io.File.stdout().writer(threaded.io(), &stdout_buffer);
+    const stdout = &stdout_writer.interface;
+
     try stdout.print("Example: module loaded successfully\n", .{});
+    try stdout.flush();
 }
