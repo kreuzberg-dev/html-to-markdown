@@ -939,7 +939,7 @@ prefix = "htm"
 result_type = "ConversionResult"
 
 [crates.e2e.call.overrides.kotlin_android]
-class = "io.xberg.android.HtmlToMarkdownRs"
+class = "io.xberg.android.HtmlToMarkdown"
 function = "convert"
 options_type = "ConversionOptions"
 
