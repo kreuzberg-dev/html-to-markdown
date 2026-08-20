@@ -12,6 +12,8 @@ use std::ffi::{CStr, CString};
 
 use html_to_markdown_ffi::*;
 
+const INVALID_HANDLE: u64 = 0;
+
 /// Build a null-terminated C string owned by the caller for the duration of a test.
 fn cstr(s: &str) -> CString {
     CString::new(s).expect("test fixture string must not contain interior NUL bytes")
@@ -22,9 +24,9 @@ fn should_allocate_and_free_default_conversion_options() {
     // SAFETY: exercising the exported alloc/free pair directly, per the crate's own contract.
     unsafe {
         let options = htm_conversion_options_default();
-        assert!(
-            !options.is_null(),
-            "htm_conversion_options_default must not return null"
+        assert_ne!(
+            options, INVALID_HANDLE,
+            "htm_conversion_options_default must return a valid handle"
         );
         htm_conversion_options_free(options);
     }
@@ -35,8 +37,8 @@ fn should_round_trip_conversion_result_through_convert_and_free() {
     // SAFETY: standard alloc -> use -> free cycle using only library-returned pointers.
     unsafe {
         let html = cstr("<h1>Hello World</h1>");
-        let result = htm_convert(html.as_ptr(), std::ptr::null());
-        assert!(!result.is_null(), "htm_convert must succeed for well-formed HTML");
+        let result = htm_convert(html.as_ptr(), INVALID_HANDLE);
+        assert_ne!(result, INVALID_HANDLE, "htm_convert must succeed for well-formed HTML");
 
         let content_ptr = htm_conversion_result_content(result);
         assert!(
@@ -61,8 +63,8 @@ fn should_return_two_independently_owned_strings_from_repeated_content_calls() {
     // ~keep of the same memory.
     unsafe {
         let html = cstr("<p>content</p>");
-        let result = htm_convert(html.as_ptr(), std::ptr::null());
-        assert!(!result.is_null());
+        let result = htm_convert(html.as_ptr(), INVALID_HANDLE);
+        assert_ne!(result, INVALID_HANDLE);
 
         let first = htm_conversion_result_content(result);
         let second = htm_conversion_result_content(result);
@@ -83,11 +85,11 @@ fn should_round_trip_conversion_options_through_json() {
     unsafe {
         let json = cstr(r#"{"wrap":false,"output_format":"Markdown"}"#);
         let options = htm_conversion_options_from_json(json.as_ptr());
-        assert!(!options.is_null(), "options must parse from valid JSON");
+        assert_ne!(options, INVALID_HANDLE, "options must parse from valid JSON");
 
         let output_format = htm_conversion_options_output_format(options);
-        assert!(
-            !output_format.is_null(),
+        assert_ne!(
+            output_format, INVALID_HANDLE,
             "output_format getter must return an owned enum handle"
         );
         htm_output_format_free(output_format);
@@ -111,20 +113,23 @@ fn should_extract_document_title_through_metadata_lifecycle() {
     unsafe {
         let json = cstr(r#"{"extract_metadata":true}"#);
         let options = htm_conversion_options_from_json(json.as_ptr());
-        assert!(!options.is_null());
+        assert_ne!(options, INVALID_HANDLE);
 
         let html = cstr("<html><head><title>Test Page</title></head><body><p>x</p></body></html>");
         let result = htm_convert(html.as_ptr(), options);
-        assert!(!result.is_null(), "conversion with metadata extraction must succeed");
+        assert_ne!(
+            result, INVALID_HANDLE,
+            "conversion with metadata extraction must succeed"
+        );
 
         let metadata = htm_conversion_result_metadata(result);
-        assert!(
-            !metadata.is_null(),
-            "metadata getter must return a non-null handle when extraction is enabled"
+        assert_ne!(
+            metadata, INVALID_HANDLE,
+            "metadata getter must return a valid handle when extraction is enabled"
         );
 
         let document = htm_html_metadata_document(metadata);
-        assert!(!document.is_null());
+        assert_ne!(document, INVALID_HANDLE);
 
         let title_ptr = htm_document_metadata_title(document);
         assert!(!title_ptr.is_null(), "title must be present for the fixture HTML");
@@ -144,7 +149,7 @@ fn should_free_conversion_options_update_handle() {
     unsafe {
         let json = cstr(r#"{"wrap":true}"#);
         let update = htm_conversion_options_update_from_json(json.as_ptr());
-        assert!(!update.is_null(), "update handle must parse from valid JSON");
+        assert_ne!(update, INVALID_HANDLE, "update handle must parse from valid JSON");
         htm_conversion_options_update_free(update);
     }
 }
