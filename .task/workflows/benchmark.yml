@@ -120,9 +120,9 @@ tasks:
           load_one="$(awk '{ print $1 }' /proc/loadavg)"
           printf '%s\t%s\t%s\t%s\n' "$check" "$load_one" "$load_limit" "$idle_pct" \
             | tee -a "$logs_dir/quiet-gate.tsv"
-          if ! awk -v load="$load_one" -v limit="$load_limit" \
+          if ! awk -v observed_load="$load_one" -v limit="$load_limit" \
             -v idle="$idle_pct" -v minimum="$min_idle_percent" \
-            'BEGIN { exit !(load <= limit && idle >= minimum) }'; then
+            'BEGIN { exit !(observed_load <= limit && idle >= minimum) }'; then
             quiet=0
           fi
         done
