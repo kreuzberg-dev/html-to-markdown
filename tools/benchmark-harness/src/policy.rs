@@ -1,0 +1,640 @@
+//! Regression policy evaluation for legacy and calibrated configurations.
+
+use std::collections::{HashMap, HashSet};
+
+use anyhow::{Result, bail, ensure};
+
+use crate::schema::{
+    BenchRecord, CalibratedBaseline, CalibratedBenchRecord, GroupThreshold, Guardrails, LegacyGuardrails,
+    LegacyRunResults, RunResults, SAMPLES_PER_RUN, SCHEMA_VERSION,
+};
+use crate::stats;
+
+/// One fixture comparison and its effective allowance.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Comparison {
+    /// Fixture key.
+    pub fixture: String,
+    /// Baseline timing.
+    pub baseline_ms: f64,
+    /// Current method-compatible timing.
+    pub current_ms: f64,
+    /// Policy percent for the fixture group.
+    pub threshold_pct: f64,
+    /// Effective absolute allowance.
+    pub allowed_delta_ms: f64,
+    /// Whether the positive delta exceeds the allowance.
+    pub failed: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct Metadata<'a> {
+    group: &'a str,
+    bytes: u64,
+    output_bytes: u64,
+}
+
+/// Evaluate a schema-v2 capture against an approved calibrated baseline.
+pub fn evaluate_strict(
+    results: &RunResults,
+    baseline: &CalibratedBaseline,
+    guardrails: &Guardrails,
+) -> Result<Vec<Comparison>> {
+    validate_strict_documents(results, baseline, guardrails)?;
+    let baseline_map = calibrated_map(&baseline.runs)?;
+    results
+        .runs
+        .iter()
+        .map(|record| strict_record(record, baseline_map[record.fixture.as_str()], guardrails))
+        .collect()
+}
+
+/// Evaluate with the temporary schema-v1 percentage-only migration bridge.
+pub fn evaluate_legacy(
+    results: &RunResults,
+    baseline: &LegacyRunResults,
+    guardrails: &LegacyGuardrails,
+) -> Result<Vec<Comparison>> {
+    ensure_schema(results.schema, "results")?;
+    ensure!(
+        baseline.schema == 1,
+        "unsupported baseline schema {}; expected 1",
+        baseline.schema
+    );
+    ensure!(
+        guardrails.schema == 1,
+        "unsupported guardrails schema {}; expected 1",
+        guardrails.schema
+    );
+    let result_inventory = validate_results(results)?;
+    validate_thresholds(
+        &guardrails.thresholds,
+        result_inventory.values().map(|metadata| metadata.group),
+    )?;
+    let baseline_map = legacy_map(baseline)?;
+    ensure_inventory_matches(&result_inventory, &legacy_metadata(&baseline_map)?)?;
+    results
+        .runs
+        .iter()
+        .map(|record| legacy_record(record, baseline_map[record.fixture.as_str()].ms_best, guardrails))
+        .collect()
+}
+
+fn validate_strict_documents(
+    results: &RunResults,
+    baseline: &CalibratedBaseline,
+    guardrails: &Guardrails,
+) -> Result<()> {
+    ensure_schema(results.schema, "results")?;
+    ensure_schema(baseline.schema, "baseline")?;
+    ensure_schema(guardrails.schema, "guardrails")?;
+    ensure!(!baseline.campaign_id.is_empty(), "baseline campaign_id is empty");
+    ensure!(
+        baseline.campaign_id == guardrails.campaign_id,
+        "baseline and guardrails campaign_id differ"
+    );
+    ensure!(
+        results.provenance == guardrails.calibration_provenance,
+        "benchmark provenance mismatch"
+    );
+    ensure!(
+        baseline.provenance == guardrails.calibration_provenance,
+        "baseline provenance mismatch"
+    );
+    let result_inventory = validate_results(results)?;
+    let baseline_inventory = validate_calibrated_baseline(baseline)?;
+    ensure_inventory_matches(&result_inventory, &baseline_inventory)?;
+    validate_guardrails(guardrails, &result_inventory)
+}
+
+fn validate_results(results: &RunResults) -> Result<HashMap<&str, Metadata<'_>>> {
+    ensure!(!results.runs.is_empty(), "results fixture inventory is empty");
+    let mut inventory = HashMap::with_capacity(results.runs.len());
+    for record in &results.runs {
+        validate_record_statistics(record)?;
+        let metadata = Metadata {
+            group: &record.group,
+            bytes: record.bytes,
+            output_bytes: record.output_bytes,
+        };
+        ensure!(
+            inventory.insert(record.fixture.as_str(), metadata).is_none(),
+            "duplicate result fixture {}",
+            record.fixture
+        );
+    }
+    Ok(inventory)
+}
+
+fn validate_record_statistics(record: &BenchRecord) -> Result<()> {
+    ensure!(
+        record.samples_ms.len() == SAMPLES_PER_RUN,
+        "fixture {} must have nine samples",
+        record.fixture
+    );
+    ensure!(
+        record
+            .samples_ms
+            .iter()
+            .all(|sample| sample.is_finite() && *sample >= 0.0),
+        "fixture {} has invalid samples",
+        record.fixture
+    );
+    ensure!(
+        stats::approximately_equal(record.median_ms, stats::median(&record.samples_ms)),
+        "fixture {} median is corrupt",
+        record.fixture
+    );
+    ensure!(
+        stats::approximately_equal(record.mad_ms, stats::mad(&record.samples_ms)),
+        "fixture {} MAD is corrupt",
+        record.fixture
+    );
+    let legacy_ms_best = record.samples_ms[..3].iter().copied().fold(f64::INFINITY, f64::min);
+    ensure!(
+        record.legacy_ms_best == legacy_ms_best,
+        "fixture {} legacy statistic is corrupt",
+        record.fixture
+    );
+    ensure!(
+        record.mb_per_s.is_finite() && record.mb_per_s >= 0.0,
+        "fixture {} throughput is invalid",
+        record.fixture
+    );
+    Ok(())
+}
+
+fn validate_calibrated_baseline(baseline: &CalibratedBaseline) -> Result<HashMap<&str, Metadata<'_>>> {
+    ensure!(!baseline.runs.is_empty(), "baseline fixture inventory is empty");
+    let mut inventory = HashMap::with_capacity(baseline.runs.len());
+    for record in &baseline.runs {
+        ensure!(
+            record.median_ms.is_finite() && record.median_ms > 0.0,
+            "baseline {} median must be positive",
+            record.fixture
+        );
+        ensure!(
+            record.mad_ms.is_finite() && record.mad_ms >= 0.0,
+            "baseline {} MAD is invalid",
+            record.fixture
+        );
+        let metadata = Metadata {
+            group: &record.group,
+            bytes: record.bytes,
+            output_bytes: record.output_bytes,
+        };
+        ensure!(
+            inventory.insert(record.fixture.as_str(), metadata).is_none(),
+            "duplicate baseline fixture {}",
+            record.fixture
+        );
+    }
+    Ok(inventory)
+}
+
+fn validate_guardrails(guardrails: &Guardrails, inventory: &HashMap<&str, Metadata<'_>>) -> Result<()> {
+    validate_thresholds(
+        &guardrails.thresholds,
+        inventory.values().map(|metadata| metadata.group),
+    )?;
+    ensure!(
+        guardrails.fixture_floors.len() == inventory.len(),
+        "guardrail fixture inventory is not exact"
+    );
+    for fixture in inventory.keys() {
+        let floor = guardrails
+            .fixture_floors
+            .get(*fixture)
+            .ok_or_else(|| anyhow::anyhow!("missing floor for {fixture}"))?;
+        ensure!(
+            floor.sample_count == 40,
+            "floor for {fixture} was not derived from 40 runs"
+        );
+        ensure!(
+            floor.median_ms.is_finite() && floor.median_ms > 0.0,
+            "floor median for {fixture} must be positive"
+        );
+        ensure!(
+            floor.mad_ms.is_finite() && floor.mad_ms >= 0.0,
+            "floor MAD for {fixture} is invalid"
+        );
+        ensure!(
+            floor.floor_ms.is_finite() && floor.floor_ms > 0.0,
+            "floor for {fixture} must be positive"
+        );
+    }
+    Ok(())
+}
+
+fn validate_thresholds<'a>(
+    thresholds: &HashMap<String, GroupThreshold>,
+    groups: impl Iterator<Item = &'a str>,
+) -> Result<()> {
+    for (group, value) in thresholds {
+        ensure!(
+            value.max_regression_pct.is_finite() && value.max_regression_pct > 0.0,
+            "threshold for group {group} must be positive and finite"
+        );
+    }
+    let groups: HashSet<&str> = groups.collect();
+    for group in groups {
+        ensure!(
+            thresholds.contains_key(group),
+            "no threshold configured for group {group}"
+        );
+    }
+    Ok(())
+}
+
+fn ensure_inventory_matches(
+    current: &HashMap<&str, Metadata<'_>>,
+    baseline: &HashMap<&str, Metadata<'_>>,
+) -> Result<()> {
+    ensure!(current.len() == baseline.len(), "fixture inventories differ in size");
+    for (fixture, metadata) in current {
+        ensure!(
+            baseline.get(fixture) == Some(metadata),
+            "fixture metadata differs for {fixture}"
+        );
+    }
+    Ok(())
+}
+
+fn calibrated_map(records: &[CalibratedBenchRecord]) -> Result<HashMap<&str, &CalibratedBenchRecord>> {
+    let mut map = HashMap::with_capacity(records.len());
+    for record in records {
+        ensure!(
+            map.insert(record.fixture.as_str(), record).is_none(),
+            "duplicate baseline fixture {}",
+            record.fixture
+        );
+    }
+    Ok(map)
+}
+
+fn legacy_map(baseline: &LegacyRunResults) -> Result<HashMap<&str, &crate::schema::LegacyBenchRecord>> {
+    let mut map = HashMap::with_capacity(baseline.runs.len());
+    for record in &baseline.runs {
+        ensure!(
+            record.ms_best.is_finite() && record.ms_best > 0.0,
+            "legacy baseline {} must be positive",
+            record.fixture
+        );
+        ensure!(
+            map.insert(record.fixture.as_str(), record).is_none(),
+            "duplicate legacy baseline fixture {}",
+            record.fixture
+        );
+    }
+    Ok(map)
+}
+
+fn legacy_metadata<'a>(
+    records: &HashMap<&'a str, &'a crate::schema::LegacyBenchRecord>,
+) -> Result<HashMap<&'a str, Metadata<'a>>> {
+    Ok(records
+        .iter()
+        .map(|(fixture, record)| {
+            (
+                *fixture,
+                Metadata {
+                    group: &record.group,
+                    bytes: record.bytes,
+                    output_bytes: record.output_bytes,
+                },
+            )
+        })
+        .collect())
+}
+
+fn strict_record(
+    record: &BenchRecord,
+    baseline: &CalibratedBenchRecord,
+    guardrails: &Guardrails,
+) -> Result<Comparison> {
+    let floor = &guardrails.fixture_floors[&record.fixture];
+    let threshold_pct = guardrails.thresholds[&record.group].max_regression_pct;
+    let allowance = (baseline.median_ms * threshold_pct / 100.0).max(floor.floor_ms);
+    Ok(comparison(
+        record.fixture.clone(),
+        baseline.median_ms,
+        record.median_ms,
+        threshold_pct,
+        allowance,
+    ))
+}
+
+fn legacy_record(record: &BenchRecord, baseline_ms: f64, guardrails: &LegacyGuardrails) -> Result<Comparison> {
+    let threshold_pct = guardrails.thresholds[&record.group].max_regression_pct;
+    Ok(comparison(
+        record.fixture.clone(),
+        baseline_ms,
+        record.legacy_ms_best,
+        threshold_pct,
+        baseline_ms * threshold_pct / 100.0,
+    ))
+}
+
+fn comparison(fixture: String, baseline_ms: f64, current_ms: f64, threshold_pct: f64, allowance: f64) -> Comparison {
+    Comparison {
+        fixture,
+        baseline_ms,
+        current_ms,
+        threshold_pct,
+        allowed_delta_ms: allowance,
+        failed: current_ms - baseline_ms > allowance,
+    }
+}
+
+fn ensure_schema(schema: u32, kind: &str) -> Result<()> {
+    if schema != SCHEMA_VERSION {
+        bail!("unsupported {kind} schema {schema}; expected {SCHEMA_VERSION}");
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashMap;
+
+    use super::{evaluate_legacy, evaluate_strict};
+    use crate::schema::{
+        BenchRecord, CalibratedBaseline, CalibratedBenchRecord, FixtureFloor, Guardrails, LegacyBenchRecord,
+        LegacyGuardrails, LegacyRunResults, Provenance, RunResults, SCHEMA_VERSION, default_thresholds,
+    };
+
+    #[test]
+    fn should_allow_tiny_fixture_delta_within_measured_floor() {
+        let (results, baseline, guardrails) = scenario(vec![1.08; 9], 0.10);
+        let comparison = evaluate_strict(&results, &baseline, &guardrails).unwrap().remove(0);
+        assert!(!comparison.failed);
+        assert_eq!(comparison.allowed_delta_ms, 0.10);
+    }
+
+    #[test]
+    fn should_fail_material_delta_beyond_floor_and_percentage() {
+        let (results, baseline, guardrails) = scenario(vec![1.11; 9], 0.10);
+        assert!(evaluate_strict(&results, &baseline, &guardrails).unwrap()[0].failed);
+    }
+
+    #[test]
+    fn should_reject_partial_inventory() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.runs.clear();
+        assert_eq!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string(),
+            "results fixture inventory is empty"
+        );
+    }
+
+    #[test]
+    fn should_reject_duplicate_fixture() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.runs.push(results.runs[0].clone());
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("duplicate result fixture")
+        );
+    }
+
+    #[test]
+    fn should_reject_altered_group_metadata() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.runs[0].group = "clean_medium".to_owned();
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("fixture metadata differs")
+        );
+    }
+
+    #[test]
+    fn should_reject_altered_input_and_output_metadata() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.runs[0].bytes = 11;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("fixture metadata differs")
+        );
+        results.runs[0].bytes = 10;
+        results.runs[0].output_bytes = 6;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("fixture metadata differs")
+        );
+    }
+
+    #[test]
+    fn should_reject_corrupt_and_nan_statistics() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.runs[0].median_ms = f64::NAN;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("median is corrupt")
+        );
+        results.runs[0].samples_ms[0] = f64::NAN;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("invalid samples")
+        );
+    }
+
+    #[test]
+    fn should_reject_missing_floor_nonpositive_baseline_and_unconfigured_threshold() {
+        let (results, mut baseline, mut guardrails) = scenario(vec![1.0; 9], 0.10);
+        guardrails.fixture_floors.clear();
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("inventory is not exact")
+        );
+        guardrails = scenario(vec![1.0; 9], 0.10).2;
+        baseline.runs[0].median_ms = 0.0;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("must be positive")
+        );
+        baseline = scenario(vec![1.0; 9], 0.10).1;
+        guardrails.thresholds.remove("clean_small");
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("no threshold configured")
+        );
+    }
+
+    #[test]
+    fn should_reject_campaign_mismatch_and_nonpositive_floor() {
+        let (results, baseline, mut guardrails) = scenario(vec![1.0; 9], 0.10);
+        guardrails.campaign_id = "different".to_owned();
+        assert_eq!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string(),
+            "baseline and guardrails campaign_id differ"
+        );
+        guardrails = scenario(vec![1.0; 9], 0.10).2;
+        guardrails.fixture_floors.get_mut("fixture.html").unwrap().floor_ms = 0.0;
+        assert!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string()
+                .contains("floor for fixture.html must be positive")
+        );
+    }
+
+    #[test]
+    fn should_reject_measurement_setting_mismatch() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+        results.provenance.iteration_override = Some(100);
+        assert_eq!(
+            evaluate_strict(&results, &baseline, &guardrails)
+                .unwrap_err()
+                .to_string(),
+            "benchmark provenance mismatch"
+        );
+    }
+
+    #[test]
+    fn should_use_best_of_first_three_for_legacy_equivalence() {
+        let samples = vec![1.2, 1.0, 1.1, 9.0, 9.0, 9.0, 9.0, 9.0, 9.0];
+        let current = result(samples);
+        let baseline = legacy_baseline();
+        let guardrails = LegacyGuardrails {
+            schema: 1,
+            thresholds: default_thresholds(),
+        };
+        let comparison = evaluate_legacy(&current, &baseline, &guardrails).unwrap().remove(0);
+        assert_eq!(comparison.current_ms, 1.0);
+        assert!(!comparison.failed);
+    }
+
+    #[test]
+    fn should_preserve_policy_thresholds() {
+        let thresholds = default_thresholds();
+        assert_eq!(thresholds["clean_large"].max_regression_pct, 5.0);
+        assert_eq!(thresholds["clean_medium"].max_regression_pct, 8.0);
+        assert_eq!(thresholds["clean_small"].max_regression_pct, 10.0);
+        assert_eq!(thresholds["adversarial"].max_regression_pct, 30.0);
+    }
+
+    fn scenario(samples: Vec<f64>, floor_ms: f64) -> (RunResults, CalibratedBaseline, Guardrails) {
+        let provenance = provenance();
+        let results = result(samples);
+        let baseline = CalibratedBaseline {
+            schema: SCHEMA_VERSION,
+            campaign_id: "campaign".to_owned(),
+            sha: "a".repeat(40),
+            hostname: "host".to_owned(),
+            created_at: "2026-01-01T00:00:00Z".to_owned(),
+            provenance: provenance.clone(),
+            runs: vec![CalibratedBenchRecord {
+                fixture: "fixture.html".to_owned(),
+                group: "clean_small".to_owned(),
+                bytes: 10,
+                median_ms: 1.0,
+                mad_ms: 0.01,
+                mb_per_s: 1.0,
+                output_bytes: 5,
+            }],
+        };
+        let guardrails = Guardrails {
+            schema: SCHEMA_VERSION,
+            campaign_id: "campaign".to_owned(),
+            thresholds: default_thresholds(),
+            calibration_provenance: provenance,
+            fixture_floors: HashMap::from([(
+                "fixture.html".to_owned(),
+                FixtureFloor {
+                    sample_count: 40,
+                    median_ms: 1.0,
+                    mad_ms: 0.01,
+                    floor_ms,
+                },
+            )]),
+        };
+        (results, baseline, guardrails)
+    }
+
+    fn result(samples_ms: Vec<f64>) -> RunResults {
+        let median_ms = crate::stats::median(&samples_ms);
+        let mad_ms = crate::stats::mad(&samples_ms);
+        let legacy_ms_best = samples_ms[..3].iter().copied().fold(f64::INFINITY, f64::min);
+        RunResults {
+            schema: SCHEMA_VERSION,
+            sha: "a".repeat(40),
+            hostname: "host".to_owned(),
+            created_at: "2026-01-01T00:00:01Z".to_owned(),
+            provenance: provenance(),
+            runs: vec![BenchRecord {
+                fixture: "fixture.html".to_owned(),
+                group: "clean_small".to_owned(),
+                bytes: 10,
+                samples_ms,
+                median_ms,
+                mad_ms,
+                legacy_ms_best,
+                mb_per_s: 1.0,
+                output_bytes: 5,
+            }],
+        }
+    }
+
+    fn legacy_baseline() -> LegacyRunResults {
+        LegacyRunResults {
+            schema: 1,
+            sha: "old".to_owned(),
+            host: "unknown".to_owned(),
+            created_at: "then".to_owned(),
+            runs: vec![LegacyBenchRecord {
+                fixture: "fixture.html".to_owned(),
+                group: "clean_small".to_owned(),
+                bytes: 10,
+                ms_best: 1.0,
+                mb_per_s: 1.0,
+                output_bytes: 5,
+            }],
+        }
+    }
+
+    fn provenance() -> Provenance {
+        Provenance {
+            os: "linux".to_owned(),
+            arch: "x86_64".to_owned(),
+            cpu_model: "cpu".to_owned(),
+            cpu_count: 2,
+            rustc_verbose: "rustc".to_owned(),
+            rustc_host: "x86_64-unknown-linux-gnu".to_owned(),
+            cargo_version: "cargo".to_owned(),
+            profile: "release".to_owned(),
+            build_flags: String::new(),
+            measurement_mode: "nine-batch-median-mad-v2".to_owned(),
+            tier_strategy: "auto".to_owned(),
+            visitor_mode: "disabled".to_owned(),
+            iteration_override: None,
+            warmup_iterations: crate::bench::WARMUP_ITERATIONS,
+            calibration_target_ms: crate::bench::CALIBRATION_TARGET_MS,
+            calibration_timeout_ms: crate::bench::CALIBRATION_TIMEOUT_MS,
+            core_features: vec!["metadata".to_owned()],
+            runner_image: Some("ubuntu24".to_owned()),
+            runner_class: Some("github-hosted".to_owned()),
+        }
+    }
+}

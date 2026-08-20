@@ -9,6 +9,7 @@ repository.workspace = true
 homepage.workspace = true
 description = "Benchmark harness and golden oracle for html-to-markdown-rs"
 publish = false
+build = "build.rs"
 
 [package.metadata.cargo-machete]
 # Kept available for golden-oracle diff assertions; not currently referenced.
@@ -23,24 +24,20 @@ name = "htmbench"
 path = "src/main.rs"
 
 [features]
-default = []
+default = ["inline-images", "metadata", "serde", "visitor"]
+inline-images = ["html-to-markdown-rs/inline-images"]
+metadata = ["html-to-markdown-rs/metadata"]
+serde = ["html-to-markdown-rs/serde"]
+visitor = ["html-to-markdown-rs/visitor"]
 # Enable testkit for --force-tier1 benchmarking.
 testkit = ["html-to-markdown-rs/testkit"]
 
 [dependencies]
 anyhow = "1"
 clap = { version = "4.6", features = ["derive"] }
-# ~keep Feature set must mirror the shipped CLI (crates/html-to-markdown-cli:
-# metadata, inline-images, visitor, serde) so `task bench:run` measures the
-# artifact users actually install, not a superset/subset of it. `testkit` is
-# opt-in here (via this crate's own `testkit` feature, --force-tier1 only) to
-# match the CLI, which does not ship with it.
-html-to-markdown-rs = { path = "../../crates/html-to-markdown", default-features = false, features = [
-  "metadata",
-  "inline-images",
-  "visitor",
-  "serde",
-] }
+# ~keep Harness features above are the single source of truth for core features,
+# keeping the compiled dependency and recorded provenance in lockstep.
+html-to-markdown-rs = { path = "../../crates/html-to-markdown", default-features = false }
 humantime = "2"
 pretty_assertions = "1"
 serde = { version = "1", features = ["derive"] }

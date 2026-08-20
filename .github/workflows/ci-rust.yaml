@@ -179,18 +179,14 @@ jobs:
           path: rust-coverage.lcov
           retention-days: 7
 
-  # ~keep The benchmark harness (tools/benchmark-harness) and its regression
-  # thresholds (tools/benchmark-harness/baselines/baseline.json, default 10% max
-  # regression per group) already existed and already enforce a real failure
-  # condition in `bench compare` — nothing in CI ever ran it (html-to-markdown
-  # audit #19). Wired here as a real, blocking gate rather than a no-op.
-  # Pinned to a single Linux runner (not a matrix) to keep wall-clock timing
-  # comparisons meaningful — shared-runner noise can still cause false positives
-  # on tight margins; if this proves flaky in practice the fix is to widen the
-  # per-group threshold in baseline.json, not to make the job non-blocking.
+  # ~keep Pinned to ubuntu-24.04 so a schema-v2 calibrated baseline can approve an
+  # exact runner provenance key. Until that 40-run calibration is reviewed, the
+  # checked-in schema-v1 files retain blocking percentage-only enforcement and
+  # print a migration warning. Schema v2 never skips an incompatible runner: a
+  # provenance mismatch or missing fixture floor is a configuration failure.
   benchmark-regression:
     name: "Benchmark: Regression guardrail"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Checkout

@@ -3,18 +3,21 @@
 //! Subcommands:
 //! - `run`     — benchmark the fixture corpus and write a JSON results file
 //! - `compare` — compare a results file against a baseline with guardrail checks
+//! - `calibrate` — derive an approved baseline and fixture noise floors
 //! - `oracle`  — verify (or bless) Markdown snapshot tests
 //! - `survey`  — print a fixture corpus feature-coverage table
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use html_to_markdown_bench::{
-    bench, fixture,
+    bench, calibration, fixture,
     oracle::{self, Permutation},
-    schema::{BenchRecord, Guardrails, RunResults, SCHEMA_VERSION},
+    policy, provenance,
+    schema::{
+        BenchRecord, CalibratedBaseline, Guardrails, LegacyGuardrails, LegacyRunResults, RunResults, SCHEMA_VERSION,
+    },
     survey,
 };
 use html_to_markdown_rs::TierStrategy;
@@ -34,6 +37,8 @@ enum Commands {
     Run(RunArgs),
     /// Compare a results file against a baseline with guardrail enforcement.
     Compare(CompareArgs),
+    /// Calibrate a baseline and fixture floors from forty full-corpus captures.
+    Calibrate(CalibrateArgs),
     /// Run (or bless) Markdown snapshot oracle tests.
     Oracle(OracleArgs),
     /// Print a fixture corpus feature-coverage survey.
@@ -55,7 +60,7 @@ struct RunArgs {
     filter: Option<String>,
 
     /// Override iteration count (default: auto-calibrated).
-    #[arg(long)]
+    #[arg(long, value_parser = clap::value_parser!(u32).range(1..))]
     iters: Option<u32>,
 
     /// Also benchmark against mdream (requires `compare-mdream` feature).
@@ -89,14 +94,27 @@ fn cmd_run(args: RunArgs) -> Result<()> {
     }
 
     let sha = git_sha();
-    let host = hostname();
+    let hostname = hostname();
+    let tier_strategy = if args.force_tier1 {
+        "tier1"
+    } else if args.force_tier2 {
+        "tier2"
+    } else {
+        "auto"
+    };
+    let visitor_mode = if args.with_visitor { "noop" } else { "disabled" };
+    let provenance = provenance::collect(&provenance::CaptureSettings {
+        tier_strategy,
+        visitor_mode,
+        iteration_override: args.iters,
+    })?;
     let created_at = humantime::format_rfc3339(std::time::SystemTime::now()).to_string();
 
     let mut runs: Vec<BenchRecord> = Vec::with_capacity(fixtures.len());
     for fix in &fixtures {
         let html = std::fs::read_to_string(&fix.path).with_context(|| format!("reading {}", fix.path.display()))?;
 
-        let mut opts: Option<ConversionOptions> = if args.force_tier1 {
+        let opts: Option<ConversionOptions> = if args.force_tier1 {
             #[cfg(feature = "testkit")]
             {
                 Some(ConversionOptions {
@@ -119,27 +137,37 @@ fn cmd_run(args: RunArgs) -> Result<()> {
             None
         };
 
-        if args.with_visitor {
-            let handle = html_to_markdown_bench::bench::new_noop_visitor_handle();
-            opts = Some(ConversionOptions {
-                visitor: Some(handle),
-                ..opts.unwrap_or_default()
-            });
-        }
-        let (ms_best, output_bytes) = bench::run_one(&html, opts);
-        if ms_best == 0.0 {
+        #[cfg(feature = "visitor")]
+        let opts = if args.with_visitor {
+            {
+                let handle = html_to_markdown_bench::bench::new_noop_visitor_handle();
+                Some(ConversionOptions {
+                    visitor: Some(handle),
+                    ..opts.unwrap_or_default()
+                })
+            }
+        } else {
+            opts
+        };
+        #[cfg(not(feature = "visitor"))]
+        let opts = {
+            if args.with_visitor {
+                anyhow::bail!("--with-visitor requires building with the visitor feature");
+            }
+            opts
+        };
+        let measurement = bench::run_one(&html, opts, args.iters);
+        if measurement.median_ms == 0.0 {
             tracing::warn!(
                 "NOTE: {} panicked during bench (known core bug) — recording 0 ms",
                 fix.rel_path
             );
         }
-        let mb_per_s = if ms_best > 0.0 {
-            (fix.bytes as f64 / 1_048_576.0) / (ms_best / 1_000.0)
+        let mb_per_s = if measurement.median_ms > 0.0 {
+            (fix.bytes as f64 / 1_048_576.0) / (measurement.median_ms / 1_000.0)
         } else {
             0.0
         };
-
-        let mdream_ms_best: Option<f64> = None;
 
         if args.mdream {
             tracing::warn!("--mdream flag has no effect (compare-mdream feature removed)");
@@ -149,21 +177,30 @@ fn cmd_run(args: RunArgs) -> Result<()> {
             fixture: fix.rel_path.clone(),
             group: fix.group.clone(),
             bytes: fix.bytes,
-            ms_best,
+            samples_ms: measurement.samples_ms,
+            median_ms: measurement.median_ms,
+            mad_ms: measurement.mad_ms,
+            legacy_ms_best: measurement.legacy_ms_best,
             mb_per_s,
-            output_bytes: output_bytes as u64,
-            mdream_ms_best,
+            output_bytes: measurement.output_bytes as u64,
         };
 
-        tracing::info!("{:<55}  {:.4} ms  {:.1} MB/s", fix.rel_path, ms_best, mb_per_s,);
+        tracing::info!(
+            "{:<55}  median={:.4} ms  MAD={:.4} ms  {:.1} MB/s",
+            fix.rel_path,
+            record.median_ms,
+            record.mad_ms,
+            mb_per_s,
+        );
         runs.push(record);
     }
 
     let results = RunResults {
         schema: SCHEMA_VERSION,
         sha,
-        host,
+        hostname,
         created_at,
+        provenance,
         runs,
     };
 
@@ -197,37 +234,50 @@ struct CompareArgs {
     reason = "guardrail pass/fail report is this command's result output"
 )]
 fn cmd_compare(args: CompareArgs) -> Result<()> {
-    let results: RunResults = load_json(&args.results)?;
-    let baseline: RunResults = load_json(&args.baseline)?;
-    let guardrails: Guardrails = load_json(&args.guardrails)?;
-
-    let baseline_map: HashMap<&str, f64> = baseline.runs.iter().map(|r| (r.fixture.as_str(), r.ms_best)).collect();
+    let results: RunResults = load_schema_v2(&args.results, "results")?;
+    let baseline_value = load_value(&args.baseline)?;
+    let guardrails_value = load_value(&args.guardrails)?;
+    let baseline_schema = schema_of(&baseline_value);
+    let guardrails_schema = schema_of(&guardrails_value);
+    let comparisons = match (baseline_schema, guardrails_schema) {
+        (1, 1) => {
+            eprintln!(
+                "WARNING: schema-v1 baseline has no calibrated fixture floors; using temporary percentage-only policy"
+            );
+            policy::evaluate_legacy(
+                &results,
+                &serde_json::from_value::<LegacyRunResults>(baseline_value)?,
+                &serde_json::from_value::<LegacyGuardrails>(guardrails_value)?,
+            )?
+        }
+        (SCHEMA_VERSION, SCHEMA_VERSION) => policy::evaluate_strict(
+            &results,
+            &serde_json::from_value::<CalibratedBaseline>(baseline_value)?,
+            &serde_json::from_value::<Guardrails>(guardrails_value)?,
+        )?,
+        _ => anyhow::bail!(
+            "baseline/guardrails schema mismatch: baseline={baseline_schema}, guardrails={guardrails_schema}"
+        ),
+    };
 
     let mut failures = Vec::new();
-    for record in &results.runs {
-        let Some(&base_ms) = baseline_map.get(record.fixture.as_str()) else {
-            tracing::warn!("no baseline for fixture {}, skipping", record.fixture);
-            continue;
-        };
-
-        let threshold = guardrails
-            .thresholds
-            .get(&record.group)
-            .map_or(10.0, |t| t.max_regression_pct);
-
-        if base_ms > 0.0 {
-            let pct_change = (record.ms_best - base_ms) / base_ms * 100.0;
-            let symbol = if pct_change > 0.0 { "+" } else { "" };
-            println!(
-                "{:<55}  base={:.4}ms  new={:.4}ms  {}{:.1}%  (limit +{:.0}%)",
-                record.fixture, base_ms, record.ms_best, symbol, pct_change, threshold
-            );
-            if pct_change > threshold {
-                failures.push(format!(
-                    "{}: regression {:.1}% exceeds limit {:.0}%",
-                    record.fixture, pct_change, threshold
-                ));
-            }
+    for comparison in comparisons {
+        let delta_ms = comparison.current_ms - comparison.baseline_ms;
+        let pct_change = delta_ms / comparison.baseline_ms * 100.0;
+        println!(
+            "{:<55} base={:.4}ms new={:.4}ms {:+.1}% allowed={:.4}ms (+{:.0}%)",
+            comparison.fixture,
+            comparison.baseline_ms,
+            comparison.current_ms,
+            pct_change,
+            comparison.allowed_delta_ms,
+            comparison.threshold_pct,
+        );
+        if comparison.failed {
+            failures.push(format!(
+                "{}: delta {:.4}ms exceeds effective allowance {:.4}ms",
+                comparison.fixture, delta_ms, comparison.allowed_delta_ms
+            ));
         }
     }
 
@@ -240,6 +290,33 @@ fn cmd_compare(args: CompareArgs) -> Result<()> {
         }
         anyhow::bail!("{} guardrail(s) violated", failures.len())
     }
+}
+
+#[derive(Debug, Parser)]
+struct CalibrateArgs {
+    /// Directory containing exactly forty schema-v2 full-corpus result files.
+    #[arg(long)]
+    runs_dir: PathBuf,
+
+    /// Baseline file to migrate or update.
+    #[arg(long, default_value = "tools/benchmark-harness/baselines/baseline.json")]
+    baseline: PathBuf,
+
+    /// Guardrails file to migrate or update.
+    #[arg(long, default_value = "tools/benchmark-harness/guardrails.json")]
+    guardrails: PathBuf,
+}
+
+#[expect(clippy::print_stdout, reason = "calibration result is CLI output")]
+fn cmd_calibrate(args: CalibrateArgs) -> Result<()> {
+    calibration::calibrate(&args.runs_dir, &args.baseline, &args.guardrails)?;
+    println!(
+        "Calibrated {} and {} from {}.",
+        args.baseline.display(),
+        args.guardrails.display(),
+        args.runs_dir.display()
+    );
+    Ok(())
 }
 
 #[derive(Debug, Parser)]
@@ -344,9 +421,31 @@ fn load_json<T: serde::de::DeserializeOwned>(path: &PathBuf) -> Result<T> {
     serde_json::from_str(&raw).with_context(|| format!("parsing {}", path.display()))
 }
 
+fn load_value(path: &PathBuf) -> Result<serde_json::Value> {
+    load_json(path)
+}
+
+fn schema_of(value: &serde_json::Value) -> u32 {
+    value
+        .get("schema")
+        .and_then(serde_json::Value::as_u64)
+        .and_then(|schema| u32::try_from(schema).ok())
+        .unwrap_or(0)
+}
+
+fn load_schema_v2(path: &PathBuf, kind: &str) -> Result<RunResults> {
+    let value = load_value(path)?;
+    let schema = schema_of(&value);
+    anyhow::ensure!(
+        schema == SCHEMA_VERSION,
+        "unsupported {kind} schema {schema}; expected {SCHEMA_VERSION}"
+    );
+    serde_json::from_value(value).with_context(|| format!("decoding schema-v2 {kind} {}", path.display()))
+}
+
 fn git_sha() -> String {
     std::process::Command::new("git")
-        .args(["rev-parse", "--short", "HEAD"])
+        .args(["rev-parse", "HEAD"])
         .output()
         .ok()
         .and_then(|o| {
@@ -362,6 +461,15 @@ fn git_sha() -> String {
 fn hostname() -> String {
     std::env::var("HOSTNAME")
         .or_else(|_| std::env::var("HOST"))
+        .or_else(|_| {
+            std::process::Command::new("hostname")
+                .output()
+                .ok()
+                .filter(|output| output.status.success())
+                .and_then(|output| String::from_utf8(output.stdout).ok())
+                .map(|value| value.trim().to_owned())
+                .ok_or(std::env::VarError::NotPresent)
+        })
         .unwrap_or_else(|_| "unknown".to_owned())
 }
 
@@ -377,6 +485,7 @@ fn main() -> Result<()> {
     match cli.command {
         Commands::Run(args) => cmd_run(args),
         Commands::Compare(args) => cmd_compare(args),
+        Commands::Calibrate(args) => cmd_calibrate(args),
         Commands::Oracle(args) => cmd_oracle(args),
         Commands::Survey(args) => cmd_survey(args),
     }

@@ -3,14 +3,51 @@ version: "3"
 tasks:
   run:
     desc: "Run the benchmark harness over the fixture corpus"
+    env:
+      HTMBENCH_LOG: htmbench=info,html_to_markdown=error
+    vars:
+      RESULTS_FILE: '{{.RESULTS_FILE | default "tools/benchmark-harness/results/latest.json"}}'
     cmds:
       - mkdir -p tools/benchmark-harness/results
-      - cargo run --release -p html-to-markdown-bench -- run --output tools/benchmark-harness/results/latest.json
+      - cargo run --release -p html-to-markdown-bench -- run --output {{.RESULTS_FILE}}
 
   compare:
     desc: "Compare latest benchmark results against the baseline"
+    vars:
+      RESULTS_FILE: '{{.RESULTS_FILE | default "tools/benchmark-harness/results/latest.json"}}'
     cmds:
-      - cargo run --release -p html-to-markdown-bench -- compare --results tools/benchmark-harness/results/latest.json
+      - cargo run --release -p html-to-markdown-bench -- compare --results {{.RESULTS_FILE}}
+
+  test:
+    desc: "Run benchmark harness unit tests"
+    cmds:
+      - cargo test --release -p html-to-markdown-bench
+
+  lint:
+    desc: "Check benchmark harness with Clippy"
+    cmds:
+      - cargo clippy --release -p html-to-markdown-bench --all-targets -- -D warnings
+
+  format:
+    desc: "Format benchmark harness Rust sources"
+    cmds:
+      - cargo fmt -p html-to-markdown-bench
+
+  format:check:
+    desc: "Check benchmark harness Rust formatting"
+    cmds:
+      - cargo fmt -p html-to-markdown-bench -- --check
+
+  calibrate:
+    desc: "Calibrate baseline and fixture floors from exactly 40 quiet full-corpus runs"
+    requires:
+      vars: [RUNS_DIR]
+    cmds:
+      - >-
+        cargo run --release -p html-to-markdown-bench -- calibrate
+        --runs-dir {{.RUNS_DIR}}
+        --baseline tools/benchmark-harness/baselines/baseline.json
+        --guardrails tools/benchmark-harness/guardrails.json
 
   oracle:
     desc: "Verify oracle snapshots match current output"

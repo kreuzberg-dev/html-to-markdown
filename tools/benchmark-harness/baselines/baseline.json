@@ -138,7 +138,7 @@
       "bytes": 67037,
       "ms_best": 3.5304,
       "mb_per_s": 18.10884464902724,
-      "output_bytes": 25541
+      "output_bytes": 25383
     },
     {
       "fixture": "real-world/issues/gh-190/firsteigen.html",
@@ -162,7 +162,7 @@
       "bytes": 163213,
       "ms_best": 3.0642352941176467,
       "mb_per_s": 50.79637536399881,
-      "output_bytes": 40082
+      "output_bytes": 40078
     },
     {
       "fixture": "real-world/issues/gh-121-hacker-news.html",
