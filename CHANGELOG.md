@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Leading normalized whitespace at the start of a paragraph is no longer emitted before an image,
+  preventing CommonMark from interpreting the image as an indented code block
+  ([#460](https://github.com/xberg-io/html-to-markdown/issues/460)).
+
 ## [3.11.2] - 2026-08-19
 
 ### Fixed

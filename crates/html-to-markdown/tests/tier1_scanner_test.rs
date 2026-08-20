@@ -199,6 +199,15 @@ fn tier1_matches_tier2_image_in_paragraph() {
     assert_matches_tier2("<p>before <img src=\"x.png\"> after</p>");
 }
 
+#[test]
+fn paragraph_drops_leading_spaces_before_image() {
+    let html = "<p>    <img src=\"x.png\"></p>";
+    let expected = "![](x.png)\n";
+
+    assert_eq!(tier1(html), expected);
+    assert_eq!(tier2(html), expected);
+}
+
 // ~keep ── Bail / fallback tests ─────────────────────────────────────────────────────
 // ~keep
 // ~keep These tests verify that when Tier-1 bails, the fallback to Tier-2 still

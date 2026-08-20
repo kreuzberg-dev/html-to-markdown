@@ -76,6 +76,10 @@ pub fn process_text_node(
             return;
         }
 
+        if ctx.in_paragraph && output.len() == ctx.block_content_start {
+            return;
+        }
+
         if had_newlines {
             if output.is_empty() {
                 return;
