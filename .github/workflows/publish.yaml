@@ -397,7 +397,7 @@ jobs:
         uses: xberg-io/actions/check-registry@v1
         with:
           registry: maven
-          package: "io.xberg:html-to-markdown-kotlin"
+          package: "io.xberg:html-to-markdown-android"
           version: ${{ needs.prepare.outputs.version }}
 
   check-pub:
@@ -2229,7 +2229,7 @@ jobs:
         uses: xberg-io/actions/wait-for-package@v1
         with:
           registry: maven
-          package: "io.xberg:html-to-markdown-kotlin"
+          package: "io.xberg:html-to-markdown-android"
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "60"
 
