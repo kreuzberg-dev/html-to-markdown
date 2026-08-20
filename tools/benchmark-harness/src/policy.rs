@@ -140,13 +140,15 @@ fn validate_record_statistics(record: &BenchRecord) -> Result<()> {
         "fixture {} has invalid samples",
         record.fixture
     );
+    let recomputed_median = stats::median(&record.samples_ms);
     ensure!(
-        stats::approximately_equal(record.median_ms, stats::median(&record.samples_ms)),
+        stats::approximately_equal(record.median_ms, recomputed_median, recomputed_median),
         "fixture {} median is corrupt",
         record.fixture
     );
+    let recomputed_mad = stats::mad(&record.samples_ms);
     ensure!(
-        stats::approximately_equal(record.mad_ms, stats::mad(&record.samples_ms)),
+        stats::approximately_equal(record.mad_ms, recomputed_mad, recomputed_median),
         "fixture {} MAD is corrupt",
         record.fixture
     );
@@ -357,7 +359,7 @@ fn ensure_schema(schema: u32, kind: &str) -> Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use super::{evaluate_legacy, evaluate_strict};
+    use super::{evaluate_legacy, evaluate_strict, validate_record_statistics};
     use crate::schema::{
         BenchRecord, CalibratedBaseline, CalibratedBenchRecord, FixtureFloor, Guardrails, LegacyBenchRecord,
         LegacyGuardrails, LegacyRunResults, Provenance, RunResults, SCHEMA_VERSION, default_thresholds,
@@ -450,6 +452,23 @@ mod tests {
                 .to_string()
                 .contains("invalid samples")
         );
+    }
+
+    #[test]
+    fn should_accept_ci_round_trip_mad_for_vuejs_docs() {
+        let record: BenchRecord = serde_json::from_str(
+            r#"{
+                "fixture":"mdream/vuejs-docs.html","group":"clean_medium","bytes":112232,
+                "samples_ms":[10.3192925,10.148774166666666,10.023908833333333,
+                    10.064827833333334,10.046842833333335,10.026310666666665,
+                    10.018591,10.080160666666666,10.033060666666666],
+                "median_ms":10.046842833333335,"mad_ms":0.02293400000000112,
+                "legacy_ms_best":10.023908833333333,"mb_per_s":10.653374164846468,
+                "output_bytes":26014
+            }"#,
+        )
+        .unwrap();
+        validate_record_statistics(&record).unwrap();
     }
 
     #[test]

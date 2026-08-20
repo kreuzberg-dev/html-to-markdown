@@ -33,12 +33,14 @@ pub fn nearest_rank(values: &[f64], percentile: f64) -> f64 {
     sorted[rank - 1]
 }
 
-/// Whether two recomputed floating-point statistics differ by at most a few ULPs.
+/// Whether two recomputed statistics differ by at most a few ULPs at the computation scale.
 #[must_use]
-pub fn approximately_equal(left: f64, right: f64) -> bool {
+pub fn approximately_equal(left: f64, right: f64, computation_scale: f64) -> bool {
     left.is_finite()
         && right.is_finite()
-        && (left - right).abs() <= f64::EPSILON * left.abs().max(right.abs()).max(1.0) * 8.0
+        && computation_scale.is_finite()
+        && (left - right).abs()
+            <= f64::EPSILON * left.abs().max(right.abs()).max(computation_scale.abs()).max(1.0) * 8.0
 }
 
 #[cfg(test)]
@@ -60,7 +62,11 @@ mod tests {
 
     #[test]
     fn should_accept_round_trip_statistic_within_a_few_ulps() {
-        assert!(approximately_equal(2.278_750_000_000_000_5, 2.278_750_000_000_001));
-        assert!(!approximately_equal(2.278_750_000_000_000_5, 2.3));
+        assert!(approximately_equal(
+            2.278_750_000_000_000_5,
+            2.278_750_000_000_001,
+            2.278_750_000_000_001
+        ));
+        assert!(!approximately_equal(2.278_750_000_000_000_5, 2.3, 2.3));
     }
 }

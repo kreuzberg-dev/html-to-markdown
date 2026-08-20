@@ -270,13 +270,15 @@ fn validate_record(record: &BenchRecord, index: usize) -> Result<()> {
         "run {index} fixture {} has invalid samples",
         record.fixture
     );
+    let recomputed_median = stats::median(&record.samples_ms);
     ensure!(
-        stats::approximately_equal(record.median_ms, stats::median(&record.samples_ms)),
+        stats::approximately_equal(record.median_ms, recomputed_median, recomputed_median),
         "run {index} fixture {} median is corrupt",
         record.fixture
     );
+    let recomputed_mad = stats::mad(&record.samples_ms);
     ensure!(
-        stats::approximately_equal(record.mad_ms, stats::mad(&record.samples_ms)),
+        stats::approximately_equal(record.mad_ms, recomputed_mad, recomputed_median),
         "run {index} fixture {} MAD is corrupt",
         record.fixture
     );
