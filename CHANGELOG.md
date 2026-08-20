@@ -7,11 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.3] - 2026-08-20
+
 ### Fixed
 
 - Leading normalized whitespace at the start of a paragraph is no longer emitted before an image,
   preventing CommonMark from interpreting the image as an indented code block
   ([#460](https://github.com/xberg-io/html-to-markdown/issues/460)).
+
+- The Swift crate compiles again. Codegen emitted a bare `EnumName::Variant` path for
+  data-carrying variants when converting a Swift string back into a Rust enum, which rustc rejects
+  with `E0533: expected value, found struct variant`; the regenerated crate routes those through
+  per-enum string conversion helpers instead.
+
+- The e2e freshness gate no longer fails on formatting it cannot produce. It installs Elixir, so
+  alef's `mix format` pass runs there as it does locally — without it the job emitted unformatted
+  `.exs` and reported the difference as fixture staleness.
 
 ### Changed
 
@@ -20,6 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without changing the existing percentage regression thresholds
   ([#461](https://github.com/xberg-io/html-to-markdown/issues/461),
   [#462](https://github.com/xberg-io/html-to-markdown/issues/462)).
+
+- Java's `VisitResult` is now a plain sealed interface. Its Jackson `@JsonSerialize` /
+  `@JsonDeserialize` annotations and the nested serializer and deserializer classes are gone; the
+  visitor bridge marshals the type directly and never routed it through Jackson.
+
+### Removed
+
+- The unused Java visitor classes `IHtmlVisitor`, `HtmlVisitorAdapter` and `HtmlVisitorBridge`.
+  They shipped alongside the live `HtmlVisitor`, `VisitorBridge` and `VisitorHandle` surface but
+  nothing in the binding referenced them, so an implementation of `IHtmlVisitor` was never
+  invoked. Implement `HtmlVisitor` instead.
 
 ## [3.11.2] - 2026-08-19
 
