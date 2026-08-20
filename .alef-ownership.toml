@@ -26,6 +26,7 @@ owned_paths = [
   ".github/skills/cli/SKILL.md",
   ".github/skills/mcp/SKILL.md",
   "crates/html-to-markdown-ffi/README.md",
+  "crates/html-to-markdown-node/.gitignore",
   "docs-site/src/content/docs/reference/api-c.md",
   "docs-site/src/content/docs/reference/api-csharp.md",
   "docs-site/src/content/docs/reference/api-dart.md",
