@@ -1549,9 +1549,15 @@ jobs:
       checksums: true
 
   verify-binstall:
+    # ~keep Must wait for promote-release, not just upload-cli-release. binstall resolves
+    # `[package.metadata.binstall] pkg-url` to
+    # `.../releases/download/v<version>/cli-<target>.tar.gz`, and that path 404s while the
+    # release is still a draft (verified: draft asset 404, published asset 200). With
+    # `--strategies crate-meta-data` there is no source fallback, so the job failed with
+    # "Fallback to cargo-install is disabled" (exit 94) despite every asset being uploaded.
     name: Verify cargo-binstall install
-    needs: [prepare, upload-cli-release]
-    if: ${{ needs.prepare.outputs.release_cli == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.upload-cli-release.result == 'success' }}
+    needs: [prepare, upload-cli-release, promote-release]
+    if: ${{ needs.prepare.outputs.release_cli == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.upload-cli-release.result == 'success' && needs.promote-release.result == 'success' }}
     uses: xberg-io/actions/.github/workflows/reusable-binstall-verify.yml@v1
     with:
       package-name: html-to-markdown-cli
