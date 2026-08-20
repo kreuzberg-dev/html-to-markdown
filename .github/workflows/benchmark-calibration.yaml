@@ -1,0 +1,44 @@
+name: Benchmark Calibration
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: short
+  BUILD_PROFILE: "ci"
+  HTMBENCH_RUNNER_CLASS: github-hosted
+
+jobs:
+  collect:
+    name: "Benchmark: Collect calibration campaign"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # ~keep v6
+
+      - name: Setup Rust
+        uses: xberg-io/actions/setup-rust@afc3c7ca41a92dec3ea4d37a5b32d48614e87f21 # ~keep v1
+        with:
+          cache-key-prefix: benchmark-calibration
+
+      - name: Install Task
+        uses: xberg-io/actions/install-task@afc3c7ca41a92dec3ea4d37a5b32d48614e87f21 # ~keep v1
+
+      - name: Collect calibration captures
+        run: task bench:calibration:collect
+        shell: bash
+
+      - name: Upload raw calibration campaign
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # ~keep v7
+        with:
+          name: benchmark-calibration-${{ github.run_id }}
+          path: benchmark-calibration/
+          if-no-files-found: error
+          retention-days: 30
