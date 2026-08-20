@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "issue": 462,
+  "campaign_id": "c87f68acde9af870d9a3a3fb169c8208e0a5654c:2026-08-20T14:13:50.962124248Z",
+  "capture_sha": "c87f68acde9af870d9a3a3fb169c8208e0a5654c",
+  "workflow_run": {
+    "id": 32376480025,
+    "url": "https://github.com/xberg-io/html-to-markdown/actions/runs/32376480025",
+    "job_id": 96449016388,
+    "job_url": "https://github.com/xberg-io/html-to-markdown/actions/runs/32376480025/job/96449016388"
+  },
+  "artifact": {
+    "id": 9410161373,
+    "name": "benchmark-calibration-32376480025",
+    "url": "https://github.com/xberg-io/html-to-markdown/actions/runs/32376480025/artifacts/9410161373",
+    "size_bytes": 208156,
+    "sha256": "24404a67ee0b27f62d82e99ac70be1f206877f453960096333f298b72dfec184",
+    "retention_days": 30,
+    "retained_archive": "tools/benchmark-harness/evidence/issue-462/32376480025/raw.zip",
+    "checksums": "tools/benchmark-harness/evidence/issue-462/32376480025/SHA256SUMS"
+  },
+  "captures": {
+    "count": 40,
+    "first": "0001.json",
+    "last": "0040.json",
+    "schema": 2,
+    "fixtures_per_capture": 29,
+    "fixture_inventory_sha256": "27bb211298377e6d7491a33d18ca2622f1357198741525e7d840df2a12135239"
+  },
+  "quiet_gate": "tools/benchmark-harness/evidence/issue-462/32376480025/quiet-gate.tsv",
+  "provenance": "tools/benchmark-harness/evidence/issue-462/32376480025/provenance.txt"
+}
