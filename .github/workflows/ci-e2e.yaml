@@ -222,6 +222,18 @@ jobs:
         with:
           cache-key-prefix: e2e-freshness
 
+      # ~keep alef formats the Elixir suite with `mix format` during generation. Without mix on
+      # PATH it degrades to a WARN and emits unformatted output, which the drift check below then
+      # reports as staleness that has nothing to do with fixtures/ — the whole job failed on
+      # e2e/elixir/**.exs for that reason alone. Only the formatter is needed here, so no hex,
+      # rebar or dependency install. Every other language's formatter is already on the runner
+      # image or installed by the steps below.
+      - name: Setup Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with:
+          elixir-version: "1.19"
+          otp-version: "28.1"
+
       - name: Install Task
         uses: xberg-io/actions/install-task@v1
 
