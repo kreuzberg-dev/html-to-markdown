@@ -28,7 +28,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "Hello World"
+        "value": "Hello World\n"
       },
       {
         "type": "not_empty",

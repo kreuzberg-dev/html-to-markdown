@@ -9,7 +9,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "Hello World"
+        "value": "Hello World\n"
       }
     ],
     "docs": {

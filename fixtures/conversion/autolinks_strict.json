@@ -9,7 +9,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "[foobar.png](foobar.png)"
+        "value": "[foobar.png](foobar.png)\n"
       }
     ],
     "docs": {
@@ -28,7 +28,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "[/docs/intro.html](/docs/intro.html)"
+        "value": "[/docs/intro.html](/docs/intro.html)\n"
       }
     ],
     "docs": {
@@ -47,7 +47,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "<https://example.com>"
+        "value": "<https://example.com>\n"
       }
     ],
     "docs": {
@@ -66,7 +66,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "<a@b.com>"
+        "value": "<a@b.com>\n"
       }
     ],
     "docs": {
@@ -85,7 +85,7 @@
       {
         "type": "equals",
         "field": "content",
-        "value": "[foobar.png](foobar.png) <https://www.heise.de>"
+        "value": "[foobar.png](foobar.png) <https://www.heise.de>\n"
       }
     ],
     "docs": {
