@@ -61,6 +61,7 @@ owned_paths = [
   "e2e/r/tests/test_smoke.R",
   "e2e/r/tests/test_structure.R",
   "e2e/r/tests/test_visitor.R",
+  "packages/java/pom.xml",
   "packages/kotlin-android/src/main/AndroidManifest.xml",
   "packages/python/html_to_markdown/_html_to_markdown.pyi",
   "packages/r/R/htmltomarkdown.R",
