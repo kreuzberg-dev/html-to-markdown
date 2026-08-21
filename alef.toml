@@ -63,6 +63,7 @@ manifest = "composer.json"
 [workspace.docs.snippets.sessions.go]
 cwd = "packages/go"
 manifest = "packages/go/go.mod"
+before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-ffi", "cd ../.. && scripts/ci/go/copy-ffi.sh"]
 
 [workspace.docs.snippets.sessions.java]
 cwd = "packages/java"
