@@ -1541,7 +1541,9 @@ jobs:
     # "Fallback to cargo-install is disabled" (exit 94) despite every asset being uploaded.
     name: Verify cargo-binstall install
     needs: [prepare, upload-cli-release, promote-release]
-    if: ${{ needs.prepare.outputs.release_cli == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.upload-cli-release.result == 'success' && needs.promote-release.result == 'success' }}
+    # ~keep `promote-release.outputs.promoted`, not `.result`: promote-release now waits on the
+    # per-language uploads, so its result carries their failure poison. See the note above it.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_cli == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.upload-cli-release.result == 'success' && needs.promote-release.outputs.promoted == 'true' }}
     uses: xberg-io/actions/.github/workflows/reusable-binstall-verify.yml@v1
     with:
       package-name: html-to-markdown-cli
@@ -1931,7 +1933,9 @@ jobs:
   publish-packagist:
     name: Trigger Packagist update
     needs: [prepare, upload-php-pie-release, check-packagist]
-    if: ${{ needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    # ~keep Packagist indexes the git tag, not the PIE archives, so a dropped PHP matrix cell must
+    # not stop it. `!cancelled()` opts out of the failure that propagates from `php-extension`.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: xberg-io/actions/publish-packagist@v1
@@ -2289,23 +2293,54 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
+  # --- Release spine: promote -> finalize -> announce ------------------------------------------
+  # These jobs decide whether the release exists at all, so they gate ONLY on release-blocking
+  # jobs: version validation, crates.io, and the CLI + C FFI assets the release page, Homebrew
+  # and cargo-binstall are built around. Per-language artifact jobs stay in `needs` for ordering
+  # but never appear in the `if`.
+  #
+  # Two GitHub Actions rules make that distinction load-bearing, and v3.11.3 (run 32467842571)
+  # hit both. Four `php-extension` Windows legs failed and nothing else did, yet the release was
+  # never promoted, never finalized, never announced, and the Homebrew bottles and binstall
+  # verification never ran:
+  #   1. A failure propagates down the whole `needs` chain, so a job's implicit `success()` gate
+  #      is false even when its own direct needs all succeeded. `!cancelled()` (or `always()`)
+  #      is required to opt out of that.
+  #   2. The propagated failure also poisons the VALUE of `needs.<job>.result`. In that run
+  #      `upload-php-pie-release` concluded `success`, but downstream jobs read its result as
+  #      `failure`, so `!contains(needs.*.result, 'failure')` was false and `always()` did not
+  #      save `verify-assets`, `release-finalize` or `announce-discord`.
+  # Consequence: a result check is only trustworthy for a job whose ENTIRE ancestry is
+  # release-blocking. To hand a trustworthy signal downstream, promote-release publishes a
+  # `promoted` output instead — job outputs carry no failure poison. ~keep
   promote-release:
     name: Publish GitHub Release from draft
     needs:
       - prepare
+      - validate-versions
+      - publish-crates
       - upload-cli-release
       - upload-c-ffi-release
+      # ~keep Ordering only: the draft flips once every per-language asset upload has settled, so
+      # a published release is not missing assets that are still uploading. Their results are
+      # deliberately absent from the `if` below — one language's artifact must not block the
+      # release.
       - upload-go-release
       - upload-swift-release
       - upload-elixir-release
       - upload-php-pie-release
       - upload-r-release
     if: |
+      !cancelled() &&
       needs.prepare.outputs.is_tag == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
+      needs.validate-versions.result == 'success' &&
+      needs.publish-crates.result != 'failure' &&
       needs.upload-cli-release.result == 'success' &&
       needs.upload-c-ffi-release.result == 'success'
     runs-on: ubuntu-latest
+    outputs:
+      promoted: ${{ steps.flip.outputs.promoted }}
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
         id: app-token
@@ -2314,10 +2349,13 @@ jobs:
           private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
           owner: xberg-io
       - name: Flip release out of draft
+        id: flip
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
-        run: gh release edit "${{ needs.prepare.outputs.tag }}" --draft=false
+        run: |
+          gh release edit "${{ needs.prepare.outputs.tag }}" --draft=false
+          echo "promoted=true" >>"$GITHUB_OUTPUT"
 
   publish-homebrew-formula:
     name: Update Homebrew formulas
@@ -2380,7 +2418,7 @@ jobs:
   homebrew-bottles:
     name: Build Homebrew bottle (${{ matrix.bottle_tag }})
     needs: [prepare, publish-homebrew-formula, promote-release]
-    if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.publish-homebrew-formula.result == 'success' && needs.promote-release.result == 'success' }}
+    if: ${{ !cancelled() && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.publish-homebrew-formula.result == 'success' && needs.promote-release.outputs.promoted == 'true' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -2427,8 +2465,11 @@ jobs:
 
   publish-homebrew-bottles:
     name: Merge Homebrew bottle DSL
-    needs: [prepare, publish-homebrew-formula, homebrew-bottles]
-    if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.publish-homebrew-formula.result == 'success' && needs.homebrew-bottles.result == 'success' }}
+    needs: [prepare, publish-homebrew-formula, homebrew-bottles, promote-release]
+    # ~keep `homebrew-bottles.result` is poisoned by anything upstream of promote-release, so gate
+    # on the two clean signals instead. A genuinely failed bottle leg still turns the run red on
+    # its own, and this job then fails loudly on the missing bottle JSON rather than vanishing.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.publish-homebrew-formula.result == 'success' && needs.promote-release.outputs.promoted == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2483,6 +2524,12 @@ jobs:
           git commit -m "html-to-markdown ${{ needs.prepare.outputs.version }}: add bottle DSL"
           git push origin HEAD
 
+  # ~keep Reporting gate, not a release gate. It runs unconditionally on a real tag and fails when
+  # the published release is missing an expected asset, which is how a partial release becomes
+  # visible. It is deliberately absent from every `if` in the release spine: the old
+  # `!contains(needs.*.result, 'failure')` guard read the poisoned result of
+  # `upload-php-pie-release` and skipped this job outright in v3.11.3, which is the opposite of
+  # what an asset audit is for — the audit must run precisely when something went wrong.
   verify-assets:
     name: Verify release assets
     needs:
@@ -2492,7 +2539,7 @@ jobs:
       - upload-c-ffi-release
       - upload-elixir-release
       - upload-php-pie-release
-    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && !contains(needs.*.result, 'failure') }}
+    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2517,8 +2564,8 @@ jobs:
             # Elixir NIF
             libhtml_to_markdown_nif-*.tar.gz
             # PHP PIE — explicit per-cell patterns so a single dropped
-            # matrix cell (the recurring #333 failure) fails the release
-            # instead of shipping a partial asset set. 4 PHP versions ×
+            # matrix cell (the recurring #333 failure) is named in the failure
+            # output instead of hiding inside a wildcard. 4 PHP versions ×
             # {arm64-darwin, arm64-linux, x86_64-linux} unix + windows x86_64.
             php_html_to_markdown-*_php8.2-arm64-darwin-bsdlibc-nts.tgz
             php_html_to_markdown-*_php8.2-arm64-linux-glibc-nts.tgz
@@ -2705,6 +2752,7 @@ jobs:
     name: Finalize GitHub Release
     needs:
       - prepare
+      - promote-release
       - verify-assets
       - publish-crates
       - publish-pypi
@@ -2726,12 +2774,15 @@ jobs:
       - upload-swift-release
       - update-swift-package-manifest
       - upload-r-release
+    # ~keep Everything above `promote-release` is ordering only, so finalize still runs last. The
+    # gate is the promotion output plus crates.io: if the release page exists and the crates
+    # published, the release is real and must be finalized even if a language artifact is missing.
     if: |
-      always() &&
       !cancelled() &&
       needs.prepare.outputs.is_tag == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
-      !contains(needs.*.result, 'failure')
+      needs.promote-release.outputs.promoted == 'true' &&
+      needs.publish-crates.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2752,6 +2803,7 @@ jobs:
     name: Announce release on Discord
     needs:
       - prepare
+      - promote-release
       - publish-crates
       - publish-pypi
       - publish-rubygems
@@ -2772,13 +2824,16 @@ jobs:
       - upload-php-pie-release
       - upload-r-release
       - release-finalize
+    # ~keep Announce when the release actually shipped. `release-finalize.result` cannot be read
+    # here — finalize needs verify-assets, so its result inherits any language-artifact failure —
+    # so this gates on the same clean promotion output finalize does, and orders after it.
     if: |
-      always() &&
       !cancelled() &&
       needs.prepare.outputs.is_tag == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.is_prerelease != 'true' &&
-      !contains(needs.*.result, 'failure')
+      needs.promote-release.outputs.promoted == 'true' &&
+      needs.publish-crates.result != 'failure'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2887,3 +2942,89 @@ jobs:
         with:
           packages-dir: dist-hermes
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+
+  # --- Release outcome report -------------------------------------------------------------------
+  # Terminal job. The spine above deliberately lets a release complete with a per-language artifact
+  # missing, so something has to make that state loud. This reads the run's real job conclusions
+  # from the API — not `needs.*.result`, which carries the chain-failure poison described above —
+  # and writes a summary saying whether the release shipped and exactly which artifacts are absent.
+  # It fails the run whenever any job failed, so a partial release is red and named rather than
+  # silently green. ~keep
+  release-report:
+    name: Report release outcome
+    needs:
+      - prepare
+      - promote-release
+      - release-finalize
+      - announce-discord
+      - verify-assets
+      - verify-binstall
+      - publish-homebrew-bottles
+      - publish-packagist
+      - publish-crates
+      - publish-pypi
+      - publish-rubygems
+      - publish-node
+      - publish-wasm
+      - publish-maven
+      - publish-nuget
+      - publish-hex
+      - publish-kotlin-android
+      - trigger-pubdev
+      - publish-zig
+      - update-swift-package-manifest
+      - publish-plugin-opencode
+      - publish-plugin-hermes
+    if: ${{ always() && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Summarize release outcome
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          PROMOTED: ${{ needs.promote-release.outputs.promoted }}
+        run: |
+          set -euo pipefail
+
+          gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/attempts/${GITHUB_RUN_ATTEMPT}/jobs?per_page=100" \
+            --jq '.jobs[] | select(.conclusion == "failure") | .name' >/tmp/failed-jobs.txt
+
+          if [ "${PROMOTED}" = "true" ]; then
+            shipped="**${TAG} shipped** — the GitHub release is published."
+          else
+            shipped="**${TAG} did NOT ship** — the release was never promoted out of draft."
+          fi
+
+          {
+            echo "## Release outcome: ${TAG}"
+            echo
+            echo "${shipped}"
+            echo
+            if [ -s /tmp/failed-jobs.txt ]; then
+              echo "### Failed jobs"
+              echo
+              while IFS= read -r job; do
+                printf -- "- \`%s\`\n" "${job}"
+              done </tmp/failed-jobs.txt
+              echo
+              if [ "${PROMOTED}" = "true" ]; then
+                echo "The release is **incomplete**: the artifacts those jobs produce are missing"
+                echo "from ${TAG}. Fix the cause and re-run this workflow — the build, upload and"
+                echo "publish jobs each guard against an already-published version, so a re-run"
+                echo "fills the gaps without disturbing what already shipped."
+              fi
+            else
+              echo "All jobs succeeded."
+            fi
+          } >>"${GITHUB_STEP_SUMMARY}"
+
+          if [ -s /tmp/failed-jobs.txt ]; then
+            while IFS= read -r job; do
+              echo "::error title=Incomplete release::${TAG}: job '${job}' failed"
+            done </tmp/failed-jobs.txt
+            exit 1
+          fi

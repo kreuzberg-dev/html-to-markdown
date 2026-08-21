@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A failed per-language artifact build no longer aborts the release. In v3.11.3 four
+  `Build PHP extension (... windows-x86_64)` legs failed and nothing else did, yet the GitHub
+  release was never promoted out of draft, never finalized and never announced, and the Homebrew
+  bottles, `cargo-binstall` verification, Packagist trigger and asset audit never ran — 3.11.3
+  reached every language registry but its release page stayed a draft.
+
+  Two GitHub Actions behaviours caused it, and the publish workflow now accounts for both. A
+  failure propagates down the entire `needs` chain, so a job's implicit `success()` gate is false
+  even when its own direct needs succeeded; and the propagated failure also poisons the *value* of
+  `needs.<job>.result`, so `upload-php-pie-release` reported `failure` to downstream jobs despite
+  concluding `success` — which is why `always()` plus `!contains(needs.*.result, 'failure')` still
+  skipped `verify-assets`, `release-finalize` and `announce-discord`.
+
+  The release spine (`promote-release` → `release-finalize` → `announce-discord`, plus
+  `verify-binstall` and the Homebrew bottle jobs) now gates only on jobs whose whole ancestry is
+  release-blocking: version validation, crates.io, and the CLI and C FFI assets. Per-language
+  artifact jobs stay in `needs` for ordering — the draft still flips only after every asset upload
+  has settled — but their results no longer appear in any gate. `promote-release` publishes a
+  `promoted` output for downstream jobs to gate on, because job outputs carry no failure poison.
+
+### Added
+
+- A `Report release outcome` job closes the workflow. It reads the run's real job conclusions from
+  the API and writes a job summary stating whether the tag shipped and naming every artifact that
+  is missing, then fails the run if anything failed. A release that ships without one language's
+  binary is now red and explicitly labelled incomplete rather than silently green.
+
+### Changed
+
+- `Verify release assets` is a reporting gate rather than a release gate. It runs on every real
+  tag and no longer guards itself with `!contains(needs.*.result, 'failure')`, which had skipped
+  the asset audit in exactly the situation the audit exists for. Nothing in the release spine
+  depends on its result.
+
 ## [3.11.3] - 2026-08-21
 
 ### Fixed
