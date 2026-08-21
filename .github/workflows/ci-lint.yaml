@@ -59,8 +59,12 @@ jobs:
       setup-rust: true
       setup-python: true
       # poly's checkstyle whole-project check runs `mvn checkstyle:check`;
-      # checkstyle 13+ requires JDK 21+ (defaulted by java-version).
+      # checkstyle 13+ requires JDK 21+. The version must also match
+      # packages/java/pom.xml's maven.compiler.release, or the snippet
+      # session's `mvn package` dies with "release version 25 not
+      # supported" on the default JDK 21. ~keep
       setup-java: true
+      java-version: "25"
       # The remaining whole-project checks poly runs (golangci-lint, rubocop, steep,
       # dart-analyze, credo) each need their own toolchain. Without them this job
       # skipped poly's workspace phase entirely, so those five linters ran only in
