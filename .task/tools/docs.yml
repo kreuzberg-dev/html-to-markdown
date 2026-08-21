@@ -42,8 +42,13 @@ tasks:
 
   snippets:gaps:
     desc: Report snippet coverage gaps (missing variants, unreferenced files, etc.)
+    # kotlin is absent from the required set: alef.toml gives kotlin_android
+    # exclude_functions = ["visitor"], because its trait-bridge emitter cannot bind via an
+    # options field. The binding therefore has no visitor API and alef stops emitting the 49
+    # visitor and 5 visitor edge-case snippets for it, which requiring kotlin here reports as
+    # 54 permanent gaps. ~keep
     cmds:
-      - alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,r,c,swift,dart,kotlin,zig
+      - alef snippets gaps --snippets docs-site/src/snippets --docs docs-site/src/content/docs --required-languages rust,python,typescript,go,ruby,php,java,csharp,elixir,r,c,swift,dart,zig
 
   snippets:check:
     desc: Generate and strictly validate fixture-driven documentation snippets
