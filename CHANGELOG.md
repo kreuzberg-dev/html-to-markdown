@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [3.11.3] - 2026-08-20
+## [3.11.3] - 2026-08-21
 
 ### Fixed
 
@@ -24,7 +24,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   alef's `mix format` pass runs there as it does locally — without it the job emitted unformatted
   `.exs` and reported the difference as fixture staleness.
 
+- The crates.io skip guard reads a real output again. The publish workflow asked
+  `check-registry` for an `extra-packages` key (`cli_exists`), but a composite action propagates
+  only the outputs it declares, so that key arrived as an empty string and the derived `all_exist`
+  could never be true. The guard has therefore never once skipped an already-published version. It
+  now reads the action's declared `all-exist` output.
+
 ### Changed
+
+- `packages/java/pom.xml` is alef-owned and regenerated. It had drifted out of alef's ownership
+  since roughly alef 0.60.x for want of a provenance marker, so this release lands the accumulated
+  template changes at once: the file is reindented to four spaces, gains `<excludes>` /
+  `<sourceFileIncludes>` blocks, and moves checkstyle to 13.11.0 and jackson-databind /
+  jackson-datatype-jdk8 to 2.22.2. Those versions are alef's pinned template defaults, not
+  html-to-markdown-specific choices.
+
+- All Rust dependencies taken to their latest versions (`cargo upgrade --incompatible` followed by
+  `cargo update`): `rmcp` / `rmcp-macros` 3.1.2 to 3.1.4 plus twelve transitive bumps. Fourteen
+  packages changed, none downgraded.
+
+- alef pinned to 0.62.8.
 
 - The benchmark harness now records nine timing samples with median and median absolute deviation,
   captures runner and toolchain provenance, and supports reviewed fixture-specific noise floors
