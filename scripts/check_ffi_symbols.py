@@ -59,7 +59,13 @@ EXPORT_SOURCE_PATHS = frozenset({FFI_HEADER})
 # stale entry (allowlisted symbol that is no longer missing) is itself a
 # failure, so entries cannot outlive their fix. ~keep
 KNOWN_MISSING_EXPORTS: dict[str, str] = {
-    "htm_register_html_visitor": "task #94 - visitor registration never landed in the FFI crate",
+    "htm_node_type_from_json": (
+        "alef 0.62.9 C# backend regression (dc27e0560 re-added the P/Invoke). NodeType is a "
+        "fieldless Copy enum, so it crosses the C ABI as int32_t and the FFI backend gives it "
+        "from_i32/from_str, never a handle-returning from_json. The declaration is dead - "
+        "nothing calls NodeTypeFromJson - so this is latent, not a live crash. Fixed upstream "
+        "in alef; removed by the first regen on an alef release carrying that fix."
+    ),
 }
 
 KNOWN_MISSING_PHP_FUNCTIONS: dict[str, str] = {

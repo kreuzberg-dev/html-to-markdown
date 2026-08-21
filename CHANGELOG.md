@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The FFI Symbols CI gate is green again. It was failing on two independent findings.
+
+  The `htm_register_html_visitor` allowlist entry is retired. It claimed "visitor registration
+  never landed in the FFI crate", which is no longer true: registration landed as the vtable API
+  `htm_visitor_create` / `htm_options_set_visitor` / `htm_visitor_free`, and the alef 0.62.6 regen
+  (`4765a4139`) replaced the last phantom caller — a Java Panama `SymbolLookup.find(...)` in
+  `NativeLib.java` — with lookups of those real symbols. The checker reported the entry as
+  *orphaned* rather than *resolved* only because it matches on exact symbol names and the
+  replacement uses different ones. The C# visitor surface reaches the same exports through
+  `NativeMethods.cs` and `HtmlToMarkdownConverter.Convert`, and all 49 tests in
+  `e2e/csharp/tests/VisitorTests.cs` pass against the built native library, so the public
+  `IHtmlVisitor` / `HtmlVisitorBridge` API is wired end to end.
+
+  `htm_node_type_from_json` is allowlisted, replacing it. The alef 0.62.9 regen (`dc27e0560`)
+  re-added a C# P/Invoke for it, but `NodeType` is a fieldless `Copy` enum: it crosses the C ABI
+  as `int32_t`, so the FFI exports `htm_node_type_from_i32` / `htm_node_type_from_str` and no
+  handle-returning `from_json`. Nothing calls `NodeTypeFromJson`, so the declaration is latent
+  rather than a live crash. This is a re-regression — the same symbol was allowlisted and retired
+  once before in `555a29d20`. Fixed upstream in alef's C# backend, which now skips scalar-crossing
+  named types when emitting handle-lifecycle P/Invokes; the entry comes out with the first regen
+  on an alef release carrying that fix.
+
 - A failed per-language artifact build no longer aborts the release. In v3.11.3 four
   `Build PHP extension (... windows-x86_64)` legs failed and nothing else did, yet the GitHub
   release was never promoted out of draft, never finalized and never announced, and the Homebrew
