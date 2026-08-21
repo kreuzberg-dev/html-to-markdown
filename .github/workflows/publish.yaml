@@ -254,7 +254,7 @@ jobs:
     outputs:
       rs_exists: ${{ steps.check.outputs.exists }}
       cli_exists: ${{ steps.check.outputs.cli_exists }}
-      all_exist: ${{ steps.derive.outputs.all_exist }}
+      all_exist: ${{ steps.check.outputs['all-exist'] }}
     steps:
       - id: check
         uses: xberg-io/actions/check-registry@v1
@@ -264,14 +264,6 @@ jobs:
           version: ${{ needs.prepare.outputs.version }}
           extra-packages: |
             cli_exists=html-to-markdown-cli
-
-      - id: derive
-        run: |
-          if [[ "${{ steps.check.outputs.exists }}" == "true" && "${{ steps.check.outputs.cli_exists }}" == "true" ]]; then
-            echo "all_exist=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "all_exist=false" >> "$GITHUB_OUTPUT"
-          fi
 
   check-hex:
     name: Check Hex.pm for existing version
