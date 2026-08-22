@@ -51,6 +51,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   explicitly consents to alef replacing the file with a placeholder seed on the next `generate` —
   the wrong trade for real content, so none of these were adopted.
 
+- Ran `alef generate` then `alef all` to actually resync the 13 adopted files and everything else
+  the `[workspace.docs.snippets]` `dirs` config edit (above) left stale: every alef-owned file's
+  provenance marker fingerprints the full config, so that one-line config change invalidated the
+  whole generated tree's markers even where rendered content hadn't changed. 5 of the 13 adopted
+  files had real drift: `packages/dart/rust/Cargo.toml` (hardcoded `version = "3.11.4"` instead of
+  `version.workspace = true`, and missing the `[lints.clippy]` block its swift sibling carries —
+  meaning `dbg_macro`/`print_stdout`/`print_stderr` were silently unenforced for that crate),
+  `packages/ruby/html_to_markdown.gemspec` (stale file-exclusion glob),
+  `crates/html-to-markdown-ffi/cmake/html-to-markdown-ffi-config.cmake` (indentation), and
+  `test_apps/python/pyproject.toml` and `.clang-format` (missing hash marker / stale dependency
+  pin). The other 8 already matched generated output byte-for-byte. Checked every other workspace
+  member's `Cargo.toml` for the same missing-lints gap: `packages/dart/rust/Cargo.toml` was the
+  only one lacking `[lints]` entirely; all ten others already carry their own `[lints.clippy]`
+  block or `workspace = true`. `alef verify --exit-code` now reports zero stale bindings; the
+  remaining failure is ~99 pre-existing scaffold files (`LICENSE`, `.gitignore`, `package.json`,
+  gradle wrapper files, …) that were never run through `alef adopt` and so carry no provenance
+  marker — a separate, long-standing gap outside this fix's scope, left for a future adoption pass.
+
+- Compile-validated the 96 hand-written snippets `alef generate` (above) had just made visible to
+  `alef snippets check`. 6 C snippets under `docs-site/src/snippets/c/` still declared
+  `HTMConversionResult *`/`HTMConversionOptions *`/etc. as raw pointer types and compared them
+  against `NULL`; the FFI moved to opaque `HTMAlefHandle` (`uint64_t`) handles a while ago and
+  these were never updated, so 5 failed to compile and a 6th (`visitor/basic_visitor.md`, comparing
+  `HTMHtmVisitor *` against a type that no longer exists) was misclassified as an unresolved
+  dependency by alef's error-pattern heuristic rather than a real failure. Rewrote all 6 to the
+  handle-based idiom (`HTMAlefHandle result = htm_convert(html, 0);`). One zig snippet
+  (`docs-site/src/snippets/zig/visitor/basic_visitor.md`) used `orelse` on `c.htm_convert`'s return
+  value as if it were optional; the binding returns a plain `u64` (0 on failure), so `orelse` no
+  longer type-checks — replaced with an explicit `if (result == 0) return error.ConvertFailed;`.
+  Both languages are now 578/578 with zero failures and zero unavailable.
+
+  The hand-written `docs-site/src/snippets/typescript/*` snippets import the published package
+  name (`@xberg-io/html-to-markdown`), same as a real consumer would, but the node and wasm
+  snippet sessions' `cwd` IS that package (or its sibling), so nothing had ever installed it into
+  its own `node_modules` the way `npm install @xberg-io/html-to-markdown` would for a consumer.
+  Added a `before` hook to both sessions in `alef.toml` that self-links the package
+  (`mkdir -p node_modules/@xberg-io && ln -sfn ../.. node_modules/@xberg-io/html-to-markdown` for
+  node; the wasm session links to the sibling node crate since the snippets never import the wasm
+  package by name). Verified by hand that this actually fixes module resolution — `tsc --noEmit`
+  against alef's own synthesized session `tsconfig.json` passes clean once the symlink exists — but
+  `alef snippets check` itself still reports these same 11 snippets (6 hand-written × node and wasm
+  sessions, minus one overlap) as `unresolved_dependency` even after the fix and with `--cache off`.
+  This reproduces identically across repeated fresh runs, so it isn't cache staleness; it looks like
+  a defect in how alef disambiguates a single fence-tag ("typescript") claimed by two sessions when
+  validating frontmatter-less (hand-written, not fixture-generated) snippets, since the equivalent
+  283-file fixture-generated batch (which does carry `target: node` frontmatter) passes cleanly
+  through both sessions. Not fixed from this repo; documented here for upstream triage.
+
+  5 hand-written `docs-site/src/snippets/kotlin_android/*` snippets (`import io.xberg.android.*`)
+  also remain `unresolved_dependency` even after `./gradlew assembleDebug -Palef.skipHostJni=true`
+  succeeds and the target classes are confirmably present in
+  `packages/kotlin-android/build/intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar`.
+  `./gradlew publishToMavenLocal -Palef.skipHostJni=true` gets further (compiles and bundles the
+  release AAR) but fails at `signMavenPublication` for lack of a configured signatory — this
+  environment has no GPG signing key, and none was fabricated. Left unresolved rather than faked;
+  the 6th kotlin_android snippet (`visitor/basic_visitor.md`) is comment-only (the visitor pattern
+  isn't supported on this binding yet) and reports `PASS` trivially.
+
+  `docs-site/src/snippets/feedback.md` was deliberately left out of `[workspace.docs.snippets]`
+  `dirs`: it's a shared MDX `<Content>` partial (a static "found a bug?" callout imported by ~10
+  doc pages), not a per-language code sample — it contains zero code fences, so there is nothing
+  for `alef snippets check` to discover or validate there.
+
+  Final `alef snippets check --strict --cache off` result across all 16 configured languages:
+  4571 total, 4555 passed, 0 downgraded, 0 failed, 0 skipped, 0 errors, 16 unavailable (kotlin 5,
+  typescript 11, both detailed above). `--strict`'s bar is zero *incomplete*
+  (`Skip | Unavailable | Downgraded`), not zero failures, so this run still fails that bar —
+  reported plainly rather than as a pass.
+
 ## [3.11.4] - 2026-08-22
 
 ### Fixed

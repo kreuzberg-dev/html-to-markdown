@@ -53,7 +53,8 @@ pub fn main() !void {
     const html_z = try std.heap.c_allocator.dupeZ(u8, "<h1>Title</h1><p>Body.</p>");
     defer std.heap.c_allocator.free(html_z);
 
-    const result = c.htm_convert(html_z.ptr, options) orelse return error.ConvertFailed;
+    const result = c.htm_convert(html_z.ptr, options);
+    if (result == 0) return error.ConvertFailed;
     defer c.htm_conversion_result_free(result);
 
     const json_ptr = c.htm_conversion_result_to_json(result);

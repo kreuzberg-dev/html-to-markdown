@@ -3,17 +3,17 @@
 #include <stdio.h>
 
 int main(void) {
-    HTMConversionOptions *options =
+    HTMAlefHandle options =
         htm_conversion_options_from_json("{\"heading_style\":\"atx\",\"wrap\":true}");
-    if (options == NULL) {
+    if (options == 0) {
         fprintf(stderr, "options failed: %s\n", htm_last_error_context());
         return 1;
     }
 
-    HTMConversionResult *result = htm_convert("<h1>Title</h1><p>Paragraph</p>", options);
+    HTMAlefHandle result = htm_convert("<h1>Title</h1><p>Paragraph</p>", options);
     htm_conversion_options_free(options);
 
-    if (result == NULL) {
+    if (result == 0) {
         fprintf(stderr, "convert failed: %s\n", htm_last_error_context());
         return 1;
     }

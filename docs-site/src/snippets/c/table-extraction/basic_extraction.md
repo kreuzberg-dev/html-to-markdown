@@ -12,16 +12,16 @@ int main(void) {
 
     /* include_document_structure must be enabled to populate result.tables;
      * with the default options the "tables" array in the JSON is empty. */
-    HTMConversionOptions *options =
+    HTMAlefHandle options =
         htm_conversion_options_from_json("{\"include_document_structure\":true}");
-    if (options == NULL) {
+    if (options == 0) {
         fprintf(stderr, "options failed: %s\n", htm_last_error_context());
         return 1;
     }
 
-    HTMConversionResult *result = htm_convert(html, options);
+    HTMAlefHandle result = htm_convert(html, options);
     htm_conversion_options_free(options);
-    if (result == NULL) {
+    if (result == 0) {
         fprintf(stderr, "convert failed: %s\n", htm_last_error_context());
         return 1;
     }

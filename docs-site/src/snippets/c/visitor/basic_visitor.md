@@ -24,16 +24,16 @@ int main(void) {
     HTMHtmVisitorCallbacks callbacks = {0};
     callbacks.visit_heading = visit_heading;
 
-    HTMHtmVisitor *visitor = htm_visitor_create(&callbacks);
-    HTMConversionOptions *options = htm_conversion_options_default();
+    HTMAlefHandle visitor = htm_visitor_create(&callbacks);
+    HTMAlefHandle options = htm_conversion_options_default();
     htm_options_set_visitor(options, visitor);
 
-    HTMConversionResult *result = htm_convert("<h1>Title</h1><p>Content</p>", options);
+    HTMAlefHandle result = htm_convert("<h1>Title</h1><p>Content</p>", options);
 
     htm_conversion_options_free(options);
     htm_visitor_free(visitor);
 
-    if (result == NULL) {
+    if (result == 0) {
         fprintf(stderr, "convert failed: %s\n", htm_last_error_context());
         return 1;
     }

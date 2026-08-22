@@ -3,8 +3,8 @@
 #include <stdio.h>
 
 int main(void) {
-    HTMConversionResult *result = htm_convert("<h1>Hello</h1><p>World</p>", NULL);
-    if (result == NULL) {
+    HTMAlefHandle result = htm_convert("<h1>Hello</h1><p>World</p>", 0);
+    if (result == 0) {
         fprintf(stderr, "convert failed (code %d): %s\n",
                 htm_last_error_code(), htm_last_error_context());
         return 1;

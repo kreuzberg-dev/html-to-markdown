@@ -82,11 +82,25 @@ manifest = "packages/python/pyproject.toml"
 [workspace.docs.snippets.sessions.node]
 cwd = "crates/html-to-markdown-node"
 manifest = "crates/html-to-markdown-node/package.json"
+# The hand-written typescript snippets import the published package name
+# (`@xberg-io/html-to-markdown`), same as a real consumer would -- but this
+# session's cwd IS that package, so nothing installs it into its own
+# node_modules the way `npm install @xberg-io/html-to-markdown` would for a
+# consumer. Self-link it so the compile check resolves the same import a
+# reader copies. ~keep
+before = ["mkdir -p node_modules/@xberg-io && ln -sfn ../.. node_modules/@xberg-io/html-to-markdown"]
 
 [workspace.docs.snippets.sessions.wasm]
 cwd = "crates/html-to-markdown-wasm"
 manifest = "crates/html-to-markdown-wasm/package.json"
-before = ["pnpm run build:all"]
+# Same hand-written typescript snippets are validated again from this
+# session; they still import `@xberg-io/html-to-markdown` (the node
+# package), not this crate's own wasm package name, so link to the sibling
+# node package rather than self-linking. ~keep
+before = [
+  "pnpm run build:all",
+  "mkdir -p node_modules/@xberg-io && ln -sfn ../../../html-to-markdown-node node_modules/@xberg-io/html-to-markdown",
+]
 
 [workspace.docs.snippets.sessions.ruby]
 cwd = "packages/ruby"

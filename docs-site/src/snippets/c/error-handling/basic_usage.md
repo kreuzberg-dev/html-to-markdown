@@ -4,8 +4,8 @@
 
 int main(void) {
     /* Binary data (detected via magic bytes) is rejected before parsing. */
-    HTMConversionResult *result = htm_convert("%PDF-1.4 not actually HTML", NULL);
-    if (result == NULL) {
+    HTMAlefHandle result = htm_convert("%PDF-1.4 not actually HTML", 0);
+    if (result == 0) {
         fprintf(stderr, "convert failed (code %d): %s\n",
                 htm_last_error_code(), htm_last_error_context());
         return 1;
