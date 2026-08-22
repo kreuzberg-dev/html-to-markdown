@@ -129,6 +129,8 @@ owned_paths = [
   "packages/python/html_to_markdown/py.typed",
   "packages/r/DESCRIPTION",
   "packages/r/LICENSE",
+  "packages/r/NAMESPACE",
+  "packages/r/R/extendr-wrappers.R",
   "packages/r/R/htmltomarkdown.R",
   "packages/ruby/Gemfile",
   "packages/ruby/LICENSE",

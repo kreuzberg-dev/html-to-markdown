@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `alef` pinned to `0.65.0` (from `0.64.0`) and the tree regenerated with the released crates.io
+  build (`cargo install alef --version 0.65.0 --locked`), not a local `alef` checkout — unlike the
+  0.64.0 repin, this is not byte-identical: `packages/elixir/native/html_to_markdown_nif/src/lib.rs`,
+  `packages/elixir/lib/html_to_markdown/native.ex`, `packages/r/src/rust/src/lib.rs`,
+  `packages/r/R/extendr-wrappers.R`, `packages/r/NAMESPACE`,
+  `packages/java/src/main/java/io/xberg/htmltomarkdown/{ConversionOptions,DocumentNode}.java`, and
+  the Dart/Swift structure e2e tests all picked up real codegen differences. `packages/r/NAMESPACE`
+  and `packages/r/R/extendr-wrappers.R` gained `.alef-ownership.toml` records (formats with no
+  comment syntax, so they cannot carry an inline `alef:hash:` marker) alongside the existing
+  `packages/r/DESCRIPTION` entry. `alef verify --exit-code` and `poly lint .` both pass on the
+  resulting tree.
+
 - `[workspace.docs.snippets]` `dirs` only listed `docs-site/src/snippets/generated`, so the 96
   hand-written snippets under `docs-site/src/snippets/<lang>/{getting-started,error-handling,
   table-extraction,metadata,visitor}` — the ones `usage.mdx`, `errors.mdx`, `tables.mdx` and
