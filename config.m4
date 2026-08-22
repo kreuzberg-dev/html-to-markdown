@@ -17,19 +17,19 @@ if test "$PHP_HTML_TO_MARKDOWN_ENABLED" = "yes"; then
       (cd crates/html-to-markdown-rs-php && cargo build --release) || exit 1
 
       dnl Detect output filename based on platform
-      if test -f "crates/html-to-markdown-rs-php/target/release/libhtml-to-markdown_php.dylib"; then
-        cargo_lib="crates/html-to-markdown-rs-php/target/release/libhtml-to-markdown_php.dylib"
-      elif test -f "crates/html-to-markdown-rs-php/target/release/libhtml-to-markdown_php.so"; then
-        cargo_lib="crates/html-to-markdown-rs-php/target/release/libhtml-to-markdown-rs_php.so"
+      if test -f "crates/html-to-markdown-rs-php/target/release/libhtml_to_markdown_rs_php.dylib"; then
+        cargo_lib="crates/html-to-markdown-rs-php/target/release/libhtml_to_markdown_rs_php.dylib"
+      elif test -f "crates/html-to-markdown-rs-php/target/release/libhtml_to_markdown_rs_php.so"; then
+        cargo_lib="crates/html-to-markdown-rs-php/target/release/libhtml_to_markdown_rs_php.so"
       else
-        echo "ERROR: cargo build succeeded but .so/.dylib not found in crates/html_to_markdown-php/target/release" >&2
+        echo "ERROR: cargo build succeeded but .so/.dylib not found in crates/html-to-markdown-rs-php/target/release" >&2
         exit 1
       fi
 
       mkdir -p modules
-      cp "$cargo_lib" "modules/html-to-markdown-rs.so" || exit 1
+      cp "$cargo_lib" "modules/html_to_markdown.so" || exit 1
     else
-      echo "ERROR: crates/html_to_markdown-php/Cargo.toml not found" >&2
+      echo "ERROR: crates/html-to-markdown-rs-php/Cargo.toml not found" >&2
       exit 1
     fi
   ], [])
