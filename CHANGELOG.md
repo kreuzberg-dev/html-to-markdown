@@ -132,6 +132,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`Skip | Unavailable | Downgraded`), not zero failures, so this run still fails that bar —
   reported plainly rather than as a pass.
 
+- The 5 kotlin_android `unresolved_dependency` snippets above were misdiagnosed: the real cause
+  was not the classpath or the unsigned AAR, it was plain Kotlin syntax. `error-handling/basic_usage.md`,
+  `table-extraction/basic_extraction.md`, and `metadata/basic_extraction.md` opened with (or ended
+  in) bare top-level statements — `try { }`, a top-level `for` loop, trailing `println(...)` calls
+  — which a plain `.kt` file (unlike a `.kts` script) does not permit outside a function body;
+  `kotlinc` rejected them with `error: syntax error: Expecting a top level declaration`, which
+  alef's error-pattern heuristic then classified as `unresolved_dependency` rather than a real
+  failure, the same misclassification already seen and corrected for the C/zig visitor snippets
+  above. `getting-started/basic_usage.md` and `getting-started/with_options.md` were already
+  declarations-only (`val`/`import`) and passed without change. Wrapped the executable body of the
+  three broken snippets in `fun main() { ... }`, matching the convention the Java/C# snippets
+  already use for the same requirement. `alef all --clean` (0.65.0, with `packages/kotlin-android`
+  built via `cargo build --release -p html-to-markdown-rs-jni` +
+  `./gradlew assembleDebug -Palef.skipHostJni=true`) now reports kotlin at 0 failed / 0 unavailable
+  across all 3 (all 6 including the two already-passing and the trivial visitor snippet). The
+  typescript disambiguation defect (11 unavailable, both `node` and `wasm` sessions claiming the
+  same `typescript` fence tag) is unchanged at 0.65.0 and remains upstream-triaged, not fixed here.
+
 ## [3.11.4] - 2026-08-22
 
 ### Fixed
