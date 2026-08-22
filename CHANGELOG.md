@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.4] - 2026-08-22
+
 ### Fixed
 
 - `alef.toml`'s `[workspace.docs.snippets]` `timeout_secs` was 120s, which also bounds every

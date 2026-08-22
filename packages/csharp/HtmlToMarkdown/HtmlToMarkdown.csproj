@@ -3,10 +3,10 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>HtmlToMarkdown</RootNamespace>
     <PackageId>XbergIo.HtmlToMarkdown</PackageId>
-    <Version>3.11.3</Version>
-    <AssemblyVersion>3.11.3.0</AssemblyVersion>
-    <FileVersion>3.11.3.0</FileVersion>
-    <InformationalVersion>3.11.3</InformationalVersion>
+    <Version>3.11.4</Version>
+    <AssemblyVersion>3.11.4.0</AssemblyVersion>
+    <FileVersion>3.11.4.0</FileVersion>
+    <InformationalVersion>3.11.4</InformationalVersion>
     <Description>High-performance HTML to Markdown converter</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/xberg-io/html-to-markdown</RepositoryUrl>

@@ -7,10 +7,10 @@
          the matching XbergIo.HtmlToMarkdown.runtime.<rid> at the consumer's restore. -->
     <PublishedRID Condition="'$(PublishedRID)' == ''">win-x64</PublishedRID>
     <PackageId>XbergIo.HtmlToMarkdown.runtime.$(PublishedRID)</PackageId>
-    <Version>3.11.3</Version>
-    <AssemblyVersion>3.11.3.0</AssemblyVersion>
-    <FileVersion>3.11.3.0</FileVersion>
-    <InformationalVersion>3.11.3</InformationalVersion>
+    <Version>3.11.4</Version>
+    <AssemblyVersion>3.11.4.0</AssemblyVersion>
+    <FileVersion>3.11.4.0</FileVersion>
+    <InformationalVersion>3.11.4</InformationalVersion>
     <Description>High-performance HTML to Markdown converter — native runtime assets for $(PublishedRID).</Description>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/xberg-io/html-to-markdown</RepositoryUrl>
