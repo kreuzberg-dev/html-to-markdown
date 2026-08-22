@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `alef.toml`'s `[workspace.docs.snippets]` `timeout_secs` was 120s, which also bounds every
+  session's `before` hook. On a cold checkout the kotlin_android (`assembleDebug`), wasm
+  (`pnpm run build:all`) and swift (`swift build`) sessions could not finish their `before` build
+  within that window, so their snippets were reclassified `unresolved_dependency` and reported
+  `Unavailable` — failing CI's `alef snippets check --strict` (`Failed: 0` but a large
+  `Unavailable` count) even though no snippet itself was broken. Raised to 900s, matching the
+  precedent in tree-sitter-language-pack's `alef.toml`.
 - The benchmark regression gate no longer fails at random on the CPU the runner happened to draw.
   `htmbench compare` compared the whole `Provenance` struct for equality, so a capture from an
   Intel Xeon host could not be evaluated against a baseline calibrated on an AMD EPYC host: it

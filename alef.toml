@@ -36,7 +36,15 @@ outputs = [".codex/skills", ".agents/skills", ".github/skills", ".claude/skills"
 [workspace.docs.snippets]
 dirs = ["docs-site/src/snippets/generated"]
 validation_level = "compile"
-timeout_secs = 120
+# `timeout_secs` bounds both snippet validation and every session's `before` hook (see
+# `DocsSnippetsConfig::timeout_secs` in alef's `src/core/config/output.rs`). 120s is enough for
+# `syntax`/`typecheck` snippets but not for a cold `before` build: kotlin_android's
+# `assembleDebug`, wasm's `pnpm run build:all`, and swift's `swift build` can each take several
+# minutes on a fresh checkout, so those sessions' snippets were reclassified `unresolved_dependency`
+# (reported as `Unavailable`) and failed CI under `--strict` even though every snippet itself was
+# fine. 900s matches the precedent set in tree-sitter-language-pack's alef.toml for the same
+# multi-minute `before` hooks. ~keep
+timeout_secs = 900
 strict = true
 deny_unclassified = true
 
