@@ -64,6 +64,7 @@ owned_paths = [
   "packages/java/pom.xml",
   "packages/kotlin-android/src/main/AndroidManifest.xml",
   "packages/python/html_to_markdown/_html_to_markdown.pyi",
+  "packages/r/DESCRIPTION",
   "packages/r/R/htmltomarkdown.R",
   "packages/ruby/sig/types.rbs",
   "test_apps/c/Makefile",

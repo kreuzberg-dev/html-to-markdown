@@ -23,6 +23,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   language's snippet root (not a glob) to `dirs`; this reaches only the hand-written topic dirs
   and does not overlap `generated/<lang>/...`, which lives one level deeper under its own subtree.
 
+- `alef adopt "**/*" --converged-only --write` claimed ownership of 13 files that already matched
+  (or, for `packages/r/DESCRIPTION`, could only ever match via `.alef-ownership.toml` since its
+  format carries no comment syntax) current `alef generate` output byte-for-byte apart from the
+  provenance marker: `.clang-format`, `packages/r/DESCRIPTION`,
+  `crates/html-to-markdown-ffi/cmake/html-to-markdown-ffi-config.cmake`,
+  `packages/dart/rust/Cargo.toml`, `packages/{elixir,java,kotlin-android,zig}/README.md`,
+  `packages/ruby/html_to_markdown.gemspec`, and
+  `test_apps/{node,wasm}/pnpm-workspace.yaml`, `test_apps/php/phpunit.xml`,
+  `test_apps/python/pyproject.toml`. 11 of those had drifted (stale `3.11.0` version pins in
+  READMEs/gemspec/build metadata, indentation, quoting) — `adopt` stamps the marker and leaves the
+  drifted content as-is by design; a later `alef generate` will resync it now that ownership is
+  recorded. `packages/kotlin-android/gradle/wrapper/gradle-wrapper.jar` could not be adopted even
+  with `--write`: alef refuses to stamp or ownership-record any binary file, so it stays unmarked
+  — a tool limitation, not a decision made here.
+
+- Left every create-once seed alone: `config.m4`, `crates/html-to-markdown-php/src/HtmlVisitor.php`,
+  `e2e/java/pom.xml`, and `e2e/kotlin_android/build.gradle.kts` (the four paths `alef generate`
+  refused to write) plus ~20 siblings alef's own `adopt` scan flagged the same way (Cargo/npm/gem
+  scaffold manifests under `crates/html-to-markdown-node/{package.json,index.js,npm/*/package.json}`,
+  `packages/ruby/spec/html_to_markdown_spec.rb`, `packages/java/checkstyle-suppressions.xml`,
+  `packages/csharp/HtmlToMarkdown{,.Runtime}/*.csproj`, `Package.swift` /
+  `packages/swift/Package.swift`, `packages/dart/{pubspec.yaml,CHANGELOG.md,example/*.dart}`,
+  `packages/zig/{build.zig,build.zig.zon,test/*.zig}`). Each is a create-once seed: alef writes it
+  only when absent, and every one on disk is substantial hand-maintained content (24-431 lines),
+  not a placeholder. `alef adopt --clobber-create-once-seeds` would stamp them, but that flag
+  explicitly consents to alef replacing the file with a placeholder seed on the next `generate` —
+  the wrong trade for real content, so none of these were adopted.
+
 ## [3.11.4] - 2026-08-22
 
 ### Fixed
