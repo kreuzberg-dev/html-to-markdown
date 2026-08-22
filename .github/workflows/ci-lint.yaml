@@ -73,4 +73,10 @@ jobs:
       setup-ruby: true
       setup-dart: true
       setup-elixir: true
+      # zig and R snippets validated as `Unavailable` -- "zig toolchain not found" -- because
+      # reusable-validate wired no setup step for either, and under `--strict` an Unavailable
+      # fails the run exactly like a Fail. 566 of the 1078 Unavailable in run 32541909482 were
+      # these two (zig 283 + r 283). Both inputs landed in actions v1.8.144. ~keep
+      setup-zig: true
+      setup-r: true
       check-fixture-snippets: true
