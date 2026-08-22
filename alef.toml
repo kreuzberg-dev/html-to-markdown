@@ -34,7 +34,34 @@ template_dir = "templates/docs/skills"
 outputs = [".codex/skills", ".agents/skills", ".github/skills", ".claude/skills"]
 
 [workspace.docs.snippets]
-dirs = ["docs-site/src/snippets/generated"]
+# `generated/` is the fixture-driven regression corpus (alef-owned, one topic per fixture
+# category). The per-language roots below are the hand-written narrative snippets used directly
+# by usage.mdx / errors.mdx / tables.mdx / visitor.mdx (getting-started, error-handling,
+# table-extraction, metadata "basic_extraction", visitor "basic_visitor"). They demonstrate the
+# public field-access idiom (`result.content` / `result.tables` / `result.metadata`) that the
+# fixture-driven snippets don't show, so they aren't dropped in favor of a generated equivalent
+# -- but until now they sat entirely outside `dirs`, so nothing ever validated they still compile.
+# Listing each language root (not a glob) picks up only the hand-written topic dirs; it does not
+# overlap `generated/<lang>/...`, which lives one level deeper under its own subtree. ~keep
+dirs = [
+  "docs-site/src/snippets/generated",
+  "docs-site/src/snippets/c",
+  "docs-site/src/snippets/csharp",
+  "docs-site/src/snippets/dart",
+  "docs-site/src/snippets/elixir",
+  "docs-site/src/snippets/go",
+  "docs-site/src/snippets/java",
+  "docs-site/src/snippets/kotlin_android",
+  "docs-site/src/snippets/php",
+  "docs-site/src/snippets/python",
+  "docs-site/src/snippets/r",
+  "docs-site/src/snippets/ruby",
+  "docs-site/src/snippets/rust",
+  "docs-site/src/snippets/swift",
+  "docs-site/src/snippets/typescript",
+  "docs-site/src/snippets/wasm",
+  "docs-site/src/snippets/zig",
+]
 validation_level = "compile"
 # `timeout_secs` bounds both snippet validation and every session's `before` hook (see
 # `DocsSnippetsConfig::timeout_secs` in alef's `src/core/config/output.rs`). 120s is enough for

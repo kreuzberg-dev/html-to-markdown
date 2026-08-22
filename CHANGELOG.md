@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `[workspace.docs.snippets]` `dirs` only listed `docs-site/src/snippets/generated`, so the 96
+  hand-written snippets under `docs-site/src/snippets/<lang>/{getting-started,error-handling,
+  table-extraction,metadata,visitor}` — the ones `usage.mdx`, `errors.mdx`, `tables.mdx` and
+  `visitor.mdx` actually import — were never discovered by `alef snippets check`. Nothing
+  validated they still compile and nothing regenerates them, so a reader could be shown code that
+  no longer builds. `alef e2e snippets-migrate docs-site/src/snippets` confirms none of the 96
+  have a fixture-generated equivalent: the generated corpus is organized by fixture topic
+  (`conversion`, `edge-cases`, `metadata`, `options`, `real-world`, `result`, `smoke`,
+  `structure`, `visitor`) and emits a test-style snippet (frontmatter + `main()` + `print(result)`)
+  aimed at compile validation, not the field-access idiom (`result.content` / `result.tables` /
+  `result.metadata`) the narrative docs teach — so they're kept rather than replaced. Added each
+  language's snippet root (not a glob) to `dirs`; this reaches only the hand-written topic dirs
+  and does not overlap `generated/<lang>/...`, which lives one level deeper under its own subtree.
+
 ## [3.11.4] - 2026-08-22
 
 ### Fixed
