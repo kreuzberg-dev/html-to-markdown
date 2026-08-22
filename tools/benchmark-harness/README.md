@@ -16,8 +16,28 @@ task bench:compare
 
 The checked-in schema-v1 baseline remains a temporary percentage-only compatibility bridge. Comparisons print a
 warning while that bridge is active. Once an approved calibration promotes the baseline and guardrails to schema v2,
-comparison becomes strict: current and baseline provenance must exactly match the approved calibration provenance,
+comparison becomes strict: the capture's provenance *contract* must match the approved calibration provenance exactly,
 and every fixture must have a measured floor. A mismatch or missing floor is a configuration error, not a skip.
+
+## Provenance contract versus host identity
+
+The contract is everything that must match for two captures to be comparable at all: OS, architecture, Rust compiler
+identity and host triple, Cargo version, profile, build flags, compiled core features, measurement mode and settings,
+forced tier, visitor mode, iteration override, and runner image/class. Any difference there is a configuration error
+and aborts the comparison with `benchmark provenance mismatch` before a single timing is evaluated.
+
+`cpu_model` and `cpu_count` are recorded but deliberately excluded from that contract. GitHub's `ubuntu-24.04` label
+is one name over a mixed pool — the same workflow draws AMD EPYC hosts on one run and Intel Xeon hosts on the next —
+while a calibration campaign is `workflow_dispatch`-only and can be captured on whichever host it happened to draw.
+Making the CPU part of the contract therefore turned an unavoidable pool difference into a coin-flip hard failure.
+
+Host identity instead decides how a *timing* violation is reported. When the CPU differs from the calibrated one,
+comparison prints a warning, and `--allow-host-mismatch` (`ALLOW_HOST_MISMATCH=true task bench:compare`) downgrades
+violations to advisory, because a positive delta on hardware the baseline was never measured on is not evidence of a
+code regression. The flag is off by default and is passed only by the `ci-rust.yaml` regression job. It never relaxes
+the contract, and when the hardware *does* match the baseline it changes nothing: a real regression on the calibrated
+CPU still fails the run. Never reach for it to silence a violation observed on matching hardware — re-measure, or fix
+the regression.
 
 ## Calibration and baseline promotion
 

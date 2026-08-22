@@ -13,10 +13,20 @@ tasks:
 
   compare:
     desc: "Compare latest benchmark results against the baseline"
+    summary: |
+      Compare latest benchmark results against the calibrated baseline.
+
+      Set ALLOW_HOST_MISMATCH=true to downgrade timing violations to advisory when the
+      current CPU is not the one the baseline was calibrated on. Intended for heterogeneous
+      CI runner pools only; it never relaxes the provenance contract, and it changes nothing
+      when the hardware matches the baseline.
     vars:
       RESULTS_FILE: '{{.RESULTS_FILE | default "tools/benchmark-harness/results/latest.json"}}'
+      ALLOW_HOST_MISMATCH: '{{.ALLOW_HOST_MISMATCH | default ""}}'
     cmds:
-      - cargo run --release -p html-to-markdown-bench -- compare --results {{.RESULTS_FILE}}
+      - >-
+        cargo run --release -p html-to-markdown-bench -- compare --results {{.RESULTS_FILE}}
+        {{if eq .ALLOW_HOST_MISMATCH "true"}}--allow-host-mismatch{{end}}
 
   test:
     desc: "Run benchmark harness unit tests"

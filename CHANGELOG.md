@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The benchmark regression gate no longer fails at random on the CPU the runner happened to draw.
+  `htmbench compare` compared the whole `Provenance` struct for equality, so a capture from an
+  Intel Xeon host could not be evaluated against a baseline calibrated on an AMD EPYC host: it
+  aborted with `benchmark provenance mismatch` before any timing was compared, even though the
+  timings themselves passed every threshold. GitHub's `ubuntu-24.04` label spans both vendors and
+  the calibration campaign is `workflow_dispatch`-only, so which host each side drew was a coin
+  flip. `cpu_model` and `cpu_count` are now excluded from the provenance contract; every other
+  field — rustc, Cargo, profile, build flags, core features, measurement mode, tier and visitor
+  selection, iteration/warmup settings, runner image and class — still hard-fails on drift. A
+  differing CPU is reported instead as a host mismatch, and the new off-by-default
+  `--allow-host-mismatch` flag (passed only by the CI regression job) downgrades timing violations
+  to advisory on hardware the baseline was never calibrated on. Thresholds are unchanged and the
+  baseline was not re-cut: a regression measured on the calibrated CPU still fails the run.
+
 - The FFI Symbols CI gate is green again. It was failing on two independent findings.
 
   The `htm_register_html_visitor` allowlist entry is retired. It claimed "visitor registration

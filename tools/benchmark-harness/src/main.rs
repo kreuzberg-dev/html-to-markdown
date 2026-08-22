@@ -226,40 +226,53 @@ struct CompareArgs {
     /// Guardrails file.
     #[arg(long, default_value = "tools/benchmark-harness/guardrails.json")]
     guardrails: PathBuf,
+
+    /// Report timing violations as advisory when this host's CPU differs from the calibrated one.
+    ///
+    /// Off by default: a violation is fatal. Only pass this where the runner pool is known to be
+    /// heterogeneous (CI), and understand what it does and does not relax — it never weakens the
+    /// provenance contract, and on hardware that *does* match the baseline it changes nothing, so
+    /// a genuine regression measured on the calibrated CPU still fails.
+    #[arg(long)]
+    allow_host_mismatch: bool,
 }
 
-#[expect(
-    clippy::print_stdout,
-    clippy::print_stderr,
-    reason = "guardrail pass/fail report is this command's result output"
-)]
+#[expect(clippy::print_stderr, reason = "guardrail report is this command's result output")]
 fn cmd_compare(args: CompareArgs) -> Result<()> {
     let results: RunResults = load_schema_v2(&args.results, "results")?;
     let baseline_value = load_value(&args.baseline)?;
     let guardrails_value = load_value(&args.guardrails)?;
     let baseline_schema = schema_of(&baseline_value);
     let guardrails_schema = schema_of(&guardrails_value);
-    let comparisons = match (baseline_schema, guardrails_schema) {
+    let (comparisons, host_mismatch) = match (baseline_schema, guardrails_schema) {
         (1, 1) => {
             eprintln!(
                 "WARNING: schema-v1 baseline has no calibrated fixture floors; using temporary percentage-only policy"
             );
-            policy::evaluate_legacy(
+            let comparisons = policy::evaluate_legacy(
                 &results,
                 &serde_json::from_value::<LegacyRunResults>(baseline_value)?,
                 &serde_json::from_value::<LegacyGuardrails>(guardrails_value)?,
-            )?
+            )?;
+            (comparisons, None)
         }
-        (SCHEMA_VERSION, SCHEMA_VERSION) => policy::evaluate_strict(
-            &results,
-            &serde_json::from_value::<CalibratedBaseline>(baseline_value)?,
-            &serde_json::from_value::<Guardrails>(guardrails_value)?,
-        )?,
+        (SCHEMA_VERSION, SCHEMA_VERSION) => {
+            let baseline = serde_json::from_value::<CalibratedBaseline>(baseline_value)?;
+            let guardrails = serde_json::from_value::<Guardrails>(guardrails_value)?;
+            let comparisons = policy::evaluate_strict(&results, &baseline, &guardrails)?;
+            (comparisons, policy::host_mismatch(&results, &guardrails))
+        }
         _ => anyhow::bail!(
             "baseline/guardrails schema mismatch: baseline={baseline_schema}, guardrails={guardrails_schema}"
         ),
     };
 
+    let failures = report_comparisons(&comparisons);
+    report_verdict(&failures, host_mismatch.as_ref(), args.allow_host_mismatch)
+}
+
+#[expect(clippy::print_stdout, reason = "per-fixture comparison table is CLI result output")]
+fn report_comparisons(comparisons: &[policy::Comparison]) -> Vec<String> {
     let mut failures = Vec::new();
     for comparison in comparisons {
         let delta_ms = comparison.current_ms - comparison.baseline_ms;
@@ -280,16 +293,49 @@ fn cmd_compare(args: CompareArgs) -> Result<()> {
             ));
         }
     }
+    failures
+}
 
+/// Decide whether guardrail violations are fatal, and say why when they are not.
+///
+/// Violations are downgraded to advisory only when both halves hold: the capture ran on a CPU the
+/// baseline was never calibrated on, *and* the caller explicitly opted in. Either half missing
+/// keeps the violation fatal, which is what preserves regression detection on matched hardware.
+#[expect(
+    clippy::print_stdout,
+    clippy::print_stderr,
+    reason = "guardrail verdict is this command's result output"
+)]
+fn report_verdict(
+    failures: &[String],
+    host_mismatch: Option<&policy::HostMismatch>,
+    allow_host_mismatch: bool,
+) -> Result<()> {
+    if let Some(mismatch) = host_mismatch {
+        eprintln!(
+            "WARNING: host CPU differs from the calibrated baseline host: {} ({} cores) vs calibrated {} ({} cores)",
+            mismatch.current_cpu_model,
+            mismatch.current_cpu_count,
+            mismatch.calibrated_cpu_model,
+            mismatch.calibrated_cpu_count,
+        );
+    }
     if failures.is_empty() {
         println!("\nAll guardrails passed.");
-        Ok(())
-    } else {
-        for f in &failures {
-            eprintln!("FAIL: {f}");
-        }
-        anyhow::bail!("{} guardrail(s) violated", failures.len())
+        return Ok(());
     }
+    for failure in failures {
+        eprintln!("FAIL: {failure}");
+    }
+    if host_mismatch.is_some() && allow_host_mismatch {
+        eprintln!(
+            "ADVISORY: {} guardrail(s) violated on a CPU the baseline was not calibrated on; \
+             not failing the run because --allow-host-mismatch was passed",
+            failures.len()
+        );
+        return Ok(());
+    }
+    anyhow::bail!("{} guardrail(s) violated", failures.len())
 }
 
 #[derive(Debug, Parser)]

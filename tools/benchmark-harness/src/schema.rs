@@ -56,6 +56,76 @@ pub struct Provenance {
     pub runner_class: Option<String>,
 }
 
+impl Provenance {
+    /// Compare every field that defines the measurement *contract*, ignoring host identity.
+    ///
+    /// The contract is everything a capture and its calibrated baseline must share for their
+    /// numbers to be comparable at all: toolchain, profile, build flags, enabled core features,
+    /// measurement mode, tier and visitor selection, iteration/warmup settings, and runner class.
+    /// A difference in any of them is a configuration error and must hard-fail.
+    ///
+    /// `cpu_model` and `cpu_count` are deliberately excluded — see [`Provenance::host_matches`].
+    #[must_use]
+    pub fn contract_matches(&self, other: &Self) -> bool {
+        // ~keep Destructured field by field on purpose: adding a field to `Provenance` breaks
+        // this function to compile, forcing an explicit contract-vs-host-identity decision
+        // instead of silently inheriting whichever side of the split the author never considered.
+        let Self {
+            os,
+            arch,
+            cpu_model: _,
+            cpu_count: _,
+            rustc_verbose,
+            rustc_host,
+            cargo_version,
+            profile,
+            build_flags,
+            measurement_mode,
+            tier_strategy,
+            visitor_mode,
+            iteration_override,
+            warmup_iterations,
+            calibration_target_ms,
+            calibration_timeout_ms,
+            core_features,
+            runner_image,
+            runner_class,
+        } = self;
+        *os == other.os
+            && *arch == other.arch
+            && *rustc_verbose == other.rustc_verbose
+            && *rustc_host == other.rustc_host
+            && *cargo_version == other.cargo_version
+            && *profile == other.profile
+            && *build_flags == other.build_flags
+            && *measurement_mode == other.measurement_mode
+            && *tier_strategy == other.tier_strategy
+            && *visitor_mode == other.visitor_mode
+            && *iteration_override == other.iteration_override
+            && *warmup_iterations == other.warmup_iterations
+            && *calibration_target_ms == other.calibration_target_ms
+            && *calibration_timeout_ms == other.calibration_timeout_ms
+            && *core_features == other.core_features
+            && *runner_image == other.runner_image
+            && *runner_class == other.runner_class
+    }
+
+    /// Compare the host-identity fields that are excluded from the measurement contract.
+    ///
+    /// `ubuntu-24.04` is one label over a heterogeneous pool: the same workflow draws AMD EPYC
+    /// hosts on one run and Intel Xeon hosts on the next, and the calibration campaign
+    /// (`workflow_dispatch`, 360-minute budget) can only ever be captured on whichever host it
+    /// happened to draw. Treating the CPU as part of the contract therefore turned an unavoidable
+    /// pool difference into a coin-flip hard failure that aborted before a single timing was
+    /// evaluated. Host identity still gates *how* timing violations are reported — matched
+    /// hardware means violations are real and fatal, mismatched hardware means they may be
+    /// hardware noise and can be downgraded to advisory by an explicit opt-in.
+    #[must_use]
+    pub fn host_matches(&self, other: &Self) -> bool {
+        self.cpu_model == other.cpu_model && self.cpu_count == other.cpu_count
+    }
+}
+
 /// Result of a single fixture benchmark run.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BenchRecord {

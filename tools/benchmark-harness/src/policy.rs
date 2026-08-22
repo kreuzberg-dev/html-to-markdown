@@ -34,6 +34,42 @@ struct Metadata<'a> {
     output_bytes: u64,
 }
 
+/// Host-identity difference between a capture and the host the baseline was calibrated on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HostMismatch {
+    /// CPU model recorded by the calibration campaign.
+    pub calibrated_cpu_model: String,
+    /// CPU model of the host that produced the capture.
+    pub current_cpu_model: String,
+    /// Logical CPU count recorded by the calibration campaign.
+    pub calibrated_cpu_count: usize,
+    /// Logical CPU count of the host that produced the capture.
+    pub current_cpu_count: usize,
+}
+
+/// Report the host-identity difference between a capture and its calibrated guardrails.
+///
+/// Host identity is excluded from the provenance contract (see [`Provenance::contract_matches`]),
+/// so it can never abort the comparison. It is reported separately because it is the only
+/// legitimate reason to downgrade a timing violation from fatal to advisory: on hardware the
+/// baseline was never measured on, a positive delta is not evidence of a code regression.
+///
+/// [`Provenance::contract_matches`]: crate::schema::Provenance::contract_matches
+#[must_use]
+pub fn host_mismatch(results: &RunResults, guardrails: &Guardrails) -> Option<HostMismatch> {
+    let calibrated = &guardrails.calibration_provenance;
+    let current = &results.provenance;
+    if current.host_matches(calibrated) {
+        return None;
+    }
+    Some(HostMismatch {
+        calibrated_cpu_model: calibrated.cpu_model.clone(),
+        current_cpu_model: current.cpu_model.clone(),
+        calibrated_cpu_count: calibrated.cpu_count,
+        current_cpu_count: current.cpu_count,
+    })
+}
+
 /// Evaluate a schema-v2 capture against an approved calibrated baseline.
 pub fn evaluate_strict(
     results: &RunResults,
@@ -94,9 +130,13 @@ fn validate_strict_documents(
         "baseline and guardrails campaign_id differ"
     );
     ensure!(
-        results.provenance == guardrails.calibration_provenance,
+        results.provenance.contract_matches(&guardrails.calibration_provenance),
         "benchmark provenance mismatch"
     );
+    // ~keep Stays exact equality, unlike the results check above: baseline and guardrails are
+    // written as one pair by a single `calibrate` run on one host, so any difference between them
+    // — host identity included — means the checked-in pair was hand-edited or mixed across
+    // campaigns, not that CI drew a different machine.
     ensure!(
         baseline.provenance == guardrails.calibration_provenance,
         "baseline provenance mismatch"
@@ -359,7 +399,7 @@ fn ensure_schema(schema: u32, kind: &str) -> Result<()> {
 mod tests {
     use std::collections::HashMap;
 
-    use super::{evaluate_legacy, evaluate_strict, validate_record_statistics};
+    use super::{HostMismatch, evaluate_legacy, evaluate_strict, host_mismatch, validate_record_statistics};
     use crate::schema::{
         BenchRecord, CalibratedBaseline, CalibratedBenchRecord, FixtureFloor, Guardrails, LegacyBenchRecord,
         LegacyGuardrails, LegacyRunResults, Provenance, RunResults, SCHEMA_VERSION, default_thresholds,
@@ -529,6 +569,59 @@ mod tests {
                 .to_string(),
             "benchmark provenance mismatch"
         );
+    }
+
+    #[test]
+    fn should_evaluate_timings_when_only_host_identity_differs() {
+        let (mut results, baseline, guardrails) = scenario(vec![1.11; 9], 0.10);
+        results.provenance.cpu_model = "Other Vendor CPU".to_owned();
+        results.provenance.cpu_count = 8;
+        let comparisons = evaluate_strict(&results, &baseline, &guardrails).unwrap();
+        assert_eq!(comparisons.len(), 1);
+        assert!(comparisons[0].failed);
+        assert_eq!(
+            host_mismatch(&results, &guardrails),
+            Some(HostMismatch {
+                calibrated_cpu_model: "cpu".to_owned(),
+                current_cpu_model: "Other Vendor CPU".to_owned(),
+                calibrated_cpu_count: 2,
+                current_cpu_count: 8,
+            })
+        );
+    }
+
+    #[test]
+    fn should_report_no_host_mismatch_on_the_calibrated_host() {
+        let (results, _baseline, guardrails) = scenario(vec![1.11; 9], 0.10);
+        assert_eq!(host_mismatch(&results, &guardrails), None);
+    }
+
+    #[test]
+    fn should_reject_toolchain_and_build_configuration_drift() {
+        for mutate in [
+            (|provenance: &mut Provenance| provenance.rustc_verbose = "rustc 1.0.0".to_owned()) as fn(&mut Provenance),
+            |provenance: &mut Provenance| provenance.cargo_version = "cargo 1.0.0".to_owned(),
+            |provenance: &mut Provenance| provenance.profile = "debug".to_owned(),
+            |provenance: &mut Provenance| provenance.build_flags = "-C target-cpu=native".to_owned(),
+            |provenance: &mut Provenance| provenance.core_features = vec!["serde".to_owned()],
+            |provenance: &mut Provenance| provenance.measurement_mode = "eight-batch".to_owned(),
+            |provenance: &mut Provenance| provenance.tier_strategy = "tier1".to_owned(),
+            |provenance: &mut Provenance| provenance.visitor_mode = "noop".to_owned(),
+            |provenance: &mut Provenance| provenance.runner_image = Some("ubuntu22".to_owned()),
+            |provenance: &mut Provenance| provenance.runner_class = Some("self-hosted".to_owned()),
+            |provenance: &mut Provenance| provenance.os = "macos".to_owned(),
+            |provenance: &mut Provenance| provenance.arch = "aarch64".to_owned(),
+        ] {
+            let (mut results, baseline, guardrails) = scenario(vec![1.0; 9], 0.10);
+            mutate(&mut results.provenance);
+            assert_eq!(
+                evaluate_strict(&results, &baseline, &guardrails)
+                    .unwrap_err()
+                    .to_string(),
+                "benchmark provenance mismatch"
+            );
+            assert_eq!(host_mismatch(&results, &guardrails), None);
+        }
     }
 
     #[test]
