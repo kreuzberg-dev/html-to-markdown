@@ -1,6 +1,6 @@
 // Generated entrypoint: forwards to the extendr-generated init function.
 // Do not edit — regenerate with `alef generate`.
-// alef:hash:781fb8fe1629a56b1c875b5862cb09e26ae3acfc423eca34dfd7137a20b6b81f
+// alef:hash:a0325621de3b4d66288faea3595d42ada5c948910aabcbdc54e8b47ead68f806
 #include <R_ext/Visibility.h>
 
 void R_init_htmltomarkdown_extendr(void *dll);
