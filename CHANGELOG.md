@@ -9,6 +9,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `alef` pinned to `0.67.2` (from `0.66.0`) and the tree regenerated. Four real codegen changes
+  landed, plus a hash restamp of the fixture-driven snippet corpus:
+  - `DocumentNode.children` and `DocumentNode.annotations` are no longer `@Nullable` in the Java
+    record. Both mirror a plain `Vec<T>` on the Rust side carrying
+    `#[serde(default, skip_serializing_if = ...)]`; the Rust value is never `null`, so the old
+    signature described a state the binding cannot produce. A compact constructor now normalizes
+    a `null` deserialization to `List.of()`. All 283 `e2e/java` tests still pass — no test in this
+    repo asserted the old null-valued contract.
+  - `flutter_rust_bridge` moved to `2.13.0` across `packages/dart/{pubspec.yaml,rust/Cargo.toml}`,
+    `Cargo.lock`, and the `frb_generated.*` outputs. `e2e/dart/pubspec.lock` also picked up the
+    `ffi: ^2.2.0` entry its `pubspec.yaml` already declared. All 283 `e2e/dart` tests pass.
+  - `crates/html-to-markdown-ffi/build.rs` was regenerated with the header-export path split into
+    named helpers, which drops the `clippy::collapsible_if` hit.
+    `cargo clippy -p html-to-markdown-ffi --all-targets -- -D warnings` is clean and all 283
+    `e2e/c` tests pass.
+  - `packages/swift/Sources/RustBridgeC/RustBridgeC.h` is now clang-formatted. Token-normalized,
+    the file is identical to the previous content apart from `#include` ordering.
+  - The generated snippets under `docs-site/src/snippets/generated/` now print the fields their
+    fixture actually asserts (`result.content`, `result.metadata.document.author`, ...) instead of
+    dumping the whole result object. This exposes an alef codegen bug: the emitter dereferences
+    optional intermediate fields without guarding them, so the 24 `metadata_*` TypeScript
+    snippets now fail `tsc` with `TS18048: 'result.metadata' is possibly 'undefined'` and the
+    three Open Graph / Twitter-card Swift snippets fail on
+    `expression implicitly coerced from 'Optional<RustString>' to 'Any'`. These are generated
+    files, so they cannot be corrected here — the fix belongs in alef's snippet emitter.
+
+  `alef verify --exit-code` and `poly lint .` both pass on the resulting tree.
+
 - `alef` pinned to `0.65.0` (from `0.64.0`) and the tree regenerated with the released crates.io
   build (`cargo install alef --version 0.65.0 --locked`), not a local `alef` checkout — unlike the
   0.64.0 repin, this is not byte-identical: `packages/elixir/native/html_to_markdown_nif/src/lib.rs`,
