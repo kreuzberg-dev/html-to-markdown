@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `task test` now runs. `tools/benchmark-harness/examples/profile_visitor.rs` imports
+  `NoOpVisitor`, which only exists under the harness's `visitor` feature, but the task builds the
+  workspace with `--no-default-features` — and `cargo test` builds examples. The example is now
+  declared with `required-features = ["visitor"]`, matching the existing `testkit` examples.
+  Before: `task test` exited 201 with `E0432: unresolved import
+  html_to_markdown_bench::bench::NoOpVisitor`. After: exit 0, 1422 passed / 0 failed / 126 suites.
+- `task test:ci`'s `--exclude benchmark-harness` excluded nothing — that is the crate's *directory*
+  name; the package is `html-to-markdown-bench`. cargo reports an unmatched exclude as a warning,
+  not an error, so the dead flag survived silently and the crate was covered on every run. Fixed
+  in all four `rust:test:ci` invocations and sabotage-verified: with the bench crate deliberately
+  made unparseable, `--exclude benchmark-harness` still fails the build while
+  `--exclude html-to-markdown-bench` never compiles it.
+- Dropped the trailing `fix-cjs-named-exports.mjs` step from `task alef:generate`. `@napi-rs/cli`
+  3.x already emits an explicit `module.exports.<name> = nativeBinding.<name>` for every runtime
+  export, so named ESM imports resolve without it (#450). The script had also gone stale in a way
+  that corrupts output: napi now declares enums as `export declare const enum X`, which its regex
+  reads as a const *named* `enum`, appending a bogus `module.exports.enum = nativeBinding.enum`
+  and re-exporting only 7 of the 20 names it used to cover.
 - `alef` pinned to `0.67.2` (from `0.66.0`) and the tree regenerated. Four real codegen changes
   landed, plus a hash restamp of the fixture-driven snippet corpus:
   - `DocumentNode.children` and `DocumentNode.annotations` are no longer `@Nullable` in the Java

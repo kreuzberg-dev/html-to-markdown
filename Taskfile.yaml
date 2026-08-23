@@ -268,11 +268,11 @@ tasks:
   alef:generate:
     desc: "Regenerate all Alef-managed outputs without building"
     cmds:
+      # @napi-rs/cli 3.x emits an explicit `module.exports.<name> = nativeBinding.<name>` line for
+      # every runtime export, so cjs-module-lexer resolves named ESM imports without the old
+      # fix-cjs-named-exports.mjs pass (#450). That script now reads `export declare const enum X`
+      # as a const named `enum` and appends a bogus `module.exports.enum`, so it is not run. ~keep
       - alef all --clean
-      # napi's index.js ends at `module.exports = nativeBinding`, which cjs-module-lexer cannot
-      # analyze, so named ESM imports break (#450). Regeneration drops the re-exports every time,
-      # so re-append them here as well as in the publish workflow. ~keep
-      - node crates/html-to-markdown-node/scripts/fix-cjs-named-exports.mjs
 
   alef:verify:
     desc: "Check Alef-generated files are up to date"
