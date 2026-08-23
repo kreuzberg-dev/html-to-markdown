@@ -18,7 +18,7 @@ ttl = "6h"
 mode = "latest-tag"
 exclude = []
 include_prereleases = false
-preserve_major = true
+preserve_major = false
 missing_ref = "warn"
 
 [output]
