@@ -1716,7 +1716,7 @@ jobs:
           cache-key-prefix: dart
 
       - name: Setup Dart
-        uses: dart-lang/setup-dart@65eb853c7ba17dde3be364c3d2858773e7144260 # v1
+        uses: dart-lang/setup-dart@7654d458321ee25acccccfdb86cd48bd95768ff1 # v1
 
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
