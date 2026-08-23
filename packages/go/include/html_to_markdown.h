@@ -988,599 +988,6 @@ void htm_free_string(char *ptr);
  */
 const char *htm_version(void);
 
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `DocumentMetadata` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_document_metadata_free`.
- */
-HTMAlefHandle htm_document_metadata_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `DocumentMetadata` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_document_metadata_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `DocumentMetadata` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_document_metadata_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `title` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_title(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `description` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_description(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `keywords` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_keywords(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `author` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_author(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `canonical_url` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_canonical_url(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `base_href` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_base_href(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `language` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_language(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `text_direction` field from a `DocumentMetadata`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_text_direction_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_document_metadata_text_direction(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `open_graph` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_open_graph(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `twitter_card` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_twitter_card(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `meta_tags` field from a `DocumentMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_document_metadata_meta_tags(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `HeaderMetadata` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_header_metadata_free`.
- */
-HTMAlefHandle htm_header_metadata_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `HeaderMetadata` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_header_metadata_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `HeaderMetadata` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_header_metadata_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `level` field from a `HeaderMetadata`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint8_t htm_header_metadata_level(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `text` field from a `HeaderMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_header_metadata_text(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `id` field from a `HeaderMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_header_metadata_id(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `depth` field from a `HeaderMetadata`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uintptr_t htm_header_metadata_depth(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `html_offset` field from a `HeaderMetadata`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uintptr_t htm_header_metadata_html_offset(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Validate that the header level is within valid range (1-6).
- * \return `true` if level is 1-6, `false` otherwise.
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- * \code
- * let valid = HeaderMetadata {
- *     level: 3,
- *     text: "Title".to_string(),
- *     id: None,
- *     depth: 2,
- *     html_offset: 100,
- * };
- * assert!(valid.is_valid());
- *
- * let invalid = HeaderMetadata {
- *     level: 7,  // Invalid
- *     text: "Title".to_string(),
- *     id: None,
- *     depth: 2,
- *     html_offset: 100,
- * };
- * assert!(!invalid.is_valid());
- * \endcode
- */
-int32_t htm_header_metadata_is_valid(HTMAlefHandle this_);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `LinkMetadata` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_link_metadata_free`.
- */
-HTMAlefHandle htm_link_metadata_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `LinkMetadata` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_link_metadata_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `LinkMetadata` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_link_metadata_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `href` field from a `LinkMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_link_metadata_href(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `text` field from a `LinkMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_link_metadata_text(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `title` field from a `LinkMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_link_metadata_title(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `link_type` field from a `LinkMetadata`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_link_type_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_link_metadata_link_type(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `rel` field from a `LinkMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_link_metadata_rel(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `attributes` field from a `LinkMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_link_metadata_attributes(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `ImageMetadata` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_image_metadata_free`.
- */
-HTMAlefHandle htm_image_metadata_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `ImageMetadata` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_image_metadata_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `ImageMetadata` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_image_metadata_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `src` field from a `ImageMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_image_metadata_src(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `alt` field from a `ImageMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_image_metadata_alt(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `title` field from a `ImageMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_image_metadata_title(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `dimensions` field from a `ImageMetadata`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_image_dimensions_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_image_metadata_dimensions(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `image_type` field from a `ImageMetadata`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_image_type_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_image_metadata_image_type(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `attributes` field from a `ImageMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_image_metadata_attributes(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `StructuredData` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_structured_data_free`.
- */
-HTMAlefHandle htm_structured_data_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `StructuredData` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_structured_data_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `StructuredData` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_structured_data_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `data_type` field from a `StructuredData`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_structured_data_type_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_structured_data_data_type(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `raw_json` field from a `StructuredData`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_structured_data_raw_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `schema_type` field from a `StructuredData`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_structured_data_schema_type(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Create a `HtmlMetadata` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_html_metadata_free`.
- */
-HTMAlefHandle htm_html_metadata_from_json(const char *json);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Serialize a `HtmlMetadata` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_html_metadata_to_json(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Free a `HtmlMetadata` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_html_metadata_free(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `document` field from a `HtmlMetadata`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_document_metadata_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_html_metadata_document(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `headers` field from a `HtmlMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_html_metadata_headers(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `links` field from a `HtmlMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_html_metadata_links(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `images` field from a `HtmlMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_html_metadata_images(HTMAlefHandle handle);
-#endif
-
-#if defined(HTM_FEATURE_METADATA)
-/**
- * Get the `structured_data` field from a `HtmlMetadata`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_html_metadata_structured_data(HTMAlefHandle handle);
-#endif
-
 /**
  * Create a `ConversionOptions` from a JSON string. Returns null on failure.
  * # Safety
@@ -2330,186 +1737,222 @@ HTMAlefHandle htm_conversion_options_update_tier_strategy(HTMAlefHandle handle);
 HTMAlefHandle htm_conversion_options_update_visitor(HTMAlefHandle handle);
 
 /**
- * Create a `PreprocessingOptions` from a JSON string. Returns null on failure.
+ * Create a `ConversionResult` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_preprocessing_options_free`.
+ * Returned handle must be freed with `htm_conversion_result_free`.
  */
-HTMAlefHandle htm_preprocessing_options_from_json(const char *json);
+HTMAlefHandle htm_conversion_result_from_json(const char *json);
 
 /**
- * Serialize a `PreprocessingOptions` to a JSON string. Returns null on failure.
+ * Serialize a `ConversionResult` to a JSON string. Returns null on failure.
  * # Safety
  * `handle` must be a valid, non-zero handle returned by a `htm` function.
  * The returned string must be freed with `htm_free_string`.
  */
-char *htm_preprocessing_options_to_json(HTMAlefHandle handle);
+char *htm_conversion_result_to_json(HTMAlefHandle handle);
 
 /**
- * Free a `PreprocessingOptions` handle.
+ * Free a `ConversionResult` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
-void htm_preprocessing_options_free(HTMAlefHandle handle);
+void htm_conversion_result_free(HTMAlefHandle handle);
 
 /**
- * Get the `enabled` field from a `PreprocessingOptions`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_enabled(HTMAlefHandle handle);
-
-/**
- * Get the `preset` field from a `PreprocessingOptions`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_preprocessing_preset_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_preprocessing_options_preset(HTMAlefHandle handle);
-
-/**
- * Get the `remove_navigation` field from a `PreprocessingOptions`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_remove_navigation(HTMAlefHandle handle);
-
-/**
- * Get the `remove_forms` field from a `PreprocessingOptions`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_remove_forms(HTMAlefHandle handle);
-
-/**
- * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
- * freed with the appropriate free function.
- */
-HTMAlefHandle htm_preprocessing_options_default(void);
-
-/**
- * Create a `PreprocessingOptionsUpdate` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_preprocessing_options_update_free`.
- */
-HTMAlefHandle htm_preprocessing_options_update_from_json(const char *json);
-
-/**
- * Free a `PreprocessingOptionsUpdate` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_preprocessing_options_update_free(HTMAlefHandle handle);
-
-/**
- * Get the `enabled` field from a `PreprocessingOptionsUpdate`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_update_enabled(HTMAlefHandle handle);
-
-/**
- * Get the `preset` field from a `PreprocessingOptionsUpdate`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_preprocessing_preset_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_preprocessing_options_update_preset(HTMAlefHandle handle);
-
-/**
- * Get the `remove_navigation` field from a `PreprocessingOptionsUpdate`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_update_remove_navigation(HTMAlefHandle handle);
-
-/**
- * Get the `remove_forms` field from a `PreprocessingOptionsUpdate`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-int32_t htm_preprocessing_options_update_remove_forms(HTMAlefHandle handle);
-
-/**
- * Create a `ImageDimensions` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_image_dimensions_free`.
- */
-HTMAlefHandle htm_image_dimensions_from_json(const char *json);
-
-/**
- * Serialize a `ImageDimensions` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_image_dimensions_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `ImageDimensions` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_image_dimensions_free(HTMAlefHandle handle);
-
-/**
- * Get the `width` field from a `ImageDimensions`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_image_dimensions_width(HTMAlefHandle handle);
-
-/**
- * Get the `height` field from a `ImageDimensions`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_image_dimensions_height(HTMAlefHandle handle);
-
-/**
- * Create a `DocumentStructure` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_document_structure_free`.
- */
-HTMAlefHandle htm_document_structure_from_json(const char *json);
-
-/**
- * Serialize a `DocumentStructure` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_document_structure_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `DocumentStructure` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_document_structure_free(HTMAlefHandle handle);
-
-/**
- * Get the `nodes` field from a `DocumentStructure`.
+ * Get the `content` field from a `ConversionResult`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_document_structure_nodes(HTMAlefHandle handle);
+char *htm_conversion_result_content(HTMAlefHandle handle);
 
 /**
- * Get the `source_format` field from a `DocumentStructure`.
+ * Get the `document` field from a `ConversionResult`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_document_structure_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_conversion_result_document(HTMAlefHandle handle);
+
+/**
+ * Get the `metadata` field from a `ConversionResult`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_html_metadata_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_conversion_result_metadata(HTMAlefHandle handle);
+
+/**
+ * Get the `tables` field from a `ConversionResult`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_document_structure_source_format(HTMAlefHandle handle);
+char *htm_conversion_result_tables(HTMAlefHandle handle);
+
+/**
+ * Get the `warnings` field from a `ConversionResult`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_conversion_result_warnings(HTMAlefHandle handle);
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Create a `DocumentMetadata` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_document_metadata_free`.
+ */
+HTMAlefHandle htm_document_metadata_from_json(const char *json);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `DocumentMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_document_metadata_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `DocumentMetadata` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_document_metadata_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `title` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_title(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `description` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_description(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `keywords` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_keywords(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `author` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_author(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `canonical_url` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_canonical_url(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `base_href` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_base_href(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `language` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_language(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `text_direction` field from a `DocumentMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_text_direction_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_document_metadata_text_direction(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `open_graph` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_open_graph(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `twitter_card` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_twitter_card(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `meta_tags` field from a `DocumentMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_document_metadata_meta_tags(HTMAlefHandle handle);
+#endif
 
 /**
  * Create a `DocumentNode` from a JSON string. Returns null on failure.
@@ -2587,205 +2030,45 @@ char *htm_document_node_annotations(HTMAlefHandle handle);
 char *htm_document_node_attributes(HTMAlefHandle handle);
 
 /**
- * Create a `TextAnnotation` from a JSON string. Returns null on failure.
+ * Create a `DocumentStructure` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_text_annotation_free`.
+ * Returned handle must be freed with `htm_document_structure_free`.
  */
-HTMAlefHandle htm_text_annotation_from_json(const char *json);
+HTMAlefHandle htm_document_structure_from_json(const char *json);
 
 /**
- * Serialize a `TextAnnotation` to a JSON string. Returns null on failure.
+ * Serialize a `DocumentStructure` to a JSON string. Returns null on failure.
  * # Safety
  * `handle` must be a valid, non-zero handle returned by a `htm` function.
  * The returned string must be freed with `htm_free_string`.
  */
-char *htm_text_annotation_to_json(HTMAlefHandle handle);
+char *htm_document_structure_to_json(HTMAlefHandle handle);
 
 /**
- * Free a `TextAnnotation` handle.
+ * Free a `DocumentStructure` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
-void htm_text_annotation_free(HTMAlefHandle handle);
+void htm_document_structure_free(HTMAlefHandle handle);
 
 /**
- * Get the `start` field from a `TextAnnotation`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_text_annotation_start(HTMAlefHandle handle);
-
-/**
- * Get the `end` field from a `TextAnnotation`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_text_annotation_end(HTMAlefHandle handle);
-
-/**
- * Get the `kind` field from a `TextAnnotation`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_annotation_kind_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_text_annotation_kind(HTMAlefHandle handle);
-
-/**
- * Create a `MetadataEntry` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_metadata_entry_free`.
- */
-HTMAlefHandle htm_metadata_entry_from_json(const char *json);
-
-/**
- * Serialize a `MetadataEntry` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_metadata_entry_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `MetadataEntry` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_metadata_entry_free(HTMAlefHandle handle);
-
-/**
- * Get the `key` field from a `MetadataEntry`.
+ * Get the `nodes` field from a `DocumentStructure`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_metadata_entry_key(HTMAlefHandle handle);
+char *htm_document_structure_nodes(HTMAlefHandle handle);
 
 /**
- * Get the `value` field from a `MetadataEntry`.
+ * Get the `source_format` field from a `DocumentStructure`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
-char *htm_metadata_entry_value(HTMAlefHandle handle);
-
-/**
- * Create a `ConversionResult` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_conversion_result_free`.
- */
-HTMAlefHandle htm_conversion_result_from_json(const char *json);
-
-/**
- * Serialize a `ConversionResult` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_conversion_result_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `ConversionResult` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_conversion_result_free(HTMAlefHandle handle);
-
-/**
- * Get the `content` field from a `ConversionResult`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_conversion_result_content(HTMAlefHandle handle);
-
-/**
- * Get the `document` field from a `ConversionResult`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_document_structure_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_conversion_result_document(HTMAlefHandle handle);
-
-/**
- * Get the `metadata` field from a `ConversionResult`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_html_metadata_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_conversion_result_metadata(HTMAlefHandle handle);
-
-/**
- * Get the `tables` field from a `ConversionResult`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_conversion_result_tables(HTMAlefHandle handle);
-
-/**
- * Get the `warnings` field from a `ConversionResult`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_conversion_result_warnings(HTMAlefHandle handle);
-
-/**
- * Create a `TableGrid` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_table_grid_free`.
- */
-HTMAlefHandle htm_table_grid_from_json(const char *json);
-
-/**
- * Serialize a `TableGrid` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_table_grid_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `TableGrid` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_table_grid_free(HTMAlefHandle handle);
-
-/**
- * Get the `rows` field from a `TableGrid`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_table_grid_rows(HTMAlefHandle handle);
-
-/**
- * Get the `cols` field from a `TableGrid`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-uint32_t htm_table_grid_cols(HTMAlefHandle handle);
-
-/**
- * Get the `cells` field from a `TableGrid`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_table_grid_cells(HTMAlefHandle handle);
+char *htm_document_structure_source_format(HTMAlefHandle handle);
 
 /**
  * Create a `GridCell` from a JSON string. Returns null on failure.
@@ -2854,96 +2137,464 @@ uint32_t htm_grid_cell_col_span(HTMAlefHandle handle);
  */
 int32_t htm_grid_cell_is_header(HTMAlefHandle handle);
 
+#if defined(HTM_FEATURE_METADATA)
 /**
- * Create a `TableData` from a JSON string. Returns null on failure.
+ * Create a `HeaderMetadata` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_table_data_free`.
+ * Returned handle must be freed with `htm_header_metadata_free`.
  */
-HTMAlefHandle htm_table_data_from_json(const char *json);
-
-/**
- * Serialize a `TableData` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_table_data_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `TableData` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_table_data_free(HTMAlefHandle handle);
-
-/**
- * Get the `grid` field from a `TableData`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_table_grid_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_table_data_grid(HTMAlefHandle handle);
-
-/**
- * Get the `markdown` field from a `TableData`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_table_data_markdown(HTMAlefHandle handle);
-
-/**
- * Create a `ProcessingWarning` from a JSON string. Returns null on failure.
- * # Safety
- * JSON string must be valid UTF-8 and null-terminated.
- * Returned handle must be freed with `htm_processing_warning_free`.
- */
-HTMAlefHandle htm_processing_warning_from_json(const char *json);
-
-/**
- * Serialize a `ProcessingWarning` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_processing_warning_to_json(HTMAlefHandle handle);
-
-/**
- * Free a `ProcessingWarning` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_processing_warning_free(HTMAlefHandle handle);
-
-/**
- * Get the `message` field from a `ProcessingWarning`.
- * A non-null returned pointer is owned by the caller.
- * It must be freed with `htm_free_string`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-char *htm_processing_warning_message(HTMAlefHandle handle);
-
-/**
- * Get the `kind` field from a `ProcessingWarning`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_warning_kind_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_processing_warning_kind(HTMAlefHandle handle);
-
-#if defined(HTM_FEATURE_VISITOR)
-/**
- * Free a `VisitorHandle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_visitor_handle_free(HTMAlefHandle handle);
+HTMAlefHandle htm_header_metadata_from_json(const char *json);
 #endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `HeaderMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_header_metadata_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `HeaderMetadata` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_header_metadata_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `level` field from a `HeaderMetadata`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint8_t htm_header_metadata_level(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `text` field from a `HeaderMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_header_metadata_text(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `id` field from a `HeaderMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_header_metadata_id(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `depth` field from a `HeaderMetadata`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t htm_header_metadata_depth(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `html_offset` field from a `HeaderMetadata`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uintptr_t htm_header_metadata_html_offset(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Validate that the header level is within valid range (1-6).
+ * \return `true` if level is 1-6, `false` otherwise.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
+ * \code
+ * let valid = HeaderMetadata {
+ *     level: 3,
+ *     text: "Title".to_string(),
+ *     id: None,
+ *     depth: 2,
+ *     html_offset: 100,
+ * };
+ * assert!(valid.is_valid());
+ *
+ * let invalid = HeaderMetadata {
+ *     level: 7,  // Invalid
+ *     text: "Title".to_string(),
+ *     id: None,
+ *     depth: 2,
+ *     html_offset: 100,
+ * };
+ * assert!(!invalid.is_valid());
+ * \endcode
+ */
+int32_t htm_header_metadata_is_valid(HTMAlefHandle this_);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Create a `HtmlMetadata` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_html_metadata_free`.
+ */
+HTMAlefHandle htm_html_metadata_from_json(const char *json);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `HtmlMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_html_metadata_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `HtmlMetadata` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_html_metadata_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `document` field from a `HtmlMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_document_metadata_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_html_metadata_document(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `headers` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_html_metadata_headers(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `links` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_html_metadata_links(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `images` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_html_metadata_images(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `structured_data` field from a `HtmlMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_html_metadata_structured_data(HTMAlefHandle handle);
+#endif
+
+/**
+ * Create a `ImageDimensions` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_image_dimensions_free`.
+ */
+HTMAlefHandle htm_image_dimensions_from_json(const char *json);
+
+/**
+ * Serialize a `ImageDimensions` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_image_dimensions_to_json(HTMAlefHandle handle);
+
+/**
+ * Free a `ImageDimensions` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_image_dimensions_free(HTMAlefHandle handle);
+
+/**
+ * Get the `width` field from a `ImageDimensions`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t htm_image_dimensions_width(HTMAlefHandle handle);
+
+/**
+ * Get the `height` field from a `ImageDimensions`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t htm_image_dimensions_height(HTMAlefHandle handle);
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Create a `ImageMetadata` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_image_metadata_free`.
+ */
+HTMAlefHandle htm_image_metadata_from_json(const char *json);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `ImageMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_image_metadata_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `ImageMetadata` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_image_metadata_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `src` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_image_metadata_src(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `alt` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_image_metadata_alt(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `title` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_image_metadata_title(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `dimensions` field from a `ImageMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_image_dimensions_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_image_metadata_dimensions(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `image_type` field from a `ImageMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_image_type_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_image_metadata_image_type(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `attributes` field from a `ImageMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_image_metadata_attributes(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Create a `LinkMetadata` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_link_metadata_free`.
+ */
+HTMAlefHandle htm_link_metadata_from_json(const char *json);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `LinkMetadata` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_link_metadata_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `LinkMetadata` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_link_metadata_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `href` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_link_metadata_href(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `text` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_link_metadata_text(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `title` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_link_metadata_title(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `link_type` field from a `LinkMetadata`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_link_type_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_link_metadata_link_type(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `rel` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_link_metadata_rel(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `attributes` field from a `LinkMetadata`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_link_metadata_attributes(HTMAlefHandle handle);
+#endif
+
+/**
+ * Create a `MetadataEntry` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_metadata_entry_free`.
+ */
+HTMAlefHandle htm_metadata_entry_from_json(const char *json);
+
+/**
+ * Serialize a `MetadataEntry` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_metadata_entry_to_json(HTMAlefHandle handle);
+
+/**
+ * Free a `MetadataEntry` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_metadata_entry_free(HTMAlefHandle handle);
+
+/**
+ * Get the `key` field from a `MetadataEntry`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_metadata_entry_key(HTMAlefHandle handle);
+
+/**
+ * Get the `value` field from a `MetadataEntry`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_metadata_entry_value(HTMAlefHandle handle);
 
 #if defined(HTM_FEATURE_VISITOR)
 /**
@@ -3074,244 +2725,353 @@ HTMAlefHandle htm_node_context_into_owned(HTMAlefHandle this_);
 #endif
 
 /**
- * Convert an integer to a `TextDirection` variant. Returns -1 on invalid input.
+ * Create a `PreprocessingOptions` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_preprocessing_options_free`.
  */
-int32_t htm_text_direction_from_i32(int32_t value);
+HTMAlefHandle htm_preprocessing_options_from_json(const char *json);
 
 /**
- * Convert a `TextDirection` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Serialize a `PreprocessingOptions` to a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
  */
-int32_t htm_text_direction_from_str(const char *name);
+char *htm_preprocessing_options_to_json(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `LinkType` variant. Returns -1 on invalid input.
+ * Free a `PreprocessingOptions` handle.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Handle must have been returned by this library, or be zero.
  */
-int32_t htm_link_type_from_i32(int32_t value);
+void htm_preprocessing_options_free(HTMAlefHandle handle);
 
 /**
- * Convert a `LinkType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `enabled` field from a `PreprocessingOptions`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_link_type_from_str(const char *name);
+int32_t htm_preprocessing_options_enabled(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `ImageType` variant. Returns -1 on invalid input.
+ * Get the `preset` field from a `PreprocessingOptions`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_preset_free`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_image_type_from_i32(int32_t value);
+HTMAlefHandle htm_preprocessing_options_preset(HTMAlefHandle handle);
 
 /**
- * Convert a `ImageType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `remove_navigation` field from a `PreprocessingOptions`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_image_type_from_str(const char *name);
+int32_t htm_preprocessing_options_remove_navigation(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `StructuredDataType` variant. Returns -1 on invalid input.
+ * Get the `remove_forms` field from a `PreprocessingOptions`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_structured_data_type_from_i32(int32_t value);
+int32_t htm_preprocessing_options_remove_forms(HTMAlefHandle handle);
 
 /**
- * Convert a `StructuredDataType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
- * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * \note SAFETY: Caller must ensure all pointer arguments are valid or null. Returned pointers must be
+ * freed with the appropriate free function.
  */
-int32_t htm_structured_data_type_from_str(const char *name);
+HTMAlefHandle htm_preprocessing_options_default(void);
 
 /**
- * Convert an integer to a `TierStrategy` variant. Returns -1 on invalid input.
+ * Create a `PreprocessingOptionsUpdate` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_preprocessing_options_update_free`.
  */
-int32_t htm_tier_strategy_from_i32(int32_t value);
+HTMAlefHandle htm_preprocessing_options_update_from_json(const char *json);
 
 /**
- * Convert a `TierStrategy` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Free a `PreprocessingOptionsUpdate` handle.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Handle must have been returned by this library, or be zero.
  */
-int32_t htm_tier_strategy_from_str(const char *name);
+void htm_preprocessing_options_update_free(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `PreprocessingPreset` variant. Returns -1 on invalid input.
+ * Get the `enabled` field from a `PreprocessingOptionsUpdate`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_preset_from_i32(int32_t value);
+int32_t htm_preprocessing_options_update_enabled(HTMAlefHandle handle);
 
 /**
- * Convert a `PreprocessingPreset` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `preset` field from a `PreprocessingOptionsUpdate`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_preprocessing_preset_free`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_preprocessing_preset_from_str(const char *name);
+HTMAlefHandle htm_preprocessing_options_update_preset(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `HeadingStyle` variant. Returns -1 on invalid input.
+ * Get the `remove_navigation` field from a `PreprocessingOptionsUpdate`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_heading_style_from_i32(int32_t value);
+int32_t htm_preprocessing_options_update_remove_navigation(HTMAlefHandle handle);
 
 /**
- * Convert a `HeadingStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `remove_forms` field from a `PreprocessingOptionsUpdate`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_heading_style_from_str(const char *name);
+int32_t htm_preprocessing_options_update_remove_forms(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `ListIndentType` variant. Returns -1 on invalid input.
+ * Create a `ProcessingWarning` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_processing_warning_free`.
  */
-int32_t htm_list_indent_type_from_i32(int32_t value);
+HTMAlefHandle htm_processing_warning_from_json(const char *json);
 
 /**
- * Convert a `ListIndentType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Serialize a `ProcessingWarning` to a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
  */
-int32_t htm_list_indent_type_from_str(const char *name);
+char *htm_processing_warning_to_json(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `WhitespaceMode` variant. Returns -1 on invalid input.
+ * Free a `ProcessingWarning` handle.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Handle must have been returned by this library, or be zero.
  */
-int32_t htm_whitespace_mode_from_i32(int32_t value);
+void htm_processing_warning_free(HTMAlefHandle handle);
 
 /**
- * Convert a `WhitespaceMode` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `message` field from a `ProcessingWarning`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_whitespace_mode_from_str(const char *name);
+char *htm_processing_warning_message(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `NewlineStyle` variant. Returns -1 on invalid input.
+ * Get the `kind` field from a `ProcessingWarning`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_warning_kind_free`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_newline_style_from_i32(int32_t value);
+HTMAlefHandle htm_processing_warning_kind(HTMAlefHandle handle);
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Create a `StructuredData` from a JSON string. Returns null on failure.
+ * # Safety
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_structured_data_free`.
+ */
+HTMAlefHandle htm_structured_data_from_json(const char *json);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Serialize a `StructuredData` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_structured_data_to_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Free a `StructuredData` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_structured_data_free(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `data_type` field from a `StructuredData`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_structured_data_type_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_structured_data_data_type(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `raw_json` field from a `StructuredData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_structured_data_raw_json(HTMAlefHandle handle);
+#endif
+
+#if defined(HTM_FEATURE_METADATA)
+/**
+ * Get the `schema_type` field from a `StructuredData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+char *htm_structured_data_schema_type(HTMAlefHandle handle);
+#endif
 
 /**
- * Convert a `NewlineStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Create a `TableData` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_table_data_free`.
  */
-int32_t htm_newline_style_from_str(const char *name);
+HTMAlefHandle htm_table_data_from_json(const char *json);
 
 /**
- * Convert an integer to a `CodeBlockStyle` variant. Returns -1 on invalid input.
+ * Serialize a `TableData` to a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
  */
-int32_t htm_code_block_style_from_i32(int32_t value);
+char *htm_table_data_to_json(HTMAlefHandle handle);
 
 /**
- * Convert a `CodeBlockStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Free a `TableData` handle.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Handle must have been returned by this library, or be zero.
  */
-int32_t htm_code_block_style_from_str(const char *name);
+void htm_table_data_free(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `HighlightStyle` variant. Returns -1 on invalid input.
+ * Get the `grid` field from a `TableData`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_table_grid_free`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_highlight_style_from_i32(int32_t value);
+HTMAlefHandle htm_table_data_grid(HTMAlefHandle handle);
 
 /**
- * Convert a `HighlightStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `markdown` field from a `TableData`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_highlight_style_from_str(const char *name);
+char *htm_table_data_markdown(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `LinkStyle` variant. Returns -1 on invalid input.
+ * Create a `TableGrid` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_table_grid_free`.
  */
-int32_t htm_link_style_from_i32(int32_t value);
+HTMAlefHandle htm_table_grid_from_json(const char *json);
 
 /**
- * Convert a `LinkStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Serialize a `TableGrid` to a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
  */
-int32_t htm_link_style_from_str(const char *name);
+char *htm_table_grid_to_json(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `UrlEscapeStyle` variant. Returns -1 on invalid input.
+ * Free a `TableGrid` handle.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Handle must have been returned by this library, or be zero.
  */
-int32_t htm_url_escape_style_from_i32(int32_t value);
+void htm_table_grid_free(HTMAlefHandle handle);
 
 /**
- * Convert a `UrlEscapeStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `rows` field from a `TableGrid`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_url_escape_style_from_str(const char *name);
+uint32_t htm_table_grid_rows(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `OutputFormat` variant. Returns -1 on invalid input.
+ * Get the `cols` field from a `TableGrid`.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_output_format_from_i32(int32_t value);
+uint32_t htm_table_grid_cols(HTMAlefHandle handle);
 
 /**
- * Convert a `OutputFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Get the `cells` field from a `TableGrid`.
+ * A non-null returned pointer is owned by the caller.
+ * It must be freed with `htm_free_string`.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * Pointer must be a valid handle returned by this library.
  */
-int32_t htm_output_format_from_str(const char *name);
+char *htm_table_grid_cells(HTMAlefHandle handle);
 
 /**
- * Convert an integer to a `NodeContent` variant. Returns -1 on invalid input.
+ * Create a `TextAnnotation` from a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure all pointer arguments are valid or null.
- * Returned pointers must be freed with the appropriate free function.
+ * JSON string must be valid UTF-8 and null-terminated.
+ * Returned handle must be freed with `htm_text_annotation_free`.
  */
-int32_t htm_node_content_from_i32(int32_t value);
+HTMAlefHandle htm_text_annotation_from_json(const char *json);
 
 /**
- * Convert a `NodeContent` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Serialize a `TextAnnotation` to a JSON string. Returns null on failure.
  * # Safety
- * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
  */
-int32_t htm_node_content_from_str(const char *name);
+char *htm_text_annotation_to_json(HTMAlefHandle handle);
+
+/**
+ * Free a `TextAnnotation` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_text_annotation_free(HTMAlefHandle handle);
+
+/**
+ * Get the `start` field from a `TextAnnotation`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t htm_text_annotation_start(HTMAlefHandle handle);
+
+/**
+ * Get the `end` field from a `TextAnnotation`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+uint32_t htm_text_annotation_end(HTMAlefHandle handle);
+
+/**
+ * Get the `kind` field from a `TextAnnotation`.
+ * A non-null returned handle is owned by the caller.
+ * It must be freed with `htm_annotation_kind_free`.
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+HTMAlefHandle htm_text_annotation_kind(HTMAlefHandle handle);
+
+#if defined(HTM_FEATURE_VISITOR)
+/**
+ * Free a `VisitorHandle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_visitor_handle_free(HTMAlefHandle handle);
+#endif
 
 /**
  * Convert an integer to a `AnnotationKind` variant. Returns -1 on invalid input.
@@ -3329,19 +3089,139 @@ int32_t htm_annotation_kind_from_i32(int32_t value);
 int32_t htm_annotation_kind_from_str(const char *name);
 
 /**
- * Convert an integer to a `WarningKind` variant. Returns -1 on invalid input.
+ * Convert an integer to a `CodeBlockStyle` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
  * Returned pointers must be freed with the appropriate free function.
  */
-int32_t htm_warning_kind_from_i32(int32_t value);
+int32_t htm_code_block_style_from_i32(int32_t value);
 
 /**
- * Convert a `WarningKind` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * Convert a `CodeBlockStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
-int32_t htm_warning_kind_from_str(const char *name);
+int32_t htm_code_block_style_from_str(const char *name);
+
+/**
+ * Convert an integer to a `HeadingStyle` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_heading_style_from_i32(int32_t value);
+
+/**
+ * Convert a `HeadingStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_heading_style_from_str(const char *name);
+
+/**
+ * Convert an integer to a `HighlightStyle` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_highlight_style_from_i32(int32_t value);
+
+/**
+ * Convert a `HighlightStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_highlight_style_from_str(const char *name);
+
+/**
+ * Convert an integer to a `ImageType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_image_type_from_i32(int32_t value);
+
+/**
+ * Convert a `ImageType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_image_type_from_str(const char *name);
+
+/**
+ * Convert an integer to a `LinkStyle` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_link_style_from_i32(int32_t value);
+
+/**
+ * Convert a `LinkStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_link_style_from_str(const char *name);
+
+/**
+ * Convert an integer to a `LinkType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_link_type_from_i32(int32_t value);
+
+/**
+ * Convert a `LinkType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_link_type_from_str(const char *name);
+
+/**
+ * Convert an integer to a `ListIndentType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_list_indent_type_from_i32(int32_t value);
+
+/**
+ * Convert a `ListIndentType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_list_indent_type_from_str(const char *name);
+
+/**
+ * Convert an integer to a `NewlineStyle` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_newline_style_from_i32(int32_t value);
+
+/**
+ * Convert a `NewlineStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_newline_style_from_str(const char *name);
+
+/**
+ * Convert an integer to a `NodeContent` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_node_content_from_i32(int32_t value);
+
+/**
+ * Convert a `NodeContent` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_node_content_from_str(const char *name);
 
 /**
  * Convert an integer to a `NodeType` variant. Returns -1 on invalid input.
@@ -3359,6 +3239,96 @@ int32_t htm_node_type_from_i32(int32_t value);
 int32_t htm_node_type_from_str(const char *name);
 
 /**
+ * Convert an integer to a `OutputFormat` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_output_format_from_i32(int32_t value);
+
+/**
+ * Convert a `OutputFormat` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_output_format_from_str(const char *name);
+
+/**
+ * Convert an integer to a `PreprocessingPreset` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_preprocessing_preset_from_i32(int32_t value);
+
+/**
+ * Convert a `PreprocessingPreset` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_preprocessing_preset_from_str(const char *name);
+
+/**
+ * Convert an integer to a `StructuredDataType` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_structured_data_type_from_i32(int32_t value);
+
+/**
+ * Convert a `StructuredDataType` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_structured_data_type_from_str(const char *name);
+
+/**
+ * Convert an integer to a `TextDirection` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_text_direction_from_i32(int32_t value);
+
+/**
+ * Convert a `TextDirection` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_text_direction_from_str(const char *name);
+
+/**
+ * Convert an integer to a `TierStrategy` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_tier_strategy_from_i32(int32_t value);
+
+/**
+ * Convert a `TierStrategy` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_tier_strategy_from_str(const char *name);
+
+/**
+ * Convert an integer to a `UrlEscapeStyle` variant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
+ */
+int32_t htm_url_escape_style_from_i32(int32_t value);
+
+/**
+ * Convert a `UrlEscapeStyle` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
+ * # Safety
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
+ */
+int32_t htm_url_escape_style_from_str(const char *name);
+
+/**
  * Convert an integer to a `VisitResult` variant. Returns -1 on invalid input.
  * # Safety
  * Caller must ensure all pointer arguments are valid or null.
@@ -3374,224 +3344,34 @@ int32_t htm_visit_result_from_i32(int32_t value);
 int32_t htm_visit_result_from_str(const char *name);
 
 /**
- * Free a `TextDirection` handle.
+ * Convert an integer to a `WarningKind` variant. Returns -1 on invalid input.
  * # Safety
- * Handle must have been returned by this library, or be zero.
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
-void htm_text_direction_free(HTMAlefHandle handle);
+int32_t htm_warning_kind_from_i32(int32_t value);
 
 /**
- * Serialize a `TextDirection` to a JSON string. Returns null on failure.
+ * Convert a `WarningKind` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
-char *htm_text_direction_to_json(HTMAlefHandle handle);
+int32_t htm_warning_kind_from_str(const char *name);
 
 /**
- * Render a `TextDirection` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
+ * Convert an integer to a `WhitespaceMode` variant. Returns -1 on invalid input.
  * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
+ * Caller must ensure all pointer arguments are valid or null.
+ * Returned pointers must be freed with the appropriate free function.
  */
-char *htm_text_direction_to_string(HTMAlefHandle handle);
+int32_t htm_whitespace_mode_from_i32(int32_t value);
 
 /**
- * Free a `LinkType` handle.
+ * Convert a `WhitespaceMode` serde wire value (C string) to its integer discriminant. Returns -1 on invalid input.
  * # Safety
- * Handle must have been returned by this library, or be zero.
+ * Caller must ensure `ptr` is a valid pointer to a `c_char` or null.
  */
-void htm_link_type_free(HTMAlefHandle handle);
-
-/**
- * Serialize a `LinkType` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_link_type_to_json(HTMAlefHandle handle);
-
-/**
- * Render a `LinkType` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_link_type_to_string(HTMAlefHandle handle);
-
-/**
- * Free a `ImageType` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_image_type_free(HTMAlefHandle handle);
-
-/**
- * Serialize a `ImageType` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_image_type_to_json(HTMAlefHandle handle);
-
-/**
- * Render a `ImageType` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_image_type_to_string(HTMAlefHandle handle);
-
-/**
- * Free a `StructuredDataType` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_structured_data_type_free(HTMAlefHandle handle);
-
-/**
- * Serialize a `StructuredDataType` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_structured_data_type_to_json(HTMAlefHandle handle);
-
-/**
- * Render a `StructuredDataType` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_structured_data_type_to_string(HTMAlefHandle handle);
-
-/**
- * Free a `TierStrategy` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_tier_strategy_free(HTMAlefHandle handle);
-
-/**
- * Serialize a `TierStrategy` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_tier_strategy_to_json(HTMAlefHandle handle);
-
-/**
- * Render a `TierStrategy` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_tier_strategy_to_string(HTMAlefHandle handle);
-
-/**
- * Free a `PreprocessingPreset` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_preprocessing_preset_free(HTMAlefHandle handle);
-
-/**
- * Free a `HeadingStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_heading_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `ListIndentType` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_list_indent_type_free(HTMAlefHandle handle);
-
-/**
- * Free a `WhitespaceMode` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_whitespace_mode_free(HTMAlefHandle handle);
-
-/**
- * Free a `NewlineStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_newline_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `CodeBlockStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_code_block_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `HighlightStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_highlight_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `LinkStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_link_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `UrlEscapeStyle` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_url_escape_style_free(HTMAlefHandle handle);
-
-/**
- * Free a `OutputFormat` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_output_format_free(HTMAlefHandle handle);
-
-/**
- * Free a `NodeContent` handle.
- * # Safety
- * Handle must have been returned by this library, or be zero.
- */
-void htm_node_content_free(HTMAlefHandle handle);
-
-/**
- * Serialize a `NodeContent` to a JSON string. Returns null on failure.
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_node_content_to_json(HTMAlefHandle handle);
-
-/**
- * Render a `NodeContent` as its string representation
- * (the unit-variant name as serialized by serde — e.g. `"completed"`,
- * without surrounding JSON quotes).
- * # Safety
- * `handle` must be a valid, non-zero handle returned by a `htm` function.
- * The returned string must be freed with `htm_free_string`.
- */
-char *htm_node_content_to_string(HTMAlefHandle handle);
+int32_t htm_whitespace_mode_from_str(const char *name);
 
 /**
  * Free a `AnnotationKind` handle.
@@ -3619,29 +3399,121 @@ char *htm_annotation_kind_to_json(HTMAlefHandle handle);
 char *htm_annotation_kind_to_string(HTMAlefHandle handle);
 
 /**
- * Free a `WarningKind` handle.
+ * Free a `CodeBlockStyle` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
-void htm_warning_kind_free(HTMAlefHandle handle);
+void htm_code_block_style_free(HTMAlefHandle handle);
 
 /**
- * Serialize a `WarningKind` to a JSON string. Returns null on failure.
+ * Free a `HeadingStyle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_heading_style_free(HTMAlefHandle handle);
+
+/**
+ * Free a `HighlightStyle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_highlight_style_free(HTMAlefHandle handle);
+
+/**
+ * Free a `ImageType` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_image_type_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `ImageType` to a JSON string. Returns null on failure.
  * # Safety
  * `handle` must be a valid, non-zero handle returned by a `htm` function.
  * The returned string must be freed with `htm_free_string`.
  */
-char *htm_warning_kind_to_json(HTMAlefHandle handle);
+char *htm_image_type_to_json(HTMAlefHandle handle);
 
 /**
- * Render a `WarningKind` as its string representation
+ * Render a `ImageType` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
  * without surrounding JSON quotes).
  * # Safety
  * `handle` must be a valid, non-zero handle returned by a `htm` function.
  * The returned string must be freed with `htm_free_string`.
  */
-char *htm_warning_kind_to_string(HTMAlefHandle handle);
+char *htm_image_type_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `LinkStyle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_link_style_free(HTMAlefHandle handle);
+
+/**
+ * Free a `LinkType` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_link_type_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `LinkType` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_link_type_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `LinkType` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_link_type_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `ListIndentType` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_list_indent_type_free(HTMAlefHandle handle);
+
+/**
+ * Free a `NewlineStyle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_newline_style_free(HTMAlefHandle handle);
+
+/**
+ * Free a `NodeContent` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_node_content_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `NodeContent` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_node_content_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `NodeContent` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_node_content_to_string(HTMAlefHandle handle);
 
 /**
  * Free a `NodeType` handle.
@@ -3667,6 +3539,134 @@ char *htm_node_type_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_node_type_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `OutputFormat` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_output_format_free(HTMAlefHandle handle);
+
+/**
+ * Free a `PreprocessingPreset` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_preprocessing_preset_free(HTMAlefHandle handle);
+
+/**
+ * Free a `StructuredDataType` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_structured_data_type_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `StructuredDataType` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_structured_data_type_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `StructuredDataType` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_structured_data_type_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `TextDirection` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_text_direction_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `TextDirection` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_text_direction_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `TextDirection` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_text_direction_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `TierStrategy` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_tier_strategy_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `TierStrategy` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_tier_strategy_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `TierStrategy` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_tier_strategy_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `UrlEscapeStyle` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_url_escape_style_free(HTMAlefHandle handle);
+
+/**
+ * Free a `WarningKind` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_warning_kind_free(HTMAlefHandle handle);
+
+/**
+ * Serialize a `WarningKind` to a JSON string. Returns null on failure.
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_warning_kind_to_json(HTMAlefHandle handle);
+
+/**
+ * Render a `WarningKind` as its string representation
+ * (the unit-variant name as serialized by serde — e.g. `"completed"`,
+ * without surrounding JSON quotes).
+ * # Safety
+ * `handle` must be a valid, non-zero handle returned by a `htm` function.
+ * The returned string must be freed with `htm_free_string`.
+ */
+char *htm_warning_kind_to_string(HTMAlefHandle handle);
+
+/**
+ * Free a `WhitespaceMode` handle.
+ * # Safety
+ * Handle must have been returned by this library, or be zero.
+ */
+void htm_whitespace_mode_free(HTMAlefHandle handle);
 
 /**
  * Run `convert` with configured options-field bridge support.
