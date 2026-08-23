@@ -1,9 +1,9 @@
 // Build-time regression guard for issue #450.
 //
 // Loads the freshly built package through a real Node ESM *named* import — the
-// exact shape that failed before the `fix-cjs-named-exports` pass ran. If the
-// CJS named re-exports are ever missing again, this throws and fails the build
-// instead of silently shipping a package whose `import { convert }` is broken.
+// exact shape that failed when napi emitted only `module.exports = nativeBinding`.
+// If the CJS named re-exports are ever missing again, this throws and fails the
+// build instead of silently shipping a package whose `import { convert }` is broken.
 //
 // Host-only: it must actually load the native `.node`, so it belongs in the
 // local/e2e `build` (which builds for the host via `--platform`), never in the

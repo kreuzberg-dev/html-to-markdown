@@ -680,8 +680,10 @@ jobs:
         shell: bash
         run: |
           pnpm --filter ./crates/html-to-markdown-node exec napi build --release
+          # `napi build` clobbers index.d.ts with its own thin declarations; the committed file is
+          # alef-generated (rustdoc, JsonValue, real enums) and freshness-gated by `alef verify`, so
+          # restore it. index.js is napi's to own and ships exactly as emitted. ~keep
           git checkout HEAD -- crates/html-to-markdown-node/index.d.ts
-          node crates/html-to-markdown-node/scripts/fix-cjs-named-exports.mjs
           mkdir -p typescript-defs
           cp crates/html-to-markdown-node/index.js crates/html-to-markdown-node/index.d.ts typescript-defs/
 

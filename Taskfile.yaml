@@ -269,9 +269,9 @@ tasks:
     desc: "Regenerate all Alef-managed outputs without building"
     cmds:
       # @napi-rs/cli 3.x emits an explicit `module.exports.<name> = nativeBinding.<name>` line for
-      # every runtime export, so cjs-module-lexer resolves named ESM imports without the old
-      # fix-cjs-named-exports.mjs pass (#450). That script now reads `export declare const enum X`
-      # as a const named `enum` and appends a bogus `module.exports.enum`, so it is not run. ~keep
+      # every runtime export, so cjs-module-lexer resolves named ESM imports straight off napi's
+      # output (#450). The post-build re-export fixup that used to run here is gone; do not
+      # reintroduce one. `node:verify-esm` is the guard that this stays true. ~keep
       - alef all --clean
 
   alef:verify:
