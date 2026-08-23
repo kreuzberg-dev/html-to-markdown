@@ -61,6 +61,14 @@ name = "tier1_routing"
 path = "examples/tier1_routing.rs"
 required-features = ["testkit"]
 
+# ~keep Imports `html_to_markdown_bench::bench::NoOpVisitor`, which only exists under the
+# `visitor` feature, so the example cannot build under `--no-default-features`. Without this
+# gate it breaks `task test` (cargo test builds examples).
+[[example]]
+name = "profile_visitor"
+path = "examples/profile_visitor.rs"
+required-features = ["visitor"]
+
 # ~keep Isolates each convert_html_impl stage (byte preprocessing, tl::parse,
 # build_dom_context, has_inline_block_misnest) for phase-level timing; needs
 # testkit to reach the pub(crate) converter internals it profiles directly.
