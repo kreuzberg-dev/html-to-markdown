@@ -26,7 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `[workspace.docs.snippets]` gained `docs_dirs` and `required_languages`, mirroring the flags
   `task docs:snippets:gaps` already passed. Neither was set, so the gap pass -- unreferenced
   snippets and missing language variants -- was skipped entirely, and alef 0.67.5 correctly
-  refuses to let a strict run pass on a check that compared nothing.
+  refuses to let a strict run pass on a check that compared nothing. `alef.toml` is hashed as a
+  generation input as a whole rather than per-surface, so adding two snippet-only keys restamped
+  the provenance marker of all 5044 content-verified files without changing a single line of
+  generated content.
 
 ### Fixed
 

@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:h2m/html_to_markdown_rs.dart' as html_to_markdown_rs;
+import 'package:h2m/h2m.dart' as html_to_markdown_rs;
 
 void main() {
   test('ImageDimensions equality holds for identical field values', () {
