@@ -9,6 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A skipped `publish-crates` no longer reads as a passing gate, and a release that published
+  nothing can no longer report success.** Eight places in `.github/workflows/publish.yaml` gated
+  downstream build, publish and release-promotion jobs on
+  `needs.publish-crates.result != 'failure'`. That expression is TRUE when the dependency was
+  *skipped*, and `publish-crates` skips for two opposite reasons: the version is already on
+  crates.io (a re-run or a resumed release, where downstream must proceed) or an upstream gate
+  such as version validation or crate packaging failed (where downstream must not). `result`
+  alone cannot separate them, so every one of those conditions was gating on nothing --
+  tree-sitter-language-pack v1.15.5 promoted a GitHub release to `Latest` with 40+ failed jobs and
+  every registry publish skipped, and still reported success.
+
+  A new always-running `crates-gate` job resolves the ambiguity once, into an explicit
+  `outcome` (`published` / `already-present` / `not-required` / `dry-run` / `blocked`) and an
+  `ok` flag that every consumer now tests instead of `result`. Because the job always runs, its
+  outputs always exist; because it never fails, depending on it cannot skip a consumer. The
+  legitimate already-published path stays exactly as permissive as before, and only the
+  gate-failed path is newly blocked.
+
+  `release-report` also stopped being able to see this class of failure: it inspected only jobs
+  whose conclusion was `failure`, so a run where every publish job merely *skipped* passed. It now
+  judges each target on its own result and treats `skipped` as a failure unless the target is not
+  enabled for this release or its registry probe already found this exact version published.
+
 - **The R vendoring script deleted the core crate's `[lints]` without inlining anything, so the
   vendored copy compiled under a different lint configuration than its sources.**
   `scripts/ci/r/vendor-core-crate.py` copies `crates/html-to-markdown/` out of the workspace and

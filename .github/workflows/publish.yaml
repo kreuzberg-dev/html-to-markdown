@@ -633,8 +633,8 @@ jobs:
 
   python-sdist:
     name: Build Python sdist
-    needs: [prepare, check-pypi, publish-crates]
-    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_python == 'true' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    needs: [prepare, check-pypi, crates-gate]
+    if: ${{ !cancelled() && needs.crates-gate.outputs.ok == 'true' && needs.prepare.outputs.release_python == 'true' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -894,8 +894,8 @@ jobs:
 
   ruby-gem:
     name: Build Ruby gem (${{ matrix.label }})
-    needs: [prepare, check-rubygems, publish-crates]
-    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_ruby == 'true' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    needs: [prepare, check-rubygems, crates-gate]
+    if: ${{ !cancelled() && needs.crates-gate.outputs.ok == 'true' && needs.prepare.outputs.release_ruby == 'true' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     env:
@@ -1053,8 +1053,8 @@ jobs:
 
   php-extension:
     name: Build PHP extension (php${{ matrix.php }} ${{ matrix.platform.label }})
-    needs: [prepare, check-packagist, publish-crates]
-    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_php == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    needs: [prepare, check-packagist, crates-gate]
+    if: ${{ !cancelled() && needs.crates-gate.outputs.ok == 'true' && needs.prepare.outputs.release_php == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ${{ matrix.platform.os }}
     timeout-minutes: 60
     strategy:
@@ -1385,8 +1385,8 @@ jobs:
 
   elixir-natives:
     name: Build Elixir NIF (${{ matrix.label }})
-    needs: [prepare, check-elixir-release, publish-crates]
-    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_elixir == 'true' && (needs.check-elixir-release.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    needs: [prepare, check-elixir-release, crates-gate]
+    if: ${{ !cancelled() && needs.crates-gate.outputs.ok == 'true' && needs.prepare.outputs.release_elixir == 'true' && (needs.check-elixir-release.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 180
     strategy:
@@ -1464,8 +1464,8 @@ jobs:
 
   elixir-package:
     name: Build Elixir Hex package
-    needs: [prepare, check-hex, publish-crates]
-    if: ${{ !cancelled() && needs.publish-crates.result != 'failure' && needs.prepare.outputs.release_elixir == 'true' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    needs: [prepare, check-hex, crates-gate]
+    if: ${{ !cancelled() && needs.crates-gate.outputs.ok == 'true' && needs.prepare.outputs.release_elixir == 'true' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     env:
       MIX_ENV: dev
@@ -1722,6 +1722,64 @@ jobs:
           package: html-to-markdown-rs
           version: ${{ needs.prepare.outputs.version }}
           max-attempts: "60"
+
+  # ~keep `needs.publish-crates.result != 'failure'` is TRUE when publish-crates was SKIPPED,
+  # and publish-crates skips for two opposite reasons: the version is already on crates.io
+  # (a re-run or a resumed release — downstream must proceed), or an upstream gate such as
+  # cargo-packages failed (downstream must NOT proceed). `result` alone cannot tell them
+  # apart, so every downstream job that read it was gating on nothing: tree-sitter-language-pack
+  # v1.15.5 published a GitHub release to zero registries that way and still reported success.
+  # This job always runs, so its outputs always exist, and it resolves the ambiguity once into
+  # an explicit outcome the whole workflow tests instead of re-deriving it at each call site.
+  crates-gate:
+    name: Crates.io publish gate
+    needs: [prepare, check-cratesio, publish-crates]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      ok: ${{ steps.decide.outputs.ok }}
+      outcome: ${{ steps.decide.outputs.outcome }}
+    steps:
+      - id: decide
+        name: Decide whether the crates.io prerequisite is satisfied
+        shell: bash
+        env:
+          RESULT_PUBLISH_CRATES: ${{ needs.publish-crates.result }}
+          RELEASE_CRATES: ${{ needs.prepare.outputs.release_crates }}
+          IS_TAG: ${{ needs.prepare.outputs.is_tag }}
+          DRY_RUN: ${{ needs.prepare.outputs.dry_run }}
+          FORCE_REPUBLISH: ${{ needs.prepare.outputs.force_republish }}
+          ALREADY_ON_CRATESIO: ${{ needs.check-cratesio.outputs.all_exist }}
+        run: |
+          set -uo pipefail
+
+          if [[ "${RESULT_PUBLISH_CRATES}" == "failure" ]]; then
+            outcome="blocked"
+          elif [[ "${RESULT_PUBLISH_CRATES}" == "success" ]]; then
+            outcome="published"
+          elif [[ "${RELEASE_CRATES}" != "true" ]]; then
+            outcome="not-required"
+          elif [[ "${DRY_RUN}" == "true" ]]; then
+            outcome="dry-run"
+          elif [[ "${IS_TAG}" != "true" ]]; then
+            outcome="not-a-tag"
+          elif [[ "${ALREADY_ON_CRATESIO}" == "true" && "${FORCE_REPUBLISH}" != "true" ]]; then
+            outcome="already-present"
+          else
+            outcome="blocked"
+          fi
+
+          if [[ "${outcome}" == "blocked" ]]; then
+            ok="false"
+            echo "::error title=crates.io prerequisite not met::publish-crates finished with '${RESULT_PUBLISH_CRATES}' and this version is not on crates.io — every job that builds or publishes against the released crate will be held back."
+          else
+            ok="true"
+          fi
+
+          echo "outcome=${outcome}" >>"$GITHUB_OUTPUT"
+          echo "ok=${ok}" >>"$GITHUB_OUTPUT"
+          echo "crates-gate: outcome=${outcome} ok=${ok} (publish-crates=${RESULT_PUBLISH_CRATES})"
 
   publish-pypi:
     name: Publish to PyPI
@@ -2334,7 +2392,7 @@ jobs:
     needs:
       - prepare
       - validate-versions
-      - publish-crates
+      - crates-gate
       - upload-cli-release
       - upload-c-ffi-release
       # ~keep Ordering only: the draft flips once every per-language asset upload has settled, so
@@ -2351,7 +2409,7 @@ jobs:
       needs.prepare.outputs.is_tag == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
       needs.validate-versions.result == 'success' &&
-      needs.publish-crates.result != 'failure' &&
+      needs.crates-gate.outputs.ok == 'true' &&
       needs.upload-cli-release.result == 'success' &&
       needs.upload-c-ffi-release.result == 'success'
     runs-on: ubuntu-latest
@@ -2770,7 +2828,7 @@ jobs:
       - prepare
       - promote-release
       - verify-assets
-      - publish-crates
+      - crates-gate
       - publish-pypi
       - publish-rubygems
       - publish-node
@@ -2798,7 +2856,7 @@ jobs:
       needs.prepare.outputs.is_tag == 'true' &&
       needs.prepare.outputs.dry_run != 'true' &&
       needs.promote-release.outputs.promoted == 'true' &&
-      needs.publish-crates.result != 'failure'
+      needs.crates-gate.outputs.ok == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2820,7 +2878,7 @@ jobs:
     needs:
       - prepare
       - promote-release
-      - publish-crates
+      - crates-gate
       - publish-pypi
       - publish-rubygems
       - publish-node
@@ -2849,7 +2907,7 @@ jobs:
       needs.prepare.outputs.dry_run != 'true' &&
       needs.prepare.outputs.is_prerelease != 'true' &&
       needs.promote-release.outputs.promoted == 'true' &&
-      needs.publish-crates.result != 'failure'
+      needs.crates-gate.outputs.ok == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2970,6 +3028,29 @@ jobs:
     name: Report release outcome
     needs:
       - prepare
+      - validate-versions
+      - crates-gate
+      - check-pypi
+      - check-npm
+      - check-wasm
+      - check-rubygems
+      - check-maven
+      - check-nuget
+      - check-packagist
+      - check-cratesio
+      - check-hex
+      - check-homebrew
+      - check-cli
+      - check-go
+      - check-c-ffi
+      - check-elixir-release
+      - check-maven-kotlin
+      - check-pub
+      - check-zig
+      - upload-cli-release
+      - upload-go-release
+      - upload-c-ffi-release
+      - upload-elixir-release
       - promote-release
       - release-finalize
       - announce-discord
@@ -3044,3 +3125,150 @@ jobs:
             done </tmp/failed-jobs.txt
             exit 1
           fi
+
+      # ~keep The step above only inspects jobs whose conclusion is `failure`. A publish job that
+      # was SKIPPED is invisible to it, and `skipped` is exactly what a downstream job becomes
+      # when an upstream gate fails — so a release that shipped a GitHub tag to zero registries
+      # reported green (tree-sitter-language-pack v1.15.5, 40+ failures, every publish skipped).
+      # Judge each target on its own result and treat `skipped` as a failure unless one of the two
+      # legitimate reasons applies: the target is not enabled for this release, or its registry
+      # probe already found this exact version published and no republish was forced.
+      - name: Verify every enabled publish target succeeded
+        if: always()
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          FORCE_REPUBLISH: ${{ needs.prepare.outputs.force_republish }}
+          RESULT_PREPARE: ${{ needs.prepare.result }}
+          RESULT_VALIDATE: ${{ needs.validate-versions.result }}
+          RESULT_CRATES_GATE: ${{ needs.crates-gate.outputs.ok }}
+          RESULT_PROMOTE: ${{ needs.promote-release.outputs.promoted }}
+          RESULT_FINALIZE: ${{ needs.release-finalize.result }}
+          RESULT_PUBLISH_CRATES: ${{ needs.publish-crates.result }}
+          RESULT_PUBLISH_PYPI: ${{ needs.publish-pypi.result }}
+          RESULT_PUBLISH_RUBYGEMS: ${{ needs.publish-rubygems.result }}
+          RESULT_PUBLISH_NODE: ${{ needs.publish-node.result }}
+          RESULT_PUBLISH_WASM: ${{ needs.publish-wasm.result }}
+          RESULT_PUBLISH_PACKAGIST: ${{ needs.publish-packagist.result }}
+          RESULT_PUBLISH_MAVEN: ${{ needs.publish-maven.result }}
+          RESULT_PUBLISH_NUGET: ${{ needs.publish-nuget.result }}
+          RESULT_PUBLISH_HEX: ${{ needs.publish-hex.result }}
+          RESULT_PUBLISH_KOTLIN: ${{ needs.publish-kotlin-android.result }}
+          RESULT_TRIGGER_PUBDEV: ${{ needs.trigger-pubdev.result }}
+          RESULT_PUBLISH_ZIG: ${{ needs.publish-zig.result }}
+          RESULT_PUBLISH_HOMEBREW: ${{ needs.publish-homebrew-bottles.result }}
+          RESULT_UPLOAD_CLI: ${{ needs.upload-cli-release.result }}
+          RESULT_VERIFY_BINSTALL: ${{ needs.verify-binstall.result }}
+          RESULT_UPLOAD_GO: ${{ needs.upload-go-release.result }}
+          RESULT_UPLOAD_C_FFI: ${{ needs.upload-c-ffi-release.result }}
+          RESULT_UPLOAD_ELIXIR: ${{ needs.upload-elixir-release.result }}
+          RESULT_SWIFT_MANIFEST: ${{ needs.update-swift-package-manifest.result }}
+          RELEASE_CRATES: ${{ needs.prepare.outputs.release_crates }}
+          RELEASE_PYTHON: ${{ needs.prepare.outputs.release_python }}
+          RELEASE_RUBY: ${{ needs.prepare.outputs.release_ruby }}
+          RELEASE_NODE: ${{ needs.prepare.outputs.release_node }}
+          RELEASE_WASM: ${{ needs.prepare.outputs.release_wasm }}
+          RELEASE_PHP: ${{ needs.prepare.outputs.release_php }}
+          RELEASE_JAVA: ${{ needs.prepare.outputs.release_java }}
+          RELEASE_CSHARP: ${{ needs.prepare.outputs.release_csharp }}
+          RELEASE_ELIXIR: ${{ needs.prepare.outputs.release_elixir }}
+          RELEASE_KOTLIN: ${{ needs.prepare.outputs.release_kotlin }}
+          RELEASE_DART: ${{ needs.prepare.outputs.release_dart }}
+          RELEASE_ZIG: ${{ needs.prepare.outputs.release_zig }}
+          RELEASE_HOMEBREW: ${{ needs.prepare.outputs.release_homebrew }}
+          RELEASE_CLI: ${{ needs.prepare.outputs.release_cli }}
+          RELEASE_GO: ${{ needs.prepare.outputs.release_go }}
+          RELEASE_C_FFI: ${{ needs.prepare.outputs.release_c_ffi }}
+          RELEASE_SWIFT: ${{ needs.prepare.outputs.release_swift }}
+          EXISTS_CRATES: ${{ needs.check-cratesio.outputs.all_exist }}
+          EXISTS_PYPI: ${{ needs.check-pypi.outputs.exists }}
+          EXISTS_RUBYGEMS: ${{ needs.check-rubygems.outputs.exists }}
+          EXISTS_NPM: ${{ needs.check-npm.outputs.node_exists }}
+          EXISTS_WASM: ${{ needs.check-wasm.outputs.exists }}
+          EXISTS_PACKAGIST: ${{ needs.check-packagist.outputs.exists }}
+          EXISTS_MAVEN: ${{ needs.check-maven.outputs.exists }}
+          EXISTS_NUGET: ${{ needs.check-nuget.outputs.exists }}
+          EXISTS_HEX: ${{ needs.check-hex.outputs.exists }}
+          EXISTS_KOTLIN: ${{ needs.check-maven-kotlin.outputs.exists }}
+          EXISTS_PUB: ${{ needs.check-pub.outputs.exists }}
+          EXISTS_ZIG: ${{ needs.check-zig.outputs.exists }}
+          EXISTS_HOMEBREW: ${{ needs.check-homebrew.outputs.exists }}
+          EXISTS_CLI: ${{ needs.check-cli.outputs.exists }}
+          EXISTS_GO: ${{ needs.check-go.outputs.exists }}
+          EXISTS_C_FFI: ${{ needs.check-c-ffi.outputs.exists }}
+          EXISTS_ELIXIR: ${{ needs.check-elixir-release.outputs.exists }}
+        run: |
+          set -uo pipefail
+          failed=0
+
+          require_success() {
+            local name="$1" result="$2"
+            if [[ "${result}" != "success" ]]; then
+              echo "::error title=Incomplete release::Required release job '${name}' finished with '${result}' — ${TAG} did not ship."
+              failed=1
+              return
+            fi
+            echo "  - ${name}: ok"
+          }
+
+          # A target may legitimately not run for exactly two reasons. Anything else that is
+          # not `success` — skipped, cancelled, failure — means the registry got nothing.
+          require_publish() {
+            local name="$1" result="$2" enabled="$3" already="${4:-}"
+
+            if [[ "${enabled}" != "true" ]]; then
+              echo "  - ${name}: not enabled for this release"
+              return
+            fi
+            if [[ "${already}" == "true" && "${FORCE_REPUBLISH}" != "true" ]]; then
+              echo "  - ${name}: already published at this version (correctly skipped)"
+              return
+            fi
+            if [[ "${result}" != "success" ]]; then
+              echo "::error title=Incomplete release::Publish target '${name}' is enabled and not yet published, but its job finished with '${result}' — refusing to report ${TAG} as a successful release."
+              failed=1
+              return
+            fi
+            echo "  - ${name}: published"
+          }
+
+          require_success "prepare" "${RESULT_PREPARE}"
+          require_success "validate-versions" "${RESULT_VALIDATE}"
+          require_success "release-finalize" "${RESULT_FINALIZE}"
+
+          if [[ "${RESULT_CRATES_GATE}" != "true" ]]; then
+            echo "::error title=Incomplete release::crates-gate refused to release: the crates.io prerequisite for ${TAG} was never satisfied."
+            failed=1
+          fi
+          if [[ "${RESULT_PROMOTE}" != "true" ]]; then
+            echo "::error title=Incomplete release::${TAG} was never promoted out of draft."
+            failed=1
+          fi
+
+          require_publish "crates.io" "${RESULT_PUBLISH_CRATES}" "${RELEASE_CRATES}" "${EXISTS_CRATES}"
+          require_publish "pypi" "${RESULT_PUBLISH_PYPI}" "${RELEASE_PYTHON}" "${EXISTS_PYPI}"
+          require_publish "rubygems" "${RESULT_PUBLISH_RUBYGEMS}" "${RELEASE_RUBY}" "${EXISTS_RUBYGEMS}"
+          require_publish "npm" "${RESULT_PUBLISH_NODE}" "${RELEASE_NODE}" "${EXISTS_NPM}"
+          require_publish "npm-wasm" "${RESULT_PUBLISH_WASM}" "${RELEASE_WASM}" "${EXISTS_WASM}"
+          require_publish "packagist" "${RESULT_PUBLISH_PACKAGIST}" "${RELEASE_PHP}" "${EXISTS_PACKAGIST}"
+          require_publish "maven" "${RESULT_PUBLISH_MAVEN}" "${RELEASE_JAVA}" "${EXISTS_MAVEN}"
+          require_publish "nuget" "${RESULT_PUBLISH_NUGET}" "${RELEASE_CSHARP}" "${EXISTS_NUGET}"
+          require_publish "hex" "${RESULT_PUBLISH_HEX}" "${RELEASE_ELIXIR}" "${EXISTS_HEX}"
+          require_publish "maven-kotlin-android" "${RESULT_PUBLISH_KOTLIN}" "${RELEASE_KOTLIN}" "${EXISTS_KOTLIN}"
+          require_publish "pub.dev" "${RESULT_TRIGGER_PUBDEV}" "${RELEASE_DART}" "${EXISTS_PUB}"
+          require_publish "zig" "${RESULT_PUBLISH_ZIG}" "${RELEASE_ZIG}" "${EXISTS_ZIG}"
+          require_publish "homebrew" "${RESULT_PUBLISH_HOMEBREW}" "${RELEASE_HOMEBREW}" "${EXISTS_HOMEBREW}"
+
+          # Release assets consumers resolve at install time.
+          require_publish "cli-binaries" "${RESULT_UPLOAD_CLI}" "${RELEASE_CLI}" "${EXISTS_CLI}"
+          require_publish "binstall-verify" "${RESULT_VERIFY_BINSTALL}" "${RELEASE_CLI}" "${EXISTS_CLI}"
+          require_publish "go-ffi-assets" "${RESULT_UPLOAD_GO}" "${RELEASE_GO}" "${EXISTS_GO}"
+          require_publish "c-ffi-assets" "${RESULT_UPLOAD_C_FFI}" "${RELEASE_C_FFI}" "${EXISTS_C_FFI}"
+          require_publish "elixir-nif-assets" "${RESULT_UPLOAD_ELIXIR}" "${RELEASE_ELIXIR}" "${EXISTS_ELIXIR}"
+          require_publish "swift-manifest" "${RESULT_SWIFT_MANIFEST}" "${RELEASE_SWIFT}"
+
+          if [[ "${failed}" -eq 1 ]]; then
+            echo "::error title=Incomplete release::Release ${TAG} did not reach every enabled target. See the errors above."
+            exit 1
+          fi
+          echo "Every enabled publish target for ${TAG} succeeded."
