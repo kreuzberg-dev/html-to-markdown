@@ -182,6 +182,7 @@ tasks:
     cmds:
       - task: format:check
       - task: lint:check
+      - task: node:verify-loader
 
   update:
     desc: "Update all dependencies (within major versions)"
@@ -301,6 +302,15 @@ tasks:
     # (artifact targets a foreign platform). ~keep
     cmds:
       - node crates/html-to-markdown-node/scripts/verify-esm-exports.mjs
+
+  node:verify-loader:
+    desc: "Assert the committed Node index.js loader matches package.json and index.d.ts"
+    # Purely static, so unlike `node:verify-esm` it needs nothing built and can run in the
+    # publish pipeline. index.js is committed source that publish ships verbatim, and a
+    # `napi build` run from the repo root silently rewrites it to reference
+    # `html-to-markdown-monorepo-*` packages that are never published. ~keep
+    cmds:
+      - node crates/html-to-markdown-node/scripts/verify-loader-manifest.mjs
 
   node:e2e:
     desc: "Build Node binding and run e2e/node fixture tests"
