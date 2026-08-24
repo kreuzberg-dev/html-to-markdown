@@ -141,6 +141,14 @@ jobs:
         with:
           version: ${{ needs.prepare.outputs.version }}
 
+      # The coding-agent plugin under plugin/ carries its own version source
+      # (plugin/.ai-rulez/config.toml [plugin].version) that the shared
+      # validate-versions action does not know about. Assert it against the tag
+      # actually being released, so a drifted plugin fails the release instead of
+      # shipping a bundle that lags the version it claims to be. ~keep
+      - name: Validate plugin version matches the release
+        run: python3 scripts/sync_plugin_version.py --expect "${{ needs.prepare.outputs.version }}"
+
   check-pypi:
     name: Check PyPI for existing version
     needs: prepare

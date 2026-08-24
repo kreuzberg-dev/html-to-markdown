@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The coding-agent plugin version gate never ran on the commits that cause drift.**
+  `plugin/` sat at 3.11.3 while core shipped 3.11.4, so all 13 version declarations under
+  `plugin/` — OpenCode, Hermes, Claude Code, Cursor, Codex, Gemini, Kimi, Factory — were a
+  release stale. The checker for this already existed (`scripts/sync_plugin_version.py --check`,
+  run by `CI Plugin`), but `ci-plugin.yaml`'s `paths:` filter did not list `Cargo.toml`. A
+  release commit bumps `Cargo.toml` and nothing under `plugin/`, so the workflow was never
+  triggered on exactly the commits that cause drift, and the gate reported nothing rather than
+  failing. `Cargo.toml` and `.task/tools/version-sync.yml` are now in the filter, so any core
+  bump re-runs the gate. `sync_plugin_version.py` also grew `--expect <version>`, which asserts
+  that core *and* the plugin both equal the version being released; `publish.yaml`'s
+  `validate-versions` job runs it against the tag, so a drifted plugin now fails the release
+  instead of publishing a bundle that lags the version it claims to be. The 13 stale declarations
+  are re-synced to 3.11.4.
+
 - `task test` now runs. `tools/benchmark-harness/examples/profile_visitor.rs` imports
   `NoOpVisitor`, which only exists under the harness's `visitor` feature, but the task builds the
   workspace with `--no-default-features` — and `cargo test` builds examples. The example is now

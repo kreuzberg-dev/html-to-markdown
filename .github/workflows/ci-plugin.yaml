@@ -9,20 +9,29 @@ on:
   push:
     branches: [main]
     paths:
+      # Cargo.toml is the version source of truth the plugin must track. Without it
+      # here a release commit — which bumps Cargo.toml and nothing under plugin/ —
+      # does not trigger this workflow, so the version gate below never runs and the
+      # plugin silently falls a release behind. That is how plugin/ sat at 3.11.3
+      # while core shipped 3.11.4. ~keep
+      - "Cargo.toml"
       - "plugin/**"
       - ".claude-plugin/**"
       - ".agents/plugins/**"
       - ".ai-rulez/config.toml"
       - "scripts/sync_plugin_version.py"
+      - ".task/tools/version-sync.yml"
       - ".github/workflows/ci-plugin.yaml"
   pull_request:
     branches: [main]
     paths:
+      - "Cargo.toml"
       - "plugin/**"
       - ".claude-plugin/**"
       - ".agents/plugins/**"
       - ".ai-rulez/config.toml"
       - "scripts/sync_plugin_version.py"
+      - ".task/tools/version-sync.yml"
       - ".github/workflows/ci-plugin.yaml"
   workflow_dispatch:
 
