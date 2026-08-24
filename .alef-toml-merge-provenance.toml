@@ -96,7 +96,7 @@ values = [
 [[entries]]
 relative_path = "poly.toml"
 key_path = "fmt.markdown.rumdl.disable"
-values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076"]
+values = ["MD012", "MD013", "MD024", "MD033", "MD036", "MD041", "MD046", "MD051", "MD076", "MD025"]
 
 [[entries]]
 relative_path = "poly.toml"

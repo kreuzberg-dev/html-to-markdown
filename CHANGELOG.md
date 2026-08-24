@@ -7,7 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`alef` pinned to `0.67.5` (from `0.67.2`) and the tree regenerated.** Every one of the 609
+  regenerated files carries a real content change; none is a bare provenance restamp. The
+  substantive ones: the tagged `VisitResult` wire shape is now decoded consistently across
+  languages -- Swift gains hand-written `Codable` conformance keyed on `{type, output}`, and the
+  PyO3 bridge reads the `output` member instead of treating the whole envelope as the payload;
+  Java's `VisitorBridge` derives its `NodeContext` field offsets from the declared `MemoryLayout`
+  rather than from hand-maintained byte constants, and a throwing visitor callback now returns
+  `VISIT_RESULT_CONTINUE` instead of `VISIT_RESULT_ERROR`, so one failing callback no longer
+  aborts the whole conversion; `RustBridgeC.h` drops the `__private__*` shim structs swift-bridge
+  no longer emits; Kotlin/Android e2e imports lose a doubled `io.xberg.android.io.xberg.android`
+  package prefix; the Zig e2e suite asserts exact output instead of trimming it first; and the
+  TypeScript snippets optional-chain nullable metadata (`result.metadata?.links`).
+
+- **Snippet gap checking is configured, so `--strict` runs it instead of erroring.**
+  `[workspace.docs.snippets]` gained `docs_dirs` and `required_languages`, mirroring the flags
+  `task docs:snippets:gaps` already passed. Neither was set, so the gap pass -- unreferenced
+  snippets and missing language variants -- was skipped entirely, and alef 0.67.5 correctly
+  refuses to let a strict run pass on a check that compared nothing.
+
 ### Fixed
+
+- **The eleven hand-written TypeScript and WASM snippets now declare which session validates
+  them.** Two sessions (`node` and `wasm`) both validate `typescript` snippets, and alef 0.67.5
+  stopped guessing between them; the six snippets under `docs-site/src/snippets/typescript/` now
+  carry `target: node` and the five under `docs-site/src/snippets/wasm/` carry `target: wasm`.
+  These eleven had never actually been compiled -- they were reported as errors, not failures --
+  which is how the WASM visitor example kept four implicitly-`any` callback parameters that
+  `noImplicitAny` rejects the moment the snippet is really typechecked. It is now a `typescript`
+  fence with its parameters annotated, matching the `node` example beside it and every generated
+  WASM snippet. Snippet results move from 4550 passed / 11 errored to 4561 passed / 0 errored.
 
 - **A skipped `publish-crates` no longer reads as a passing gate, and a release that published
   nothing can no longer report success.** Eight places in `.github/workflows/publish.yaml` gated

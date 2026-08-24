@@ -1,3 +1,7 @@
+---
+target: node
+---
+
 ```typescript
 import { convert, ConversionOptions, HeadingStyle } from "@xberg-io/html-to-markdown";
 

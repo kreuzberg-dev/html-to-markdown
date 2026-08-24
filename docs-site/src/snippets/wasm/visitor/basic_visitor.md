@@ -1,8 +1,12 @@
-```javascript
-import { convert, WasmConversionOptions, WasmVisitorHandle } from "@xberg-io/html-to-markdown-wasm";
+---
+target: wasm
+---
+
+```typescript
+import { convert, WasmConversionOptions, WasmNodeContext, WasmVisitorHandle } from "@xberg-io/html-to-markdown-wasm";
 
 const visitor = {
-  visitLink(ctx, href, text, title) {
+  visitLink(ctx: WasmNodeContext, href: string, text: string, title: string) {
     return { Custom: `[${text}](${href} "external")` };
   },
 };

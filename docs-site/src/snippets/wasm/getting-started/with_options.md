@@ -1,3 +1,7 @@
+---
+target: wasm
+---
+
 ```javascript
 import { convert, WasmConversionOptions, WasmHeadingStyle } from "@xberg-io/html-to-markdown-wasm";
 

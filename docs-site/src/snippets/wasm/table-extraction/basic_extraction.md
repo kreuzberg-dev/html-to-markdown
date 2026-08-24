@@ -1,3 +1,7 @@
+---
+target: wasm
+---
+
 ```javascript
 import { convert, WasmConversionOptions } from "@xberg-io/html-to-markdown-wasm";
 

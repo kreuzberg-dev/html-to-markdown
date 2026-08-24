@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.67.2"
+alef_version = "0.67.5"
 languages = [
   "python",
   "node",
@@ -61,6 +61,32 @@ dirs = [
   "docs-site/src/snippets/typescript",
   "docs-site/src/snippets/wasm",
   "docs-site/src/snippets/zig",
+]
+# The gap pass (unreferenced snippets, missing language variants) is skipped entirely unless at
+# least one of `docs_dirs`/`required_languages` is set, and a `--strict` run refuses to pass on a
+# check that compared nothing. These two mirror the flags `task docs:snippets:gaps` already
+# passes, so `alef snippets check --strict` runs the same comparison CI does instead of erroring.
+# kotlin is absent from the required set: alef.toml gives kotlin_android
+# exclude_functions = ["visitor"], because its trait-bridge emitter cannot bind via an options
+# field. The binding therefore has no visitor API and alef stops emitting the 49 visitor and 5
+# visitor edge-case snippets for it, which requiring kotlin here would report as 54 permanent
+# gaps. ~keep
+docs_dirs = ["docs-site/src/content/docs"]
+required_languages = [
+  "rust",
+  "python",
+  "typescript",
+  "go",
+  "ruby",
+  "php",
+  "java",
+  "csharp",
+  "elixir",
+  "r",
+  "c",
+  "swift",
+  "dart",
+  "zig",
 ]
 validation_level = "compile"
 # `timeout_secs` bounds both snippet validation and every session's `before` hook (see

@@ -1,3 +1,7 @@
+---
+target: node
+---
+
 ```typescript
 import { convert, ConversionOptions, NodeContext, VisitResult } from "@xberg-io/html-to-markdown";
 
