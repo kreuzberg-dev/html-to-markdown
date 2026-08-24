@@ -5,7 +5,9 @@ Vendor html-to-markdown-rs core crate into R package.
 This script:
 1. Reads workspace.dependencies and version from root Cargo.toml
 2. Copies crates/html-to-markdown/ to packages/r/src/rust/vendor/html-to-markdown-rs/
-3. Replaces workspace = true with explicit values in the vendored Cargo.toml
+3. Replaces workspace = true with explicit values in the vendored Cargo.toml,
+   including materializing the root [workspace.lints] sub-tree as the vendored
+   crate's own [lints] table
 """
 
 import os
@@ -18,6 +20,15 @@ try:
     import tomllib
 except ImportError:
     import tomli as tomllib  # type: ignore
+
+
+# ~keep Matches `[workspace.lints]` and every `[workspace.lints.<tool>]` header. Only
+# headers at column 0 are table headers in TOML.
+WORKSPACE_LINTS_HEADER_RE = re.compile(r"^\[workspace\.lints(\.[^\]]+)?\]\s*$")
+# ~keep Any table header at column 0 ends the `[workspace.lints]` run.
+TABLE_HEADER_RE = re.compile(r"^\[")
+# ~keep The inheritance marker a workspace member uses to pull in `[workspace.lints]`.
+CRATE_LINTS_INHERIT_RE = re.compile(r"(?m)^\[lints\]\nworkspace = true\n?")
 
 
 def get_repo_root() -> Path:
@@ -36,14 +47,58 @@ def read_toml(path: Path) -> dict[str, object]:
         return tomllib.load(f)
 
 
-def get_workspace_config(repo_root: Path) -> tuple[str, dict[str, object], dict[str, object]]:
-    """Extract version, package metadata, and dependencies from root Cargo.toml."""
+def get_workspace_config(repo_root: Path) -> tuple[str, dict[str, object], dict[str, object], dict[str, object]]:
+    """Extract version, package metadata, dependencies, and lints from root Cargo.toml."""
     data = read_toml(repo_root / "Cargo.toml")
     ws = data.get("workspace", {})
     version = ws.get("package", {}).get("version", "0.0.0")
     pkg = ws.get("package", {})
     deps = ws.get("dependencies", {})
-    return version, pkg, deps
+    lints = ws.get("lints", {})
+    return version, pkg, deps, lints
+
+
+def render_workspace_lints(repo_root: Path, ws_lints: dict[str, object]) -> str:
+    """Render the root manifest's ``[workspace.lints]`` sub-tree as a crate-level
+    ``[lints]`` sub-tree, verbatim.
+
+    A crate lifted out of its workspace must keep every piece of build configuration it
+    was inheriting, not just the parts that happen to be load-bearing today. ``[lints]``
+    is resolved through the workspace, so vendoring has to materialize it -- otherwise
+    the vendored copy compiles under a *different* lint configuration than the sources
+    it was copied from. The entry that matters most is ``unexpected_cfgs``' check-cfg
+    allowlist: it is what declares the crate's own ``#[cfg(...)]`` gates as expected cfg
+    names. Drop it and every gate becomes an ``unexpected_cfgs`` diagnostic -- silent in
+    a default build, a hard error under ``RUSTFLAGS="-D warnings"``.
+
+    Nothing here is specific to any one lint or cfg name: the whole sub-tree is copied,
+    so a workspace that adds a lint or a check-cfg entry needs no change here. The
+    extracted text is re-parsed and compared against the authoritative parse of the root
+    manifest, so a mis-extraction fails loudly instead of silently emitting a different
+    lint configuration -- which is the failure this function exists to prevent. ~keep
+    """
+    if not ws_lints:
+        return ""
+
+    block: list[str] = []
+    capturing = False
+    for line in (repo_root / "Cargo.toml").read_text(encoding="utf-8").splitlines():
+        if WORKSPACE_LINTS_HEADER_RE.match(line):
+            capturing = True
+            block.append("[lints" + line.strip()[len("[workspace.lints") :])
+            continue
+        if capturing and TABLE_HEADER_RE.match(line):
+            break
+        if capturing:
+            block.append(line)
+
+    rendered = "\n".join(block).rstrip() + "\n"
+    if tomllib.loads(rendered).get("lints") != ws_lints:
+        raise RuntimeError(
+            "extracted [workspace.lints] does not round-trip to the parsed workspace lints; "
+            "refusing to vendor a crate under a lint configuration that differs from its source"
+        )
+    return rendered
 
 
 def format_dependency(name: str, dep_spec: object) -> str:
@@ -75,7 +130,7 @@ def format_dependency(name: str, dep_spec: object) -> str:
     return f'{name} = "{dep_spec}"'
 
 
-def _replace_package_fields(content: str, version: str, pkg: dict[str, object]) -> str:
+def _replace_package_fields(content: str, version: str, pkg: dict[str, object], lints_block: str) -> str:
     """Replace package-level workspace inheritance fields."""
     content = re.sub(r"^version\.workspace = true$", f'version = "{version}"', content, flags=re.MULTILINE)
     content = re.sub(
@@ -102,7 +157,10 @@ def _replace_package_fields(content: str, version: str, pkg: dict[str, object]) 
             flags=re.MULTILINE,
         )
 
-    return re.sub(r"^\[lints\]\nworkspace = true\n?", "", content, flags=re.MULTILINE)
+    # Replace the workspace inheritance marker with the workspace's own lint tables.
+    # When the workspace declares none there is nothing to inline, and `workspace = true`
+    # with no parent workspace is not a manifest cargo can read -- so strip it. ~keep
+    return CRATE_LINTS_INHERIT_RE.sub(lambda _match: lints_block, content, count=1)
 
 
 def _make_fields_replacer(dep_name: str, dep_spec: object) -> callable:
@@ -140,12 +198,18 @@ def _make_fields_replacer(dep_name: str, dep_spec: object) -> callable:
     return replacer
 
 
-def replace_workspace_refs(toml_path: Path, version: str, pkg: dict[str, object], deps: dict[str, object]) -> None:
+def replace_workspace_refs(
+    toml_path: Path,
+    version: str,
+    pkg: dict[str, object],
+    deps: dict[str, object],
+    lints_block: str,
+) -> None:
     """Replace workspace references with explicit values in vendored Cargo.toml."""
     with toml_path.open() as f:
         content = f.read()
 
-    content = _replace_package_fields(content, version, pkg)
+    content = _replace_package_fields(content, version, pkg, lints_block)
 
     for name, dep_spec in deps.items():
         pattern_dotted = rf"^{re.escape(name)}\.workspace = true$"
@@ -173,7 +237,8 @@ def main() -> None:
         print(f"Error: Source crate not found at {src_crate}", file=sys.stderr)
         sys.exit(1)
 
-    version, pkg, deps = get_workspace_config(repo_root)
+    version, pkg, deps, ws_lints = get_workspace_config(repo_root)
+    lints_block = render_workspace_lints(repo_root, ws_lints)
     print(f"Workspace version: {version}")
 
     if dest_vendor.exists():
@@ -194,8 +259,9 @@ def main() -> None:
 
     vendor_toml = dest_vendor / "Cargo.toml"
     if vendor_toml.exists():
-        replace_workspace_refs(vendor_toml, version, pkg, deps)
-        print("Updated vendor/html-to-markdown-rs/Cargo.toml")
+        replace_workspace_refs(vendor_toml, version, pkg, deps, lints_block)
+        inlined = "inlined [workspace.lints]" if lints_block else "no [workspace.lints] to inline"
+        print(f"Updated vendor/html-to-markdown-rs/Cargo.toml ({inlined})")
 
     print(f"\nVendoring complete (version: {version})")
 

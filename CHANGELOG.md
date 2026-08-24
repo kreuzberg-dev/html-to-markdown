@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The R vendoring script deleted the core crate's `[lints]` without inlining anything, so the
+  vendored copy compiled under a different lint configuration than its sources.**
+  `scripts/ci/r/vendor-core-crate.py` copies `crates/html-to-markdown/` out of the workspace and
+  rewrites `workspace = true` inheritance into explicit values — except for `[lints]`, which it
+  stripped outright. The `[workspace.lints.rust]` `unexpected_cfgs` check-cfg allowlist went with
+  it; that allowlist is what declares the crate's own `#[cfg(...)]` gates as expected cfg names, so
+  every gate in the vendored copy became an `unexpected_cfgs` diagnostic — silent in a default
+  build, a hard error under `RUSTFLAGS="-D warnings"`. `missing_docs`, `unused_must_use`,
+  `unsafe_code = "forbid"` and the whole `[workspace.lints.clippy]` policy were dropped the same
+  way. The script now materializes the entire `[workspace.lints]` sub-tree into the vendored
+  manifest verbatim, matching the fix alef shipped in 0.67.x for `alef publish prepare`. The
+  extracted text is re-parsed and compared against the authoritative parse of the root manifest, so
+  a mis-extraction fails loudly rather than silently emitting different lints. Nothing is specific
+  to a lint or cfg name: adding a lint or a check-cfg entry to the workspace needs no change here.
+  The script is not replaced by alef's implementation because it runs from `packages/r/configure` at
+  R configure time — including on end-user machines installing the source tarball from GitHub, where
+  only Python 3 and a Rust toolchain exist.
+
 - **The coding-agent plugin version gate never ran on the commits that cause drift.**
   `plugin/` sat at 3.11.3 while core shipped 3.11.4, so all 13 version declarations under
   `plugin/` — OpenCode, Hermes, Claude Code, Cursor, Codex, Gemini, Kimi, Factory — were a
