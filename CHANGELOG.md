@@ -17,10 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Java's `VisitorBridge` derives its `NodeContext` field offsets from the declared `MemoryLayout`
   rather than from hand-maintained byte constants, and a throwing visitor callback now returns
   `VISIT_RESULT_CONTINUE` instead of `VISIT_RESULT_ERROR`, so one failing callback no longer
-  aborts the whole conversion; `RustBridgeC.h` drops the `__private__*` shim structs swift-bridge
-  no longer emits; Kotlin/Android e2e imports lose a doubled `io.xberg.android.io.xberg.android`
-  package prefix; the Zig e2e suite asserts exact output instead of trimming it first; and the
-  TypeScript snippets optional-chain nullable metadata (`result.metadata?.links`).
+  aborts the whole conversion; Kotlin/Android e2e imports lose a doubled
+  `io.xberg.android.io.xberg.android` package prefix; the Zig e2e suite asserts exact output
+  instead of trimming it first; and the TypeScript snippets optional-chain nullable metadata
+  (`result.metadata?.links`).
 
 - **Snippet gap checking is configured, so `--strict` runs it instead of erroring.**
   `[workspace.docs.snippets]` gained `docs_dirs` and `required_languages`, mirroring the flags
@@ -32,6 +32,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   generated content.
 
 ### Fixed
+
+- **`RustBridgeC.h` is whole again after a regeneration silently truncated it by 193 lines.**
+  The header is a concatenation of `SwiftBridgeCore.h` and `html-to-markdown-rs-swift.h`, both
+  produced by `cargo build -p html-to-markdown-rs-swift`. When those build artifacts are absent
+  -- as they are right after `alef all --clean` wipes them -- alef emits the crate half alone and
+  reports success, so the file lost `RustStr`, `__private__FfiSlice`, every `__private__Option*`
+  struct and `__swift_bridge__null_pointer`. Regenerating against real build artifacts restores
+  content byte-identical to the pre-upgrade file. Nothing about this was an alef 0.67.5 behavior
+  change; an earlier entry in this section wrongly credited it as one.
 
 - **The eleven hand-written TypeScript and WASM snippets now declare which session validates
   them.** Two sessions (`node` and `wasm`) both validate `typescript` snippets, and alef 0.67.5
