@@ -10,7 +10,10 @@ The metadata extraction feature enables comprehensive document analysis during c
 
 **Zero Overhead When Disabled:** Metadata extraction adds negligible overhead and happens during the HTML parsing pass. Pass `extract_metadata: true` in `ConversionOptions` to enable it; the result is available at `result.metadata`.
 
+{# Guarded on the branch set below; swift, dart, zig, kotlin_android and wasm have none. ~keep #}
+{% if language in ['python', 'typescript', 'ruby', 'php', 'go', 'java', 'csharp', 'elixir', 'r'] %}
 ### Example: Quick Start
+{% endif %}
 
 {% if language == 'python' %}
 

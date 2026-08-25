@@ -10,7 +10,12 @@ The visitor pattern enables custom HTML→Markdown conversion logic by providing
 
 **Supported Visitor Methods:** 40+ callbacks for text, inline elements, links, images, headings, lists, blocks, and tables.
 
+{# Guarded on the branch set below. Note this set is SMALLER than the metadata partial's: go and
+   java have a metadata example but no visitor example, which is why their READMEs dangled here
+   and not there. swift, dart, zig, kotlin_android and wasm have neither. ~keep #}
+{% if language in ['python', 'typescript', 'ruby', 'php', 'csharp', 'elixir', 'r'] %}
 ### Example: Quick Start
+{% endif %}
 
 {% if language == 'python' %}
 

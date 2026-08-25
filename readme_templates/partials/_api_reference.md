@@ -1,4 +1,8 @@
+{# Heading guarded on the same set the if-chain below covers: swift, dart, zig, kotlin_android,
+   wasm and c have no branch, so the heading used to render with an empty body. ~keep #}
+{% if language in ['python', 'typescript', 'ruby', 'php', 'go', 'java', 'csharp', 'elixir', 'r'] %}
 ### Core Function
+{% endif %}
 
 {% if language == 'python' %}
 **`convert(html: str, options?: ConversionOptions, visitor?: object) -> ConversionResult`**

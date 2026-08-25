@@ -52,7 +52,10 @@
 {{ migration_guide }}
 {% endif %}
 
-{% if performance %}
+{# Guarded on `benchmarks`, not on `performance` itself: swift, dart, zig, kotlin_android and wasm
+   declare `[crates.readme.languages.<lang>.performance]` (platform/function/note) but no
+   `[[...performance.benchmarks]]` rows, so the table rendered empty under a live heading. ~keep #}
+{% if performance and performance.benchmarks %}
 
 ## Performance Snapshot
 
@@ -88,6 +91,7 @@
 {% include 'partials/_visitor_pattern.md' %}
 {% endif %}
 
-## Examples
-
+{# No `## Examples` heading here: nothing has ever been rendered under it, so all 14 generated
+   READMEs carried a dangling TOC entry. The per-language `[crates.readme.languages.<lang>].snippets`
+   already feed Quick Start, Metadata Extraction and Visitor Pattern above. ~keep #}
 {% include 'partials/_footer.md' %}
