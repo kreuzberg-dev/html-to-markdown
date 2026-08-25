@@ -1002,8 +1002,9 @@ module = "html_to_markdown"
 # the binding's own module, so a value that is already namespaced comes out double-qualified as
 # `HtmlToMarkdown::HtmlToMarkdownRs::ConversionOptions` -- and `HtmlToMarkdownRs` is defined by
 # `ruby.define_module("HtmlToMarkdownRs")` at TOP level, never nested under `HtmlToMarkdown`, so
-# that path raises `NameError: uninitialized constant HtmlToMarkdown::HtmlToMarkdownRs` in all
-# 227 generated call sites (221 doc snippets + e2e/ruby specs + test_apps/ruby). The bare name
+# that path raises `NameError: uninitialized constant HtmlToMarkdown::HtmlToMarkdownRs`. Measured
+# against 0.67.6 output: 227 call sites over 118 files -- 112 generated doc snippets, 5 e2e/ruby
+# specs and 1 test_apps/ruby spec. The bare name
 # resolves through the `ConversionOptions = HtmlToMarkdownRs.const_get(:ConversionOptions)`
 # re-export in packages/ruby/lib/html_to_markdown/native.rb and yields the same class. ~keep
 options_type = "ConversionOptions"
