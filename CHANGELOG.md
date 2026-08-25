@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.5] - 2026-08-25
+
+### Changed
+
+- Regenerated all language bindings on alef 0.68.0.
+
 ### Changed
 
 - **`alef` pinned to `0.67.5` (from `0.67.2`) and the tree regenerated.** Every one of the 609

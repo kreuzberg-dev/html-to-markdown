@@ -31,9 +31,9 @@
         <dependency>
             <groupId>io.xberg</groupId>
             <artifactId>html-to-markdown</artifactId>
-            <version>3.11.4</version>
+            <version>3.11.5</version>
             <scope>system</scope>
-            <systemPath>${project.basedir}/../../packages/java/target/html-to-markdown-3.11.4.jar</systemPath>
+            <systemPath>${project.basedir}/../../packages/java/target/html-to-markdown-3.11.5.jar</systemPath>
         </dependency>
 
         <dependency>
