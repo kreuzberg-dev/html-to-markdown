@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.67.5"
+alef_version = "0.67.6"
 languages = [
   "python",
   "node",
@@ -101,9 +101,22 @@ timeout_secs = 900
 strict = true
 deny_unclassified = true
 
+# Every session below needs a `before` that produces the artifact its snippets compile against.
+# `validation_level = "compile"` reads a built artifact, but `alef all` does not build one, so any
+# session without a `before` is an ordering gap: alef refused 2603 snippets across c, dart, elixir,
+# php, python, r, ruby, rust and zig with "no pipeline-guaranteed build for their language" and
+# failed the strict run. The seven sessions that already had a `before` were never in that list.
+# Each command below is the same one the matching `[crates.test.<lang>].before` uses, rebased on
+# the session's own `cwd`. ~keep
 [workspace.docs.snippets.sessions.python]
 cwd = "packages/python"
 manifest = "packages/python/pyproject.toml"
+# `uv sync` here resolves against the uv workspace root, so the venv it populates is ../../.venv,
+# not a local one; maturin needs VIRTUAL_ENV pointed at it or it cannot find an interpreter. ~keep
+before = [
+  "uv sync --no-install-project --no-install-workspace",
+  "VIRTUAL_ENV=$PWD/../../.venv maturin develop --release",
+]
 
 [workspace.docs.snippets.sessions.node]
 cwd = "crates/html-to-markdown-node"
@@ -130,10 +143,12 @@ before = [
 
 [workspace.docs.snippets.sessions.ruby]
 cwd = "packages/ruby"
+before = ["bundle install", "./build-extension.sh"]
 
 [workspace.docs.snippets.sessions.php]
 cwd = "."
 manifest = "composer.json"
+before = ["cargo build --release --locked -p html-to-markdown-php"]
 
 [workspace.docs.snippets.sessions.go]
 cwd = "packages/go"
@@ -156,10 +171,12 @@ before = [
 [workspace.docs.snippets.sessions.elixir]
 cwd = "packages/elixir"
 manifest = "packages/elixir/mix.exs"
+before = ["mix deps.get", "HTML_TO_MARKDOWN_BUILD=1 mix compile"]
 
 [workspace.docs.snippets.sessions.rust]
 cwd = "crates/html-to-markdown"
 manifest = "crates/html-to-markdown/Cargo.toml"
+before = ["cargo build --release --locked"]
 
 [workspace.docs.snippets.sessions.kotlin_android]
 cwd = "packages/kotlin-android"
@@ -177,19 +194,23 @@ before = ["swift build"]
 [workspace.docs.snippets.sessions.dart]
 cwd = "packages/dart"
 manifest = "packages/dart/pubspec.yaml"
+before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-rs-dart", "dart pub get"]
 
 [workspace.docs.snippets.sessions.zig]
 cwd = "packages/zig"
 manifest = "packages/zig/build.zig"
+before = ["cd ../.. && cargo build --release --locked -p html-to-markdown-ffi", "zig build"]
 env = { ZIG_GLOBAL_CACHE_DIR = ".zig-global-cache", ZIG_LOCAL_CACHE_DIR = ".zig-cache" }
 
 [workspace.docs.snippets.sessions.c]
 cwd = "."
 manifest = "crates/html-to-markdown-ffi/include/html_to_markdown.h"
+before = ["cargo build --release --locked -p html-to-markdown-ffi"]
 
 [workspace.docs.snippets.sessions.r]
 cwd = "packages/r"
 manifest = "packages/r/DESCRIPTION"
+before = ["Rscript -e \"devtools::load_all('.')\""]
 [workspace.sync]
 extra_paths = [
   "packages/ruby/lib/html_to_markdown/version.rb",
@@ -580,11 +601,12 @@ zig = "packages/zig/src/"
 [crates.exclude]
 types = []
 functions = []
-methods = [
-  "html_to_markdown::NodeContext.serialize",
-  "html_to_markdown::NodeContext.deserialize",
-  "NodeContext.with_borrowed_attributes",
-]
+# `NodeContext.serialize`/`.deserialize` used to be listed here and warned on every run as
+# "exclude.methods entry did not match any extracted item". They are `serde::Serialize` /
+# `serde::Deserialize` trait impls (crates/html-to-markdown/src/visitor/types.rs), and the
+# extractor only collects inherent-impl methods, so no qualification of those names could ever
+# match. `with_borrowed_attributes` is an inherent method and does match. ~keep
+methods = ["NodeContext.with_borrowed_attributes"]
 
 [crates.include]
 types = [
@@ -835,6 +857,25 @@ languages = [
   "dart",
   "zig",
 ]
+# The 96 files below are hand-authored on purpose and have no fixture behind them, so alef will
+# never generate an equivalent: `alef e2e snippets-migrate docs-site/src/snippets` reports every
+# one as `no_generated_equivalent`. Five narrative topics x 16 language roots (wasm has no
+# `error-handling` variant, hence 95 rather than 96) demonstrate the public field-access idiom
+# -- `result.content` / `result.metadata` / `metadata.document.title` -- that the fixture-driven
+# corpus under `output` never emits; `feedback.md` is an MDX prose partial, not code at all.
+# Declaring them here is what turns them from `UnaccountedSnippet` warnings into recorded
+# curation. Patterns resolve against the PROJECT ROOT, not against `output` -- these files sit
+# beside the generated tree, so an `output`-relative pattern could not name them. The topic
+# names are disjoint from every directory under `generated/<lang>/`, so none of these patterns
+# can shadow a generated file. ~keep
+curated_snippets = [
+  "docs-site/src/snippets/feedback.md",
+  "docs-site/src/snippets/*/error-handling/*.md",
+  "docs-site/src/snippets/*/getting-started/*.md",
+  "docs-site/src/snippets/*/metadata/basic_extraction.md",
+  "docs-site/src/snippets/*/table-extraction/*.md",
+  "docs-site/src/snippets/*/visitor/basic_visitor.md",
+]
 
 [crates.e2e.call]
 function = "convert"
@@ -957,7 +998,15 @@ urlEscapeStyle = "UrlEscapeStyle"
 
 [crates.e2e.call.overrides.ruby]
 module = "html_to_markdown"
-options_type = "HtmlToMarkdownRs::ConversionOptions"
+# Bare, NOT `HtmlToMarkdownRs::ConversionOptions`. The ruby emitter qualifies `options_type` with
+# the binding's own module, so a value that is already namespaced comes out double-qualified as
+# `HtmlToMarkdown::HtmlToMarkdownRs::ConversionOptions` -- and `HtmlToMarkdownRs` is defined by
+# `ruby.define_module("HtmlToMarkdownRs")` at TOP level, never nested under `HtmlToMarkdown`, so
+# that path raises `NameError: uninitialized constant HtmlToMarkdown::HtmlToMarkdownRs` in all
+# 227 generated call sites (221 doc snippets + e2e/ruby specs + test_apps/ruby). The bare name
+# resolves through the `ConversionOptions = HtmlToMarkdownRs.const_get(:ConversionOptions)`
+# re-export in packages/ruby/lib/html_to_markdown/native.rb and yields the same class. ~keep
+options_type = "ConversionOptions"
 
 [crates.e2e.call.overrides.ruby.enum_fields]
 headingStyle = "HeadingStyle"
@@ -1876,7 +1925,9 @@ visitor_basic = "visitor/basic_visitor.md"
 table_extraction = "table-extraction/basic_extraction.md"
 
 [crates.custom_modules]
-node = ["helpers"]
+# No `node` key: the node backend does not consume `custom_modules`, so `node = ["helpers"]`
+# emitted nothing and alef reported it as `[warning:unconsumed_config]` on every run. The r
+# backend does consume it -- `options` is what produces packages/r/R/options.R. ~keep
 r = ["options", "types"]
 
 [[crates.trait_bridges]]
