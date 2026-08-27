@@ -286,9 +286,13 @@ tasks:
       - alef build
 
   alef:sync:
-    desc: "Sync version from Cargo.toml to all manifests"
+    desc: "Sync the version to all manifests and the plugin version pin"
     cmds:
-      - alef sync-versions
+      # Delegate instead of calling `alef sync-versions` directly. This is the only
+      # sync task `task --list-all` surfaces -- `version:sync` is in an internal
+      # included taskfile -- so the discoverable entry point was the incomplete one,
+      # and release runs that used it left the plugin version pin behind. ~keep
+      - task: version:sync
 
   alef:docs:
     desc: "Generate API reference documentation"
