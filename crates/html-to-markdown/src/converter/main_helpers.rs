@@ -33,6 +33,22 @@ pub fn trim_trailing_whitespace(output: &mut String) {
     }
 }
 
+/// Strip a trailing run of backslash hard-break markers from the end of a block's content.
+///
+/// CommonMark's hard-break rule has no effect at the end of a block: there is no next line
+/// for the break to reach. For the two-space style the leftover marker is invisible trailing
+/// whitespace, so it is harmless and left in place. For the backslash style the leftover `\`
+/// is a literal, visible character, so a trailing run of one or more `<br>`-emitted `"\\\n"`
+/// markers must be dropped entirely rather than rendered as stray backslashes (issue #464).
+/// `block_start` bounds the strip to the current block so an earlier block's content already
+/// in `output` is never touched.
+pub fn strip_trailing_backslash_breaks(output: &mut String, block_start: usize) {
+    while output.len() > block_start && output[block_start..].ends_with("\\\n") {
+        let new_len = output.len() - "\\\n".len();
+        output.truncate(new_len);
+    }
+}
+
 /// Emit a line break for a `<br>`, `<div>`, or `<p>` continuation inside a table cell.
 ///
 /// A Markdown table cell cannot contain a hard line break: neither `newline_style` form

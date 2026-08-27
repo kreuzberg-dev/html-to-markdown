@@ -7,7 +7,7 @@
 //! - Empty element filtering
 //! - Visitor callbacks for custom paragraph processing
 
-use crate::options::ConversionOptions;
+use crate::options::{ConversionOptions, NewlineStyle};
 use tl::{NodeHandle, Parser};
 
 type Context = crate::converter::Context;
@@ -101,6 +101,14 @@ pub fn handle(
                 walk_node(child_handle, parser, output, options, &p_ctx, depth + 1, dom_ctx);
             }
         }
+    }
+
+    if options.newline_style == NewlineStyle::Backslash {
+        // ~keep A trailing run of <br> has no next line to break to, so the backslash
+        // ~keep markers it emitted would otherwise leave literal, visible "\" characters at
+        // ~keep the end of the block (issue #464). The two-space style is left alone here:
+        // ~keep its leftover marker is invisible trailing whitespace, not a visible artifact.
+        crate::converter::strip_trailing_backslash_breaks(output, p_ctx.block_content_start);
     }
 
     let has_content = output.len() > content_start_pos;

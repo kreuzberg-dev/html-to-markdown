@@ -139,13 +139,32 @@ fn should_not_read_a_trailing_escaped_backslash_as_a_hard_break() {
 }
 
 #[test]
-fn should_keep_both_an_escaped_backslash_and_a_real_hard_break() {
-    // ~keep The `<br>` is the last child, so its own `\` + `\n` marker
-    // ~keep (NewlineStyle::Backslash) sits immediately after the escaped source
-    // ~keep backslash. `chomp_inline` must strip exactly the `<br>`'s two bytes.
+fn should_drop_a_trailing_hard_break_after_an_escaped_backslash() {
+    // ~keep The `<br>` is the last child of `<strong>`, which is itself the last child
+    // ~keep of `<p>` — so the break is trailing at the block level. Issue #464: a
+    // ~keep trailing `<br>` has no next line to break to and must not render at all, so
+    // ~keep the `\` + `\n` marker (NewlineStyle::Backslash) that `chomp_inline` placed
+    // ~keep after the escaped source backslash is stripped by the paragraph handler's
+    // ~keep end-of-block pass, leaving only the escaped backslash behind.
     let options = ConversionOptions {
         newline_style: html_to_markdown_rs::options::NewlineStyle::Backslash,
         ..default_options()
     };
-    assert_eq!(convert("<p><strong>abc\\<br></strong></p>", options), "**abc\\\\**\\\n");
+    assert_eq!(convert("<p><strong>abc\\<br></strong></p>", options), "**abc\\\\**\n");
+}
+
+#[test]
+fn should_keep_both_an_escaped_backslash_and_a_real_hard_break() {
+    // ~keep Same shape as above, but the `<br>` is no longer trailing at the block level
+    // ~keep (`more` follows `</strong>` inside the same `<p>`), so the hard break is
+    // ~keep real and must survive. `chomp_inline` must still strip exactly the `<br>`'s
+    // ~keep two bytes and move the marker after `<strong>`'s closing `**`.
+    let options = ConversionOptions {
+        newline_style: html_to_markdown_rs::options::NewlineStyle::Backslash,
+        ..default_options()
+    };
+    assert_eq!(
+        convert("<p><strong>abc\\<br></strong>more</p>", options),
+        "**abc\\\\**\\\nmore\n"
+    );
 }

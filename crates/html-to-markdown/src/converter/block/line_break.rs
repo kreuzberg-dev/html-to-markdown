@@ -88,7 +88,25 @@ pub fn handle(
         // ~keep cannot contain a hard line break, so newline_style is never consulted and
         // ~keep source whitespace before the <br> is trimmed rather than leaked.
         emit_table_cell_break(output, options.br_in_tables);
-    } else if output.is_empty() || output.ends_with('\n') {
+    } else if output.len() == ctx.block_content_start {
+        // ~keep A <br> with nothing before it on the current line has no prior line to
+        // ~keep break: emitting a style marker here would leave a leading artifact instead
+        // ~keep of being invisible. A leading run of <br> therefore collapses to no output
+        // ~keep at all (issue #464), rather than the previous "swallow every break after the
+        // ~keep first" check (`output.ends_with('\n')`), which also matched — and silently
+        // ~keep collapsed — a run of *consecutive* breaks with real content before them.
+        // ~keep Unguarded by `ctx.in_paragraph` (unlike `text_node.rs`'s identical-looking
+        // ~keep check): a bare top-level <br> with no enclosing paragraph/div must also
+        // ~keep no-op here, matching Tier-1's explicit "bare <br> at top level emits
+        // ~keep nothing" contract (`tier1/scanner.rs`'s `TagKind::LineBreak` arm) — the
+        // ~keep default `block_content_start: 0` from a fresh `Context` still equals
+        // ~keep `output.len()` at true document start, so this stays correct there.
+        //
+        // ~keep The bare `\n` (rather than no output at all) is load-bearing and predates
+        // ~keep #464: `integration_test.rs::test_breaks_and_newlines_issue_112` pins that a
+        // ~keep leading top-level `<br>` still opens a line. Only the CONDITION changed for
+        // ~keep #464 -- the old `output.ends_with('\n')` also matched a break that followed
+        // ~keep another break's marker, which is what swallowed consecutive runs.
         output.push('\n');
     } else {
         match options.newline_style {
