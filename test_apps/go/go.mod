@@ -3,7 +3,7 @@ module github.com/xberg-io/html-to-markdown/packages/go/v3-e2e
 go 1.26
 
 require (
-	github.com/xberg-io/html-to-markdown/packages/go/v3 v3.11.5
+	github.com/xberg-io/html-to-markdown/packages/go/v3 v3.11.6
 	github.com/stretchr/testify v1.11.1
 )
 

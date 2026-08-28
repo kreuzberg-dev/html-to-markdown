@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.11.6] - 2026-08-28
+
+Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
+still tops out at 3.11.4. Also carries the release-gate fixes below.
+
+### Fixed
+
+- **`<br>` runs emit one hard break each, and none trailing a block.** A run of consecutive `<br>`
+  elements collapsed inconsistently, and a `<br>` immediately before a block boundary added a
+  stray break to the output.
+
+- **`packages/r/src/Makevars` is tracked instead of gitignored.** The file is alef-generated and
+  alef-owned, but `packages/r/.gitignore` discarded it, so `alef verify --exit-code` -- the
+  "Verify binding freshness" step of CI Rust -- failed on every run. `src/Makevars.win` stays
+  ignored.
+
+- **The Dart e2e before hook installs the pinned `flutter_rust_bridge_codegen`.** It hard-coded
+  2.12.0 while the project pinned flutter_rust_bridge 2.13.0, so CI Dart aborted on alef's
+  version-disagreement check. `[crates.dart] frb_version` now declares the pin explicitly next to
+  the hook that has to match it.
+
+### Removed
+
+- Dropped a stray Python `enum_module` from the node and java e2e call overrides; neither emitter
+  reads it.
+
 ## [3.11.5] - 2026-08-25
 
 ### Changed

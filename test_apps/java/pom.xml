@@ -33,7 +33,7 @@
     <dependency>
       <groupId>io.xberg</groupId>
       <artifactId>html-to-markdown</artifactId>
-      <version>3.11.5</version>
+      <version>3.11.6</version>
     </dependency>
 
     <dependency>
