@@ -118,6 +118,7 @@ owned_paths = [
   "packages/java/pom.xml",
   "packages/kotlin-android/LICENSE",
   "packages/kotlin-android/README.md",
+  "packages/kotlin-android/gradle.properties",
   "packages/kotlin-android/gradle/wrapper/gradle-wrapper.properties",
   "packages/kotlin-android/gradlew",
   "packages/kotlin-android/gradlew.bat",

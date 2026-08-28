@@ -1337,6 +1337,19 @@ int32_t htm_conversion_options_infer_dimensions(HTMAlefHandle handle);
 uintptr_t htm_conversion_options_max_depth(HTMAlefHandle handle);
 
 /**
+ * Report whether the `max_depth` field on a `ConversionOptions` is `Some`.
+ *
+ * `htm_conversion_options_max_depth` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_has_max_depth(HTMAlefHandle handle);
+
+/**
  * Get the `exclude_selectors` field from a `ConversionOptions`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
@@ -1410,6 +1423,19 @@ HTMAlefHandle htm_conversion_options_update_list_indent_type(HTMAlefHandle handl
 uintptr_t htm_conversion_options_update_list_indent_width(HTMAlefHandle handle);
 
 /**
+ * Report whether the `list_indent_width` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_list_indent_width` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_list_indent_width(HTMAlefHandle handle);
+
+/**
  * Get the `bullets` field from a `ConversionOptionsUpdate`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
@@ -1435,11 +1461,37 @@ char *htm_conversion_options_update_strong_em_symbol(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_escape_asterisks(HTMAlefHandle handle);
 
 /**
+ * Report whether the `escape_asterisks` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_escape_asterisks` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_escape_asterisks(HTMAlefHandle handle);
+
+/**
  * Get the `escape_underscores` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_escape_underscores(HTMAlefHandle handle);
+
+/**
+ * Report whether the `escape_underscores` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_escape_underscores` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_escape_underscores(HTMAlefHandle handle);
 
 /**
  * Get the `escape_misc` field from a `ConversionOptionsUpdate`.
@@ -1449,11 +1501,37 @@ int32_t htm_conversion_options_update_escape_underscores(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_escape_misc(HTMAlefHandle handle);
 
 /**
+ * Report whether the `escape_misc` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_escape_misc` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_escape_misc(HTMAlefHandle handle);
+
+/**
  * Get the `escape_ascii` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_escape_ascii(HTMAlefHandle handle);
+
+/**
+ * Report whether the `escape_ascii` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_escape_ascii` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_escape_ascii(HTMAlefHandle handle);
 
 /**
  * Get the `code_language` field from a `ConversionOptionsUpdate`.
@@ -1472,11 +1550,37 @@ char *htm_conversion_options_update_code_language(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_autolinks(HTMAlefHandle handle);
 
 /**
+ * Report whether the `autolinks` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_autolinks` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_autolinks(HTMAlefHandle handle);
+
+/**
  * Get the `default_title` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_default_title(HTMAlefHandle handle);
+
+/**
+ * Report whether the `default_title` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_default_title` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_default_title(HTMAlefHandle handle);
 
 /**
  * Get the `br_in_tables` field from a `ConversionOptionsUpdate`.
@@ -1486,11 +1590,37 @@ int32_t htm_conversion_options_update_default_title(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_br_in_tables(HTMAlefHandle handle);
 
 /**
+ * Report whether the `br_in_tables` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_br_in_tables` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_br_in_tables(HTMAlefHandle handle);
+
+/**
  * Get the `compact_tables` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_compact_tables(HTMAlefHandle handle);
+
+/**
+ * Report whether the `compact_tables` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_compact_tables` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_compact_tables(HTMAlefHandle handle);
 
 /**
  * Get the `highlight_style` field from a `ConversionOptionsUpdate`.
@@ -1509,6 +1639,19 @@ HTMAlefHandle htm_conversion_options_update_highlight_style(HTMAlefHandle handle
 int32_t htm_conversion_options_update_extract_metadata(HTMAlefHandle handle);
 
 /**
+ * Report whether the `extract_metadata` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_extract_metadata` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_extract_metadata(HTMAlefHandle handle);
+
+/**
  * Get the `whitespace_mode` field from a `ConversionOptionsUpdate`.
  * A non-null returned handle is owned by the caller.
  * It must be freed with `htm_whitespace_mode_free`.
@@ -1525,11 +1668,37 @@ HTMAlefHandle htm_conversion_options_update_whitespace_mode(HTMAlefHandle handle
 int32_t htm_conversion_options_update_strip_newlines(HTMAlefHandle handle);
 
 /**
+ * Report whether the `strip_newlines` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_strip_newlines` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_strip_newlines(HTMAlefHandle handle);
+
+/**
  * Get the `wrap` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_wrap(HTMAlefHandle handle);
+
+/**
+ * Report whether the `wrap` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_wrap` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_wrap(HTMAlefHandle handle);
 
 /**
  * Get the `wrap_width` field from a `ConversionOptionsUpdate`.
@@ -1539,11 +1708,37 @@ int32_t htm_conversion_options_update_wrap(HTMAlefHandle handle);
 uintptr_t htm_conversion_options_update_wrap_width(HTMAlefHandle handle);
 
 /**
+ * Report whether the `wrap_width` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_wrap_width` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_wrap_width(HTMAlefHandle handle);
+
+/**
  * Get the `convert_as_inline` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_convert_as_inline(HTMAlefHandle handle);
+
+/**
+ * Report whether the `convert_as_inline` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_convert_as_inline` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_convert_as_inline(HTMAlefHandle handle);
 
 /**
  * Get the `sub_symbol` field from a `ConversionOptionsUpdate`.
@@ -1616,6 +1811,19 @@ char *htm_conversion_options_update_encoding(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_debug(HTMAlefHandle handle);
 
 /**
+ * Report whether the `debug` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_debug` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_debug(HTMAlefHandle handle);
+
+/**
  * Get the `strip_tags` field from a `ConversionOptionsUpdate`.
  * A non-null returned pointer is owned by the caller.
  * It must be freed with `htm_free_string`.
@@ -1639,6 +1847,19 @@ char *htm_conversion_options_update_preserve_tags(HTMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_skip_images(HTMAlefHandle handle);
+
+/**
+ * Report whether the `skip_images` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_skip_images` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_skip_images(HTMAlefHandle handle);
 
 /**
  * Get the `url_escape_style` field from a `ConversionOptionsUpdate`.
@@ -1675,11 +1896,37 @@ HTMAlefHandle htm_conversion_options_update_output_format(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_include_document_structure(HTMAlefHandle handle);
 
 /**
+ * Report whether the `include_document_structure` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_include_document_structure` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_include_document_structure(HTMAlefHandle handle);
+
+/**
  * Get the `extract_images` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_extract_images(HTMAlefHandle handle);
+
+/**
+ * Report whether the `extract_images` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_extract_images` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_extract_images(HTMAlefHandle handle);
 
 /**
  * Get the `max_image_size` field from a `ConversionOptionsUpdate`.
@@ -1689,11 +1936,37 @@ int32_t htm_conversion_options_update_extract_images(HTMAlefHandle handle);
 uint64_t htm_conversion_options_update_max_image_size(HTMAlefHandle handle);
 
 /**
+ * Report whether the `max_image_size` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_max_image_size` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_max_image_size(HTMAlefHandle handle);
+
+/**
  * Get the `capture_svg` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_conversion_options_update_capture_svg(HTMAlefHandle handle);
+
+/**
+ * Report whether the `capture_svg` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_capture_svg` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_capture_svg(HTMAlefHandle handle);
 
 /**
  * Get the `infer_dimensions` field from a `ConversionOptionsUpdate`.
@@ -1703,11 +1976,37 @@ int32_t htm_conversion_options_update_capture_svg(HTMAlefHandle handle);
 int32_t htm_conversion_options_update_infer_dimensions(HTMAlefHandle handle);
 
 /**
+ * Report whether the `infer_dimensions` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_infer_dimensions` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_infer_dimensions(HTMAlefHandle handle);
+
+/**
  * Get the `max_depth` field from a `ConversionOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 uintptr_t htm_conversion_options_update_max_depth(HTMAlefHandle handle);
+
+/**
+ * Report whether the `max_depth` field on a `ConversionOptionsUpdate` is `Some`.
+ *
+ * `htm_conversion_options_update_max_depth` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_conversion_options_update_has_max_depth(HTMAlefHandle handle);
 
 /**
  * Get the `exclude_selectors` field from a `ConversionOptionsUpdate`.
@@ -2001,6 +2300,19 @@ HTMAlefHandle htm_document_node_content(HTMAlefHandle handle);
  * Pointer must be a valid handle returned by this library.
  */
 uint32_t htm_document_node_parent(HTMAlefHandle handle);
+
+/**
+ * Report whether the `parent` field on a `DocumentNode` is `Some`.
+ *
+ * `htm_document_node_parent` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_document_node_has_parent(HTMAlefHandle handle);
 
 /**
  * Get the `children` field from a `DocumentNode`.
@@ -2806,6 +3118,19 @@ void htm_preprocessing_options_update_free(HTMAlefHandle handle);
 int32_t htm_preprocessing_options_update_enabled(HTMAlefHandle handle);
 
 /**
+ * Report whether the `enabled` field on a `PreprocessingOptionsUpdate` is `Some`.
+ *
+ * `htm_preprocessing_options_update_enabled` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_preprocessing_options_update_has_enabled(HTMAlefHandle handle);
+
+/**
  * Get the `preset` field from a `PreprocessingOptionsUpdate`.
  * A non-null returned handle is owned by the caller.
  * It must be freed with `htm_preprocessing_preset_free`.
@@ -2822,11 +3147,37 @@ HTMAlefHandle htm_preprocessing_options_update_preset(HTMAlefHandle handle);
 int32_t htm_preprocessing_options_update_remove_navigation(HTMAlefHandle handle);
 
 /**
+ * Report whether the `remove_navigation` field on a `PreprocessingOptionsUpdate` is `Some`.
+ *
+ * `htm_preprocessing_options_update_remove_navigation` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_preprocessing_options_update_has_remove_navigation(HTMAlefHandle handle);
+
+/**
  * Get the `remove_forms` field from a `PreprocessingOptionsUpdate`.
  * # Safety
  * Pointer must be a valid handle returned by this library.
  */
 int32_t htm_preprocessing_options_update_remove_forms(HTMAlefHandle handle);
+
+/**
+ * Report whether the `remove_forms` field on a `PreprocessingOptionsUpdate` is `Some`.
+ *
+ * `htm_preprocessing_options_update_remove_forms` cannot distinguish a `None` field from a
+ * legitimate zero-valued `Some` at the C ABI boundary -- there is no null representation for a
+ * numeric return, so both collapse to the same sentinel. Call this function first: `1` means
+ * the field getter's return value is meaningful, `0` means the field is absent and the getter's
+ * sentinel must be ignored, `-1` reports an invalid handle (see `htm_last_error_code`).
+ * # Safety
+ * Pointer must be a valid handle returned by this library.
+ */
+int32_t htm_preprocessing_options_update_has_remove_forms(HTMAlefHandle handle);
 
 /**
  * Create a `ProcessingWarning` from a JSON string. Returns null on failure.
@@ -3419,13 +3770,16 @@ void htm_heading_style_free(HTMAlefHandle handle);
  */
 void htm_highlight_style_free(HTMAlefHandle handle);
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Free a `ImageType` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
 void htm_image_type_free(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Serialize a `ImageType` to a JSON string. Returns null on failure.
  * # Safety
@@ -3433,7 +3787,9 @@ void htm_image_type_free(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_image_type_to_json(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Render a `ImageType` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
@@ -3443,6 +3799,7 @@ char *htm_image_type_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_image_type_to_string(HTMAlefHandle handle);
+#endif
 
 /**
  * Free a `LinkStyle` handle.
@@ -3451,13 +3808,16 @@ char *htm_image_type_to_string(HTMAlefHandle handle);
  */
 void htm_link_style_free(HTMAlefHandle handle);
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Free a `LinkType` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
 void htm_link_type_free(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Serialize a `LinkType` to a JSON string. Returns null on failure.
  * # Safety
@@ -3465,7 +3825,9 @@ void htm_link_type_free(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_link_type_to_json(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Render a `LinkType` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
@@ -3475,6 +3837,7 @@ char *htm_link_type_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_link_type_to_string(HTMAlefHandle handle);
+#endif
 
 /**
  * Free a `ListIndentType` handle.
@@ -3515,13 +3878,16 @@ char *htm_node_content_to_json(HTMAlefHandle handle);
  */
 char *htm_node_content_to_string(HTMAlefHandle handle);
 
+#if defined(HTM_FEATURE_VISITOR)
 /**
  * Free a `NodeType` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
 void htm_node_type_free(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_VISITOR)
 /**
  * Serialize a `NodeType` to a JSON string. Returns null on failure.
  * # Safety
@@ -3529,7 +3895,9 @@ void htm_node_type_free(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_node_type_to_json(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_VISITOR)
 /**
  * Render a `NodeType` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
@@ -3539,6 +3907,7 @@ char *htm_node_type_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_node_type_to_string(HTMAlefHandle handle);
+#endif
 
 /**
  * Free a `OutputFormat` handle.
@@ -3554,13 +3923,16 @@ void htm_output_format_free(HTMAlefHandle handle);
  */
 void htm_preprocessing_preset_free(HTMAlefHandle handle);
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Free a `StructuredDataType` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
 void htm_structured_data_type_free(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Serialize a `StructuredDataType` to a JSON string. Returns null on failure.
  * # Safety
@@ -3568,7 +3940,9 @@ void htm_structured_data_type_free(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_structured_data_type_to_json(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Render a `StructuredDataType` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
@@ -3578,14 +3952,18 @@ char *htm_structured_data_type_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_structured_data_type_to_string(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Free a `TextDirection` handle.
  * # Safety
  * Handle must have been returned by this library, or be zero.
  */
 void htm_text_direction_free(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Serialize a `TextDirection` to a JSON string. Returns null on failure.
  * # Safety
@@ -3593,7 +3971,9 @@ void htm_text_direction_free(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_text_direction_to_json(HTMAlefHandle handle);
+#endif
 
+#if defined(HTM_FEATURE_METADATA)
 /**
  * Render a `TextDirection` as its string representation
  * (the unit-variant name as serialized by serde — e.g. `"completed"`,
@@ -3603,6 +3983,7 @@ char *htm_text_direction_to_json(HTMAlefHandle handle);
  * The returned string must be freed with `htm_free_string`.
  */
 char *htm_text_direction_to_string(HTMAlefHandle handle);
+#endif
 
 /**
  * Free a `TierStrategy` handle.

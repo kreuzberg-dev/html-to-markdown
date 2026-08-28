@@ -190,6 +190,7 @@ fn wire__crate__create_conversion_result_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_document_metadata_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -302,6 +303,7 @@ fn wire__crate__create_grid_cell_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_header_metadata_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -330,6 +332,7 @@ fn wire__crate__create_header_metadata_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_html_metadata_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -593,6 +596,7 @@ fn wire__crate__create_image_dimensions_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_image_metadata_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -621,6 +625,7 @@ fn wire__crate__create_image_metadata_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_link_metadata_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -677,6 +682,7 @@ fn wire__crate__create_metadata_entry_from_json_impl(
         },
     )
 }
+#[cfg(feature = "visitor")]
 fn wire__crate__create_node_context_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -789,6 +795,7 @@ fn wire__crate__create_processing_warning_from_json_impl(
         },
     )
 }
+#[cfg(feature = "metadata")]
 fn wire__crate__create_structured_data_from_json_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -3323,21 +3330,28 @@ fn pde_ffi_dispatcher_primary_impl(
         3 => wire__crate__create_conversion_options_from_json_with_visitor_impl(port, ptr, rust_vec_len, data_len),
         4 => wire__crate__create_conversion_options_update_from_json_impl(port, ptr, rust_vec_len, data_len),
         5 => wire__crate__create_conversion_result_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         6 => wire__crate__create_document_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
         7 => wire__crate__create_document_node_from_json_impl(port, ptr, rust_vec_len, data_len),
         8 => wire__crate__create_document_structure_from_json_impl(port, ptr, rust_vec_len, data_len),
         9 => wire__crate__create_grid_cell_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         10 => wire__crate__create_header_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         11 => wire__crate__create_html_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
         12 => wire__crate__create_html_visitor_impl(port, ptr, rust_vec_len, data_len),
         13 => wire__crate__create_image_dimensions_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         14 => wire__crate__create_image_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         15 => wire__crate__create_link_metadata_from_json_impl(port, ptr, rust_vec_len, data_len),
         16 => wire__crate__create_metadata_entry_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "visitor")]
         17 => wire__crate__create_node_context_from_json_impl(port, ptr, rust_vec_len, data_len),
         18 => wire__crate__create_preprocessing_options_from_json_impl(port, ptr, rust_vec_len, data_len),
         19 => wire__crate__create_preprocessing_options_update_from_json_impl(port, ptr, rust_vec_len, data_len),
         20 => wire__crate__create_processing_warning_from_json_impl(port, ptr, rust_vec_len, data_len),
+        #[cfg(feature = "metadata")]
         21 => wire__crate__create_structured_data_from_json_impl(port, ptr, rust_vec_len, data_len),
         22 => wire__crate__create_table_data_from_json_impl(port, ptr, rust_vec_len, data_len),
         23 => wire__crate__create_table_grid_from_json_impl(port, ptr, rust_vec_len, data_len),

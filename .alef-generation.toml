@@ -1,0 +1,14 @@
+# alef generation-inputs record -- COMMIT THIS FILE, do not add it to .gitignore.
+#
+# Records, per crate, the generation-inputs fingerprint (Rust sources + alef.toml -- see
+# `core::hash::compute_inputs_hash`) as of that crate's most recent successful `alef
+# generate`/`alef all` run. `alef verify` recomputes the current fingerprint and compares it
+# to the value recorded here to detect a stale tree -- inputs changed since the last
+# generation -- without folding that fingerprint into every generated file's own
+# `alef:hash:` stamp, which used to restamp every file on any unrelated config or source
+# change (see `core::hash`'s module doc for the incident this record replaces).
+#
+# Do not hand-edit; it is rewritten by `alef generate`/`alef all` on every successful run.
+
+[crates]
+html-to-markdown-rs = "1c89f1c6ac84b70d839f61833aa5c7aa54dccc154e0da90f0d29e4bbb4db57b5"

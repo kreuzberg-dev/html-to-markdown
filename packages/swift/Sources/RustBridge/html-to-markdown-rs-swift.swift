@@ -4428,6 +4428,3 @@ extension HtmlVisitorBox: Vectorizable {
 func __swift_bridge__SwiftHtmlVisitorBox__free (ptr: UnsafeMutableRawPointer) {
     let _ = Unmanaged<SwiftHtmlVisitorBox>.fromOpaque(ptr).takeRetainedValue()
 }
-
-
-
