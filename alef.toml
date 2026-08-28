@@ -918,7 +918,6 @@ urlEscapeStyle = "UrlEscapeStyle"
 module = "@xberg-io/html-to-markdown"
 function = "convert"
 options_type = "ConversionOptions"
-enum_module = "html_to_markdown._html_to_markdown"
 
 [crates.e2e.call.overrides.node.enum_fields]
 headingStyle = "HeadingStyle"
@@ -943,7 +942,6 @@ options_ptr = true
 class = "io.xberg.htmltomarkdown.HtmlToMarkdownRs"
 function = "convert"
 options_type = "ConversionOptions"
-enum_module = "html_to_markdown._html_to_markdown"
 nested_types_optional = false
 
 [crates.e2e.call.overrides.java.enum_fields]
