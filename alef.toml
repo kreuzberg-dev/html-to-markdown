@@ -573,6 +573,7 @@ features = ["full", "testkit"]
 pubspec_name = "h2m"
 lib_name = "h2m"
 style = "frb"
+frb_version = "2.13.0"
 features = ["full", "testkit"]
 
 [crates.wasm]
@@ -768,7 +769,7 @@ e2e = "cd e2e/swift_e2e && swift test"
 
 [crates.test.dart]
 precondition = "command -v dart >/dev/null 2>&1"
-before = "{ command -v flutter_rust_bridge_codegen >/dev/null 2>&1 || cargo install flutter_rust_bridge_codegen --version 2.12.0; } && cd packages/dart && dart pub get && cd rust && flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml && cd ../../.. && cargo build --release --locked -p html-to-markdown-rs-dart"
+before = "{ command -v flutter_rust_bridge_codegen >/dev/null 2>&1 || cargo install flutter_rust_bridge_codegen --version 2.13.0; } && cd packages/dart && dart pub get && cd rust && flutter_rust_bridge_codegen generate --config-file flutter_rust_bridge.yaml && cd ../../.. && cargo build --release --locked -p html-to-markdown-rs-dart"
 e2e = "cd e2e/dart && DYLD_FALLBACK_LIBRARY_PATH=$PWD/../../target/release LD_LIBRARY_PATH=$PWD/../../target/release FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=$PWD/../../target/release dart pub get && DYLD_FALLBACK_LIBRARY_PATH=$PWD/../../target/release LD_LIBRARY_PATH=$PWD/../../target/release FRB_DART_LOAD_EXTERNAL_LIBRARY_NATIVE_LIB_DIR=$PWD/../../target/release dart test"
 
 [crates.test.zig]
