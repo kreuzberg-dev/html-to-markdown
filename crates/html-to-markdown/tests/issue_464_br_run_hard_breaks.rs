@@ -10,7 +10,7 @@
 //!   precedes this `<br>` on the current line" — so the second and later `<br>` in a run
 //!   silently no-opped instead of emitting their own marker.
 //! - A trailing run of `<br>` at the end of a block left literal, visible backslash
-//!   characters behind. CommonMark's hard-break syntax has no effect at the end of a
+//!   characters behind. `CommonMark`'s hard-break syntax has no effect at the end of a
 //!   block (<https://spec.commonmark.org/spec#hard-line-breaks>), but unlike the
 //!   two-space style's leftover marker (invisible trailing whitespace), a leftover `\`
 //!   is not whitespace, so later normalization passes could not clean it up.

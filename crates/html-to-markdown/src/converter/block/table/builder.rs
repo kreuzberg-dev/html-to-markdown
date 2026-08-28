@@ -82,7 +82,7 @@ pub fn table_total_columns(
 /// ~keep two-pass path. The metadata collector does not affect emitted bytes, so reuse stays on
 /// ~keep for it — its entries stop being recorded twice per table cell, which is the double
 /// ~keep walk's bug, not a behaviour worth preserving.
-fn cell_text_reuse_allowed(ctx: &super::super::super::Context, table_scan: &TableScan) -> bool {
+const fn cell_text_reuse_allowed(ctx: &super::super::super::Context, table_scan: &TableScan) -> bool {
     if table_scan.nested_table_count > 0 {
         return false;
     }
