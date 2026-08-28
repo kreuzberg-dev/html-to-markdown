@@ -8,5 +8,4 @@ src/rust/.cargo/
 src/rust/target/
 src/rust/vendor/
 src/rust/vendor.tar.xz
-src/Makevars
 src/Makevars.win
