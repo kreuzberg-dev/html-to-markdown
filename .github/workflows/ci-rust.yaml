@@ -105,10 +105,12 @@ jobs:
       - name: Install alef
         uses: xberg-io/actions/install-alef@v1
 
-      # ~keep `alef verify` prints "Stale bindings detected" but exits 0 without --exit-code,
-      # so no workflow noticed the 371 generated files that had drifted from alef.toml.
+      # ~keep Enforcement is the DEFAULT: `alef verify` returns a failure status on drift, and
+      # `--report-only` is the opt-out — never add it here. The `--exit-code` flag this step
+      # used to pass is a hidden deprecated no-op as of alef 0.76.0 (absent from `verify --help`),
+      # so it was removed rather than left implying it is what makes the gate strict.
       - name: Verify binding freshness
-        run: alef verify --exit-code
+        run: alef verify
 
   rust-tests:
     name: "Test: Rust (${{ matrix.os }})"
