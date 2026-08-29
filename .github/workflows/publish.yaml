@@ -49,11 +49,14 @@ jobs:
     name: Prepare metadata
     # This workflow publishes the release object itself, which re-enters it through
     # `on: release` and queues a full duplicate publish run behind the dispatch run that
-    # created it. Keyed on triggering_actor, not release.author: the bot creates the release
-    # as a draft, so a human publishing that draft must still publish. ~keep
+    # created it. Keyed on `actor`, not `release.author` and not `triggering_actor`:
+    # release.author is always the bot because the bot creates the release as a draft, so it
+    # would suppress a human publishing that draft. triggering_actor becomes the human on a
+    # re-run, so it would ADMIT a duplicate when someone re-runs the bot's own recursive run.
+    # `actor` is pinned to whoever initiated the original run and survives re-runs. ~keep
     if: >-
       github.event_name != 'release' ||
-      github.triggering_actor != 'xberg-dev-publisher[bot]'
+      github.actor != 'xberg-dev-publisher[bot]'
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
