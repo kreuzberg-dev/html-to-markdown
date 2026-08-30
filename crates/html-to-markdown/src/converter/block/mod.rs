@@ -1,4 +1,3 @@
-pub mod blockquote;
 pub mod container;
 pub mod div;
 pub mod heading;
