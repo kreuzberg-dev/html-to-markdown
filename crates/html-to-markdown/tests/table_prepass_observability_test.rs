@@ -21,6 +21,10 @@ use html_to_markdown_rs::{ConversionOptions, ConversionResult, DocumentNode, Lin
 const BLANK_TABLE_WITH_NESTED_BLANK_TABLE_HTML: &str =
     "<table><tr><td><table><tr><td></td></tr></table></td></tr></table>";
 
+// ~keep Only the `visitor`-gated module below consumes this, so every build without that
+// ~keep feature -- including the default one -- warned it dead. Gate the allow rather than
+// ~keep the constant, so the warning comes back if the last real user goes away.
+#[cfg_attr(not(feature = "visitor"), allow(dead_code))]
 const SINGLE_CELL_IMAGE_HTML: &str = r#"<table><tr><td><img src="photo.png" alt="a photo"></td></tr></table>"#;
 
 fn options_with_metadata() -> ConversionOptions {
