@@ -23,12 +23,12 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # ~keep v6
 
       - name: Setup Rust
-        uses: xberg-io/actions/setup-rust@afc3c7ca41a92dec3ea4d37a5b32d48614e87f21 # ~keep v1
+        uses: xberg-io/actions/setup-rust@fc21dc868b7ec7f2b29a75c16312a818f7feb6f6 # ~keep v1
         with:
           cache-key-prefix: benchmark-calibration
 
       - name: Install Task
-        uses: xberg-io/actions/install-task@afc3c7ca41a92dec3ea4d37a5b32d48614e87f21 # ~keep v1
+        uses: xberg-io/actions/install-task@fc21dc868b7ec7f2b29a75c16312a818f7feb6f6 # ~keep v1
 
       - name: Collect calibration captures
         run: task bench:calibration:collect
