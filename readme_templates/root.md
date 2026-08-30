@@ -216,6 +216,13 @@ cargo binstall html-to-markdown-cli
 brew install xberg-io/tap/html-to-markdown
 ```
 
+Windows users can install the same binary through [Scoop](https://scoop.sh):
+
+```powershell
+scoop bucket add xberg https://github.com/xberg-io/scoop-bucket
+scoop install html-to-markdown
+```
+
 See [CLI usage](https://docs.html-to-markdown.xberg.io) for full documentation.
 
 </details>

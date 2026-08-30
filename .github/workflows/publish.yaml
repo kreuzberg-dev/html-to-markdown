@@ -78,6 +78,7 @@ jobs:
       release_cli: ${{ steps.meta.outputs.release_cli }}
       release_crates: ${{ steps.meta.outputs.release_crates }}
       release_homebrew: ${{ steps.meta.outputs.release_homebrew }}
+      release_scoop: ${{ steps.meta.outputs.release_scoop }}
       release_java: ${{ steps.meta.outputs.release_java }}
       release_csharp: ${{ steps.meta.outputs.release_csharp }}
       release_go: ${{ steps.meta.outputs.release_go }}
@@ -2517,6 +2518,85 @@ jobs:
           echo "::error::could not push to the tap after 5 attempts"
           exit 1
 
+  # The Windows counterpart of publish-homebrew-formula. There is deliberately no
+  # `check-scoop` idempotency gate: the render step rewrites the manifest in place and
+  # the commit below is guarded by `git diff --quiet bucket/`, so re-running a release
+  # is already a no-op. ~keep
+  publish-scoop-manifest:
+    name: Update Scoop manifest
+    needs: [prepare, upload-cli-release]
+    if: ${{ needs.prepare.outputs.release_scoop == 'true' && needs.upload-cli-release.result == 'success' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        id: bucket-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          owner: xberg-io
+          repositories: scoop-bucket
+
+      - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+        id: source-token
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_APP_PRIVATE_KEY }}
+          owner: xberg-io
+
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ needs.prepare.outputs.checkout_ref }}
+
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: xberg-io/scoop-bucket
+          token: ${{ steps.bucket-token.outputs.token }}
+          path: scoop-bucket
+          persist-credentials: true
+
+      - uses: xberg-io/actions/publish-scoop-manifests@v1
+        with:
+          bucket-dir: ${{ github.workspace }}/scoop-bucket
+          config-file: scripts/publish/scoop.json
+          tag: ${{ needs.prepare.outputs.tag }}
+          version: ${{ needs.prepare.outputs.version }}
+          github-repo: ${{ github.repository }}
+          dry-run: ${{ needs.prepare.outputs.dry_run }}
+          token: ${{ steps.source-token.outputs.token }}
+
+      - name: Commit and push to bucket
+        working-directory: scoop-bucket
+        env:
+          GH_TOKEN: ${{ steps.bucket-token.outputs.token }}
+        run: |
+          git config user.name "xberg-dev-publisher[bot]"
+          git config user.email "291994444+xberg-dev-publisher[bot]@users.noreply.github.com"
+          if git diff --quiet bucket/; then
+            echo "No manifest changes; skipping commit."
+            exit 0
+          fi
+          git add bucket/html-to-markdown.json
+          git commit -m "html-to-markdown ${{ needs.prepare.outputs.version }}"
+          # Six release pipelines push to this one bucket, so a concurrent release can land
+          # between our checkout and our push and reject it as non-fast-forward. Each repo
+          # touches only its own manifest, so rebasing onto the new tip and retrying is safe --
+          # there is nothing for two releases to genuinely conflict over. ~keep
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD; then
+              exit 0
+            fi
+            echo "push rejected (attempt $attempt); rebasing onto the current bucket tip"
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "::error::bucket rebase hit a real conflict; refusing to force the push"
+              exit 1
+            fi
+            sleep $((attempt * 3))
+          done
+          echo "::error::could not push to the bucket after 5 attempts"
+          exit 1
+
   homebrew-bottles:
     name: Build Homebrew bottle (${{ matrix.bottle_tag }})
     needs: [prepare, publish-homebrew-formula, promote-release]
@@ -2884,6 +2964,7 @@ jobs:
       - publish-nuget
       - publish-hex
       - publish-homebrew-bottles
+      - publish-scoop-manifest
       - publish-kotlin-android
       - trigger-pubdev
       - publish-zig
@@ -2934,6 +3015,7 @@ jobs:
       - publish-nuget
       - publish-hex
       - publish-homebrew-bottles
+      - publish-scoop-manifest
       - publish-kotlin-android
       - trigger-pubdev
       - publish-zig
@@ -3103,6 +3185,7 @@ jobs:
       - verify-assets
       - verify-binstall
       - publish-homebrew-bottles
+      - publish-scoop-manifest
       - publish-packagist
       - publish-crates
       - publish-pypi
@@ -3203,6 +3286,7 @@ jobs:
           RESULT_TRIGGER_PUBDEV: ${{ needs.trigger-pubdev.result }}
           RESULT_PUBLISH_ZIG: ${{ needs.publish-zig.result }}
           RESULT_PUBLISH_HOMEBREW: ${{ needs.publish-homebrew-bottles.result }}
+          RESULT_PUBLISH_SCOOP: ${{ needs.publish-scoop-manifest.result }}
           RESULT_UPLOAD_CLI: ${{ needs.upload-cli-release.result }}
           RESULT_VERIFY_BINSTALL: ${{ needs.verify-binstall.result }}
           RESULT_UPLOAD_GO: ${{ needs.upload-go-release.result }}
@@ -3222,6 +3306,7 @@ jobs:
           RELEASE_DART: ${{ needs.prepare.outputs.release_dart }}
           RELEASE_ZIG: ${{ needs.prepare.outputs.release_zig }}
           RELEASE_HOMEBREW: ${{ needs.prepare.outputs.release_homebrew }}
+          RELEASE_SCOOP: ${{ needs.prepare.outputs.release_scoop }}
           RELEASE_CLI: ${{ needs.prepare.outputs.release_cli }}
           RELEASE_GO: ${{ needs.prepare.outputs.release_go }}
           RELEASE_C_FFI: ${{ needs.prepare.outputs.release_c_ffi }}
@@ -3304,6 +3389,7 @@ jobs:
           require_publish "pub.dev" "${RESULT_TRIGGER_PUBDEV}" "${RELEASE_DART}" "${EXISTS_PUB}"
           require_publish "zig" "${RESULT_PUBLISH_ZIG}" "${RELEASE_ZIG}" "${EXISTS_ZIG}"
           require_publish "homebrew" "${RESULT_PUBLISH_HOMEBREW}" "${RELEASE_HOMEBREW}" "${EXISTS_HOMEBREW}"
+          require_publish "scoop" "${RESULT_PUBLISH_SCOOP}" "${RELEASE_SCOOP}"
 
           # Release assets consumers resolve at install time.
           require_publish "cli-binaries" "${RESULT_UPLOAD_CLI}" "${RELEASE_CLI}" "${EXISTS_CLI}"

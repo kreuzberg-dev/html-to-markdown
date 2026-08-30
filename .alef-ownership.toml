@@ -25,6 +25,7 @@ owned_paths = [
   ".github/skills/api/SKILL.md",
   ".github/skills/cli/SKILL.md",
   ".github/skills/mcp/SKILL.md",
+  "README.md",
   "composer.json",
   "config.m4",
   "crates/html-to-markdown-ffi/README.md",

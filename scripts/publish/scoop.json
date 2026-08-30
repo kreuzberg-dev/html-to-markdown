@@ -1,0 +1,11 @@
+{
+  "manifests": [
+    {
+      "name": "html-to-markdown",
+      "template": "scripts/publish/html-to-markdown.json.tmpl",
+      "assets": {
+        "win_x64_sha": "cli-x86_64-pc-windows-msvc.zip"
+      }
+    }
+  ]
+}
