@@ -196,10 +196,17 @@ fn deeply_nested_tables_do_not_overflow_stack() {
     // ~keep pre-existing O(n^2) cost unrelated to this depth-reset fix), so a much larger depth
     // ~keep here would make this test impractically slow without adding overflow coverage.
     const NESTING_DEPTH: usize = 2_000;
-    // ~keep MSVC coverage builds need more stack per bounded table-render frame than Unix
-    // ~keep builds. One MiB still remains far below what the unfixed 2,000-frame recursion
-    // ~keep would require, so the regression continues to catch the original depth reset.
-    const TEST_STACK_SIZE: usize = if cfg!(windows) { 1024 * 1024 } else { 256 * 1024 };
+    // ~keep One MiB unconditionally. The budget has to clear the cost of the BOUNDED
+    // ~keep recursion the depth guard allows (64 frames) in the heaviest build, not just the
+    // ~keep default one: enabling any non-default feature -- `visitor` and `inline-images`
+    // ~keep were each enough on their own -- adds locals to `walk_node`'s frame, and a debug
+    // ~keep `--all-features` build needed just over 256 KiB, so the previous Unix budget
+    // ~keep aborted the whole test binary with a stack overflow. It was also already
+    // ~keep per-platform for the same underlying reason (MSVC frames are larger), so a
+    // ~keep single figure with headroom replaces a `cfg!` that only tracked one cause of it.
+    // ~keep One MiB stays an order of magnitude below what the unfixed 2,000-frame recursion
+    // ~keep would require, so the regression this test exists for still fires.
+    const TEST_STACK_SIZE: usize = 1024 * 1024;
 
     let _guard = test_lock();
 
