@@ -2525,7 +2525,7 @@ jobs:
   publish-scoop-manifest:
     name: Update Scoop manifest
     needs: [prepare, upload-cli-release]
-    if: ${{ needs.prepare.outputs.release_scoop == 'true' && needs.upload-cli-release.result == 'success' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' }}
+    if: ${{ needs.prepare.outputs.release_scoop == 'true' && needs.upload-cli-release.result == 'success' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2565,6 +2565,7 @@ jobs:
           token: ${{ steps.source-token.outputs.token }}
 
       - name: Commit and push to bucket
+        if: ${{ needs.prepare.outputs.dry_run != 'true' }}
         working-directory: scoop-bucket
         env:
           GH_TOKEN: ${{ steps.bucket-token.outputs.token }}
