@@ -1191,19 +1191,31 @@ fn open_paragraph(state: &mut Tier1State) {
     // ~keep with "\n\n", push "\n\n" (may produce three newlines total when
     // ~keep output ends with a single "\n", e.g. right after a table row or
     // ~keep an `<hr>`).
-    let dest = state.cell_or_output_mut();
     // ~keep Phase EE: when the paragraph is the first child of a list-item
     // ~keep (output ends with a freshly-emitted bullet like `- ` or `1. `),
     // ~keep the paragraph content joins the bullet inline.  Tier-2's
-    // ~keep paragraph.rs achieves this by checking the parent and skipping
-    // ~keep the leading `\n\n` for the first block child.  Check BEFORE
-    // ~keep `trim_trailing_horizontal`, which would strip the trailing
-    // ~keep space from the bullet.
-    if dest.ends_with("- ") || dest.ends_with("* ") || dest.ends_with("+ ") || ends_with_ordered_marker(dest) {
-        return;
+    // ~keep paragraph.rs (`is_list_continuation`) only applies this special case
+    // ~keep when `ctx.in_list_item` is true -- gate on the same condition here.
+    // ~keep Without it, ordinary top-level text that happens to end in "- "/"* "/
+    // ~keep "+ "/"N. " (a real bullet-looking suffix, OR the `<strong>`/`<em>`
+    // ~keep ambiguity `line_is_bare_list_marker` exists to rule out) wrongly
+    // ~keep skipped the "\n\n" separator before a following `<p>` and glued the
+    // ~keep two blocks onto a single line, even with no list anywhere in sight.
+    // ~keep Check BEFORE `trim_trailing_horizontal`, which would strip the
+    // ~keep trailing space from the bullet.
+    let in_list_item = state
+        .stack
+        .iter()
+        .any(|frame| matches!(frame.spec.kind, TagKind::ListItem));
+    if in_list_item {
+        let dest = state.cell_or_output_mut();
+        if dest.ends_with("- ") || dest.ends_with("* ") || dest.ends_with("+ ") || ends_with_ordered_marker(dest) {
+            return;
+        }
     }
     // ~keep Drop trailing horizontal whitespace from inter-tag preservation
     // ~keep (Phase U-2) before the block separator.
+    let dest = state.cell_or_output_mut();
     crate::converter::tier1::state::trim_trailing_horizontal(dest);
     if !dest.is_empty() && !dest.ends_with("\n\n") {
         dest.push_str("\n\n");
@@ -2500,11 +2512,12 @@ fn push_list_item_continuation_lines(state: &mut Tier1State, rendered: &str) {
         state.output.push_str(rendered);
         return;
     }
-    let is_continuation = !state.output.is_empty()
-        && !state.output.ends_with("- ")
-        && !state.output.ends_with("* ")
-        && !state.output.ends_with("+ ")
-        && !ends_with_ordered_marker(&state.output);
+    // ~keep A plain suffix check like `ends_with("* ")` also matches the closing
+    // ~keep "**"/"*" of `<strong>`/`<em>` immediately followed by a migrated trailing
+    // ~keep space, indistinguishable from a real bare bullet by suffix alone. Reuse
+    // ~keep `line_is_bare_list_marker` (this file, mirrors Tier-2's
+    // ~keep `list::utils::line_is_bare_list_marker`) instead of repeating that ambiguity.
+    let is_continuation = !state.output.is_empty() && !line_is_bare_list_marker(&state.output);
     let indent: String = std::iter::repeat_n(' ', indent_width).collect();
     for (index, segment) in rendered.split_inclusive('\n').enumerate() {
         let line = segment.strip_suffix('\n').unwrap_or(segment);

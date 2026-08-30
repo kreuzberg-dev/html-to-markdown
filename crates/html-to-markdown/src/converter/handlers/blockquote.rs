@@ -143,11 +143,19 @@ pub fn handle_blockquote(
         // ~keep instead sits right after the marker, which already provides that column
         // ~keep (see `block/paragraph.rs::add_list_continuation_indent` for the identical
         // ~keep first-line distinction, applied there to paragraphs only).
+        // ~keep A plain suffix check like `output.ends_with("* ")` also matches the closing
+        // ~keep "**"/"*" of `<strong>`/`<em>` immediately followed by a migrated trailing
+        // ~keep space (e.g. `<strong>bold</strong> <blockquote>` leaves output ending in
+        // ~keep "**bold** "), which is indistinguishable from a real bare bullet by suffix
+        // ~keep alone. That false positive misclassified this blockquote as sitting right
+        // ~keep after the marker (skipping the continuation indent) when real inline
+        // ~keep content actually preceded it, leaving the quoted line unindented and
+        // ~keep dropping it (and the rest of the list) out of the item on reparse. See
+        // ~keep `list::utils::line_is_bare_list_marker`'s doc comment for the full
+        // ~keep rationale; it decomposes the WHOLE line instead of checking a fixed suffix.
         let is_list_continuation = list_indent.is_some()
             && !output.is_empty()
-            && !output.ends_with("* ")
-            && !output.ends_with("- ")
-            && !output.ends_with(". ");
+            && !crate::converter::list::utils::line_is_bare_list_marker(output);
 
         if ctx.blockquote_depth > 0 {
             if !output.is_empty() {

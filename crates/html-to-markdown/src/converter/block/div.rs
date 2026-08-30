@@ -59,11 +59,17 @@ pub fn handle(
     let is_table_continuation =
         ctx.in_table_cell && !output.is_empty() && !output.ends_with('|') && !output.ends_with("<br>");
 
-    let is_list_continuation = ctx.in_list_item
-        && !output.is_empty()
-        && !output.ends_with("* ")
-        && !output.ends_with("- ")
-        && !output.ends_with(". ");
+    // ~keep A plain suffix check like `output.ends_with("* ")` also matches the closing
+    // ~keep "**"/"*" of `<strong>`/`<em>` immediately followed by a migrated trailing
+    // ~keep space, indistinguishable from a real bare bullet by suffix alone -- and,
+    // ~keep being hardcoded to `-`/`*`, never matched the third bullet `+` at all. The
+    // ~keep false positive misclassified this div as sitting right after the marker,
+    // ~keep which skips BOTH branches below (neither `is_list_continuation` nor
+    // ~keep `needs_leading_sep` fires), so the div's content got glued directly onto the
+    // ~keep preceding inline text with no separator at all. See
+    // ~keep `list::utils::line_is_bare_list_marker`'s doc comment for the full rationale.
+    let is_list_continuation =
+        ctx.in_list_item && !output.is_empty() && !crate::converter::list::utils::line_is_bare_list_marker(output);
 
     let needs_leading_sep = !ctx.in_table_cell
         && !ctx.in_list_item

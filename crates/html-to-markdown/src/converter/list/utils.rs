@@ -372,7 +372,13 @@ fn strip_leading_bare_marker(text: &str) -> Option<&str> {
 /// ~keep also naturally handles several single-child lists nested directly inside each
 /// ~keep other, whose bare markers stack on one physical line with nothing else between
 /// ~keep them (CommonMark spec example 299: `"1. - 2. foo"`).
-fn line_is_bare_list_marker(output: &str) -> bool {
+///
+/// ~keep `pub` (not `pub(crate)`, which clippy's `redundant_pub_crate` flags here since
+/// ~keep `list::utils` is itself only `pub` within the crate): the same ambiguity affects
+/// ~keep the "is this block the item's first content, or a continuation?" decision in
+/// ~keep `handlers/blockquote.rs`, `handlers/code_block.rs`, and `block/div.rs`, which now
+/// ~keep reuse this instead of repeating a hardcoded, `+`-missing, two-byte suffix check.
+pub fn line_is_bare_list_marker(output: &str) -> bool {
     let line_start = output.rfind('\n').map_or(0, |pos| pos + 1);
     let mut rest = output[line_start..].trim_start_matches([' ', '\t']);
     if rest.is_empty() {

@@ -511,11 +511,17 @@ fn format_code_block_in_list_item(
     };
     format_code_block(content, language, &mut rendered, options, &plain_ctx);
 
+    // ~keep A plain suffix check like `output.ends_with("* ")` also matches the closing
+    // ~keep "**"/"*" of `<strong>`/`<em>` immediately followed by a migrated trailing
+    // ~keep space, indistinguishable from a real bare bullet by suffix alone -- and, being
+    // ~keep hardcoded to `-`/`*`, never matched the third bullet `+` at all. Both false
+    // ~keep positive (fake marker) and false negative (real `+ ` marker) misclassified
+    // ~keep this fenced block relative to the marker, either gluing the opening fence onto
+    // ~keep the previous inline line (breaking the fence syntax) or doubly indenting the
+    // ~keep first line. See `list::utils::line_is_bare_list_marker`'s doc comment.
     let is_continuation = !ctx.convert_as_inline
         && !output.is_empty()
-        && !output.ends_with("* ")
-        && !output.ends_with("- ")
-        && !output.ends_with(". ");
+        && !crate::converter::list::utils::line_is_bare_list_marker(output);
 
     if is_continuation {
         crate::converter::trim_trailing_whitespace(output);
