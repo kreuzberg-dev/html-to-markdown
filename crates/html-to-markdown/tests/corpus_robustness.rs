@@ -1,5 +1,6 @@
 // ~keep The inner attribute below is a crate-level Rust attribute, not a shell shebang.
 #![allow(missing_docs)]
+#![allow(clippy::print_stdout, clippy::print_stderr, clippy::dbg_macro)] // ~keep: tests print by design
 
 //! Robustness oracle: conversion must not panic, hang, or blow up in size.
 //!
