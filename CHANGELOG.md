@@ -89,6 +89,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `newline_style="spaces"` output is unchanged -- its leftover marker is invisible trailing
   whitespace.
 
+- **Four cases where the Tier-1 fast scanner produced different Markdown than the Tier-2
+  converter for the same input.** The library picks a tier automatically, so a divergence means
+  the same document could convert two ways depending on which path it qualified for. Tier-2 is
+  authoritative and was correct in all four.
+
+  A custom element (any unknown tag containing `-`) was treated as block-level, so one appearing
+  inline in flowing text split the surrounding paragraph, list item or blockquote and could leave
+  an orphaned bullet or emphasis marker behind. Unknown elements are inline by default in HTML --
+  there is no block-level custom element absent a CSS rule this converter does not apply -- so
+  they now pass through inline, as the DOM walker always did.
+
+  Named character references outside Tier-1's hot subset (`&notin;`, `&there4;`, `&sup1;`,
+  `&para;`, `&trade;`) passed through as literal text instead of decoding. Tier-1 now falls back
+  to the same full WHATWG named-reference table Tier-2 decodes against, rather than a hand-picked
+  subset.
+
+  `<strong><strong>x</strong></strong>` emitted `****x****`, which `CommonMark` does not parse as
+  strong emphasis at all; redundant same-type nesting now collapses to one marker pair. A
+  trailing whitespace run before a closing inline marker -- most often a decoded `&nbsp;` --
+  stayed inside the markers instead of moving outside them.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
