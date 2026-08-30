@@ -78,33 +78,29 @@ fn escaping_options() -> ConversionOptions {
 
 /// Floor for examples that must reach a fixpoint with escaping enabled.
 ///
-/// ~keep A ratchet set to the measured value: 609 of 652 with escaping on, against 597 with
-/// ~keep the defaults. Fixed since the previous 607 floor: an `<a>`/`<img>` with no visible
-/// ~keep text falls back to its href as the label (`handlers/link.rs`); that fallback bypassed
-/// ~keep the normal text escaper entirely, so a raw `*`/`_` in the href round-tripped into real
-/// ~keep emphasis (476, 477). A related destination-escaping gap (`inline/link.rs`,
-/// ~keep `append_url_destination`) was also closed -- a literal backslash preceding the paren
-/// ~keep escaping in an unbalanced-parens destination was not itself escaped, and a raw line
-/// ~keep ending inside an angle-bracket-wrapped destination is not valid `CommonMark` at all --
-/// ~keep but every example that exercised it (21, 631, 642, 643) also happens to trip comrak's
-/// ~keep link-destination percent-encoding on the very next byte, so it stays unstable for that
-/// ~keep separate reason and the fix does not move this floor; it is still a real, verified
-/// ~keep content-preservation fix (see the PR/commit description for the byte-level evidence).
-/// ~keep A wider fix was investigated and deliberately not applied: the same leading-space
-/// ~keep instability affecting most of the remaining HTML-blocks failures traces to
-/// ~keep `text_node.rs`'s whitespace-collapsing (`skip_prefix`/the whitespace-only branch)
-/// ~keep having no way to tell "start of the real document/block output" apart from "start of
-/// ~keep a handler's private scratch buffer" (`emphasis.rs`, `typography.rs`'s sub/sup, and
-/// ~keep every other inline wrapper build their content into a fresh local `String` before
-/// ~keep splicing it into non-empty output) -- an `output.is_empty()` guard there fixed 16 of
-/// ~keep the 45 (entity refs 25/40, fenced code 138, HTML blocks 150/151/155/161/163-166/171/173/
-/// ~keep 184/186/189) but broke `test_subscript_leading_whitespace` / `test_superscript_leading_whitespace`
-/// ~keep in `integration_test.rs` (and, per the same mechanism, silently changed output for
-/// ~keep every inline wrapper whose first child starts with whitespace). It needs a real
-/// ~keep "am I at document start" signal threaded through every scratch-buffer call site, not
-/// ~keep a one-line guard -- left for follow-up. Raise this number as more are fixed; a drop is
-/// ~keep a regression.
-const MIN_STABLE_ESCAPED: usize = 609;
+/// ~keep A ratchet set to the measured value: 642 of 652 with escaping on, against 628 with
+/// ~keep the shipped defaults. Raise it as more are fixed; a drop is a regression.
+///
+/// ~keep The 10 that remain fall into three groups.
+///
+/// ~keep Inherent to the round trip (252, 301, 302): two adjacent block quotes, or two
+/// ~keep adjacent lists using the same bullet, have no separator in the source that survives
+/// ~keep a compliant reparse -- they merge into one block whatever we emit. Emitting an
+/// ~keep unrequested separator to force a fixpoint would corrupt the far more common case.
+///
+/// ~keep Renderer re-encoding we deliberately do not mirror (21, 344, 631): these carry
+/// ~keep ASCII characters (backslash, backtick) that a compliant renderer percent-encodes in
+/// ~keep a destination. Our own escaping already round-trips the content losslessly -- the
+/// ~keep second and third conversions agree -- so only the byte spelling differs. Matching it
+/// ~keep would mean reimplementing the renderer's full safe-character set as our default and
+/// ~keep would disturb the documented backslash tradeoff in `inline/link.rs`.
+///
+/// ~keep Known open defects (175, 182, 642, 643): 642/643 are a real bug, not an artifact --
+/// ~keep `normalize_link_label` collapses a hard line break inside a link label, so a `<br>`
+/// ~keep there is lost on the second conversion. It is left alone deliberately: several
+/// ~keep `~keep` comments in `tier1/scanner.rs` depend on the current behaviour for parity,
+/// ~keep so it needs a coordinated two-tier change rather than a local edit.
+const MIN_STABLE_ESCAPED: usize = 642;
 
 #[test]
 fn commonmark_spec_examples_reach_a_conversion_fixpoint() {
