@@ -31,8 +31,11 @@ fn convert(html: &str) -> String {
 #[test]
 fn should_not_delete_text_that_merely_looks_like_a_hidden_tag() {
     for (html, expected) in [
-        ("<1div hidden>x</1div>", "<1div hidden>x</1div>\n"),
-        ("<_div hidden>x</_div>", "<_div hidden>x</_div>\n"),
+        // ~keep The closing `</1div>` / `</_div>` is itself a bogus comment -- HTML5's
+        // ~keep end-tag-open state takes anything but an ASCII letter into the
+        // ~keep bogus-comment state -- so only the opening run survives as text.
+        ("<1div hidden>x</1div>", "<1div hidden>x\n"),
+        ("<_div hidden>x</_div>", "<_div hidden>x\n"),
         ("<-div hidden>x", "<-div hidden>x\n"),
         ("< div hidden>x", "< div hidden>x\n"),
         ("<9 hidden>y", "<9 hidden>y\n"),
@@ -84,12 +87,7 @@ fn should_strip_a_hidden_element_that_follows_unrelated_markup() {
     assert_eq!(convert("<!doctype html><div hidden>x</div>"), "");
     assert_eq!(convert("<9 hidden><div hidden>y</div>"), "<9 hidden>\n");
 
-    // ~keep The hidden `<div>` is stripped here too -- but the `<?php ... ?>` ahead of it
-    // ~keep leaks its own text. HTML5 puts `<?` into the bogus-comment state, which consumes
-    // ~keep through the next `>` and produces a comment node, so this should render as
-    // ~keep nothing at all. That leak is unrelated to the tag-open-state fix (it is
-    // ~keep byte-identical before and after it) and is pinned here as current behaviour
-    // ~keep rather than as desired behaviour, so that fixing it shows up as this assertion
-    // ~keep failing instead of going unnoticed.
-    assert_eq!(convert("<?php echo 1; ?><div hidden>x</div>"), "?php echo 1; ?>\n");
+    // ~keep `<?php ... ?>` is a bogus comment under HTML5's tag-open state, so it renders as
+    // ~keep nothing, and the hidden `<div>` after it is stripped as well.
+    assert_eq!(convert("<?php echo 1; ?><div hidden>x</div>"), "");
 }

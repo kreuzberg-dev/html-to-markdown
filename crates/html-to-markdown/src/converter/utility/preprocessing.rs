@@ -1120,6 +1120,126 @@ pub fn sanitize_markdown_url(url: &str) -> Cow<'_, str> {
 /// Scans for opening tags matching either condition, finds their matching
 /// closing tag, and removes the entire element (tag + content, so nested
 /// content never leaks out). Self-closing tags are also removed.
+/// Find `needle` in `haystack` at or after `from`, returning its start offset.
+fn find_subslice(haystack: &[u8], from: usize, needle: &[u8]) -> Option<usize> {
+    if from >= haystack.len() {
+        return None;
+    }
+    haystack[from..]
+        .windows(needle.len())
+        .position(|w| w == needle)
+        .map(|off| from + off)
+}
+
+/// Remove HTML5 *bogus comments* so they do not leak into the output as text.
+///
+/// The tokenizer enters the bogus-comment state from three places, and in all of them the
+/// run through the next `>` becomes a comment token, which renders as nothing:
+///
+/// - `<?` — a "processing instruction" is not a thing in HTML; `<?php … ?>` is a comment.
+/// - `<!` not beginning `--`, `DOCTYPE`, or `[CDATA[`.
+/// - `</` followed by anything that is not an ASCII letter, e.g. `</3>` or `</ >`.
+///
+/// Real comments already convert to nothing, so leaving these as text was inconsistent as
+/// well as wrong: `<?php echo 1; ?>` emitted `?php echo 1; ?>`, and `<!bogus>` emitted a
+/// stray `>`.
+///
+/// `<![CDATA[` is deliberately NOT treated as a bogus comment here. It only is one outside
+/// foreign content; inside `<svg>` or `<math>` it is real CDATA, and this pass has no
+/// element context to tell them apart. Getting that wrong would corrupt SVG, so the narrower
+/// behaviour is kept (see `tools/benchmark-harness/fixtures/synthetic/cdata_in_svg.html`).
+///
+/// Real tags are skipped with the quote-aware [`find_tag_end`] rather than scanned through,
+/// so a `<?` or `<!` inside an attribute value cannot be mistaken for a bogus comment.
+pub fn strip_bogus_comments(input: &str) -> Cow<'_, str> {
+    let bytes = input.as_bytes();
+    let len = bytes.len();
+    // ~keep The shortest bogus comment is two bytes (`<?`, `</`, `<!` at end of input), so
+    // ~keep the cheap bail must not be wider than that.
+    if len < 2 || !bytes.contains(&b'<') {
+        return Cow::Borrowed(input);
+    }
+
+    let mut idx = 0;
+    let mut last = 0;
+    let mut output: Option<String> = None;
+
+    while idx < len {
+        if bytes[idx] != b'<' || idx + 1 >= len {
+            idx += 1;
+            continue;
+        }
+
+        let next = bytes[idx + 1];
+        let rest = if idx + 2 <= len {
+            &bytes[idx + 2..]
+        } else {
+            &bytes[len..]
+        };
+
+        // ~keep Step over a real comment as one unit. Its interior is not markup, and a
+        // ~keep downlevel conditional comment (`<!--[if gte mso 9]> … <![endif]-->`, which
+        // ~keep Microsoft Word emits by the dozen) contains a `<![endif]` that looks exactly
+        // ~keep like a bogus comment. Stripping that would delete the `-->` closing the real
+        // ~keep comment, leaving it unterminated and swallowing the rest of the document.
+        if next == b'!' && rest.starts_with(b"--") {
+            idx = find_subslice(bytes, idx + 4, b"-->").map_or(len, |end| end + 3);
+            continue;
+        }
+        // ~keep Likewise CDATA: its interior is character data, not markup.
+        if next == b'!' && rest.starts_with(b"[CDATA[") {
+            idx = find_subslice(bytes, idx + 9, b"]]>").map_or(len, |end| end + 3);
+            continue;
+        }
+
+        let bogus = if next == b'?' {
+            true
+        } else if next == b'!' {
+            // ~keep Real comments and CDATA already returned above. `<!DOCTYPE` is a doctype,
+            // ~keep handled elsewhere; anything else after `<!` is a bogus comment.
+            !(rest.len() >= 7 && rest[..7].eq_ignore_ascii_case(b"DOCTYPE"))
+        } else if next == b'/' {
+            // ~keep `</` followed by a letter is a real end tag; anything else -- including
+            // ~keep end-of-input -- is a bogus comment.
+            idx + 2 >= len || !bytes[idx + 2].is_ascii_alphabetic()
+        } else {
+            false
+        };
+
+        if !bogus {
+            // ~keep Skip a real tag wholesale so a `<?`/`<!` sitting inside a quoted
+            // ~keep attribute value is never seen as a bogus comment of its own.
+            if next.is_ascii_alphabetic() {
+                if let Some(tag_end) = find_tag_end(bytes, idx + 1) {
+                    idx = tag_end;
+                    continue;
+                }
+            }
+            idx += 1;
+            continue;
+        }
+
+        // ~keep The bogus-comment state ends at the first `>` regardless of quoting, or at
+        // ~keep end-of-input if there is none -- unlike a tag, it has no attribute grammar.
+        let end = bytes[idx + 1..]
+            .iter()
+            .position(|&b| b == b'>')
+            .map_or(len, |off| idx + 1 + off + 1);
+        let out = output.get_or_insert_with(|| String::with_capacity(len));
+        out.push_str(&input[last..idx]);
+        last = end;
+        idx = end;
+    }
+
+    match output {
+        Some(mut out) => {
+            out.push_str(&input[last..]);
+            Cow::Owned(out)
+        }
+        None => Cow::Borrowed(input),
+    }
+}
+
 pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
     let bytes = input.as_bytes();
     let len = bytes.len();

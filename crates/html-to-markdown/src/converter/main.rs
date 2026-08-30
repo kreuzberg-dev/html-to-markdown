@@ -25,7 +25,7 @@ use crate::converter::utility::caching::build_dom_context;
 use crate::converter::utility::content::{is_block_level_element, normalized_tag_name};
 use crate::converter::utility::preprocessing::{
     normalize_bogus_comment_endings, normalize_split_closing_tags, normalize_unclosed_list_items, preprocess_html,
-    strip_hidden_elements, strip_script_and_style_tags,
+    strip_bogus_comments, strip_hidden_elements, strip_script_and_style_tags,
 };
 use crate::converter::utility::serialization::serialize_tag_to_html;
 use crate::options::{NewlineStyle, OutputFormat};
@@ -64,6 +64,11 @@ pub fn convert_html_impl(
     structure_collector: Option<StructureCollectorHandle>,
 ) -> Result<ConversionOutput> {
     let stripped = strip_script_and_style_tags(html);
+    // ~keep Before anything else looks for tags: an HTML5 bogus comment (`<?php … ?>`,
+    // ~keep `<!bogus>`, `</3>`) is a comment token, so it must render as nothing rather
+    // ~keep than leak its text. Running it here also keeps it from confusing the passes
+    // ~keep below, which do look for tag-shaped runs.
+    let stripped = strip_bogus_comments(&stripped);
     let stripped = strip_hidden_elements(&stripped);
     // ~keep Normalise bogus HTML comment endings (`--->`, `---->`, …) that cause the
     // ~keep `tl` parser to silently discard all document content that follows them.

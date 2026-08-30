@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **HTML5 bogus comments render as nothing instead of leaking their text.** `<?php echo 1; ?>`
+  emitted `?php echo 1; ?>`, `<!bogus>` emitted a stray `>`, and `</3>` emitted `</3>`. All
+  three are comment tokens under the tokenizer's tag-open, markup-declaration-open and
+  end-tag-open states, so they render as nothing -- as real `<!-- -->` comments already did.
+  Identical constructs were rendering differently based only on which tokenizer state they
+  happened to reach.
+
+  Most visibly this cleans up Microsoft Word HTML, whose downlevel-*revealed* conditional
+  comments (`<![if !vml]> … <![endif]>`, not wrapped in `<!--`) were surfacing as literal noise
+  around every image and footnote.
+
+  Real comments, CDATA, and doctypes are stepped over rather than scanned into. That matters
+  for downlevel-*hidden* conditional comments: `<!--[if gte mso 9]> … <![endif]-->` is a real
+  comment whose terminator is the `-->` at the end of `<![endif]-->`, so treating that
+  `<![endif]` as bogus would delete the comment's own terminator and swallow the rest of the
+  document. `<![CDATA[` is left untouched entirely, since it is only a bogus comment outside
+  foreign content and this pass has no element context to distinguish `<svg>` interiors.
+
 - **`strip_hidden_elements` no longer treats a non-tag `<` as a tag, fixing both a
   content bug and a quadratic-time denial-of-service vector.** The hidden-element pre-pass
   accepted any `<` whose next byte was not `/` or `!`, then scanned forward for the next `>`
