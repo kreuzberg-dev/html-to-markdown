@@ -9,14 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [3.12.0] - 2026-08-30
 
-Correctness release. Nine defects in the shipped converter, plus five cases where the Tier-1
-fast scanner and the Tier-2 converter disagreed on the same input -- the library picks a tier
-automatically, so those meant one document could convert two ways.
+Correctness release. A broad pass over converter correctness: defects in the shipped output,
+plus a run of cases where the Tier-1 fast scanner and the Tier-2 converter disagreed on the same
+input -- the library picks a tier automatically, so those meant one document could convert two
+ways.
 
 Test coverage behind it: every one of the 652 `CommonMark` spec examples is now exercised through
 a conversion-fixpoint oracle (the exact-match test compares against the spec's own rendering, so
 it can only run on the 131 examples admitting a single valid form), a Tier-1/Tier-2 differential
 oracle over the benchmark corpus and a generated document set, and a fuzz target.
+
+Against that fixpoint oracle, 642 of the 652 examples now round-trip unchanged with escaping
+enabled and 628 with the shipped defaults, up from 607 and 597. Of the 10 that remain, three are
+inherent to the round trip -- adjacent block quotes, and adjacent lists sharing a bullet, merge
+under any compliant reparse whatever we emit.
 
 ### Fixed
 
@@ -130,6 +136,63 @@ oracle over the benchmark corpus and a generated document set, and a fuzz target
   `CommonMark` spec fixture from a path outside the crate root, which `cargo package` does not
   carry, so `cargo test` on the packaged crate failed to build. They are excluded from the
   package and still run from a repository checkout.
+
+- **Leading whitespace at the start of a document is stripped, matching every later block.**
+  `<p>&nbsp;a</p>` kept its space while `<p>x</p><p>&nbsp;a</p>` dropped it, so the same markup
+  converted differently depending only on whether anything preceded it. The converter had no way
+  to tell "start of the real output" from "start of a handler's private scratch buffer" -- every
+  inline wrapper builds its content into a fresh buffer before splicing it in -- so a naive
+  emptiness check silently changed every wrapper whose first child begins with whitespace.
+
+- **Block children of a list item stay inside the item.** Fenced code blocks and block quotes
+  were emitted without the continuation indentation that keeps them in the item, so they escaped
+  the list entirely on reparse. The indent sums each open ancestor's actual marker width rather
+  than assuming two spaces per level, since ordered markers vary in width (`1.` against `10.`).
+
+- **List looseness is detected as the whole-list property it is.** One blank line anywhere
+  between items makes a compliant reparse wrap *every* item in `<p>`, but detection only looked
+  for a literal `<p>` and missed `div`, `blockquote`, `pre`, `table`, `hr` and `dl` children and
+  loose nested sublists. Alongside it: a nested list that is an item's sole leading child no
+  longer double-counts the parent marker's width and pushes its content past the four-space
+  indented-code threshold; a block quote following an item's bare leading text is no longer
+  forced onto a blank line, which had made that text round-trip as its own paragraph; a bare
+  `<!-- -->` between two adjacent same-type lists is preserved, being the one signal that stops
+  them merging; and the bare-marker check now honours the configured bullets instead of
+  hardcoding `*`, `-` and `.`, having missed `+` from the default cycle.
+
+- **A nested list keeps its line break when the text before it ends in whitespace.**
+  `<li><strong>b </strong><ul><li>sub</li></ul></li>` collapsed to `- **b** * sub`, flattening
+  the sublist onto the parent line so it stopped being a list at all and its content was lost.
+  The "are we already at a bare marker" test was a two-byte suffix check, and a closing `**b**`
+  plus its trailing space ends in the same two bytes as a real `*` bullet plus its space. Both
+  tiers were wrong in exactly the same
+  way, so the differential oracle could not see it; the check now requires the whole line to
+  decompose into bare markers.
+
+- **Non-ASCII bytes in a link destination are percent-encoded.** A raw byte at or above 0x80 is
+  not valid URI syntax under RFC 3986, and compliant renderers encode it when writing an `href`.
+  Only non-ASCII bytes are touched, so reserved ASCII punctuation in query strings is untouched.
+  Same-document `#fragment` destinations are exempt: they must byte-match an element id this
+  converter does not generate, and encoding one side of that pair would break the anchor.
+
+- **Link-shaped text in image alt text and link labels is escaped.** Alt text is parsed as full
+  inline content on reparse, so `<img alt="[foo](uri2)">` had its alt silently become a real
+  nested link and lost the destination. Both ends of the pair are escaped, since escaping only
+  the closing bracket leaves the outer `[` to be captured by a later `]` and the image then fails
+  to form at all. A genuine nested `![alt](src)` inside link text is left intact.
+
+- **A link or image with no visible text no longer turns its own href into emphasis.** Such an
+  element falls back to the href as its label, and that fallback bypassed the text escaper, so a
+  raw `*` or `_` in the URL round-tripped into real emphasis. Two destination-escaping gaps
+  closed with it: a literal backslash before the paren escaping in an unbalanced-parens
+  destination was not itself escaped, and a raw line ending inside an angle-bracket-wrapped
+  destination is not valid `CommonMark` at all and is now folded to a space.
+
+- **The Tier-1 fast scanner matches the Tier-2 converter on every fix above, and on a further
+  run of divergences found by the differential oracle.** Because the library selects a tier by
+  input shape, each divergence was a case where one document could convert two ways. Three
+  suppressions were also removed from the oracle's allow-list, so it now generates those shapes
+  freely instead of avoiding them; the four that remain are each documented in place.
 
 ## [3.11.6] - 2026-08-28
 
