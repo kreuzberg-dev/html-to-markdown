@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-08-30
+
+Correctness release. Nine defects in the shipped converter, plus five cases where the Tier-1
+fast scanner and the Tier-2 converter disagreed on the same input -- the library picks a tier
+automatically, so those meant one document could convert two ways.
+
+Test coverage behind it: every one of the 652 `CommonMark` spec examples is now exercised through
+a conversion-fixpoint oracle (the exact-match test compares against the spec's own rendering, so
+it can only run on the 131 examples admitting a single valid form), a Tier-1/Tier-2 differential
+oracle over the benchmark corpus and a generated document set, and a fuzz target.
+
 ### Fixed
 
 - **An empty `title=""` is treated as absent instead of rendered as `(url "")`.** The empty
@@ -109,6 +120,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   strong emphasis at all; redundant same-type nesting now collapses to one marker pair. A
   trailing whitespace run before a closing inline marker -- most often a decoded `&nbsp;` --
   stayed inside the markers instead of moving outside them.
+
+  A leading whitespace run inside `<strong>`/`<em>` was deleted rather than moved outside the
+  markers, so `<p>a<em>&nbsp;x</em></p>` lost the space entirely: `a*x*` where the DOM converter
+  gives `a *x*`. The trim is still applied to `<a>` labels, which really are trimmed, and to
+  `<code>`, which is verbatim.
+
+- **The published crate no longer ships two tests that cannot compile.** Both read the
+  `CommonMark` spec fixture from a path outside the crate root, which `cargo package` does not
+  carry, so `cargo test` on the packaged crate failed to build. They are excluded from the
+  package and still run from a repository checkout.
 
 ## [3.11.6] - 2026-08-28
 

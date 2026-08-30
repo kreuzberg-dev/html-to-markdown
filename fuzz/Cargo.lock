@@ -160,7 +160,7 @@ dependencies = [
 
 [[package]]
 name = "html-to-markdown-rs"
-version = "3.11.6"
+version = "3.12.0"
 dependencies = [
  "ahash",
  "astral-tl",
