@@ -1971,12 +1971,27 @@ fn close_inline_marker(state: &mut Tier1State, frame: &OpenTag, marker: &str) {
     // ~keep `<b><span>&nbsp;</span>X</b>` patterns.
     let content_str = &buf[content_start..];
     let leading_len = content_str.len() - content_str.trim_start().len();
-    if leading_len > 0 {
+    // ~keep `content_start` is re-bound (not just conditionally mutated in place)
+    // ~keep because the trailing check below indexes `buf` at this offset again:
+    // ~keep moving `leading_len` bytes from right after the open marker to right
+    // ~keep before it shifts every later byte's position forward by `leading_len`
+    // ~keep without changing the buffer's total length, so the ORIGINAL
+    // ~keep `content_start` value no longer points at the start of the real
+    // ~keep content — it now lands `marker.len()` bytes into whatever sits at
+    // ~keep the old marker position, which is a char boundary only by
+    // ~keep coincidence. Reusing the stale value panicked
+    // ~keep ("byte index is not a char boundary") on `<em>\u{2003}x</em>`-shaped
+    // ~keep input, where the 1-byte `*` marker and the 3-byte migrated space
+    // ~keep don't line up.
+    let content_start = if leading_len > 0 {
         let leading: String = content_str[..leading_len].to_owned();
         buf.replace_range(content_start..content_start + leading_len, "");
         let marker_start = clamp_to_char_boundary(buf, content_start.saturating_sub(marker.len()));
         buf.insert_str(marker_start, &leading);
-    }
+        content_start + leading_len
+    } else {
+        content_start
+    };
 
     // ~keep Trailing counterpart of the leading-whitespace migration above: a
     // ~keep trailing whitespace run (e.g. a decoded `&nbsp;` folded to a plain
@@ -3075,8 +3090,29 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
             || active.ends_with("+ ")
             || ends_with_ordered_marker(active)
     };
+    // ~keep When the leading run being stripped below sits at the very start of a
+    // ~keep `<strong>`/`<em>` body specifically (not `<a>`/`<code>`, and not the
+    // ~keep summary-accumulation kinds handled by `at_inline_frame_start`'s other
+    // ~keep arm), Tier-2's `chomp_inline` (utility/content.rs) does not delete
+    // ~keep that whitespace: it collapses the run to a single ASCII space that
+    // ~keep `close_inline_marker` then migrates outside the opening marker.
+    // ~keep Deleting it outright — correct for `<a>` (`normalize_link_label`
+    // ~keep really does trim) and left as-is for `<code>` (fully verbatim,
+    // ~keep handled separately) — would make `<em>&nbsp;x</em>` render `*x*`
+    // ~keep instead of Tier-2's ` *x*`. Push one space into the buffer here so
+    // ~keep `close_inline_marker`'s existing leading-migration block (added
+    // ~keep alongside its trailing counterpart) has something to move.
+    let leading_ws_migrates_out = at_inline_frame_start
+        && matches!(
+            state.stack.last().map(|frame| frame.spec.kind),
+            Some(TagKind::Strong | TagKind::Emphasis)
+        );
     let raw = if !in_pre && !state.in_table_cell() && (at_inline_frame_start || block_separator_after) {
-        raw.trim_start_matches([' ', '\t', '\n', '\r'])
+        let trimmed = raw.trim_start_matches([' ', '\t', '\n', '\r']);
+        if leading_ws_migrates_out && trimmed.len() < raw.len() {
+            state.cell_or_output_mut().push(' ');
+        }
+        trimmed
     } else {
         raw
     };
