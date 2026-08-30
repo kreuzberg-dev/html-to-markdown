@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **An empty `title=""` is treated as absent instead of rendered as `(url "")`.** The empty
+  annotation carries no information and no Markdown serializer round-trips it, so converting
+  the re-rendered output produced different Markdown than the first pass. Applies to links,
+  images and graphics alike. A whitespace-only title is still a title; only a genuinely empty
+  attribute changed.
+
 - **HTML5 bogus comments render as nothing instead of leaking their text.** `<?php echo 1; ?>`
   emitted `?php echo 1; ?>`, `<!bogus>` emitted a stray `>`, and `</3>` emitted `</3>`. All
   three are comment tokens under the tokenizer's tag-open, markup-declaration-open and

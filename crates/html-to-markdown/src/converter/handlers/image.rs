@@ -58,7 +58,16 @@ pub fn handle_img(
         .flatten()
         .map_or(Cow::Borrowed(""), |v| v.as_utf8_str());
 
-    let title = tag.attributes().get("title").flatten().map(|v| v.as_utf8_str());
+    // ~keep An empty `title=""` carries no information, and `[t](u "")` / `![a](i "")` is
+    // ~keep noise that no Markdown serializer round-trips: re-rendering the output drops
+    // ~keep the empty title, so the second pass no longer matches the first. Treat it as
+    // ~keep absent, which is what it means.
+    let title = tag
+        .attributes()
+        .get("title")
+        .flatten()
+        .map(|v| v.as_utf8_str())
+        .filter(|v| !v.is_empty());
 
     #[cfg(feature = "metadata")]
     #[allow(clippy::useless_let_if_seq)]

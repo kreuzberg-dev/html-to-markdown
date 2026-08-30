@@ -54,7 +54,16 @@ pub fn handle_link(
         .get("href")
         .flatten()
         .map(|v| text::decode_html_entities(&v.as_utf8_str()));
-    let title = tag.attributes().get("title").flatten().map(|v| v.as_utf8_str());
+    // ~keep An empty `title=""` carries no information, and `[t](u "")` / `![a](i "")` is
+    // ~keep noise that no Markdown serializer round-trips: re-rendering the output drops
+    // ~keep the empty title, so the second pass no longer matches the first. Treat it as
+    // ~keep absent, which is what it means.
+    let title = tag
+        .attributes()
+        .get("title")
+        .flatten()
+        .map(|v| v.as_utf8_str())
+        .filter(|v| !v.is_empty());
 
     if let Some(href) = href_attr {
         let owned_children: Vec<tl::NodeHandle>;
