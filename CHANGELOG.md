@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`strip_hidden_elements` no longer treats a non-tag `<` as a tag, fixing both a
+  content bug and a quadratic-time denial-of-service vector.** The hidden-element pre-pass
+  accepted any `<` whose next byte was not `/` or `!`, then scanned forward for the next `>`
+  anywhere in the document and treated whatever it spanned as a tag. HTML5 only begins a tag
+  name when `<` is followed by an ASCII letter, so this was wrong in three ways:
+
+  - **Visible text was silently deleted.** `<1div hidden>x</1div>` is entirely text, but the
+    pre-pass matched it as a hidden element and removed the whole span including the `x`.
+    Same for `<_div …>`, `<-div …>`, `< div …>` and any non-ASCII initial.
+  - **Genuinely hidden content leaked.** In `<<div hidden>x</div>` the span began at the stray
+    first `<`, so what got removed was `<<div hidden>` and the `x` inside the real hidden
+    `<div>` survived into the output.
+  - **Conversion was O(n²) in unterminated `<`.** With no `>` ahead, every candidate `<`
+    re-scanned to end of input. Converting 40,000 bare `<` took 1.05 s and 80,000 took 4.2 s;
+    around a megabyte of such input would have taken hours. This is reachable from untrusted
+    pages -- the repo's own fixtures already carry a `fallthrough_bare_lt` group -- so it was
+    a practical DoS. The same input now converts in roughly linear time; the guarded case
+    dropped from 16.4 s to 0.26 s.
+
+  Output is byte-identical across the whole fixture corpus; the only behaviour changes are
+  the two defect classes above, each now pinned by test.
+
 - **A `<br>` inside a code span or fenced code block no longer injects a `newline_style`
   marker into the code.** A code context reproduces its content literally, so the marker was
   not syntax there -- it was a character in the user's code. `newline_style="backslash"` put a

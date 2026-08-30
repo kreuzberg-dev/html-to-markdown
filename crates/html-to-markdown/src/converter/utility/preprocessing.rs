@@ -1128,12 +1128,24 @@ pub fn strip_hidden_elements(input: &str) -> Cow<'_, str> {
         return Cow::Borrowed(input);
     }
 
+    // ~keep DoS guard: a run of unterminated `<` (no `>` anywhere in the rest of the
+    // ~keep document) makes `find_tag_end` scan to EOF on every single one, turning this
+    // ~keep loop quadratic. Once no `>` remains past `idx`, `find_tag_end` is guaranteed
+    // ~keep to fail regardless of quoting, so `last_gt` lets every remaining iteration
+    // ~keep skip the call in O(1) instead of re-scanning to the end each time.
+    let last_gt = bytes.iter().rposition(|&b| b == b'>');
+
     let mut idx = 0;
     let mut last = 0;
     let mut output: Option<String> = None;
 
     while idx < len {
-        if bytes[idx] == b'<' && idx + 1 < len && bytes[idx + 1] != b'/' && bytes[idx + 1] != b'!' {
+        // ~keep A `<` not immediately followed by an ASCII letter can never start a real
+        // ~keep HTML tag name (HTML5 tokenizer "tag open state"), so it is never worth a
+        // ~keep `find_tag_end` scan. Without this, a run like `<<<<<` treats every `<` as a
+        // ~keep candidate tag start, and each failing scan re-walks the same suffix.
+        let starts_tag_name = idx + 1 < len && bytes[idx + 1].is_ascii_alphabetic();
+        if bytes[idx] == b'<' && starts_tag_name && last_gt.is_some_and(|gt| gt > idx) {
             if let Some(tag_end) = find_tag_end(bytes, idx + 1) {
                 let tag_slice = &input[idx..tag_end];
                 if tag_has_hidden_attribute(tag_slice) || tag_has_hidden_style(tag_slice) {
