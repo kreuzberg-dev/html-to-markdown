@@ -6,6 +6,7 @@
 use std::collections::BTreeMap;
 
 use crate::options::ConversionOptions;
+use crate::options::NewlineStyle;
 use crate::options::conversion::{MAX_CONFIGURABLE_DEPTH, NATIVE_STACK_SAFE_DEPTH};
 
 /// Resolve the effective traversal-depth ceiling.
@@ -38,14 +39,47 @@ pub fn trim_trailing_whitespace(output: &mut String) {
 /// CommonMark's hard-break rule has no effect at the end of a block: there is no next line
 /// for the break to reach. For the two-space style the leftover marker is invisible trailing
 /// whitespace, so it is harmless and left in place. For the backslash style the leftover `\`
-/// is a literal, visible character, so a trailing run of one or more `<br>`-emitted `"\\\n"`
-/// markers must be dropped entirely rather than rendered as stray backslashes (issue #464).
-/// `block_start` bounds the strip to the current block so an earlier block's content already
-/// in `output` is never touched.
+/// is a literal, visible character, so it must go — but each `"\\\n"` marker in the run keeps
+/// its `\n` (only the `\` is dropped). The freed newline is what a block boundary is already
+/// made of, so callers that then run their own "how many blank lines are already here"
+/// separator logic (every block handler's `needs_leading_sep`-shaped check) keep working
+/// unmodified, and any surplus blank lines a run of several `<br>` collapses into are mopped
+/// up by `collapse_excess_blank_lines` at the end of the document (issue #464). `block_start`
+/// bounds the strip to the current block so an earlier block's content already in `output` is
+/// never touched.
 pub fn strip_trailing_backslash_breaks(output: &mut String, block_start: usize) {
+    // ~keep `block_content_start` is set only by the paragraph handler, so a handler that
+    // ~keep walks its children into a fresh buffer while inheriting that context leaves the
+    // ~keep index pointing into the wrong buffer. That is not hypothetical: it is the root
+    // ~keep cause of the reported panics in issues #216/#217, and `text_node.rs` clamps the
+    // ~keep same index the same way for the same reason. The `output.len() > block_start`
+    // ~keep loop guard below already rules out an out-of-bounds slice, but not a stale index
+    // ~keep that lands mid-UTF-8-character, which slicing would also panic on.
+    let block_start = crate::converter::utility::content::floor_char_boundary(output, block_start.min(output.len()));
+    let mut stripped_breaks = 0usize;
     while output.len() > block_start && output[block_start..].ends_with("\\\n") {
         let new_len = output.len() - "\\\n".len();
         output.truncate(new_len);
+        stripped_breaks += 1;
+    }
+    for _ in 0..stripped_breaks {
+        output.push('\n');
+    }
+}
+
+/// Strip a trailing backslash hard-break run from a self-contained block-content buffer,
+/// before that buffer is trimmed and spliced back into the shared output.
+///
+/// Several block handlers (blockquote, sectioning elements, details/summary, figure/
+/// figcaption, dl/dt/dd, list items) walk their children into a fresh, empty local
+/// `String` rather than the shared `output`, then splice the trimmed result back.
+/// `str::trim` cannot repair a trailing `"\\\n"` marker by itself — trim only removes
+/// whitespace, and `\` is not whitespace, so it eats the newline and leaves the
+/// backslash stranded (issue #464 follow-up). Since the buffer is fresh, position `0`
+/// is always its own start, so callers only need to name the buffer and the style.
+pub fn strip_trailing_backslash_breaks_from_fresh_buffer(content: &mut String, newline_style: NewlineStyle) {
+    if newline_style == NewlineStyle::Backslash {
+        strip_trailing_backslash_breaks(content, 0);
     }
 }
 

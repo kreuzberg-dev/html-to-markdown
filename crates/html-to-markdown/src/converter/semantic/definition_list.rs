@@ -80,6 +80,15 @@ pub fn handle_dl(
             }
         }
 
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the dl's content is
+        // ~keep simply finished here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up).
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut content,
+            options.newline_style,
+        );
+
         let trimmed = content.trim();
         if !trimmed.is_empty() {
             if !output.is_empty() && !output.ends_with("\n\n") {
@@ -118,6 +127,15 @@ pub fn handle_dt(
                 walk_node(child_handle, parser, &mut content, options, ctx, depth + 1, dom_ctx);
             }
         }
+
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the dt's content is
+        // ~keep simply finished here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up).
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut content,
+            options.newline_style,
+        );
 
         let trimmed = content.trim();
         if !trimmed.is_empty() {
@@ -158,6 +176,15 @@ pub fn handle_dd(
                 walk_node(child_handle, parser, &mut content, options, ctx, depth + 1, dom_ctx);
             }
         }
+
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the dd's content is
+        // ~keep simply finished here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up).
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut content,
+            options.newline_style,
+        );
 
         let trimmed = content.trim();
 
@@ -222,6 +249,14 @@ pub fn handle_menu(
                     dom_ctx,
                 );
             }
+        }
+
+        if options.newline_style == crate::options::NewlineStyle::Backslash {
+            // ~keep A trailing <br> run with no following sibling has no next dispatch to
+            // ~keep catch it in `walk_node`'s pre-block-dispatch strip, since the menu's own
+            // ~keep content is simply finished here — so this closes its own trailing run
+            // ~keep the same way `paragraph.rs` closes its own (issue #464 follow-up).
+            crate::converter::main_helpers::strip_trailing_backslash_breaks(output, content_start);
         }
 
         if !ctx.convert_as_inline && output.len() > content_start {

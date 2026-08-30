@@ -16,18 +16,19 @@ use std::collections::{BTreeMap, HashSet};
 use crate::converter::dom_context::DomContext;
 use crate::converter::main_helpers::{
     collapse_excess_blank_lines, effective_max_depth, extract_head_metadata, format_metadata_frontmatter,
-    has_custom_element_tags, repair_with_html5ever, trim_line_end_whitespace, trim_trailing_whitespace,
+    has_custom_element_tags, repair_with_html5ever, strip_trailing_backslash_breaks, trim_line_end_whitespace,
+    trim_trailing_whitespace,
 };
 use crate::converter::plain_text::extract_plain_text;
 use crate::converter::preprocessing_helpers::{has_inline_block_misnest, should_drop_for_preprocessing};
 use crate::converter::utility::caching::build_dom_context;
-use crate::converter::utility::content::normalized_tag_name;
+use crate::converter::utility::content::{is_block_level_element, normalized_tag_name};
 use crate::converter::utility::preprocessing::{
     normalize_bogus_comment_endings, normalize_split_closing_tags, normalize_unclosed_list_items, preprocess_html,
     strip_hidden_elements, strip_script_and_style_tags,
 };
 use crate::converter::utility::serialization::serialize_tag_to_html;
-use crate::options::OutputFormat;
+use crate::options::{NewlineStyle, OutputFormat};
 
 use crate::converter::handlers::{handle_blockquote, handle_code, handle_graphic, handle_img, handle_link, handle_pre};
 use crate::error::Result;
@@ -293,8 +294,18 @@ pub fn convert_html_impl(
         ctx.set_excluded_node_ids(excluded);
     }
 
+    let top_level_start = output.len();
     for child_handle in dom.children() {
         walk_node(child_handle, parser, &mut output, options, &ctx, 0, &dom_ctx);
+    }
+
+    // ~keep Mirrors the pre-block-dispatch strip in `walk_node`, for the one block boundary
+    // ~keep that check can never see: the end of the document itself, when a trailing `<br>`
+    // ~keep run is the last thing at top level with no following sibling to trigger it
+    // ~keep (issue #464 follow-up, e.g. `"A<br>"`). Bounded to `top_level_start` so frontmatter
+    // ~keep already written above is never touched.
+    if options.newline_style == NewlineStyle::Backslash {
+        strip_trailing_backslash_breaks(&mut output, top_level_start);
     }
 
     tracing::debug!(
@@ -492,6 +503,26 @@ pub fn walk_node(
 
             #[cfg_attr(not(feature = "visitor"), allow(unused_variables))]
             let element_output_start = output.len();
+
+            // ~keep A hard line break has no effect at the end of a block (CommonMark
+            // ~keep <https://spec.commonmark.org/spec#hard-line-breaks>): the run is only
+            // ~keep ever trailing once it turns out nothing but a new block follows it, and
+            // ~keep this is the single place every block-level dispatch already passes
+            // ~keep through, so it is where that becomes knowable regardless of which
+            // ~keep container the run started in. `is_block_level_element` is the same
+            // ~keep inline/block classification `plain_text.rs` and `visitor_hooks.rs`
+            // ~keep already use, so an inline sibling (real content, e.g. `<em>`/`<span>`)
+            // ~keep never trips this and the marker survives, matching issue #464's
+            // ~keep "only a run with nothing following in the same block is stripped".
+            // ~keep Container endings with no following sibling at all (a trailing `<br>`
+            // ~keep closing a `<div>`/`<li>`/`<blockquote>`, or the whole document) have no
+            // ~keep next dispatch to catch them here, so those close their own trailing run
+            // ~keep at their own point of closing instead (`block/div.rs`, `handlers/blockquote.rs`,
+            // ~keep `list/item.rs`, several `semantic/*.rs` handlers that splice a local
+            // ~keep buffer back into `output`, and the top-level loop in this file).
+            if options.newline_style == NewlineStyle::Backslash && is_block_level_element(tag_name.as_ref()) {
+                strip_trailing_backslash_breaks(output, ctx.block_content_start);
+            }
 
             match tag_name.as_ref() {
                 "h1" | "h2" | "h3" | "h4" | "h5" | "h6" => {

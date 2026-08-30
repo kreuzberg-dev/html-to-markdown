@@ -149,6 +149,16 @@ pub fn handle_figure(
             }
         }
 
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the figure's content is
+        // ~keep simply finished here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up). `trim_matches` below
+        // ~keep does not treat `\` as trimmable, so it cannot clean this up on its own.
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut figure_content,
+            options.newline_style,
+        );
+
         figure_content = figure_content.replace("\n![", "![");
         figure_content = figure_content.replace(" ![", "![");
 
@@ -247,6 +257,17 @@ pub fn handle_figcaption(
                 super::walk_node(child_handle, parser, &mut text, options, ctx, depth + 1, dom_ctx);
             }
         }
+
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the figcaption's content
+        // ~keep is simply finished here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up). Left uncaught, the
+        // ~keep stray `\` below ends up between the text and the closing `*`, escaping the
+        // ~keep emphasis delimiter instead of merely surviving as a visible character.
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut text,
+            options.newline_style,
+        );
 
         let text = text.trim().to_owned();
         if text.is_empty() {

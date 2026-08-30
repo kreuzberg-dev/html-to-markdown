@@ -9,6 +9,7 @@
 use crate::converter::Context;
 use crate::converter::dom_context::DomContext;
 use crate::converter::main::walk_node;
+use crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer;
 use crate::options::ConversionOptions;
 
 #[cfg(feature = "visitor")]
@@ -73,6 +74,12 @@ pub fn handle_blockquote(
             );
         }
     }
+
+    // ~keep A trailing <br> run with no following sibling has no next dispatch to catch it
+    // ~keep in `walk_node`'s pre-block-dispatch strip, since the blockquote's content is
+    // ~keep simply finished here — so this closes its own trailing run the same way
+    // ~keep `paragraph.rs` closes its own (issue #464 follow-up).
+    strip_trailing_backslash_breaks_from_fresh_buffer(&mut content, options.newline_style);
 
     let trimmed_content = content.trim();
 

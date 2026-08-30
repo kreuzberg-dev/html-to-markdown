@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **A `<br>` at the end of any block no longer leaves a stray `\` under
+  `newline_style="backslash"` ([#464](https://github.com/xberg-io/html-to-markdown/issues/464)).**
+  3.11.6 claimed this was fixed, but the strip ran only inside the paragraph handler, so it
+  covered `<p>...<br></p>` and nothing else. Every other way an inline run can end still leaked
+  the marker: before a following block of any kind (`A<br><p>B`, the reporter's follow-up case,
+  plus headings, lists, blockquotes, rules, tables and `<div>`), at the end of the document
+  (`A<br>`), at the end of a `<div>`, list item, blockquote, `<section>`, `<details>`, `<figure>`
+  or `<dl>`, and through nested containers.
+
+  `CommonMark` gives a hard line break no meaning at the end of a *block*, not merely at the end
+  of a `<p>`. The check now runs wherever a block boundary is actually reached. Handlers that
+  walk their children into a fresh buffer were each an independent instance of the same defect,
+  because `str::trim` cannot repair a trailing `"\\\n"` -- it removes the newline and leaves the
+  backslash stranded.
+
+  Worst case fixed: in a `<figcaption>` the caption is wrapped in emphasis *after* the marker is
+  appended, so the leftover backslash landed between the text and the closing `*` and escaped it
+  -- `<figure><figcaption>A<br></figcaption></figure>` produced `*A\*`, malformed Markdown rather
+  than a merely visible artifact.
+
+  A `<br>` that precedes real inline content still emits its break, a leading top-level `<br>`
+  still opens a line ([#112](https://github.com/xberg-io/html-to-markdown/issues/112)), and
+  `newline_style="spaces"` output is unchanged -- its leftover marker is invisible trailing
+  whitespace.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io

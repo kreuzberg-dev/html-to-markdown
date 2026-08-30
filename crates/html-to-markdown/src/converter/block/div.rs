@@ -6,8 +6,10 @@
 //! - List continuations: Uses list indentation
 //! - Block context: Adds surrounding newlines for proper block separation
 
-use crate::converter::main_helpers::{emit_table_cell_break, trim_trailing_whitespace};
-use crate::options::ConversionOptions;
+use crate::converter::main_helpers::{
+    emit_table_cell_break, strip_trailing_backslash_breaks, trim_trailing_whitespace,
+};
+use crate::options::{ConversionOptions, NewlineStyle};
 use tl::{NodeHandle, Parser};
 
 type Context = crate::converter::Context;
@@ -83,6 +85,14 @@ pub fn handle(
         for child_handle in children.top().iter() {
             walk_node(child_handle, parser, output, options, ctx, depth + 1, dom_ctx);
         }
+    }
+
+    if options.newline_style == NewlineStyle::Backslash {
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since the div is simply
+        // ~keep finishing here — so this closes its own trailing run the same way
+        // ~keep `paragraph.rs` closes its own (issue #464 follow-up).
+        strip_trailing_backslash_breaks(output, content_start_pos);
     }
 
     let has_content = output.len() > content_start_pos;

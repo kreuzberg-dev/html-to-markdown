@@ -57,6 +57,16 @@ pub fn handle(
             }
         }
 
+        // ~keep A trailing <br> run with no following sibling has no next dispatch to catch
+        // ~keep it in `walk_node`'s pre-block-dispatch strip, since this sectioning element's
+        // ~keep content is simply finished here — so this closes its own trailing run the
+        // ~keep same way `paragraph.rs` closes its own (issue #464 follow-up). `content` is
+        // ~keep pushed to `output` raw below (not `.trim()`-ed), so the strip has to run here.
+        crate::converter::main_helpers::strip_trailing_backslash_breaks_from_fresh_buffer(
+            &mut content,
+            options.newline_style,
+        );
+
         if content.trim().is_empty() {
             return;
         }

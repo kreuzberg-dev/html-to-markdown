@@ -8,11 +8,12 @@
 
 use crate::converter::list::utils::add_list_leading_separator;
 use crate::converter::main_helpers::effective_max_depth;
+use crate::converter::main_helpers::strip_trailing_backslash_breaks;
 use crate::converter::main_helpers::tag_name_eq;
 use crate::converter::main_helpers::trim_trailing_whitespace;
 use crate::converter::utility::content::normalized_tag_name;
 use crate::converter::walk_node;
-use crate::options::ConversionOptions;
+use crate::options::{ConversionOptions, NewlineStyle};
 #[cfg(feature = "visitor")]
 use std::borrow::Cow;
 use tl;
@@ -275,6 +276,14 @@ pub fn handle_li(
         }
 
         trim_trailing_whitespace(output);
+
+        if options.newline_style == NewlineStyle::Backslash {
+            // ~keep A trailing <br> run with no following sibling has no next dispatch to
+            // ~keep catch it in `walk_node`'s pre-block-dispatch strip, since the item's own
+            // ~keep content is simply finished here — so this closes its own trailing run the
+            // ~keep same way `paragraph.rs` closes its own (issue #464 follow-up).
+            strip_trailing_backslash_breaks(output, item_start_pos);
+        }
 
         if !ctx.in_table_cell {
             if let Some(ref sc) = ctx.structure_collector {
