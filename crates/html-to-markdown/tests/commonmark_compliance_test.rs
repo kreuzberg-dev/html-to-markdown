@@ -229,7 +229,7 @@ fn test_commonmark_compliance() {
     println!("\n=== CommonMark Compliance Test Results ===");
     println!("Total tests: {total}");
     if skipped > 0 {
-        println!("Skipped: {skipped} (escaping tests with escaping disabled)");
+        println!("Skipped: {skipped} (spec rendering is one of several valid forms, or needs non-default escaping)");
         println!("Tested: {tested}");
     }
     println!("Passed: {passed} ({pass_rate:.1}%)");
@@ -274,14 +274,22 @@ fn test_commonmark_compliance() {
 
         panic!(
             "\nCommonMark compliance test FAILED: {passed}/{tested} tests passing ({pass_rate:.1}%)\n\
-                {skipped} tests skipped (escaping tests with escaping disabled)\n\
+                {skipped} tests skipped (multiple valid renderings, or non-default escaping)\n\
                 Default library settings must be CommonMark compliant!\n\
                 This is a mandatory test for v2.0 release."
         );
     }
 
+    // ~keep Deliberately narrow wording. This test compares our Markdown against the spec's
+    // ~keep Markdown, which is a fair oracle only where the spec's rendering is the ONLY valid
+    // ~keep one -- so it skips most examples, and passing says nothing about those. Claiming
+    // ~keep "library defaults are CommonMark compliant" off the back of the tested minority
+    // ~keep read as a guarantee this test cannot make. `commonmark_spec_fixpoint.rs` covers all
+    // ~keep 652 via an oracle that needs no canonical form.
     println!(
-        "\n✓ All {tested} CommonMark tests passed! ({skipped} skipped) Library defaults are CommonMark compliant."
+        "\n✓ {passed}/{tested} exact-match CommonMark examples passed; {skipped} of {total} skipped \
+         as admitting more than one valid rendering. See commonmark_spec_fixpoint.rs for the \
+         remaining coverage."
     );
 }
 
