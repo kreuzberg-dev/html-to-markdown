@@ -90,7 +90,10 @@ fn image_in_deeply_nested_heading_preserved() {
 
 // ~keep ── 6. Byte-equality with Tier-2 ─────────────────────────────────────────────
 
-#[cfg(feature = "testkit")]
+// ~keep Every test in this module additionally requires `inline-images`, so the
+// ~keep module must carry that gate too — with only `testkit` enabled the `t1`/`t2`
+// ~keep helpers would compile with no callers and trip `-D dead-code`.
+#[cfg(all(feature = "testkit", feature = "inline-images"))]
 mod tier_parity {
     use html_to_markdown_rs::{ConversionOptions, TierStrategy, convert};
 
