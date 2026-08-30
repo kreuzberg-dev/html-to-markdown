@@ -115,33 +115,92 @@ pub fn collect_link_label_text(
     (text, block_nodes, saw_block)
 }
 
-/// Normalize a link label by collapsing newlines and normalizing whitespace.
+/// The two hard-line-break markers `block/line_break.rs` can emit for a real `<br>`:
+/// `"  \n"` for `NewlineStyle::Spaces`, `"\\\n"` for `NewlineStyle::Backslash`.
+const HARD_BREAK_MARKERS: [&str; 2] = ["  \n", "\\\n"];
+
+/// Normalize a link label by collapsing incidental newlines/whitespace while preserving an
+/// explicit hard line break (`<br>`) that appears mid-label.
+///
+/// A hard line break inside a link's visible text is legal `CommonMark` (`[foo  \nbar](url)`),
+/// so collapsing it unconditionally is lossy: convert to Markdown, render that back to HTML,
+/// and convert again, and the `<br>` that survived the round trip disappears on the second
+/// pass. Only the two exact marker shapes `block/line_break.rs` emits for a real `<br>` are
+/// preserved; every other newline (soft line breaks from wrapped source text, `\r`) still
+/// collapses to a single space, matching the previous behaviour.
+///
+/// ~keep This scans for the two marker substrings directly and copies everything else through
+/// ~keep the ordinary whitespace-collapsing rules, rather than swapping the markers out for a
+/// ~keep placeholder character and restoring them afterward. A placeholder scheme is unsound
+/// ~keep here: it assumes an injective mapping over a character set the label cannot contain,
+/// ~keep and that is false for arbitrary HTML input. An earlier version used Private Use Area
+/// ~keep code points as placeholders on the reasoning that "no producer this crate parses
+/// ~keep assigns them" -- but icon fonts do exactly that (Bootstrap 3's Glyphicons start at
+/// ~keep U+E001), so a label already containing that literal character collided with the
+/// ~keep placeholder and reappeared as a spurious hard break after "restoration". Because the
+/// ~keep three marker bytes (space, backslash, `\n`) are pure ASCII, they can never occur as
+/// ~keep part of a multi-byte UTF-8 sequence, so matching/splitting on them with plain byte
+/// ~keep offsets (via `str::find`) is always on a char boundary -- no placeholder needed.
 #[allow(clippy::trivially_copy_pass_by_ref)]
 pub fn normalize_link_label(label: &str) -> String {
-    let mut needs_collapse = false;
-    for ch in label.chars() {
-        if ch == '\n' || ch == '\r' {
-            needs_collapse = true;
-            break;
-        }
+    let mut result = String::with_capacity(label.len());
+    let mut rest = label;
+
+    while let Some((marker_pos, marker)) = find_earliest_hard_break_marker(rest) {
+        collapse_whitespace_into(&mut result, &rest[..marker_pos]);
+        result.push_str(marker);
+        rest = &rest[marker_pos + marker.len()..];
+    }
+    collapse_whitespace_into(&mut result, rest);
+
+    drop_boundary_hard_breaks(result.trim()).to_string()
+}
+
+/// Find the earliest occurrence of either hard-break marker in `text`, if any.
+fn find_earliest_hard_break_marker(text: &str) -> Option<(usize, &'static str)> {
+    HARD_BREAK_MARKERS
+        .iter()
+        .filter_map(|marker| text.find(marker).map(|pos| (pos, *marker)))
+        .min_by_key(|(pos, _)| *pos)
+}
+
+/// Fold newlines to a space and collapse whitespace runs in a marker-free segment, appending
+/// the result to `out`. Mirrors the whitespace handling `normalize_link_label` has always
+/// applied outside of a hard-break marker.
+fn collapse_whitespace_into(out: &mut String, segment: &str) {
+    if segment.is_empty() {
+        return;
     }
 
-    let collapsed = if needs_collapse {
-        let mut collapsed = String::with_capacity(label.len());
-        for ch in label.chars() {
-            if ch == '\n' || ch == '\r' {
-                collapsed.push(' ');
-            } else {
-                collapsed.push(ch);
-            }
-        }
-        Cow::Owned(collapsed)
+    let folded: Cow<'_, str> = if segment.contains(['\n', '\r']) {
+        Cow::Owned(segment.replace(['\n', '\r'], " "))
     } else {
-        Cow::Borrowed(label)
+        Cow::Borrowed(segment)
     };
 
-    let normalized = text::normalize_whitespace_cow(collapsed.as_ref());
-    normalized.as_ref().trim().to_string()
+    out.push_str(text::normalize_whitespace_cow(folded.as_ref()).as_ref());
+}
+
+/// Drop a hard-break marker that ends up at the label's very start or end -- it has no
+/// preceding/following line to break to/from, so (matching the pre-existing behaviour of
+/// collapsing such a break down to nothing) it is removed rather than kept.
+fn drop_boundary_hard_breaks(mut text: &str) -> &str {
+    loop {
+        let without_leading = HARD_BREAK_MARKERS
+            .iter()
+            .find_map(|marker| text.strip_prefix(marker))
+            .map(str::trim_start);
+        let without_trailing = HARD_BREAK_MARKERS
+            .iter()
+            .find_map(|marker| text.strip_suffix(marker))
+            .map(str::trim_end);
+
+        let next = without_leading.or(without_trailing);
+        match next {
+            Some(stripped) if stripped != text => text = stripped,
+            _ => return text,
+        }
+    }
 }
 
 /// Normalize a tag name to lowercase, preserving borrowed input when possible.
@@ -386,5 +445,79 @@ mod tests {
     #[test]
     fn escape_link_label_escapes_only_the_link_shaped_inner_pair() {
         assert_eq!(escape_link_label("[a[b](c)]"), "[a\\[b\\](c)]");
+    }
+
+    // ~keep Regression for CommonMark spec examples 642/643: a `<br>`-produced hard
+    // ~keep line break (`"  \n"`, matching `NewlineStyle::Spaces`) mid-label must
+    // ~keep survive, not collapse to a plain space.
+    #[test]
+    fn normalize_link_label_preserves_a_mid_label_spaces_style_hard_break() {
+        assert_eq!(normalize_link_label("foo  \nbar"), "foo  \nbar");
+    }
+
+    #[test]
+    fn normalize_link_label_preserves_a_mid_label_backslash_style_hard_break() {
+        assert_eq!(normalize_link_label("foo\\\nbar"), "foo\\\nbar");
+    }
+
+    // ~keep A hard break with nothing before/after it has no line to break to or
+    // ~keep from, so it is dropped entirely -- matching the pre-existing behaviour of
+    // ~keep trimming a leading/trailing break down to nothing, not just collapsing it
+    // ~keep to a space.
+    #[test]
+    fn normalize_link_label_drops_a_leading_hard_break() {
+        assert_eq!(normalize_link_label("  \nbar"), "bar");
+    }
+
+    #[test]
+    fn normalize_link_label_drops_a_trailing_hard_break() {
+        assert_eq!(normalize_link_label("foo  \n"), "foo");
+    }
+
+    // ~keep An ordinary soft newline (no `<br>` behind it, e.g. wrapped source text)
+    // ~keep still collapses to a single space -- only the two exact hard-break marker
+    // ~keep shapes are preserved.
+    #[test]
+    fn normalize_link_label_still_collapses_an_incidental_newline_to_a_space() {
+        assert_eq!(normalize_link_label("foo\nbar"), "foo bar");
+        assert_eq!(normalize_link_label("foo \n bar"), "foo bar");
+    }
+
+    #[test]
+    fn normalize_link_label_still_collapses_ordinary_whitespace_runs() {
+        assert_eq!(normalize_link_label("foo   bar"), "foo bar");
+        assert_eq!(normalize_link_label("  foo bar  "), "foo bar");
+    }
+
+    // ~keep Regression for a real collision in an earlier version of this function: it used
+    // ~keep Private Use Area code points (U+E000/U+E001) as placeholders for the hard-break
+    // ~keep markers, reasoning that no producer this crate parses assigns them. That is false
+    // ~keep -- icon fonts live in the PUA (Bootstrap 3's Glyphicons start at U+E001) -- so a
+    // ~keep label already containing that literal character collided with the placeholder and
+    // ~keep reappeared as a spurious hard break once the placeholder was "restored". The
+    // ~keep trigger needs both a literal PUA character AND a real hard-break marker in the
+    // ~keep same label -- a PUA character alone never entered the placeholder-substitution
+    // ~keep branch at all, which is why this was not caught by the other tests above.
+    #[test]
+    fn normalize_link_label_does_not_confuse_a_literal_pua_character_with_the_spaces_sentinel() {
+        assert_eq!(normalize_link_label("a\u{E000}b  \nc"), "a\u{E000}b  \nc");
+    }
+
+    #[test]
+    fn normalize_link_label_does_not_confuse_a_literal_pua_character_with_the_backslash_sentinel() {
+        assert_eq!(normalize_link_label("a\u{E001}b\\\nc"), "a\u{E001}b\\\nc");
+    }
+
+    // ~keep The Glyphicon code point itself (U+E001) is exactly the second placeholder this
+    // ~keep function used to use, so this pins the specific real-world icon-font byte, not
+    // ~keep just "some" PUA character.
+    #[test]
+    fn normalize_link_label_preserves_a_glyphicon_code_point_alongside_a_spaces_style_hard_break() {
+        assert_eq!(normalize_link_label("\u{E001} foo  \nbar"), "\u{E001} foo  \nbar");
+    }
+
+    #[test]
+    fn normalize_link_label_preserves_a_glyphicon_code_point_alongside_a_backslash_style_hard_break() {
+        assert_eq!(normalize_link_label("\u{E001} foo\\\nbar"), "\u{E001} foo\\\nbar");
     }
 }

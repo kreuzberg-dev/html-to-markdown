@@ -1582,10 +1582,23 @@ fn emit_void(
         TagKind::LineBreak => {
             // ~keep `<br>` outside any block context emits nothing (Tier-2 behaviour).
             // ~keep Three context-dependent emissions:
-            // ~keep   - Inside a link (anywhere): one space.  Tier-2's
-            // ~keep     `normalize_link_label` (utility/content.rs ~145) collapses
-            // ~keep     whitespace runs in link labels, so multiple spaces or
-            // ~keep     `  \n` would normalize back to one space.
+            // ~keep   - Inside a link (anywhere): `"  \n"`, unmodified, UNLESS the link's
+            // ~keep     body is still empty (nothing emitted since the `<a>`/wrapper
+            // ~keep     opened), in which case nothing is emitted at all. Tier-2's
+            // ~keep     `normalize_link_label` (utility/content.rs) now preserves this
+            // ~keep     exact marker mid-label instead of collapsing it (CommonMark
+            // ~keep     spec examples 642/643 — a hard break inside link text is legal
+            // ~keep     and must survive a convert/render/convert round trip), trimming
+            // ~keep     it away only if it ends up at the label's start/end — a break
+            // ~keep     with nothing before it has no preceding line to break, so a
+            // ~keep     leading `<br>` (`<a><br>bar</a>`) must produce `[bar]`, not
+            // ~keep     `[  \nbar]`. Router (`router.rs`) bails Tier-1 whenever
+            // ~keep     `newline_style` is not `Spaces`, so this literal is the only
+            // ~keep     marker Tier-1 ever needs to match. No trim beforehand otherwise,
+            // ~keep     matching the non-heading branch below and Tier-2's own
+            // ~keep     `line_break.rs`, which does not trim here either — only the
+            // ~keep     label's own start/end trimming (in `normalize_link_label` /
+            // ~keep     `close_link` below) cleans up the ends.
             // ~keep   - Inside a table cell (not in a link): mirrors Tier-2's
             // ~keep     `emit_table_cell_break` (main_helpers.rs) — trim trailing
             // ~keep     spaces/tabs, then emit a literal `<br>` when `br_in_tables`
@@ -1597,9 +1610,15 @@ fn emit_void(
             // ~keep     `&nbsp;` folded to a plain space) trimmed first so the hard-break
             // ~keep     prefix is exactly two spaces, not two-plus-N.  Mirrors the
             // ~keep     table-cell branch's own `trim_trailing_whitespace` call below.
-            let in_link = state.stack.iter().any(|f| matches!(f.spec.kind, TagKind::Link));
-            if in_link {
-                state.cell_or_output_mut().push(' ');
+            let link_frame_content_start = state
+                .stack
+                .iter()
+                .rev()
+                .find_map(|f| matches!(f.spec.kind, TagKind::Link).then_some(f.content_start));
+            if let Some(link_content_start) = link_frame_content_start {
+                if link_content_start < state.cell_or_output_mut().len() {
+                    state.cell_or_output_mut().push_str("  \n");
+                }
             } else if state.in_table_cell() {
                 let dest = state.cell_or_output_mut();
                 crate::converter::main_helpers::trim_trailing_whitespace(dest);
@@ -3506,6 +3525,17 @@ fn flush_text(
     // ~keep frame must bypass the gate, or `<td><a> x</a></td>` keeps the space
     // ~keep Tier-2 trims (`[ x](...)` instead of `[x](...)`).
     let in_link_frame = matches!(state.stack.last().map(|frame| frame.spec.kind), Some(TagKind::Link));
+    // ~keep Tier-2's `process_text_node` (`text_node.rs`) drops a text node's leading
+    // ~keep whitespace run whenever `output.ends_with('\n') && prefix == " "` — one of
+    // ~keep several `skip_prefix` conditions, and unlike the others it is not limited
+    // ~keep to a double newline. A hard break inside a link (`<a>foo<br> bar</a>`) is
+    // ~keep the only way link content ever ends in a bare `\n` (see `normalize_link_label`
+    // ~keep and the `TagKind::LineBreak` `in_link` arm above, which now preserve/emit it
+    // ~keep rather than folding it to a space), so this mirrors that one `skip_prefix`
+    // ~keep arm scoped to exactly the case Tier-1 can produce it in: right after such a
+    // ~keep break, `bar`'s leading space must not survive, or Tier-1 emits
+    // ~keep `[foo  \n bar]` where Tier-2 emits `[foo  \nbar]`.
+    let after_link_hard_break = in_link_frame && state.cell_or_output_mut().ends_with('\n');
     // ~keep Tier-2's `handle_code` renders `<code>` content fully verbatim — no
     // ~keep trimming, no whitespace normalization at all. `in_code` (already
     // ~keep computed above) covers both bare `<code>` and `<pre><code>`; the
@@ -3516,7 +3546,7 @@ fn flush_text(
     let raw = if !in_pre
         && !in_code
         && (!state.in_table_cell() || in_link_frame)
-        && (at_inline_frame_start || block_separator_after || document_start_strip)
+        && (at_inline_frame_start || block_separator_after || document_start_strip || after_link_hard_break)
     {
         let trimmed = raw.trim_start_matches([' ', '\t', '\n', '\r']);
         if leading_ws_migrates_out && trimmed.len() < raw.len() {
