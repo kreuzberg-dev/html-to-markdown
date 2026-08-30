@@ -385,6 +385,44 @@ pub fn percent_encode_url(url: &str) -> String {
     encoded
 }
 
+/// Percent-encode only the non-ASCII bytes of a URL destination, leaving every ASCII byte --
+/// including reserved/punctuation characters such as `:`, `?`, `&`, `=`, `(`, `)`, and `\` --
+/// untouched.
+///
+/// RFC 3986 defines a URI's grammar as ASCII-only; a raw byte >= 0x80 is not valid URI syntax
+/// under any encoding style, `Angle` included. This is also what every CommonMark-compliant
+/// HTML renderer does when serializing a link destination into an `href` attribute: the
+/// spec's own worked examples encode it this way (`[foo](/f\u{f6}\u{f6})` renders as
+/// `<a href="/f%C3%B6%C3%B6">` per `commonmark-spec`'s example for entity references), and
+/// `cmark`, `commonmark.js`, and `comrak` all implement the same `houdini_escape_href`-style
+/// safe-character set. Encoding it here is therefore standards-driven, not an accommodation
+/// for one downstream renderer -- unlike [`percent_encode_url`], it never touches an ASCII
+/// byte, so it cannot interact with the balanced-parens / unbalanced-parens escaping below or
+/// with the documented backslash tradeoff in [`append_url_destination`].
+#[must_use]
+fn percent_encode_non_ascii(url: &str) -> std::borrow::Cow<'_, str> {
+    if url.is_ascii() {
+        return std::borrow::Cow::Borrowed(url);
+    }
+    let mut encoded = String::with_capacity(url.len() + 8);
+    for byte in url.bytes() {
+        if byte.is_ascii() {
+            encoded.push(byte as char);
+        } else {
+            encoded.push('%');
+            let hi = char::from_digit(u32::from(byte >> 4), 16)
+                .unwrap_or('0')
+                .to_ascii_uppercase();
+            let lo = char::from_digit(u32::from(byte & 0x0f), 16)
+                .unwrap_or('0')
+                .to_ascii_uppercase();
+            encoded.push(hi);
+            encoded.push(lo);
+        }
+    }
+    std::borrow::Cow::Owned(encoded)
+}
+
 /// Check whether every `)` in `href` is matched by a preceding `(`, and every `(` is closed.
 ///
 /// A raw (non-bracketed) Markdown link destination may contain parentheses only if they form a
@@ -438,10 +476,36 @@ pub fn append_url_destination(
 ) {
     if dest.is_empty() {
         output.push_str("<>");
-    } else if url_escape_style == crate::options::validation::UrlEscapeStyle::Percent {
+        return;
+    }
+    if url_escape_style == crate::options::validation::UrlEscapeStyle::Percent {
         let encoded = percent_encode_url(dest);
         output.push_str(&encoded);
-    } else if dest.contains(' ') || dest.contains('\n') {
+        return;
+    }
+
+    // ~keep Applied up front, before the space/newline and paren-balance branches below: a
+    // ~keep raw non-ASCII byte is never valid URI syntax (RFC 3986), so encoding it is correct
+    // ~keep regardless of which branch handles the rest of `dest`, and it changes nothing
+    // ~keep else -- see `percent_encode_non_ascii`'s doc comment for why this is
+    // ~keep standards-driven rather than a downstream-renderer accommodation, and for why it
+    // ~keep cannot interact with the backslash tradeoff in the arms below (it never touches an
+    // ~keep ASCII byte, so it commutes with every other transform in this function).
+    //
+    // ~keep Skipped for a same-document fragment (`#...`): a fragment must byte-match the
+    // ~keep target element's `id`, which the id-generating tool controls, not this converter
+    // ~keep -- real-world generators (verified against a GitHub-rendered fixture,
+    // ~keep `gh-143-links-wordwrap.html`'s `#walk-up-\u{fe0e}-and-walk-down-\u{fe0e}`) commonly
+    // ~keep leave non-ASCII characters raw in anchor hrefs. Encoding only the href here, while
+    // ~keep the id it must match stays raw, breaks the link rather than normalizing it.
+    let dest = if dest.starts_with('#') {
+        std::borrow::Cow::Borrowed(dest)
+    } else {
+        percent_encode_non_ascii(dest)
+    };
+    let dest = dest.as_ref();
+
+    if dest.contains(' ') || dest.contains('\n') {
         // ~keep angle-bracket destinations may contain raw parentheses, but a raw `<`, `>`, or
         // ~keep an unescaped `\` (which would otherwise merge with the next escaped char and
         // ~keep un-escape it) terminates the wrap early, so all three must be escaped inside it
@@ -615,11 +679,70 @@ mod tests {
     }
 
     #[test]
+    fn percent_encode_non_ascii_leaves_ascii_only_input_unchanged() {
+        assert_eq!(
+            percent_encode_non_ascii("/file (1) <draft>.pdf"),
+            "/file (1) <draft>.pdf"
+        );
+    }
+
+    #[test]
+    fn percent_encode_non_ascii_encodes_only_non_ascii_bytes() {
+        assert_eq!(percent_encode_non_ascii("/f\u{f6}\u{f6}.html"), "/f%C3%B6%C3%B6.html");
+    }
+
+    #[test]
     fn append_markdown_link_angle_plain_url_unchanged() {
         let mut out = String::new();
         let options = opts_with_style(UrlEscapeStyle::Angle);
         append_markdown_link(&mut out, "text", "/file.pdf", None, "text", &options, None);
         assert_eq!(out, "[text](/file.pdf)");
+    }
+
+    // ~keep Regression for the CommonMark spec fixpoint gap: a raw non-ASCII byte in a
+    // ~keep destination is never valid URI syntax (RFC 3986), and every compliant HTML
+    // ~keep renderer percent-encodes it on render (confirmed against the spec's own worked
+    // ~keep example for entity references, `/f\u{f6}\u{f6}` -> `/f%C3%B6%C3%B6`), so the
+    // ~keep default `Angle` style must emit it pre-encoded to reach a round-trip fixpoint.
+    #[test]
+    fn append_markdown_link_angle_percent_encodes_non_ascii() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "öö.html", "öö.html", None, "öö.html", &options, None);
+        assert_eq!(out, "[öö.html](%C3%B6%C3%B6.html)");
+    }
+
+    // ~keep Non-ASCII pre-encoding must not disturb ASCII reserved characters the `Angle`
+    // ~keep style deliberately leaves alone (unlike `Percent`, which would also mangle this
+    // ~keep query string): only bytes >= 0x80 are touched.
+    #[test]
+    fn append_markdown_link_angle_percent_encodes_non_ascii_but_not_ascii_reserved_chars() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(
+            &mut out,
+            "text",
+            "https://example.com/söq?a=1&b=2",
+            None,
+            "text",
+            &options,
+            None,
+        );
+        assert_eq!(out, "[text](https://example.com/s%C3%B6q?a=1&b=2)");
+    }
+
+    // ~keep Regression: a same-document fragment must byte-match the target element's
+    // ~keep `id`, which this converter does not control, and real-world generators
+    // ~keep commonly leave non-ASCII characters raw there (verified against a
+    // ~keep GitHub-rendered fixture, `gh-143-links-wordwrap.html`'s
+    // ~keep `#walk-up-\u{fe0e}-and-walk-down-\u{fe0e}`) -- pre-encoding only the href while
+    // ~keep the id it must match stays raw would break the anchor instead of normalizing it.
+    #[test]
+    fn append_markdown_link_angle_does_not_percent_encode_a_fragment_destination() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "#walk-up-\u{fe0e}", None, "text", &options, None);
+        assert_eq!(out, "[text](#walk-up-\u{fe0e})");
     }
 
     #[test]

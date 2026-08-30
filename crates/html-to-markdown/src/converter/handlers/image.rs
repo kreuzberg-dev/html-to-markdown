@@ -309,6 +309,25 @@ mod tests {
         assert_eq!(result, "![alt](/img%20%281%29.png)");
     }
 
+    // ~keep Regression for the CommonMark spec fixpoint gap (spec example 520):
+    // ~keep `<img alt="[foo](uri2)">` previously emitted `![[foo](uri2)](uri3)`, which
+    // ~keep reparses with the alt text's `[foo](uri2)` becoming a real nested link --
+    // ~keep CommonMark parses an image's alt as full inline content, so only `foo`
+    // ~keep survived into the alt attribute on a second conversion and `uri2` was lost.
+    #[test]
+    fn format_image_markdown_escapes_link_shaped_alt_text() {
+        let result = format_image_markdown(
+            "uri3",
+            "[foo](uri2)",
+            None,
+            false,
+            LinkStyle::Inline,
+            UrlEscapeStyle::Angle,
+            None,
+        );
+        assert_eq!(result, "![\\[foo\\](uri2)](uri3)");
+    }
+
     #[test]
     fn format_image_markdown_percent_encodes_angle_brackets() {
         let result = format_image_markdown(
