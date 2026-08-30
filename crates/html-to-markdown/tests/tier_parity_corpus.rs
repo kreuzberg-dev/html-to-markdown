@@ -220,7 +220,6 @@ impl RunReport {
 // ~keep precondition or transform in place — add a new, separately-named step instead.
 fn allowlisted_divergence(input: &str, tier1_output: &str, tier2_output: &str, is_truncated: bool) -> Option<String> {
     static BOUNDARY: OnceLock<regex::Regex> = OnceLock::new();
-    static ADJACENT_IMAGES: OnceLock<regex::Regex> = OnceLock::new();
 
     // ~keep Root cause: this input is one of the generator's deliberately truncated
     // ~keep documents (`maybe_truncate` cut it off at an arbitrary `char` boundary,
@@ -301,42 +300,6 @@ fn allowlisted_divergence(input: &str, tier1_output: &str, tier2_output: &str, i
         candidate1 = collapsed1;
         candidate2 = collapsed2;
         applied.push("block-boundary-blank-line");
-    }
-
-    // ~keep Root cause: a multi-line `<li>` — its last rendered line is a `<br>`
-    // ~keep hard-break continuation, not the bullet/number marker line itself —
-    // ~keep directly followed by a `<blockquote>` with no separating whitespace
-    // ~keep in the source. This is the same block-boundary-blank-line
-    // ~keep phenomenon documented above (Tier-2 inserts a blank separator line
-    // ~keep there, Tier-1 does not), but that step's boundary regex is anchored
-    // ~keep to marker lines (`- `/`1. `) and does not match a continuation
-    // ~keep line, so per this file's "add a new, separately-named step" rule
-    // ~keep this is its own step rather than a widening of that one's
-    // ~keep precondition. Scoped to `</ul><blockquote>` / `</ol><blockquote>`
-    // ~keep adjacency in the input so it cannot swallow an unrelated
-    // ~keep blockquote-formatting divergence.
-    if input.contains("</ul><blockquote>") || input.contains("</ol><blockquote>") {
-        let collapsed1 = candidate1.replace("\n\n> ", "\n> ");
-        let collapsed2 = candidate2.replace("\n\n> ", "\n> ");
-        if collapsed1 != candidate1 || collapsed2 != candidate2 {
-            candidate1 = collapsed1;
-            candidate2 = collapsed2;
-            applied.push("list-continuation-blockquote-boundary");
-        }
-    }
-
-    // ~keep Root cause: two `<img>` elements separated by exactly one literal
-    // ~keep space in the source. Tier-2 sometimes drops that single space
-    // ~keep between the two resulting `![alt](src)` runs while Tier-1 keeps it
-    // ~keep — but not always (this specific document may have both sides agree
-    // ~keep already), so the gap is removed from BOTH candidates symmetrically
-    // ~keep rather than assuming which side has it.
-    let adjacent_images_re =
-        ADJACENT_IMAGES.get_or_init(|| regex::Regex::new(r"<img\b[^>]*>[ ]<img\b").expect("regex compiles"));
-    if adjacent_images_re.is_match(input) {
-        candidate1 = candidate1.replace(") ![", ")![");
-        candidate2 = candidate2.replace(") ![", ")![");
-        applied.push("adjacent-images-space");
     }
 
     // ~keep Fixing cell content above (heading image/br) changes a cell's
@@ -620,22 +583,87 @@ fn gen_text(rng: &mut Rng) -> String {
     out
 }
 
+// ~keep Literal Unicode whitespace characters distinct from ASCII space/tab/
+// ~keep newline: NBSP, en/em space, thin space, ideographic space. Mirrors
+// ~keep the `UNICODE_WS_ENTITIES` vocabulary Tier-1's `flush_text` folds to a
+// ~keep plain space (scanner.rs), so leading/trailing runs built from these
+// ~keep actually exercise that folding path, not just plain-ASCII trimming.
+const WS_UNICODE_LITERALS: &[char] = &['\u{a0}', '\u{2002}', '\u{2003}', '\u{2009}', '\u{3000}'];
+
+/// Builds one whitespace run for the leading/trailing edge of an inline
+/// element's body — plain ASCII space/tab/newline runs alongside `&nbsp;`
+/// and literal Unicode whitespace. All three tiers of the vocabulary
+/// (ASCII, named entity, literal Unicode) are exercised uniformly at every
+/// call site, including `<code>` bodies, now that leading/trailing
+/// whitespace handling agrees between Tier-1 and Tier-2 everywhere this
+/// generator can place a run.
+fn gen_ws_run(rng: &mut Rng) -> String {
+    match rng.gen_range(6) {
+        0 => " ".to_string(),
+        1 => "   ".to_string(),
+        2 => "\n  ".to_string(),
+        3 => "&nbsp;".to_string(),
+        4 => (*rng.choose(WS_UNICODE_LITERALS)).to_string(),
+        _ => format!("&nbsp;{}", rng.choose(WS_UNICODE_LITERALS)),
+    }
+}
+
+/// Wraps `content` with a leading and/or trailing whitespace run (each added
+/// independently, with `content` left untouched most of the time) — the
+/// shape this generator was missing entirely, which is why the Tier-1
+/// leading-whitespace-migration defect (fixed alongside this generator
+/// change) survived undetected by the oracle.
+///
+/// ~keep Only ever adds a run against a plain-text edge of `content`
+/// ~keep (`inner` from `gen_inline` is either all `gen_text` output or a
+/// ~keep single `<tag>...</tag>` string — see `gen_inline`'s call sites —
+/// ~keep never a mix), never against a `<`/`>` tag-boundary edge. A
+/// ~keep leading/trailing run added there would land as its OWN separate
+/// ~keep whitespace-only text-node sibling next to a child element (e.g.
+/// ~keep `<em>\u{2003}<x-widget>x</x-widget></em>`) instead of merging into
+/// ~keep one text node with real content — a materially different shape
+/// ~keep Tier-2 handles by a different, unrelated rule (a whitespace-only
+/// ~keep text-node sibling of an element inside `<strong>`/`<em>` is
+/// ~keep dropped outright, not folded to a migrated space; confirmed by
+/// ~keep direct testing to reproduce identically with no inline marker
+/// ~keep involved at all — see the final report). Out of scope for the
+/// ~keep leading-whitespace-migration defect this generator change targets.
+fn maybe_wrap_leading_trailing_ws(rng: &mut Rng, content: String) -> String {
+    let mut out = content;
+    if !out.starts_with('<') && rng.chance(1, 4) {
+        out = format!("{}{out}", gen_ws_run(rng));
+    }
+    if !out.ends_with('>') && rng.chance(1, 4) {
+        out = format!("{out}{}", gen_ws_run(rng));
+    }
+    out
+}
+
 fn gen_inline(rng: &mut Rng, depth: usize) -> String {
     if depth >= 2 || rng.chance(1, 2) {
         return gen_text(rng);
     }
     match rng.gen_range(9) {
-        0 => format!("<strong>{}</strong>", gen_inline(rng, depth + 1)),
-        1 => format!("<em>{}</em>", gen_inline(rng, depth + 1)),
+        0 => {
+            let inner = gen_inline(rng, depth + 1);
+            format!("<strong>{}</strong>", maybe_wrap_leading_trailing_ws(rng, inner))
+        }
+        1 => {
+            let inner = gen_inline(rng, depth + 1);
+            format!("<em>{}</em>", maybe_wrap_leading_trailing_ws(rng, inner))
+        }
         2 => {
             let ticks = "`".repeat(1 + rng.gen_range(3));
-            format!("<code>{ticks}{}{ticks}</code>", gen_text(rng))
+            let text = gen_text(rng);
+            let body = maybe_wrap_leading_trailing_ws(rng, format!("{ticks}{text}{ticks}"));
+            format!("<code>{body}</code>")
         }
-        3 => format!(
-            r#"<a href="https://example.com/{}">{}</a>"#,
-            rng.gen_range(1000),
-            gen_text(rng)
-        ),
+        3 => {
+            let href_id = rng.gen_range(1000);
+            let text = gen_text(rng);
+            let label = maybe_wrap_leading_trailing_ws(rng, text);
+            format!(r#"<a href="https://example.com/{href_id}">{label}</a>"#)
+        }
         4 => format!(r#"<img src="/img{}.png" alt="{}">"#, rng.gen_range(1000), gen_text(rng)),
         5 => format!("{}<br>{}", gen_text(rng), gen_text(rng)),
         6 => format!("<mark>{}</mark>", gen_text(rng)),
@@ -677,8 +705,9 @@ fn gen_list(rng: &mut Rng, depth: usize, in_list_chain: bool, chain_has_ol: bool
     let item_count = 1 + rng.gen_range(4);
     let mut items = String::new();
     for _ in 0..item_count {
+        let will_nest_list = depth < 3 && rng.chance(1, 4);
         let mut item_body = gen_paragraph_content(rng);
-        if depth < 3 && rng.chance(1, 4) {
+        if will_nest_list {
             item_body.push_str(&gen_list(rng, depth + 1, true, chain_has_ol || use_ol));
         }
         let _ = write!(items, "<li>{item_body}</li>");

@@ -122,7 +122,26 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
         match bytes[pos] {
             b'<' => {
                 if text_start < pos {
-                    flush_text(&mut state, &html[text_start..pos], text_start)?;
+                    // ~keep Peek the upcoming tag BEFORE flushing the preceding text: a
+                    // ~keep purely-whitespace run immediately after an inline-close marker
+                    // ~keep (`**`/`*`/etc.) is collapsed to one space by default, but
+                    // ~keep Tier-2's `text_node.rs` pushes it verbatim when the next
+                    // ~keep sibling isn't inline — see `flush_text`'s use of this flag for
+                    // ~keep why that only matters (byte-for-byte) when the next sibling is
+                    // ~keep specifically a nested `<ul>`/`<ol>`.
+                    let next_tag_is_list = upcoming_tag_is_list_open(bytes, pos);
+                    // ~keep Same idea, narrower target: whether the whitespace about to be
+                    // ~keep flushed sits directly in front of a following `<img>` — see
+                    // ~keep `flush_text`'s use of `next_tag_is_img` alongside
+                    // ~keep `Tier1State::last_emitted_was_img`.
+                    let next_tag_is_img = upcoming_tag_is_named(bytes, pos, b"img");
+                    flush_text(
+                        &mut state,
+                        &html[text_start..pos],
+                        text_start,
+                        next_tag_is_list,
+                        next_tag_is_img,
+                    )?;
                 }
 
                 let next = bytes.get(pos + 1).copied().unwrap_or(0);
@@ -170,7 +189,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 // ~keep bare `<x` as a text node). Emit the `<` and continue so
                 // ~keep we don't bail on commonly-unescaped source like `x < 5`.
                 if !parse::is_tag_name_start(next) {
-                    flush_text(&mut state, "<", pos)?;
+                    flush_text(&mut state, "<", pos, false, false)?;
                     pos += 1;
                     text_start = pos;
                     continue;
@@ -611,7 +630,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
     }
 
     if text_start < pos {
-        flush_text(&mut state, &html[text_start..pos], text_start)?;
+        flush_text(&mut state, &html[text_start..pos], text_start, false, false)?;
     }
 
     // ~keep Phase N2: implicitly close all remaining open elements at EOF.
@@ -635,6 +654,17 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
         }
         emit_close_for_implicit(&mut state, options)?;
     }
+
+    // ~keep Mirror Tier-2's final render-stage order exactly (main.rs):
+    // ~keep `trim_line_end_whitespace` runs BEFORE `collapse_excess_blank_lines`.
+    // ~keep Without this, a code span's delimiter padding space that lands right
+    // ~keep before an embedded newline in `<code>` content (e.g. a leading
+    // ~keep `\n`-starting body next to a trailing backtick run needing a pad)
+    // ~keep survives in Tier-1 but is stripped by Tier-2 as ordinary
+    // ~keep end-of-line trailing whitespace — this is a general per-line pass,
+    // ~keep not something scoped to code spans specifically, so reuse the exact
+    // ~keep Tier-2 helper rather than reimplementing it.
+    crate::converter::main_helpers::trim_line_end_whitespace(&mut state.output);
 
     // ~keep Collapse runs of 3+ consecutive newlines to exactly 2, matching Tier-2's
     // ~keep `collapse_excess_blank_lines` post-processing step.
@@ -990,6 +1020,10 @@ fn emit_open(
     // ~keep Opening any tag ends the "just closed a custom element" boundary
     // ~keep window (see the field's doc comment on `Tier1State`).
     state.last_closed_custom_element = false;
+    // ~keep Opening any tag ends the "just emitted an <img>" window too (see
+    // ~keep `Tier1State::last_emitted_was_img`); the `TagKind::Image` arm below
+    // ~keep re-sets it to true after this reset runs.
+    state.last_emitted_was_img = false;
 
     // ~keep Phase V: when a block-level tag opens inside a link, bail.  Tier-2's
     // ~keep link handler collapses block children (img alt, paragraph text) into
@@ -1104,7 +1138,25 @@ fn emit_open(
                     cell_buf.push_str("  \n");
                 }
             } else {
-                state.ensure_blank_line();
+                // ~keep Tier-2's `needs_leading_sep` (block/div.rs) appends "\n\n" BLINDLY
+                // ~keep whenever the output doesn't already end with a blank line — it does
+                // ~keep NOT special-case a lone trailing newline into pushing just one more.
+                // ~keep That produces a transient run of 3 newlines when a
+                // ~keep single-newline-terminated sibling (a list/table/`<hr>`) precedes this
+                // ~keep div; ordinarily harmless, since the final `collapse_excess_blank_lines`
+                // ~keep pass folds any 3+ run back down to exactly 2 — EXCEPT when the div's
+                // ~keep own first child is a `<blockquote>`, whose entry logic
+                // ~keep (`close_blockquote`) inspects the exact trailing state before that
+                // ~keep collapse runs and treats "ends with \n\n" (true for the transient
+                // ~keep 3-run too) as "pop one", landing on the blank line Tier-2 actually
+                // ~keep keeps. `ensure_blank_line`'s normalized (never-3+) output would make
+                // ~keep that pop collapse a lone newline straight back down to one, losing the
+                // ~keep separator — hence the blind push here instead of `ensure_blank_line`.
+                let dest = &mut state.output;
+                if !dest.is_empty() && !dest.ends_with("\n\n") {
+                    crate::converter::tier1::state::trim_trailing_horizontal(dest);
+                    dest.push_str("\n\n");
+                }
             }
         }
         // ~keep Summary: push accumulation buffer so children redirect into it (Phase R).
@@ -1170,7 +1222,16 @@ fn open_heading(state: &mut Tier1State) {
 }
 
 fn open_blockquote(state: &mut Tier1State) {
-    state.ensure_blank_line();
+    // ~keep Tier-2's `handle_blockquote` (blockquote.rs) branches on nesting: a
+    // ~keep NESTED blockquote (already inside an outer one, per `EscapeCtx::BLOCKQUOTE`)
+    // ~keep unconditionally gets a blank-line separator on open. A TOP-LEVEL
+    // ~keep blockquote instead computes its separator from whatever the
+    // ~keep immediately preceding sibling already left in `output` — see
+    // ~keep `close_blockquote`, which needs that untouched pre-open tail, so
+    // ~keep nothing is done here for the top-level case.
+    if state.escape_ctx.contains(EscapeCtx::BLOCKQUOTE) {
+        state.ensure_blank_line();
+    }
 }
 
 fn open_pre(state: &mut Tier1State, attrs: &[(&[u8], Option<&[u8]>)]) {
@@ -1214,20 +1275,37 @@ fn open_list(state: &mut Tier1State, kind: ListKind) {
     let current_list_depth = state.list_depth;
     {
         let dest = state.cell_or_output_mut();
-        // ~keep Drop trailing horizontal whitespace from inter-tag preservation
-        // ~keep (Phase U-2) before the block separator.
-        crate::converter::tier1::state::trim_trailing_horizontal(dest);
         if !dest.is_empty() {
             if current_list_depth == 0 {
-                if !dest.ends_with("\n\n") {
-                    if dest.ends_with('\n') {
-                        dest.push('\n');
-                    } else {
-                        dest.push_str("\n\n");
-                    }
+                // ~keep Mirror Tier-2's top-level `add_list_leading_separator` branch
+                // ~keep (`!ctx.in_list`, list/utils.rs) EXACTLY, literal-suffix
+                // ~keep collision included: it checks whether the tail ends in
+                // ~keep "\n\n", "* ", "- ", or ". " and otherwise blindly appends
+                // ~keep "\n\n" with NO trim first. When the immediately preceding
+                // ~keep content is a `<strong>`/`<em>`/`<b>` (default `*` marker)
+                // ~keep closed by exactly one space, the tail's last two bytes are
+                // ~keep "* " — the SAME two bytes as an unordered bullet marker —
+                // ~keep so the check false-negatives and no separator is added at
+                // ~keep all, leaving that one space as the sole boundary
+                // ~keep (`**y** - z`). This is a genuine, narrowly-scoped Tier-2
+                // ~keep quirk, not a general "a list always gets its own line"
+                // ~keep rule, so it must be reproduced literally, not "fixed" —
+                // ~keep hence no eager trim before this check (Tier-2 has none).
+                let needs_newline =
+                    !dest.ends_with("\n\n") && !dest.ends_with("* ") && !dest.ends_with("- ") && !dest.ends_with(". ");
+                if needs_newline {
+                    dest.push_str("\n\n");
                 }
             } else {
-                if !dest.ends_with('\n') {
+                // ~keep Mirror Tier-2's `ctx.in_list_item` branch the same way: the
+                // ~keep same literal-suffix check (against a bare newline instead of
+                // ~keep a blank line), trimming ONLY once it actually decides to
+                // ~keep insert the separator — not eagerly beforehand, for the same
+                // ~keep reason as the top-level branch above.
+                let needs_newline =
+                    !dest.ends_with('\n') && !dest.ends_with("* ") && !dest.ends_with("- ") && !dest.ends_with(". ");
+                if needs_newline {
+                    crate::converter::tier1::state::trim_trailing_horizontal(dest);
                     dest.push('\n');
                 }
             }
@@ -1422,6 +1500,10 @@ fn emit_void(
     // ~keep A void element closes the "just closed a custom element" boundary
     // ~keep window too (see the field's doc comment on `Tier1State`).
     state.last_closed_custom_element = false;
+    // ~keep Closes the "just emitted an <img>" window too (see
+    // ~keep `Tier1State::last_emitted_was_img`); the `TagKind::Image` arm below
+    // ~keep re-sets it to true after this reset runs.
+    state.last_emitted_was_img = false;
 
     match spec.kind {
         TagKind::Hr => {
@@ -1531,6 +1613,9 @@ fn emit_void(
                 // ~keep is in a heading whose tag is not in `keep_inline_images_in`.
                 dest.push_str(alt);
             }
+            // ~keep Set regardless of `keep_as_markdown` — Tier-2's `is_empty_inline_element`
+            // ~keep (paragraph.rs) checks the DOM tag name only, not how it renders.
+            state.last_emitted_was_img = true;
         }
 
         TagKind::Ignored | TagKind::Inline | TagKind::Block => {}
@@ -1660,6 +1745,11 @@ fn emit_close(
             }
         }
     };
+
+    // ~keep Closing any tag ends the "just emitted an <img>" window too (see
+    // ~keep `Tier1State::last_emitted_was_img`) — an intervening close means the
+    // ~keep two images are not both unwrapped direct siblings any more.
+    state.last_emitted_was_img = false;
 
     while let Some(top) = state.stack.last() {
         if kinds_match(&top.spec.kind, &spec.kind) {
@@ -2163,6 +2253,22 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
         state.output.push_str(normalized.trim_end());
     }
 
+    // ~keep Tier-2's `text.trim()` (heading.rs) trims the ENTIRE rendered heading
+    // ~keep body — not just internal whitespace runs — before prefixing. A leading
+    // ~keep whitespace character (a decoded `&nbsp;`, or one migrated out of an
+    // ~keep `<em>`/`<strong>` open marker by `close_inline_marker`'s leading-migration
+    // ~keep step) would otherwise double up against the "# " prefix's own trailing
+    // ~keep space (`<h3>&nbsp;x</h3>` -> "###  x" instead of Tier-2's "### x").
+    let leading_ws_len = state.output[content_start..]
+        .char_indices()
+        .find(|&(_, c)| !c.is_whitespace())
+        .map_or(state.output.len() - content_start, |(i, _)| i);
+    if leading_ws_len > 0 {
+        state
+            .output
+            .replace_range(content_start..content_start + leading_ws_len, "");
+    }
+
     let prefix = heading_prefix(n);
     state.output.insert_str(content_start, prefix);
     // ~keep Tier-2 leaves a blank line ("\n\n") after a heading. A
@@ -2186,13 +2292,42 @@ fn close_blockquote(state: &mut Tier1State, frame: &OpenTag) {
     // ~keep mirroring `close_inline_marker`'s and `<br>`'s own trailing-whitespace
     // ~keep trim — Tier-2 does not carry it into the quoted line.
     crate::converter::main_helpers::trim_trailing_whitespace(&mut content);
+    // ~keep Tier-2's `content.trim()` (blockquote.rs) trims the ENTIRE accumulated
+    // ~keep child content — not just internal whitespace runs — before the "> "
+    // ~keep per-line prefixing. A leading whitespace character (a decoded
+    // ~keep `&nbsp;`, or one migrated out of an `<em>`/`<strong>` open marker by
+    // ~keep `close_inline_marker`'s leading-migration step) would otherwise double
+    // ~keep up against the prefix's own trailing space (`<blockquote>&nbsp;x</blockquote>`
+    // ~keep -> ">  x" instead of Tier-2's "> x").
+    let leading_ws_len = content
+        .char_indices()
+        .find(|&(_, c)| !c.is_whitespace())
+        .map_or(content.len(), |(i, _)| i);
+    if leading_ws_len > 0 {
+        content.replace_range(0..leading_ws_len, "");
+    }
     let prefixed = prefix_blockquote_lines(&content);
     state.output.truncate(content_start);
-    // ~keep Mirror Tier-2 blockquote.rs: when the output ends with "\n\n"
-    // ~keep before the blockquote, remove one "\n" (heading-then-blockquote
-    // ~keep produces only a single newline separator, not a blank line).
-    if state.output.ends_with("\n\n") {
-        state.output.pop();
+    if frame.prev_escape_ctx.contains(EscapeCtx::BLOCKQUOTE) {
+        // ~keep Nested blockquote: `open_blockquote` already normalized the tail to
+        // ~keep a clean blank line above; collapse it back to one newline here,
+        // ~keep mirroring Tier-2's nested-blockquote separator handling.
+        if state.output.ends_with("\n\n") {
+            state.output.pop();
+        }
+    } else if !state.output.is_empty() {
+        // ~keep Mirror Tier-2's top-level branch exactly (blockquote.rs:135-143): an
+        // ~keep existing blank-line separator collapses to a single newline, but a
+        // ~keep lone trailing newline (or none at all) is PROMOTED up to a blank
+        // ~keep line. This is a literal function of the untouched pre-open tail —
+        // ~keep see `open_blockquote` for why nothing runs there in this branch.
+        if state.output.ends_with("\n\n") {
+            state.output.pop();
+        } else if !state.output.ends_with('\n') {
+            state.output.push_str("\n\n");
+        } else {
+            state.output.push('\n');
+        }
     }
     state.output.push_str(&prefixed);
 }
@@ -2238,7 +2373,17 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
             state.output.push_str(raw);
             state.output.push('\n');
             state.output.push_str(&fence);
-            state.output.push('\n');
+            // ~keep Tier-2's `format_code_block` (handlers/code_block.rs) ends the
+            // ~keep Backticks/Tildes branch with `output.push_str("\n\n")` — a clean
+            // ~keep blank-line terminator, not a single newline.  Matching that
+            // ~keep precisely matters beyond the general case (where a following
+            // ~keep sibling's own leading-separator logic papers over a single-vs-
+            // ~keep double difference either way): `close_blockquote`'s top-level
+            // ~keep branch inspects this exact trailing state to decide whether to
+            // ~keep collapse or promote the separator, so leaving only one newline
+            // ~keep here made a `<pre>` directly followed by a `<blockquote>`
+            // ~keep diverge from Tier-2 (discovered via that fix; see tests).
+            state.output.push_str("\n\n");
         }
         CodeBlockStyle::Tildes => {
             let indented = indent_pre_lines(&raw);
@@ -2822,7 +2967,13 @@ fn output_ends_with_inline_text(output: &str) -> bool {
     !output_ends_with_inline_close_marker(output)
 }
 
-fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(), BailReason> {
+fn flush_text(
+    state: &mut Tier1State,
+    raw: &str,
+    base_offset: usize,
+    next_tag_is_list: bool,
+    next_tag_is_img: bool,
+) -> Result<(), BailReason> {
     if raw.is_empty() {
         return Ok(());
     }
@@ -2832,6 +2983,10 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
     // ~keep of the boundary check below (see the field's doc comment).
     let after_custom_element_close = state.last_closed_custom_element;
     state.last_closed_custom_element = false;
+    // ~keep Same read-then-clear convention, for the "previous direct sibling
+    // ~keep was an <img>" half of the adjacent-images check below.
+    let after_img = state.last_emitted_was_img;
+    state.last_emitted_was_img = false;
 
     // ~keep Inside a table but outside a cell or caption: discard text (whitespace
     // ~keep between structural tags like <table>...<tr> or <tr>...<td>).
@@ -3043,6 +3198,22 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
                 )
             });
         if !inside_inline {
+            // ~keep Tier-2's `paragraph.rs` skips a whitespace-only text node
+            // ~keep OUTRIGHT (not deduped to a space, DROPPED) when it sits directly
+            // ~keep between two "empty inline" siblings that are both direct
+            // ~keep children of the same `<p>` — scoped here to the `<img>`/`<img>`
+            // ~keep case the allow-listed divergence was keyed on (`is_empty_inline_element`
+            // ~keep also covers `br`/`hr`/`input`, but those combinations are
+            // ~keep unverified and out of scope). `state.stack.last()` being
+            // ~keep `Paragraph` mirrors walking the `<p>`'s OWN direct children —
+            // ~keep an intervening wrapper tag would put something else on top.
+            let in_direct_paragraph = matches!(
+                state.stack.last().map(|frame| frame.spec.kind),
+                Some(TagKind::Paragraph)
+            );
+            if in_direct_paragraph && after_img && next_tag_is_img {
+                return Ok(());
+            }
             // ~keep Use the active buffer (summary buf or main output) for the
             // ~keep tail check so spaces between adjacent inline elements inside
             // ~keep a summary are preserved correctly.
@@ -3055,7 +3226,29 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
                 || (after_custom_element_close && !active_tail.is_empty() && !active_tail.ends_with('\n'))
             {
                 let dest = state.cell_or_output_mut();
-                dest.push(' ');
+                if next_tag_is_list && raw.contains('\n') {
+                    // ~keep Tier-2's text_node.rs branches BEFORE the previous/next-
+                    // ~keep sibling check above when the whitespace run itself
+                    // ~keep contains a newline (`had_newlines`): with a non-inline
+                    // ~keep next sibling (`<ul>`/`<ol>`), that branch drops the run
+                    // ~keep entirely rather than collapsing or preserving it. Push
+                    // ~keep nothing here to match.
+                } else if next_tag_is_list {
+                    // ~keep Tier-2's text_node.rs pushes a whitespace-only text node
+                    // ~keep VERBATIM (not collapsed) whenever the next sibling isn't
+                    // ~keep inline — see `previous_sibling_is_inline_tag(...) &&
+                    // ~keep next_sibling_is_inline_tag(...)`, false here since `<ul>`/
+                    // ~keep `<ol>` are block. That raw tail then feeds
+                    // ~keep `add_list_leading_separator`'s literal `ends_with("* "|
+                    // ~keep "- "|". ")` check (list/utils.rs), which only
+                    // ~keep false-negatives (collides with a bullet marker, skipping
+                    // ~keep the separator) when the run is EXACTLY one space —
+                    // ~keep collapsing here to a single space unconditionally would
+                    // ~keep manufacture that collision for runs that never had it.
+                    dest.push_str(raw);
+                } else {
+                    dest.push(' ');
+                }
             }
             return Ok(());
         }
@@ -3107,7 +3300,25 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
             state.stack.last().map(|frame| frame.spec.kind),
             Some(TagKind::Strong | TagKind::Emphasis)
         );
-    let raw = if !in_pre && !state.in_table_cell() && (at_inline_frame_start || block_separator_after) {
+    // ~keep The `!state.in_table_cell()` gate below exists for the general
+    // ~keep block_separator_after case (a cell has no block separators to
+    // ~keep speak of). But Tier-2's `normalize_link_label` trims a link label's
+    // ~keep leading whitespace unconditionally, in a cell or not — so an `<a>`
+    // ~keep frame must bypass the gate, or `<td><a> x</a></td>` keeps the space
+    // ~keep Tier-2 trims (`[ x](...)` instead of `[x](...)`).
+    let in_link_frame = matches!(state.stack.last().map(|frame| frame.spec.kind), Some(TagKind::Link));
+    // ~keep Tier-2's `handle_code` renders `<code>` content fully verbatim — no
+    // ~keep trimming, no whitespace normalization at all. `in_code` (already
+    // ~keep computed above) covers both bare `<code>` and `<pre><code>`; the
+    // ~keep `<pre>` case is already excluded via `!in_pre`, so this only adds
+    // ~keep the bare-`<code>` exclusion needed to stop a leading plain ASCII
+    // ~keep space/tab/newline run from being deleted (`<code> x</code>` must
+    // ~keep stay "` x`", not become "`x`").
+    let raw = if !in_pre
+        && !in_code
+        && (!state.in_table_cell() || in_link_frame)
+        && (at_inline_frame_start || block_separator_after)
+    {
         let trimmed = raw.trim_start_matches([' ', '\t', '\n', '\r']);
         if leading_ws_migrates_out && trimmed.len() < raw.len() {
             state.cell_or_output_mut().push(' ');
@@ -4296,4 +4507,42 @@ fn lowercase_into<'b>(bytes: &[u8], buf: &'b mut [u8; MAX_TAG_NAME_BYTES]) -> &'
 /// Convert a byte slice to an owned `String` (lossy UTF-8).
 fn bytes_to_string(b: &[u8]) -> String {
     String::from_utf8_lossy(b).into_owned()
+}
+
+/// Peek the lowercased tag name of the upcoming OPEN tag at `bytes[lt_pos]`
+/// (expected to be `<`), if there is one — `None` for a close tag (`</...`),
+/// a non-tag `<` (comment, bang, literal), or EOF. Shared by
+/// `upcoming_tag_is_list_open` and `upcoming_tag_is_named` so the main scan
+/// loop can peek ahead, BEFORE the tag itself is parsed, to tell `flush_text`
+/// what kind of tag the text about to be flushed sits directly in front of.
+fn upcoming_open_tag_name<'b>(bytes: &[u8], lt_pos: usize, buf: &'b mut [u8; MAX_TAG_NAME_BYTES]) -> Option<&'b [u8]> {
+    if bytes.get(lt_pos) != Some(&b'<') {
+        return None;
+    }
+    let &next = bytes.get(lt_pos + 1)?;
+    if !parse::is_tag_name_start(next) {
+        return None;
+    }
+    let name_start = lt_pos + 1;
+    let name_end = parse::scan_tag_name(bytes, name_start);
+    Some(lowercase_into(&bytes[name_start..name_end], buf))
+}
+
+/// Peek whether the upcoming tag at `bytes[lt_pos]` is an opening `<ul>`/`<ol>`.
+/// See `flush_text`'s `next_tag_is_list` parameter for why that distinction
+/// matters.
+fn upcoming_tag_is_list_open(bytes: &[u8], lt_pos: usize) -> bool {
+    let mut name_buf = [0u8; MAX_TAG_NAME_BYTES];
+    matches!(
+        upcoming_open_tag_name(bytes, lt_pos, &mut name_buf),
+        Some(b"ul" | b"ol")
+    )
+}
+
+/// Peek whether the upcoming tag at `bytes[lt_pos]` is an opening tag named
+/// exactly `name` (already lowercase). See `flush_text`'s `next_tag_is_img`
+/// parameter for why that distinction matters.
+fn upcoming_tag_is_named(bytes: &[u8], lt_pos: usize, name: &[u8]) -> bool {
+    let mut name_buf = [0u8; MAX_TAG_NAME_BYTES];
+    upcoming_open_tag_name(bytes, lt_pos, &mut name_buf) == Some(name)
 }

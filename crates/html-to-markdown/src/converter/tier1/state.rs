@@ -233,6 +233,18 @@ pub struct Tier1State {
     /// ~keep here. This flag lets `flush_text` special-case exactly that
     /// ~keep one boundary instead of relaxing the general dedup rule.
     pub last_closed_custom_element: bool,
+
+    /// True immediately after an `<img>` is emitted, for exactly the next
+    /// `flush_text` call (read-then-clear, same convention as
+    /// `last_closed_custom_element`). Tier-2's `paragraph.rs` skips a
+    /// whitespace-only text node entirely — not just deduping it to a single
+    /// space — when it sits directly between two "empty inline" siblings
+    /// (`br`/`hr`/`img`/`input`/`meta`/`link`) that are BOTH direct children
+    /// of the same `<p>`; this flag lets `flush_text` detect the "previous
+    /// direct sibling was an `<img>`" half of that condition (the "next
+    /// sibling is an `<img>`" half comes from the scan loop's tag peek, same
+    /// as `next_tag_is_list`).
+    pub last_emitted_was_img: bool,
 }
 
 impl Tier1State {
@@ -256,6 +268,7 @@ impl Tier1State {
             summary_buf_stack: Vec::new(),
             canonicalize_attr_entities: false,
             last_closed_custom_element: false,
+            last_emitted_was_img: false,
         }
     }
 
