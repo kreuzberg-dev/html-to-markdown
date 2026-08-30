@@ -49,7 +49,7 @@ pub enum RouterDecision {
 /// natively in Tier-1; it no longer forces a Tier-2 route.
 ///
 /// `report.had_custom_elements` no longer forces Tier-2 (Phase FF): the scanner
-/// passes unknown tags through transparently via `CUSTOM_ELEMENT_BLOCK_SPEC`,
+/// passes unknown tags through transparently via `CUSTOM_ELEMENT_INLINE_SPEC`,
 /// and Phase DD canonicalizes image alt/title entities for custom-element
 /// pages via a separate `has_custom_element_tags(html)` recheck in `scan()`.
 ///

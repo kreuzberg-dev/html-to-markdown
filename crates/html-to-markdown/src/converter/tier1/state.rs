@@ -105,6 +105,8 @@ bitflags::bitflags! {
         const BLOCKQUOTE = 1 << 4;
         /// Inside a heading element.
         const HEADING    = 1 << 5;
+        /// Inside a `<strong>`/`<b>` element.
+        const STRONG     = 1 << 6;
     }
 }
 
@@ -216,6 +218,21 @@ pub struct Tier1State {
     /// flag at the start of `scan` so the image emit path mirrors the
     /// canonicalization for byte-equality (Phase DD).
     pub canonicalize_attr_entities: bool,
+    /// `true` immediately after closing a custom element (unknown tag
+    /// containing `-`), until the next scanner event consumes or clears it.
+    ///
+    /// ~keep Tier-2's `is_inline_element` whitespace-merge check
+    /// ~keep (`main_helpers.rs`) is a fixed named-tag list that custom
+    /// ~keep elements never match, so a whitespace-only text node right
+    /// ~keep after a custom element's close is NOT treated as "between two
+    /// ~keep inline siblings" and is preserved verbatim even when the
+    /// ~keep custom element's own trailing content already ended in a
+    /// ~keep (decoded-entity) space. Tier-1's general whitespace flush
+    /// ~keep instead asks "does the output already end with a space" and
+    /// ~keep skips a redundant one — correct for real inline tags, wrong
+    /// ~keep here. This flag lets `flush_text` special-case exactly that
+    /// ~keep one boundary instead of relaxing the general dedup rule.
+    pub last_closed_custom_element: bool,
 }
 
 impl Tier1State {
@@ -238,6 +255,7 @@ impl Tier1State {
             pre_lang: None,
             summary_buf_stack: Vec::new(),
             canonicalize_attr_entities: false,
+            last_closed_custom_element: false,
         }
     }
 

@@ -221,7 +221,6 @@ impl RunReport {
 fn allowlisted_divergence(input: &str, tier1_output: &str, tier2_output: &str, is_truncated: bool) -> Option<String> {
     static BOUNDARY: OnceLock<regex::Regex> = OnceLock::new();
     static ADJACENT_IMAGES: OnceLock<regex::Regex> = OnceLock::new();
-    static CUSTOM_TAG: OnceLock<regex::Regex> = OnceLock::new();
 
     // ~keep Root cause: this input is one of the generator's deliberately truncated
     // ~keep documents (`maybe_truncate` cut it off at an arbitrary `char` boundary,
@@ -304,30 +303,26 @@ fn allowlisted_divergence(input: &str, tier1_output: &str, tier2_output: &str, i
         applied.push("block-boundary-blank-line");
     }
 
-    // ~keep Root cause: identical nested emphasis (`<strong><strong>x</strong></strong>`)
-    // ~keep — Tier-1 emits doubled markers (`****x****`); Tier-2 collapses redundant
-    // ~keep same-type nesting to a single marker pair (`**x**`).
-    if input.contains("<strong><strong>") {
-        candidate1 = candidate1.replace("****", "**");
-        applied.push("doubled-nested-strong-emphasis");
-    }
-
-    // ~keep Root cause: a trailing `&nbsp;` sits immediately before a closing
-    // ~keep inline tag (`</em>`, `</strong>`, `</mark>`) or a `<br>`. Tier-2
-    // ~keep trims trailing whitespace (including a decoded NBSP, which by this
-    // ~keep point may itself already have folded to a plain ASCII space via
-    // ~keep either tier's own Unicode-whitespace-entity normalization) before
-    // ~keep closing the span / emitting the hard-break marker; Tier-1 does not,
-    // ~keep leaving one extra, otherwise-invisible space character behind — as
-    // ~keep little as a single stray space with no run to collapse (e.g. before
-    // ~keep a closing `*`), so a whitespace-RUN collapse cannot fix every shape
-    // ~keep of this bug. Reuses the custom-element step's coarser
-    // ~keep whitespace-and-markdown-syntax strip instead, which is insensitive
-    // ~keep to exactly how many stray characters there are.
-    if input.contains("&nbsp;<") {
-        candidate1 = strip_markdown_syntax_and_whitespace(&candidate1);
-        candidate2 = strip_markdown_syntax_and_whitespace(&candidate2);
-        applied.push("trailing-nbsp-before-closing-tag");
+    // ~keep Root cause: a multi-line `<li>` — its last rendered line is a `<br>`
+    // ~keep hard-break continuation, not the bullet/number marker line itself —
+    // ~keep directly followed by a `<blockquote>` with no separating whitespace
+    // ~keep in the source. This is the same block-boundary-blank-line
+    // ~keep phenomenon documented above (Tier-2 inserts a blank separator line
+    // ~keep there, Tier-1 does not), but that step's boundary regex is anchored
+    // ~keep to marker lines (`- `/`1. `) and does not match a continuation
+    // ~keep line, so per this file's "add a new, separately-named step" rule
+    // ~keep this is its own step rather than a widening of that one's
+    // ~keep precondition. Scoped to `</ul><blockquote>` / `</ol><blockquote>`
+    // ~keep adjacency in the input so it cannot swallow an unrelated
+    // ~keep blockquote-formatting divergence.
+    if input.contains("</ul><blockquote>") || input.contains("</ol><blockquote>") {
+        let collapsed1 = candidate1.replace("\n\n> ", "\n> ");
+        let collapsed2 = candidate2.replace("\n\n> ", "\n> ");
+        if collapsed1 != candidate1 || collapsed2 != candidate2 {
+            candidate1 = collapsed1;
+            candidate2 = collapsed2;
+            applied.push("list-continuation-blockquote-boundary");
+        }
     }
 
     // ~keep Root cause: two `<img>` elements separated by exactly one literal
@@ -344,61 +339,22 @@ fn allowlisted_divergence(input: &str, tier1_output: &str, tier2_output: &str, i
         applied.push("adjacent-images-space");
     }
 
-    // ~keep Fixing cell content above (heading image/br, doubled emphasis) — or
-    // ~keep the custom-element step below — changes a cell's rendered width, but
-    // ~keep each tier had already computed its OWN column-padding spaces (and
-    // ~keep separator-row dash count) from the (differing) unfixed content — so
-    // ~keep the padding itself now differs even though every cell's text
-    // ~keep matches. Re-pad every `| ... |` table row/separator line to
-    // ~keep single-space boundaries before comparing. Always applied (not gated
-    // ~keep on a prior step firing): it is a no-op on non-table lines, and the
-    // ~keep final `!applied.is_empty()` check below still requires some OTHER
-    // ~keep step to have fired, so a pure, otherwise-unexplained padding
+    // ~keep Fixing cell content above (heading image/br) changes a cell's
+    // ~keep rendered width, but each tier had already computed its OWN
+    // ~keep column-padding spaces (and separator-row dash count) from the
+    // ~keep (differing) unfixed content — so the padding itself now differs
+    // ~keep even though every cell's text matches. Re-pad every `| ... |`
+    // ~keep table row/separator line to single-space boundaries before
+    // ~keep comparing. Always applied (not gated on a prior step firing): it
+    // ~keep is a no-op on non-table lines, and the final
+    // ~keep `!applied.is_empty()` check below still requires some OTHER step
+    // ~keep to have fired, so a pure, otherwise-unexplained padding
     // ~keep difference on its own still fails the test.
     let depad = |s: &str| -> String { s.lines().map(depad_table_row).collect::<Vec<_>>().join("\n") };
     candidate1 = depad(&candidate1);
     candidate2 = depad(&candidate2);
 
-    // ~keep Root cause: a custom element (unknown tag containing `-`) appearing
-    // ~keep inline within flowing text. `CUSTOM_ELEMENT_BLOCK_SPEC` (scanner.rs)
-    // ~keep treats every custom element as block-level, so Tier-1 breaks the
-    // ~keep surrounding paragraph/list-item/blockquote around it: extra blank
-    // ~keep lines, paragraph splits, an orphaned bullet/quote/emphasis marker
-    // ~keep character left dangling by the split, and/or a stray space
-    // ~keep fused/unfused at its boundary. Tier-2 treats it as an ordinary
-    // ~keep inline DOM node and keeps everything on one line. Applied last and
-    // ~keep reduces each candidate to its bag of significant (non-whitespace,
-    // ~keep non-markdown-syntax) characters — every one of those characters
-    // ~keep from the other steps above must already agree, in order, for the
-    // ~keep final check to pass. This is coarser than the other steps (a
-    // ~keep genuine, unrelated formatting divergence co-occurring in the same
-    // ~keep custom-element-containing document could in principle also be
-    // ~keep masked by it), but no such case has been observed in practice —
-    // ~keep the ambiguity between an orphaned bullet/emphasis marker character
-    // ~keep and a genuine one is otherwise unresolvable without a real
-    // ~keep markdown parser.
-    let custom_tag_re = CUSTOM_TAG.get_or_init(|| {
-        regex::Regex::new(r"<[a-zA-Z][a-zA-Z0-9]*-[a-zA-Z0-9-]*[ >]").expect("custom tag regex compiles")
-    });
-    if custom_tag_re.is_match(input) {
-        candidate1 = strip_markdown_syntax_and_whitespace(&candidate1);
-        candidate2 = strip_markdown_syntax_and_whitespace(&candidate2);
-        applied.push("custom-element-inline-whitespace");
-    }
-
     (!applied.is_empty() && candidate1 == candidate2).then(|| applied.join("+"))
-}
-
-/// Reduces markdown to its bag of significant characters for a coarse,
-/// structure-insensitive comparison: removes whitespace and every ASCII
-/// character markdown uses as block/inline syntax (asterisk, hyphen, plus,
-/// angle bracket, pipe, hash, backtick, underscore, and square/round brackets).
-/// Two markdown renderings of the same words, differing only in how they're
-/// wrapped into blocks/paragraphs/emphasis, always reduce to the same string.
-fn strip_markdown_syntax_and_whitespace(s: &str) -> String {
-    s.chars()
-        .filter(|c| !c.is_whitespace() && !"*-+>|#`_[]()".contains(*c))
-        .collect()
 }
 
 /// Re-pad a GFM table row/separator line (`| cell | cell |`) to single-space
@@ -617,13 +573,24 @@ const WORDS: &[&str] = &[
 const KNOWN_ENTITIES: &[&str] = &[
     "amp", "lt", "gt", "quot", "nbsp", "mdash", "hellip", "copy", "times", "euro",
 ];
-// ~keep Deliberately NOT prefixes of any real HTML5 legacy (semicolon-optional)
-// ~keep named character reference (e.g. "not", "sup", "para") — such a prefix
-// ~keep collision is a *different*, real root cause (Tier-2's decoder does
-// ~keep HTML5 legacy semicolon-optional prefix matching; Tier-1's does not —
-// ~keep see this file's test report) and would otherwise swamp this pool's
-// ~keep intended "fully unknown name" case.
-const UNKNOWN_ENTITIES: &[&str] = &["wobblefrob", "zzqqxx", "blorptastic", "custom123widget"];
+// ~keep Mixes genuinely-unknown names (pass through raw on both tiers) with
+// ~keep real HTML5 legacy named character references outside Tier-1's hot
+// ~keep subset (`notin`, `there4`, `sup1`, `para`, `trade`) — Tier-1 used to
+// ~keep pass these through literally instead of decoding them, a real,
+// ~keep now-fixed root cause (Tier-1's `decode_entity_into` falls back to
+// ~keep the full `html_escape::NAMED_ENTITIES` table, the same table Tier-2
+// ~keep decodes against, instead of bailing or passing the entity through).
+const UNKNOWN_ENTITIES: &[&str] = &[
+    "wobblefrob",
+    "zzqqxx",
+    "blorptastic",
+    "custom123widget",
+    "notin",
+    "there4",
+    "sup1",
+    "para",
+    "trade",
+];
 
 fn gen_text(rng: &mut Rng) -> String {
     let word_count = 1 + rng.gen_range(5);

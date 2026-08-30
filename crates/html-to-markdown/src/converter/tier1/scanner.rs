@@ -57,17 +57,22 @@ const MIN_FENCE_LENGTH: usize = 3;
 /// Static `TagSpec` used for all unknown custom elements (tag names containing
 /// `-`, e.g. `<x-foo>`, `<my-component>`).
 ///
-/// Tier-2 treats unknown custom elements as generic block containers and emits
-/// their inner content as plain text.  Using a `Block` spec here produces
-/// byte-identical output to Tier-2 for the common cases where custom-element
-/// content is plain text or standard HTML children.
+/// ~keep Unknown/custom elements are inline by default in HTML (there is no
+/// ~keep such thing as a block-level custom element absent a UA stylesheet
+/// ~keep rule or CSS `display` override, neither of which this converter
+/// ~keep applies) and Tier-2's DOM walk treats them exactly that way: an
+/// ~keep `<x-widget>` inside flowing text stays inline in the surrounding
+/// ~keep paragraph/list-item/blockquote instead of splitting it. A `Block`
+/// ~keep spec here previously matched Tier-2 only for the common case of a
+/// ~keep custom element as a whole top-level document/child; it diverged the
+/// ~keep moment one appeared inline.
 ///
-/// The static reference `&CUSTOM_ELEMENT_BLOCK_SPEC` is used anywhere the
+/// The static reference `&CUSTOM_ELEMENT_INLINE_SPEC` is used anywhere the
 /// scanner needs a `&'static TagSpec` for a custom element open/close tag.
-static CUSTOM_ELEMENT_BLOCK_SPEC: TagSpec = TagSpec {
-    kind: TagKind::Block,
+static CUSTOM_ELEMENT_INLINE_SPEC: TagSpec = TagSpec {
+    kind: TagKind::Inline,
     is_void: false,
-    is_block: true,
+    is_block: false,
     optional_close: None,
     is_rawtext: false,
 };
@@ -264,11 +269,11 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
 
                 // ~keep Resolve the tag spec.  Custom elements (names containing `-`)
                 // ~keep are not in the static TAGS table but are treated as generic
-                // ~keep block containers — Tier-2 emits their inner content as plain
-                // ~keep block text, which matches `TagKind::Block` behaviour.  All
+                // ~keep inline passthroughs, matching `TagKind::Inline` behaviour and
+                // ~keep HTML's default inline rendering for unknown elements.  All
                 // ~keep other unknown tags are still bailed immediately.
                 let spec: &'static TagSpec = if name_lower.contains(&b'-') {
-                    &CUSTOM_ELEMENT_BLOCK_SPEC
+                    &CUSTOM_ELEMENT_INLINE_SPEC
                 } else {
                     match tier1::lookup(name_lower) {
                         Some(s) => s,
@@ -982,6 +987,10 @@ fn emit_open(
     attrs: &[(&[u8], Option<&[u8]>)],
     table_probes: &mut Vec<TableLayoutProbe>,
 ) -> Result<(), BailReason> {
+    // ~keep Opening any tag ends the "just closed a custom element" boundary
+    // ~keep window (see the field's doc comment on `Tier1State`).
+    state.last_closed_custom_element = false;
+
     // ~keep Phase V: when a block-level tag opens inside a link, bail.  Tier-2's
     // ~keep link handler collapses block children (img alt, paragraph text) into
     // ~keep an inline link label; replicating that in Tier-1 requires content
@@ -1020,7 +1029,16 @@ fn emit_open(
             // ~keep Tier-2 does NOT set in_strong for figcaption children, so
             // ~keep emit `**` normally when the topmost wrap-buf is a
             // ~keep figcaption (or there's no wrap-buf at all).
-            if !state.summary_at_top() {
+            //
+            // ~keep `EscapeCtx::STRONG` here is `state.escape_ctx` BEFORE this
+            // ~keep tag's own bit is applied (`apply_open_escape_ctx` runs after
+            // ~keep `emit_open` returns) — i.e. "is there already a `<strong>`
+            // ~keep ancestor" — matching Tier-2's `ctx.in_strong` check in
+            // ~keep `handle_strong`, which likewise tests the context inherited
+            // ~keep from ancestors before forcing it true for its own children.
+            // ~keep Without this, `<strong><strong>x</strong></strong>` emits
+            // ~keep `****x****`, which is not valid CommonMark strong emphasis.
+            if !state.summary_at_top() && !state.escape_ctx.contains(EscapeCtx::STRONG) {
                 state.cell_or_output_mut().push_str("**");
             }
         }
@@ -1401,6 +1419,10 @@ fn emit_void(
     html: &str,
     options: &ConversionOptions,
 ) -> Result<(), BailReason> {
+    // ~keep A void element closes the "just closed a custom element" boundary
+    // ~keep window too (see the field's doc comment on `Tier1State`).
+    state.last_closed_custom_element = false;
+
     match spec.kind {
         TagKind::Hr => {
             {
@@ -1429,7 +1451,11 @@ fn emit_void(
             // ~keep     is true, or collapse to a single space (guarded against a
             // ~keep     leading space on an empty cell) otherwise.  `newline_style`
             // ~keep     is never consulted inside a cell (issue #453, issue #454).
-            // ~keep   - Inside a regular block (paragraph, div, etc.): `"  \n"`.
+            // ~keep   - Inside a regular block (paragraph, div, etc.): `"  \n"`, with any
+            // ~keep     trailing whitespace already in the buffer (e.g. a decoded
+            // ~keep     `&nbsp;` folded to a plain space) trimmed first so the hard-break
+            // ~keep     prefix is exactly two spaces, not two-plus-N.  Mirrors the
+            // ~keep     table-cell branch's own `trim_trailing_whitespace` call below.
             let in_link = state.stack.iter().any(|f| matches!(f.spec.kind, TagKind::Link));
             if in_link {
                 state.cell_or_output_mut().push(' ');
@@ -1444,7 +1470,9 @@ fn emit_void(
             } else if state.stack.is_empty() {
                 // ~keep bare `<br>` at top level — Tier-2 emits nothing
             } else {
-                state.cell_or_output_mut().push_str("  \n");
+                let dest = state.cell_or_output_mut();
+                crate::converter::main_helpers::trim_trailing_whitespace(dest);
+                dest.push_str("  \n");
             }
         }
 
@@ -1617,10 +1645,10 @@ fn emit_close(
     let mut name_buf = [0u8; MAX_TAG_NAME_BYTES];
     let name_lower = lowercase_into(tag_name_bytes, &mut name_buf);
 
-    // ~keep Custom element close tags (e.g. `</x-foo>`) use the same static Block
+    // ~keep Custom element close tags (e.g. `</x-foo>`) use the same static Inline
     // ~keep spec as their corresponding open tag.  All other unknown close tags bail.
     let spec: &'static TagSpec = if name_lower.contains(&b'-') {
-        &CUSTOM_ELEMENT_BLOCK_SPEC
+        &CUSTOM_ELEMENT_INLINE_SPEC
     } else {
         match tier1::lookup(name_lower) {
             Some(s) => s,
@@ -1654,14 +1682,18 @@ fn emit_close(
     })?;
 
     state.escape_ctx = frame.prev_escape_ctx;
+    state.last_closed_custom_element = std::ptr::eq(spec, &raw const CUSTOM_ELEMENT_INLINE_SPEC);
 
     match spec.kind {
         TagKind::Paragraph => close_paragraph(state),
         TagKind::Heading(n) => close_heading(state, &frame, n, false)?,
         TagKind::Blockquote => close_blockquote(state, &frame),
         TagKind::Pre => close_pre(state, &frame, options),
-        // ~keep Strong: suppress close marker when inside summary (see open strong guard).
-        TagKind::Strong if state.summary_at_top() => {}
+        // ~keep Strong: suppress close marker when inside summary, or when this
+        // ~keep frame nested inside another `<strong>` and so never emitted an
+        // ~keep open marker either (see open-side guard) — `state.escape_ctx` was
+        // ~keep just restored to `frame.prev_escape_ctx` above.
+        TagKind::Strong if state.summary_at_top() || state.escape_ctx.contains(EscapeCtx::STRONG) => {}
         TagKind::Strong => close_inline_marker(state, &frame, "**"),
         TagKind::Emphasis => close_inline_marker(state, &frame, "*"),
         TagKind::Strikethrough
@@ -1946,6 +1978,21 @@ fn close_inline_marker(state: &mut Tier1State, frame: &OpenTag, marker: &str) {
         buf.insert_str(marker_start, &leading);
     }
 
+    // ~keep Trailing counterpart of the leading-whitespace migration above: a
+    // ~keep trailing whitespace run (e.g. a decoded `&nbsp;` folded to a plain
+    // ~keep space) is pushed OUTSIDE the closing marker instead of staying
+    // ~keep inside it, matching Tier-2's `chomp_inline` suffix handling.
+    let content_str = &buf[content_start..];
+    let trailing_len = content_str.len() - content_str.trim_end().len();
+    if trailing_len > 0 {
+        let trailing_start = buf.len() - trailing_len;
+        let trailing: String = buf[trailing_start..].to_owned();
+        buf.truncate(trailing_start);
+        buf.push_str(marker);
+        buf.push_str(&trailing);
+        return;
+    }
+
     buf.push_str(marker);
 }
 
@@ -1965,14 +2012,18 @@ fn emit_close_for_implicit(state: &mut Tier1State, options: &ConversionOptions) 
     let spec = frame.spec;
 
     state.escape_ctx = frame.prev_escape_ctx;
+    state.last_closed_custom_element = std::ptr::eq(spec, &raw const CUSTOM_ELEMENT_INLINE_SPEC);
 
     match spec.kind {
         TagKind::Paragraph => close_paragraph(state),
         TagKind::Heading(n) => close_heading(state, &frame, n, true)?,
         TagKind::Blockquote => close_blockquote(state, &frame),
         TagKind::Pre => close_pre(state, &frame, options),
-        // ~keep Strong: suppress close marker when inside summary (see open strong guard).
-        TagKind::Strong if state.summary_at_top() => {}
+        // ~keep Strong: suppress close marker when inside summary, or when this
+        // ~keep frame nested inside another `<strong>` and so never emitted an
+        // ~keep open marker either (see open-side guard) — `state.escape_ctx` was
+        // ~keep just restored to `frame.prev_escape_ctx` above.
+        TagKind::Strong if state.summary_at_top() || state.escape_ctx.contains(EscapeCtx::STRONG) => {}
         TagKind::Strong => close_inline_marker(state, &frame, "**"),
         TagKind::Emphasis => close_inline_marker(state, &frame, "*"),
         TagKind::Strikethrough
@@ -2114,7 +2165,12 @@ fn close_blockquote(state: &mut Tier1State, frame: &OpenTag) {
         return;
     }
     let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
-    let content = state.output[content_start..].to_owned();
+    let mut content = state.output[content_start..].to_owned();
+    // ~keep Trailing horizontal whitespace (e.g. a decoded `&nbsp;` folded to a
+    // ~keep plain space) sitting right before `</blockquote>` is trimmed here,
+    // ~keep mirroring `close_inline_marker`'s and `<br>`'s own trailing-whitespace
+    // ~keep trim — Tier-2 does not carry it into the quoted line.
+    crate::converter::main_helpers::trim_trailing_whitespace(&mut content);
     let prefixed = prefix_blockquote_lines(&content);
     state.output.truncate(content_start);
     // ~keep Mirror Tier-2 blockquote.rs: when the output ends with "\n\n"
@@ -2756,6 +2812,12 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
         return Ok(());
     }
 
+    // ~keep Read-then-clear: this text flush is the only event that can be the
+    // ~keep "next scanner event" after a custom-element close for the purposes
+    // ~keep of the boundary check below (see the field's doc comment).
+    let after_custom_element_close = state.last_closed_custom_element;
+    state.last_closed_custom_element = false;
+
     // ~keep Inside a table but outside a cell or caption: discard text (whitespace
     // ~keep between structural tags like <table>...<tr> or <tr>...<td>).
     // ~keep Tier-2 processes only tag children explicitly, ignoring text nodes at
@@ -2924,8 +2986,10 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
         if matches!(state.stack.last().map(|f| f.spec.kind), Some(TagKind::List(_))) {
             return Ok(());
         }
+        // ~keep `after_custom_element_close` overrides the usual "already ends
+        // ~keep with a space, skip" dedup — see `Tier1State::last_closed_custom_element`.
         let dest = state.cell_or_output_mut();
-        if !dest.is_empty() && !dest.ends_with(' ') && !dest.ends_with('\n') {
+        if !dest.is_empty() && !dest.ends_with('\n') && (after_custom_element_close || !dest.ends_with(' ')) {
             dest.push(' ');
         }
         return Ok(());
@@ -2968,7 +3032,13 @@ fn flush_text(state: &mut Tier1State, raw: &str, base_offset: usize) -> Result<(
             // ~keep tail check so spaces between adjacent inline elements inside
             // ~keep a summary are preserved correctly.
             let active_tail: &str = state.cell_or_output_mut();
-            if output_ends_with_inline_close_marker(active_tail) || output_ends_with_inline_text(active_tail) {
+            // ~keep `after_custom_element_close` overrides the tail-already-has-
+            // ~keep content requirement below — see
+            // ~keep `Tier1State::last_closed_custom_element`.
+            if output_ends_with_inline_close_marker(active_tail)
+                || output_ends_with_inline_text(active_tail)
+                || (after_custom_element_close && !active_tail.is_empty() && !active_tail.ends_with('\n'))
+            {
                 let dest = state.cell_or_output_mut();
                 dest.push(' ');
             }
@@ -3382,6 +3452,7 @@ fn apply_open_escape_ctx(state: &mut Tier1State, spec: &TagSpec) {
         TagKind::Link => EscapeCtx::LINK,
         TagKind::Blockquote => EscapeCtx::BLOCKQUOTE,
         TagKind::Heading(_) => EscapeCtx::HEADING,
+        TagKind::Strong => EscapeCtx::STRONG,
         _ => return,
     };
 
@@ -4096,10 +4167,28 @@ fn decode_entity_into(out: &mut String, name: &str) -> bool {
         "yacute" => "\u{00FD}",
         "thorn" => "\u{00FE}",
         "yuml" => "\u{00FF}",
-        _ => return decode_numeric_entity_into(out, name),
+        _ => return decode_named_entity_fallback(out, name),
     };
     out.push_str(s);
     true
+}
+
+/// Falls back to the full WHATWG named-character-reference table for names
+/// outside the hot subset above.
+///
+/// ~keep `html_escape::NAMED_ENTITIES` is the exact table Tier-2 decodes
+/// ~keep against (see `text::decode_html_entities_cow`, which calls
+/// ~keep `html_escape::decode_html_entities`), so looking it up here — rather
+/// ~keep than hand-copying a second ~2000-entry table into Tier-1 — is what
+/// ~keep makes Tier-1 byte-identical to Tier-2 for names like `&notin;`
+/// ~keep instead of merely covering a hand-picked subset.
+fn decode_named_entity_fallback(out: &mut String, name: &str) -> bool {
+    let name_bytes = name.as_bytes();
+    if let Ok(index) = html_escape::NAMED_ENTITIES.binary_search_by(|(entity_name, _)| entity_name.cmp(&name_bytes)) {
+        out.push_str(html_escape::NAMED_ENTITIES[index].1);
+        return true;
+    }
+    decode_numeric_entity_into(out, name)
 }
 
 fn decode_numeric_entity_into(out: &mut String, name: &str) -> bool {
