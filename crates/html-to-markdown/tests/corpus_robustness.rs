@@ -1,0 +1,331 @@
+// ~keep The inner attribute below is a crate-level Rust attribute, not a shell shebang.
+#![allow(missing_docs)]
+
+//! Robustness oracle: conversion must not panic, hang, or blow up in size.
+//!
+//! This library's job is parsing untrusted input, and its failure history is dominated by
+//! that: issues #216 and #217 were reported panics ("byte index N is out of bounds") caused
+//! by a buffer index going stale across handlers, and `deep_nesting_overflow.rs` exists
+//! because a depth-guard reset let native recursion overflow the stack.
+//!
+//! No ground truth is needed to catch that class. The oracle is behavioural:
+//!
+//! - conversion returns rather than panicking (an `Err` is a fine outcome; a panic is not),
+//! - it terminates inside a wall-clock budget,
+//! - output stays within a sane multiple of the input, so a quadratic or runaway expansion
+//!   shows up as a failure rather than as an out-of-memory kill in CI.
+//!
+//! Inputs come from the in-repo fixture corpus plus a deterministic generator. The generator
+//! is seeded and written here rather than pulled from a property-testing crate so that a
+//! failure reproduces exactly from the seed printed in the assertion message, instead of
+//! depending on a shrinking strategy that varies between runs.
+//!
+//! A stack overflow aborts the process and cannot be caught here, by design of the platform;
+//! that case is covered separately by `deep_nesting_overflow.rs`.
+
+use html_to_markdown_rs::options::{ConversionOptions, NewlineStyle};
+use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex, mpsc};
+use std::thread;
+use std::time::Duration;
+
+/// Wall-clock ceiling for a single conversion.
+///
+/// ~keep Deliberately generous. This is a hang detector, not a benchmark: the largest
+/// ~keep fixture converts in milliseconds, so a case that needs seconds has already stopped
+/// ~keep being linear in its input. `tools/benchmark-harness` is where throughput is tracked.
+const CONVERSION_BUDGET: Duration = Duration::from_secs(20);
+
+/// Ceiling on output size as a multiple of input size, plus a fixed floor for tiny inputs.
+///
+/// ~keep Markdown is normally smaller than the HTML it came from. Growth is legitimate for
+/// ~keep pathological input (entity expansion, deeply nested emphasis re-emitting
+/// ~keep delimiters), so this only has to be tight enough to catch runaway expansion.
+const MAX_GROWTH_FACTOR: usize = 64;
+const MAX_GROWTH_FLOOR: usize = 64 * 1024;
+
+fn fixture_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tools/benchmark-harness/fixtures")
+}
+
+fn collect_html(dir: &PathBuf, out: &mut Vec<(String, String)>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            collect_html(&path, out);
+        } else if path.extension().is_some_and(|e| e == "html") {
+            if let Ok(text) = std::fs::read_to_string(&path) {
+                out.push((path.display().to_string(), text));
+            }
+        }
+    }
+}
+
+/// Run `body` on a worker thread with a wall-clock ceiling, reporting which input it was
+/// on if it never finishes.
+///
+/// ~keep One thread for the whole sweep rather than one per conversion: spawning ~6000
+/// ~keep threads cost more than the conversions themselves. Panic attribution does not need a
+/// ~keep thread (`catch_unwind` is per input, inline), and hang attribution is preserved by
+/// ~keep having the worker publish the label it is currently on, so a timeout still names the
+/// ~keep exact input instead of only the test.
+fn with_hang_guard(budget: Duration, body: impl FnOnce(&Mutex<String>) + Send + 'static) {
+    let current: Arc<Mutex<String>> = Arc::new(Mutex::new("<none>".to_owned()));
+    let worker_view = Arc::clone(&current);
+    let (tx, rx) = mpsc::channel();
+    thread::Builder::new()
+        .stack_size(8 * 1024 * 1024)
+        .spawn(move || {
+            body(&worker_view);
+            let _ = tx.send(());
+        })
+        .expect("spawn conversion thread");
+
+    if rx.recv_timeout(budget).is_err() {
+        let stuck = current
+            .lock()
+            .map(|g| g.clone())
+            .unwrap_or_else(|e| e.into_inner().clone());
+        // ~keep The worker is left running on purpose: it is wedged by definition, and
+        // ~keep detaching it lets the failure be reported instead of deadlocking the suite.
+        panic!("conversion did not finish within {budget:?}; last input started: {stuck}");
+    }
+}
+
+/// Convert, treating only a panic as failure.
+///
+/// ~keep A conversion `Err` is a fine outcome -- refusing malformed input is correct
+/// ~keep behaviour, crashing on it is not.
+fn convert_guarded(html: &str, options: ConversionOptions) -> Result<usize, String> {
+    catch_unwind(AssertUnwindSafe(|| {
+        html_to_markdown_rs::convert(html, Some(options))
+            .map(|r| r.content.unwrap_or_default().len())
+            .unwrap_or(0)
+    }))
+    .map_err(|_| "panicked".to_owned())
+}
+
+fn option_matrix() -> Vec<(&'static str, ConversionOptions)> {
+    vec![
+        ("default", ConversionOptions::default()),
+        (
+            "backslash",
+            ConversionOptions {
+                newline_style: NewlineStyle::Backslash,
+                ..Default::default()
+            },
+        ),
+    ]
+}
+
+fn assert_survives(label: &str, html: &str, options: ConversionOptions, option_label: &str, current: &Mutex<String>) {
+    if let Ok(mut slot) = current.lock() {
+        slot.clear();
+        slot.push_str(label);
+        slot.push_str(" [");
+        slot.push_str(option_label);
+        slot.push(']');
+    }
+    match convert_guarded(html, options) {
+        Ok(out_len) => {
+            let ceiling = html.len().saturating_mul(MAX_GROWTH_FACTOR).max(MAX_GROWTH_FLOOR);
+            assert!(
+                out_len <= ceiling,
+                "{label} [{option_label}]: output grew to {out_len} bytes from {} bytes of input \
+                 (ceiling {ceiling})",
+                html.len()
+            );
+        }
+        Err(reason) => panic!("{label} [{option_label}]: conversion {reason}"),
+    }
+}
+
+#[test]
+fn should_survive_every_fixture_in_the_corpus() {
+    let mut corpus = Vec::new();
+    collect_html(&fixture_root(), &mut corpus);
+    let root = fixture_root();
+
+    // ~keep A corpus that silently resolves to nothing is how this kind of test rots into a
+    // ~keep no-op that passes forever. Fail loudly instead.
+    assert!(
+        !corpus.is_empty(),
+        "no fixtures found under {} -- the corpus path is wrong, not the corpus empty",
+        root.display()
+    );
+
+    with_hang_guard(CONVERSION_BUDGET, move |current| {
+        for (path, html) in &corpus {
+            for (option_label, options) in option_matrix() {
+                assert_survives(path, html, options, option_label, current);
+            }
+        }
+    });
+}
+
+/// Deterministic 64-bit PRNG (`SplitMix64`), written here so a failing seed reproduces
+/// exactly without depending on a property-testing crate's shrinking behaviour.
+struct Rng(u64);
+
+impl Rng {
+    fn next_u64(&mut self) -> u64 {
+        self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        let mut z = self.0;
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    }
+
+    fn below(&mut self, n: usize) -> usize {
+        (self.next_u64() % n as u64) as usize
+    }
+}
+
+/// Fragments chosen for the shapes that have actually broken this crate: unclosed and
+/// mis-nested tags, fresh-buffer handlers, table structure, code contexts, `<br>` runs,
+/// entities, and multibyte text that can put a stale byte index mid-character.
+const FRAGMENTS: &[&str] = &[
+    "<p>",
+    "</p>",
+    "<div>",
+    "</div>",
+    "<span>",
+    "</span>",
+    "<br>",
+    "<br/>",
+    "<table>",
+    "<tr>",
+    "<td>",
+    "</td>",
+    "</tr>",
+    "</table>",
+    "<ul>",
+    "<li>",
+    "</li>",
+    "</ul>",
+    "<blockquote>",
+    "</blockquote>",
+    "<pre>",
+    "<code>",
+    "</code>",
+    "</pre>",
+    "<strong>",
+    "</strong>",
+    "<em>",
+    "</em>",
+    "<h1>",
+    "</h1>",
+    "<figure>",
+    "<figcaption>",
+    "</figcaption>",
+    "</figure>",
+    "<details>",
+    "<summary>",
+    "</summary>",
+    "</details>",
+    "<dl>",
+    "<dt>",
+    "</dt>",
+    "<dd>",
+    "</dd>",
+    "</dl>",
+    "<a href=\"x\">",
+    "</a>",
+    "<img src=\"i.png\" alt=\"a\">",
+    "<!-- c -->",
+    "<![CDATA[x]]>",
+    "&amp;",
+    "&#x1F600;",
+    "&nbsp;",
+    "&lt;",
+    "\u{1F600}",
+    "\u{65E5}\u{672C}\u{8A9E}",
+    "text",
+    "  ",
+    "\n",
+    "\t",
+    "\\",
+    "`",
+    "*",
+    "_",
+    "|",
+    "#",
+    ">",
+    "<script>x</script>",
+    "<style>y</style>",
+    "<hr>",
+    "<custom-el>",
+    "</custom-el>",
+];
+
+fn generate(seed: u64, max_fragments: usize) -> String {
+    let mut rng = Rng(seed);
+    let count = 1 + rng.below(max_fragments);
+    let mut html = String::new();
+    for _ in 0..count {
+        html.push_str(FRAGMENTS[rng.below(FRAGMENTS.len())]);
+    }
+    html
+}
+
+#[test]
+fn should_survive_generated_adversarial_markup() {
+    // ~keep Seeds are the reproducer: a failure names the exact seed, and `generate(seed, n)`
+    // ~keep rebuilds that input byte for byte.
+    const CASES: u64 = 3_000;
+    const MAX_FRAGMENTS: usize = 60;
+
+    with_hang_guard(CONVERSION_BUDGET, |current| {
+        for seed in 0..CASES {
+            let html = generate(seed, MAX_FRAGMENTS);
+            for (option_label, options) in option_matrix() {
+                assert_survives(&format!("seed {seed}"), &html, options, option_label, current);
+            }
+        }
+    });
+}
+
+#[test]
+fn should_survive_pathological_shapes() {
+    // ~keep Named shapes rather than random ones, for the degenerate inputs a fragment
+    // ~keep shuffler is unlikely to build but a hostile document trivially contains.
+    let cases: Vec<(&str, String)> = vec![
+        (
+            "deeply nested emphasis",
+            "<em>".repeat(5_000) + "x" + &"</em>".repeat(5_000),
+        ),
+        ("unclosed nested emphasis", "<em>".repeat(5_000) + "x"),
+        (
+            "many attributes",
+            format!("<p {}>x</p>", "data-a=\"1\" ".repeat(20_000)),
+        ),
+        ("entity storm", "&amp;".repeat(200_000)),
+        // ~keep Sized to stay fast, not to probe the limit. Unterminated `<` was quadratic
+        // ~keep when this file was written; asserting on that scaling is the job of
+        // ~keep `bare_lt_complexity.rs`, which pins the growth ratio. Here the only question
+        // ~keep is whether the shape crashes.
+        ("bare angle brackets", "<".repeat(20_000)),
+        ("null and control bytes", "a\u{0}b\u{1}c\u{7}d".repeat(10_000)),
+        ("unterminated comment", format!("<!-- {}", "a".repeat(50_000))),
+        ("unterminated tag", format!("<p {}", "a".repeat(50_000))),
+        ("multibyte boundary spam", "\u{1F600}<br>".repeat(20_000)),
+        (
+            "table without rows",
+            format!("<table>{}</table>", "<td>x".repeat(20_000)),
+        ),
+        ("interleaved mis-nesting", "<b><i></b></i>".repeat(20_000)),
+        ("br run", "<p>a".to_owned() + &"<br>".repeat(20_000) + "b</p>"),
+    ];
+
+    with_hang_guard(CONVERSION_BUDGET, move |current| {
+        for (label, html) in &cases {
+            for (option_label, options) in option_matrix() {
+                assert_survives(label, html, options, option_label, current);
+            }
+        }
+    });
+}

@@ -1,0 +1,27 @@
+[package]
+name = "html-to-markdown-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+rust-version = "1.88"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+arbitrary = { version = "1", features = ["derive"] }
+libfuzzer-sys = "0.4"
+
+[dependencies.html-to-markdown-rs]
+path = "../crates/html-to-markdown"
+
+# ~keep Fuzz targets are their own binaries and must not be swept up by `cargo test` or
+# ~keep `cargo clippy --all-targets` at the workspace root; they need nightly and libFuzzer.
+[workspace]
+
+[[bin]]
+name = "convert"
+path = "fuzz_targets/convert.rs"
+test = false
+doc = false
+bench = false
