@@ -221,3 +221,23 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 
 END OF TERMS AND CONDITIONS
 ```
+
+## CommonMark specification test data
+
+- **File**: `packages/python/tests/commonmark_spec.json`
+- **Original authors**: John MacFarlane and the CommonMark contributors
+- **Repository**: <https://github.com/commonmark/commonmark-spec>
+- **Used by**: `crates/html-to-markdown/tests/commonmark_compliance_test.rs` and
+  `crates/html-to-markdown/tests/commonmark_spec_fixpoint.rs`
+- **License**: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+
+The file is the 652 worked examples from the CommonMark specification, generated from that
+project's `spec.txt` (the `start_line` / `end_line` fields are offsets into it). It is test
+data only: no part of it is compiled into the library, and it is not carried by any published
+artifact -- the two test files that read it are excluded from the packaged crate.
+
+Note that CC BY-SA is a share-alike license, which the Vendoring Policy in `CONTRIBUTING.md`
+("permissively licensed, no copyleft at all") does not currently admit. The file predates that
+policy text. It is recorded here so the attribution requirement is met either way; whether to
+keep it, replace it with a generated fixture, or carve out an explicit exception for test
+fixtures is an open decision.
