@@ -86,6 +86,23 @@ pub struct Context {
     /// Used to distinguish paragraph-break newlines from a previous block
     /// vs. newlines generated within the current block.
     pub(crate) block_content_start: usize,
+    /// Shared flag: true until the first non-whitespace text content is emitted.
+    ///
+    /// ~keep `block_content_start` cannot answer "is this text node at the very start of a
+    /// ~keep fresh block" on its own: it is a byte offset compared against `output.len()`,
+    /// ~keep but every inline wrapper (`sub`/`sup`/`em`/`strong`/links/...) builds its content
+    /// ~keep into a *fresh local `String`* before splicing it into the real output, so that
+    /// ~keep comparison sees an empty scratch buffer (len 0) that can coincidentally equal a
+    /// ~keep real block start of 0 -- indistinguishable from genuine document start. This
+    /// ~keep flag is `Rc<Cell<bool>>` instead so every clone of `Context` -- scratch-buffer
+    /// ~keep handlers included -- observes one shared, buffer-independent truth about
+    /// ~keep whether real content already precedes this point in the actual document.
+    /// ~keep Currently reset to `true` only at document start (`Context::new`); nothing
+    /// ~keep flips it back to `true` mid-document, so it only ever fires exactly once, but
+    /// ~keep the mechanism is ready for additional reset points (e.g. per-block handlers) to
+    /// ~keep extend the same "insignificant leading whitespace" treatment to fresh blocks
+    /// ~keep beyond the very first one, without changing how consumers read it.
+    pub(crate) at_fresh_block_start: Rc<Cell<bool>>,
     /// Are we inside a ruby element?
     pub(crate) in_ruby: bool,
     /// Are we inside a `<strong>` / `<b>` element?
@@ -219,6 +236,7 @@ impl Context {
             cell_allow_inline_images: false,
             in_paragraph: false,
             block_content_start: 0,
+            at_fresh_block_start: Rc::new(Cell::new(true)),
             in_ruby: false,
             in_strong: false,
             in_link: false,

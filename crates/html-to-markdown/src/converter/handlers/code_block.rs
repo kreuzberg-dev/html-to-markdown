@@ -417,6 +417,11 @@ fn format_code_block(
         return;
     }
 
+    if ctx.in_list_item {
+        format_code_block_in_list_item(content, language, output, options, ctx);
+        return;
+    }
+
     match options.code_block_style {
         crate::options::CodeBlockStyle::Indented => {
             if !ctx.convert_as_inline && !output.is_empty() && !output.ends_with("\n\n") {
@@ -473,6 +478,67 @@ fn format_code_block(
             output.push('\n');
             output.push_str(&fence);
             output.push_str("\n\n");
+        }
+    }
+}
+
+/// Format a code block that is a child of a list item.
+///
+/// ~keep A fenced (or indented) code block spans several physical lines, but the
+/// ~keep only call site that indented list continuation content
+/// ~keep (`block/paragraph.rs::add_list_continuation_indent`) indented a single
+/// ~keep leading position, not every line a block emits. CommonMark's list
+/// ~keep container match is per physical line: a non-blank line that is not
+/// ~keep indented to `list_indent_columns` is not part of the item, so an
+/// ~keep unindented closing fence (or any interior content line) drops the rest
+/// ~keep of the block, and the item itself, out of the list on re-parse
+/// ~keep (CommonMark spec examples 263, 273, 274, 318, 324). Render into a
+/// ~keep scratch buffer first so every line can be indented uniformly, then only
+/// ~keep skip the indent on the very first line when this block sits directly
+/// ~keep after the marker text (i.e. it is the item's first content, not a
+/// ~keep continuation) — that line already starts at the right column.
+fn format_code_block_in_list_item(
+    content: &str,
+    language: Option<&str>,
+    output: &mut String,
+    options: &ConversionOptions,
+    ctx: &Context,
+) {
+    let mut rendered = String::new();
+    let plain_ctx = Context {
+        in_list_item: false,
+        ..ctx.clone()
+    };
+    format_code_block(content, language, &mut rendered, options, &plain_ctx);
+
+    let is_continuation = !ctx.convert_as_inline
+        && !output.is_empty()
+        && !output.ends_with("* ")
+        && !output.ends_with("- ")
+        && !output.ends_with(". ");
+
+    if is_continuation {
+        crate::converter::trim_trailing_whitespace(output);
+        if !output.ends_with("\n\n") {
+            if output.ends_with('\n') {
+                output.push('\n');
+            } else {
+                output.push_str("\n\n");
+            }
+        }
+    }
+
+    let indent =
+        crate::converter::list::utils::continuation_indent_string(ctx.list_depth, ctx.list_indent_columns, options)
+            .unwrap_or_default();
+
+    for (index, segment) in rendered.split_inclusive('\n').enumerate() {
+        let line = segment.strip_suffix('\n').unwrap_or(segment);
+        if line.is_empty() || (index == 0 && !is_continuation) {
+            output.push_str(segment);
+        } else {
+            output.push_str(&indent);
+            output.push_str(segment);
         }
     }
 }

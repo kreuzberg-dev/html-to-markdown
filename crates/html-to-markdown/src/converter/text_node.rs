@@ -55,6 +55,14 @@ pub fn process_text_node(
         text = Cow::Owned(text.replace(['\r', '\n'], " "));
     }
 
+    // ~keep Captured before any write below flips it: this is the one true "does real
+    // ~keep content already precede this text node" signal (see `Context::at_fresh_block_start`).
+    // ~keep Unlike comparing `output.len()` to `ctx.block_content_start`, it stays correct
+    // ~keep even when `output` is a fresh local `String` an inline wrapper (sub/sup/em/...)
+    // ~keep is building its content into, because it is shared via `Rc<Cell<bool>>` rather
+    // ~keep than inferred from whichever buffer happens to be passed in.
+    let was_fresh_block_start = ctx.at_fresh_block_start.get();
+
     if text.trim().is_empty() {
         if ctx.in_code {
             output.push_str(text.as_ref());
@@ -77,6 +85,18 @@ pub fn process_text_node(
         }
 
         if ctx.in_paragraph && output.len() == ctx.block_content_start {
+            return;
+        }
+
+        // ~keep CommonMark 4.8: leading whitespace at the very start of a block is
+        // ~keep insignificant, with or without a newline in it. `<div>`/unknown tags,
+        // ~keep `<style>`/`<textarea>`, and a stray closing tag never set `in_paragraph`,
+        // ~keep so the check above never protected them — a lone leading space (no
+        // ~keep newline) before e.g. `<div>` fell straight through to the verbatim-push
+        // ~keep fallback below and survived into the output, breaking round-trip
+        // ~keep stability. `in_table_cell`/`in_list_item`/`convert_as_inline` keep their
+        // ~keep existing dedicated handling further down, untouched.
+        if was_fresh_block_start && !ctx.convert_as_inline && !ctx.in_table_cell && !ctx.in_list_item {
             return;
         }
 
@@ -122,6 +142,12 @@ pub fn process_text_node(
         }
         return;
     }
+
+    // ~keep From here on `text` has real, non-whitespace content, so anything still
+    // ~keep downstream of this point in the document is no longer at a fresh block
+    // ~keep start — flip the shared flag before it can leak "is fresh" to a later
+    // ~keep sibling, whichever buffer this particular call happened to write into.
+    ctx.at_fresh_block_start.set(false);
 
     let processed_text = if (ctx.in_code || ctx.in_ruby) && ctx.in_table_cell {
         // ~keep Code/ruby content is verbatim by design, but a GFM table cell cannot
@@ -173,7 +199,8 @@ pub fn process_text_node(
 
         let (prefix, suffix, core) = text::chomp(normalized_text.as_ref());
 
-        let skip_prefix = output.ends_with("\n\n")
+        let skip_prefix = (was_fresh_block_start && !ctx.convert_as_inline && !ctx.in_table_cell && !ctx.in_list_item)
+            || output.ends_with("\n\n")
             || output.ends_with("* ")
             || output.ends_with("- ")
             || output.ends_with(". ")
@@ -268,6 +295,30 @@ pub fn process_text_node(
 
     #[cfg(not(feature = "visitor"))]
     let final_text = processed_text;
+
+    // ~keep A text node that starts a fresh, still-unindented physical line inside a list
+    // ~keep item (e.g. sibling text right after a heading, which only emits a single
+    // ~keep trailing newline rather than a blank line) needs the same continuation indent
+    // ~keep every block handler adds before its own first line, or it lands flush left and
+    // ~keep the item derails on re-parse (CommonMark spec example 300). Excluded from verbatim
+    // ~keep contexts (`in_code`/`in_ruby`) and from contexts that build into a detached
+    // ~keep scratch buffer rather than the real document (`in_table_cell`, `convert_as_inline`),
+    // ~keep where `output` is not the list item's own accumulating text and indenting it would
+    // ~keep corrupt literal content instead.
+    if ctx.in_list_item
+        && !ctx.in_code
+        && !ctx.in_ruby
+        && !ctx.in_table_cell
+        && !ctx.convert_as_inline
+        && output.ends_with('\n')
+        && !output.ends_with("\n\n")
+    {
+        if let Some(indent) =
+            crate::converter::list::utils::continuation_indent_string(ctx.list_depth, ctx.list_indent_columns, options)
+        {
+            output.push_str(&indent);
+        }
+    }
 
     if ctx.in_list_item && final_text.contains("\n\n") {
         let indent = " ".repeat(4 * ctx.list_depth);

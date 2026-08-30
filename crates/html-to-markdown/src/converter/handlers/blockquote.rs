@@ -125,6 +125,30 @@ pub fn handle_blockquote(
     }
 
     if !trimmed_content.is_empty() {
+        // ~keep Only the outermost blockquote call writes into the real document buffer —
+        // ~keep a nested blockquote's own call writes into its parent's local `content`
+        // ~keep scratch buffer instead (see above), which the parent then re-prefixes with
+        // ~keep its own "> " on the way out. Applying the list continuation indent at every
+        // ~keep nesting level would stack it once per level; restricting it to
+        // ~keep `blockquote_depth == 0` applies it exactly once, at the boundary where this
+        // ~keep content actually reaches the list item's own text.
+        let list_indent = if ctx.in_list_item && ctx.blockquote_depth == 0 {
+            crate::converter::list::utils::continuation_indent_string(ctx.list_depth, ctx.list_indent_columns, options)
+        } else {
+            None
+        };
+
+        // ~keep A blockquote that continues already-started list item content needs its
+        // ~keep first quoted line indented too; one that is the item's first content
+        // ~keep instead sits right after the marker, which already provides that column
+        // ~keep (see `block/paragraph.rs::add_list_continuation_indent` for the identical
+        // ~keep first-line distinction, applied there to paragraphs only).
+        let is_list_continuation = list_indent.is_some()
+            && !output.is_empty()
+            && !output.ends_with("* ")
+            && !output.ends_with("- ")
+            && !output.ends_with(". ");
+
         if ctx.blockquote_depth > 0 {
             if !output.is_empty() {
                 while output.ends_with('\n') {
@@ -147,7 +171,17 @@ pub fn handle_blockquote(
         // ~keep Only blank-out whitespace-only lines; preserve leading whitespace on
         // ~keep real content lines (code block indentation, nested list markers) so
         // ~keep quoted block children keep their structural meaning (issue #13).
-        for line in trimmed_content.lines() {
+        //
+        // ~keep Every physical line also needs the list item's own continuation indent
+        // ~keep when this blockquote is inside a list item — CommonMark's list container
+        // ~keep match is per physical line, so an unindented "> " line drops the rest of
+        // ~keep the quote (and the item) out of the list on re-parse (spec example 263).
+        for (index, line) in trimmed_content.lines().enumerate() {
+            if let Some(ref indent) = list_indent {
+                if index > 0 || is_list_continuation {
+                    output.push_str(indent);
+                }
+            }
             output.push_str(prefix);
             if !line.trim().is_empty() {
                 output.push_str(line);
@@ -157,6 +191,9 @@ pub fn handle_blockquote(
 
         if let Some(url) = cite {
             output.push('\n');
+            if let Some(ref indent) = list_indent {
+                output.push_str(indent);
+            }
             output.push_str("— <");
             output.push_str(&url);
             output.push_str(">\n\n");

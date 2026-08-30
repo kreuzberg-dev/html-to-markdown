@@ -71,3 +71,28 @@ fn code_preserves_whitespace_runs_verbatim() {
 fn code_preserves_newlines_verbatim() {
     assert_matches("<p><code>line1\n   line2</code></p>");
 }
+
+#[test]
+fn nested_list_pre_continuation_indent() {
+    assert_matches("<ul><li><ul><li><p>a</p><pre>code</pre></li></ul></li></ul>");
+}
+
+#[test]
+fn ordered_list_pre_continuation_indent_matches_marker_width() {
+    assert_matches("<ol><li><p>a</p><pre>code</pre></li><li>b</li></ol>");
+}
+
+#[test]
+fn ordered_list_pre_continuation_indent_widens_for_double_digit_marker() {
+    assert_matches("<ol start=\"9\"><li>a</li><li>b<br>c</li></ol>");
+}
+
+#[test]
+fn blockquote_continuation_indent_multiline() {
+    assert_matches("<ul><li><p>a</p><blockquote>b\nc</blockquote></li></ul>");
+}
+
+#[test]
+fn text_after_br_gets_list_continuation_indent() {
+    assert_matches("<ul><li>a<br>b</li></ul>");
+}

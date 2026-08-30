@@ -207,7 +207,21 @@ pub fn handle_link(
         }
 
         if label.is_empty() && !href.is_empty() && !children.is_empty() {
-            label.clone_from(&href);
+            // ~keep The href is raw attribute text that never passed through a text node's
+            // ~keep normal escaping, unlike every other label source above (heading text,
+            // ~keep inline content, `raw_text`) which was already escaped while it was
+            // ~keep walked. Escaping it here the same way keeps this fallback consistent with
+            // ~keep those paths -- without it, a `*`/`_`/literal backslash surviving unescaped
+            // ~keep into the label round-trips into structure (emphasis, or a silently
+            // ~keep swallowed backslash) once it is re-parsed.
+            label = text::escape(
+                &href,
+                options.escape_misc,
+                options.escape_asterisks,
+                options.escape_underscores,
+                options.escape_ascii,
+            )
+            .into_owned();
         }
 
         if label == "^" && href.starts_with('#') {

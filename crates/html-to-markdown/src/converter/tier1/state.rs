@@ -245,6 +245,36 @@ pub struct Tier1State {
     /// sibling is an `<img>`" half comes from the scan loop's tag peek, same
     /// as `next_tag_is_list`).
     pub last_emitted_was_img: bool,
+
+    /// Byte width of each currently-open list item's own marker (`"- "` = 2,
+    /// `"1. "` = 3, `"10. "` = 4, ...), one entry per open `<li>` frame,
+    /// pushed by `open_list_item` and popped by `close_list_item`.
+    ///
+    /// A block child (`<pre>`, `<blockquote>`, a text sibling after a
+    /// heading, ...) of a list item must indent every physical line to the
+    /// item's continuation column, per CommonMark's per-line list-container
+    /// matching. That column is the SUM of every ancestor `<li>`'s own
+    /// marker width — not a uniform `2 * depth` — because an ordered-list
+    /// marker's width varies with its digit count (`"1. "` vs `"10. "`).
+    /// Summing this stack gives that column directly; see
+    /// `Tier1State::list_continuation_indent_width`.
+    pub list_item_marker_widths: Vec<usize>,
+
+    /// `true` until the first text node carrying real (non-whitespace)
+    /// content has been processed anywhere in the document, then
+    /// permanently `false`.
+    ///
+    /// Mirrors Tier-2's `Context::at_fresh_block_start` (an
+    /// `Rc<Cell<bool>>` shared across the whole conversion): CommonMark
+    /// 4.8 makes leading whitespace at the very start of a document
+    /// insignificant, so `flush_text` strips it there the same way it
+    /// already strips leading whitespace after a block separator.
+    /// Deliberately NOT derived from buffer emptiness — an inline
+    /// wrapper (`<sub>`, `<em>`, a link) accumulates into a fresh local
+    /// buffer via `cell_or_output_mut`, so an empty buffer there means
+    /// "this wrapper's own scratch space is empty", not "we are at
+    /// document start". A dedicated flag distinguishes the two.
+    pub at_document_start: bool,
 }
 
 impl Tier1State {
@@ -269,7 +299,19 @@ impl Tier1State {
             canonicalize_attr_entities: false,
             last_closed_custom_element: false,
             last_emitted_was_img: false,
+            list_item_marker_widths: Vec::new(),
+            at_document_start: true,
         }
+    }
+
+    /// Total continuation-indent width (in columns) for a block child of the
+    /// innermost currently-open list item, or `0` when not inside one.
+    ///
+    /// See `list_item_marker_widths`'s doc comment for why this is a sum of
+    /// real marker widths rather than a uniform `2 * depth`.
+    #[must_use]
+    pub fn list_continuation_indent_width(&self) -> usize {
+        self.list_item_marker_widths.iter().sum()
     }
 
     /// Return a mutable reference to the current accumulation target.

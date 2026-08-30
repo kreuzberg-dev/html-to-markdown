@@ -1347,11 +1347,13 @@ fn open_list_item(state: &mut Tier1State) {
         let start = find_ol_start(&state.stack);
         let index = start.saturating_sub(1) + counter;
         push_list_item_indent(&mut state.output, indent_depth);
-        #[allow(clippy::format_push_string)]
-        state.output.push_str(&format!("{index}. "));
+        let marker = format!("{index}. ");
+        state.list_item_marker_widths.push(marker.len());
+        state.output.push_str(&marker);
     } else {
         push_list_item_indent(&mut state.output, indent_depth);
         let bullet_idx = state.ul_depth.saturating_sub(1) as usize % TIER1_BULLETS.len();
+        state.list_item_marker_widths.push(2);
         state.output.push(TIER1_BULLETS[bullet_idx] as char);
         state.output.push(' ');
     }
@@ -2329,7 +2331,7 @@ fn close_blockquote(state: &mut Tier1State, frame: &OpenTag) {
             state.output.push('\n');
         }
     }
-    state.output.push_str(&prefixed);
+    push_list_item_continuation_lines(state, &prefixed);
 }
 
 fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOptions) {
@@ -2345,10 +2347,13 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
     let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
     let raw = state.output[content_start..].to_owned();
     state.output.truncate(content_start);
+    // ~keep Render into a scratch buffer first, then (when inside a list item)
+    // ~keep indent every physical line to the item's continuation column
+    // ~keep before appending to `state.output` — see `push_list_item_continuation_lines`.
+    let mut rendered = String::new();
     match options.code_block_style {
         CodeBlockStyle::Indented => {
-            let indented = indent_pre_lines(&raw);
-            state.output.push_str(&indented);
+            rendered.push_str(&indent_pre_lines(&raw));
         }
         CodeBlockStyle::Backticks => {
             // ~keep the fence must be strictly longer than the longest run of `` ` ``
@@ -2358,21 +2363,21 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
             let fence_length = (longest_consecutive_backtick_run(&raw) + 1).max(MIN_FENCE_LENGTH);
             let fence: String = std::iter::repeat_n('`', fence_length).collect();
 
-            state.output.push_str(&fence);
+            rendered.push_str(&fence);
             if let Some(lang) = state.pre_lang.take() {
-                state.output.push_str(&lang);
+                rendered.push_str(&lang);
             } else if !options.code_language.is_empty() {
-                state.output.push_str(&options.code_language);
+                rendered.push_str(&options.code_language);
             }
-            state.output.push('\n');
+            rendered.push('\n');
             // ~keep Strip a single leading + trailing newline from raw so neither
             // ~keep fence sits next to a blank line.  Tier-2 emits
             // ~keep `\ncontent\n` (single newlines flanking content).
             let raw = raw.strip_prefix('\n').unwrap_or(&raw);
             let raw = raw.strip_suffix('\n').unwrap_or(raw);
-            state.output.push_str(raw);
-            state.output.push('\n');
-            state.output.push_str(&fence);
+            rendered.push_str(raw);
+            rendered.push('\n');
+            rendered.push_str(&fence);
             // ~keep Tier-2's `format_code_block` (handlers/code_block.rs) ends the
             // ~keep Backticks/Tildes branch with `output.push_str("\n\n")` — a clean
             // ~keep blank-line terminator, not a single newline.  Matching that
@@ -2383,14 +2388,88 @@ fn close_pre(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOption
             // ~keep collapse or promote the separator, so leaving only one newline
             // ~keep here made a `<pre>` directly followed by a `<blockquote>`
             // ~keep diverge from Tier-2 (discovered via that fix; see tests).
-            state.output.push_str("\n\n");
+            rendered.push_str("\n\n");
         }
         CodeBlockStyle::Tildes => {
-            let indented = indent_pre_lines(&raw);
-            state.output.push_str(&indented);
+            rendered.push_str(&indent_pre_lines(&raw));
         }
     }
+    push_list_item_continuation_lines(state, &rendered);
     state.pre_lang = None;
+}
+
+/// Indent a text node that starts a fresh, still-unindented physical line
+/// inside a list item (e.g. sibling text right after a heading, which only
+/// emits a single trailing newline rather than a blank line) to the item's
+/// continuation column — the same indent every block handler
+/// (`push_list_item_continuation_lines`) adds before its own first line.
+/// Without it the line lands flush left and the item (and the rest of the
+/// list) falls out of the list on reparse (CommonMark spec example 300).
+///
+/// Excluded from verbatim contexts (checked by the caller: `in_pre`/`in_code`
+/// text never reaches this point) and from contexts that accumulate into a
+/// detached scratch buffer rather than the real document (`in_table_cell`,
+/// `in_summary`, `in_table_caption`), where `cell_or_output_mut()` is not the
+/// list item's own accumulating text and indenting it would corrupt literal
+/// or already-wrapped content instead. Mirrors Tier-2's `text_node.rs`
+/// (`ctx.in_list_item && output.ends_with('\n') && !output.ends_with("\n\n")`).
+fn indent_fresh_list_item_text_line(state: &mut Tier1State) {
+    if state.in_table_cell() || state.in_summary() || state.in_table_caption() {
+        return;
+    }
+    let in_list_item = state
+        .stack
+        .iter()
+        .any(|frame| matches!(frame.spec.kind, TagKind::ListItem));
+    if !in_list_item {
+        return;
+    }
+    let indent_width = state.list_continuation_indent_width();
+    if indent_width == 0 {
+        return;
+    }
+    let dest = state.cell_or_output_mut();
+    if dest.ends_with('\n') && !dest.ends_with("\n\n") {
+        let indent: String = std::iter::repeat_n(' ', indent_width).collect();
+        dest.push_str(&indent);
+    }
+}
+
+/// Append `rendered` (a fully-formatted block's text, possibly spanning
+/// several physical lines) to `state.output`, indenting every line to the
+/// innermost open list item's continuation column when inside one.
+///
+/// CommonMark matches list containment per physical line (spec examples
+/// 263, 273, 274, 318, 324): a non-blank line that isn't indented to the
+/// item's continuation width falls out of the item — and the list — on
+/// reparse. Mirrors Tier-2's `format_code_block_in_list_item`
+/// (handlers/code_block.rs): the very first line skips the indent when it
+/// is NOT a continuation (i.e. it sits directly after the item's own
+/// marker, like `- ` + the block's first line, and already starts at the
+/// right column); every other non-blank line always gets indented. Blank
+/// lines are left bare — an indented blank line would just be trailing
+/// whitespace.
+fn push_list_item_continuation_lines(state: &mut Tier1State, rendered: &str) {
+    let indent_width = state.list_continuation_indent_width();
+    if indent_width == 0 {
+        state.output.push_str(rendered);
+        return;
+    }
+    let is_continuation = !state.output.is_empty()
+        && !state.output.ends_with("- ")
+        && !state.output.ends_with("* ")
+        && !state.output.ends_with("+ ")
+        && !ends_with_ordered_marker(&state.output);
+    let indent: String = std::iter::repeat_n(' ', indent_width).collect();
+    for (index, segment) in rendered.split_inclusive('\n').enumerate() {
+        let line = segment.strip_suffix('\n').unwrap_or(segment);
+        if line.is_empty() || (index == 0 && !is_continuation) {
+            state.output.push_str(segment);
+        } else {
+            state.output.push_str(&indent);
+            state.output.push_str(segment);
+        }
+    }
 }
 
 fn close_code(state: &mut Tier1State, frame: &OpenTag) {
@@ -2607,6 +2686,7 @@ fn close_list_item(state: &mut Tier1State, frame: &OpenTag) {
         }
         return;
     }
+    state.list_item_marker_widths.pop();
     trim_trailing_inline_whitespace(state);
     let dest = state.cell_or_output_mut();
     // ~keep Phase EE: loose-list separator.  When this item had block-level
@@ -3127,7 +3207,35 @@ fn flush_text(
     let is_block_edge =
         active_empty || active_ends_newline || active_ends_list_marker || active_ends_ordered || at_inline_frame_start;
     let raw_is_whitespace = raw.bytes().all(|b| b == b' ' || b == b'\t' || b == b'\n' || b == b'\r');
-    if !in_pre && is_block_edge && raw_is_whitespace {
+    // ~keep Tier-2's `was_fresh_block_start` check (text_node.rs:99) runs BEFORE
+    // ~keep any other whitespace-only-node disposition and takes absolute
+    // ~keep priority: at document start, a whitespace-only text node is DROPPED
+    // ~keep outright, even when the surrounding context (e.g. between two
+    // ~keep `<img>` tags' emitted Markdown and a following inline element) would
+    // ~keep otherwise call for a single separating space. This matters because
+    // ~keep `<img>` — like any non-text content — never flips
+    // ~keep `Tier1State::at_document_start`, so it stays true across leading
+    // ~keep images the way Tier-2's flag stays true across a leading `<img>`
+    // ~keep (image handling never touches `at_fresh_block_start` either).
+    // ~keep Excluded from table cells and list items, matching Tier-2's
+    // ~keep `!ctx.in_table_cell && !ctx.in_list_item` guard — those have their
+    // ~keep own dedicated whitespace handling below. Also excluded inside a
+    // ~keep heading: Tier-2's heading handler is a separate, allow-listed
+    // ~keep divergence (flattens a heading's `<img>` to bare alt text instead
+    // ~keep of Markdown image syntax) that assembles its line outside the
+    // ~keep generic text-node/`at_fresh_block_start` pipeline this mirrors, so
+    // ~keep it always keeps a real separating space after that alt text —
+    // ~keep applying this rule there would additionally drop that space and
+    // ~keep compound one known divergence with a new one.
+    let in_list_item_frame_for_ws = state
+        .stack
+        .iter()
+        .any(|frame| matches!(frame.spec.kind, TagKind::ListItem));
+    let document_start_drops_ws = state.at_document_start
+        && !state.in_table_cell()
+        && !in_list_item_frame_for_ws
+        && !state.escape_ctx.contains(EscapeCtx::HEADING);
+    if !in_pre && (is_block_edge || document_start_drops_ws) && raw_is_whitespace {
         // ~keep Drop block-edge whitespace anywhere — including inside table cells.
         // ~keep A cell-open `<td>`/`<th>` produces a fresh empty buffer; the
         // ~keep pretty-printer's inter-tag whitespace before the first child would
@@ -3266,15 +3374,43 @@ fn flush_text(
         }
         return Ok(());
     }
+    // ~keep Snapshot-then-flip: reached only once `raw` is known to carry real
+    // ~keep (non-whitespace) content — every earlier branch above either
+    // ~keep returns early or is gated on `raw_is_whitespace`. This is the one
+    // ~keep true "does real content already precede this text node, anywhere
+    // ~keep in the document" signal, mirroring Tier-2's
+    // ~keep `Context::at_fresh_block_start` (see `Tier1State::at_document_start`'s
+    // ~keep doc comment for why buffer emptiness can't stand in for it).
+    let was_at_document_start = state.at_document_start;
+    state.at_document_start = false;
+    // ~keep CommonMark 4.8: leading whitespace at the very start of the
+    // ~keep document is insignificant — mirrors Tier-2's `was_fresh_block_start`
+    // ~keep exclusion of table cells and list items (which have their own
+    // ~keep dedicated whitespace handling reached via `block_separator_after`
+    // ~keep and the table-cell gate below). Also excluded inside a heading:
+    // ~keep Tier-2's heading handler is a separate, allow-listed divergence
+    // ~keep (flattens a heading's `<img>` to bare alt text instead of
+    // ~keep Markdown image syntax) that assembles its line outside the
+    // ~keep generic text-node/`at_fresh_block_start` pipeline this mirrors, so
+    // ~keep it always keeps the real space between that alt text and
+    // ~keep following prose — stripping it here would additionally drop that
+    // ~keep space and compound one known divergence with a new one.
+    let in_list_item_frame = state
+        .stack
+        .iter()
+        .any(|frame| matches!(frame.spec.kind, TagKind::ListItem));
+    let document_start_strip = was_at_document_start
+        && !state.in_table_cell()
+        && !in_list_item_frame
+        && !state.escape_ctx.contains(EscapeCtx::HEADING);
     // ~keep Even when the text is not entirely whitespace, strip its LEADING
     // ~keep whitespace when:
     // ~keep   - we're at the start of an open inline element's body (`<a>`,
     // ~keep     `<strong>`, etc.), OR
     // ~keep   - the output ends with a block separator (`\n\n`) or a list-item
-    // ~keep     marker — Tier-2's text-node `skip_prefix` logic does the same.
-    // ~keep
-    // ~keep Not when output is empty (first paragraph of a document keeps its
-    // ~keep leading whitespace per Tier-2's behaviour).
+    // ~keep     marker — Tier-2's text-node `skip_prefix` logic does the same, OR
+    // ~keep   - we're at the very start of the document (see
+    // ~keep     `document_start_strip` above).
     let block_separator_after = {
         let active: &str = state.cell_or_output_mut();
         active.ends_with("\n\n")
@@ -3295,7 +3431,12 @@ fn flush_text(
     // ~keep instead of Tier-2's ` *x*`. Push one space into the buffer here so
     // ~keep `close_inline_marker`'s existing leading-migration block (added
     // ~keep alongside its trailing counterpart) has something to move.
+    // ~keep At document start there is nothing to migrate the space onto —
+    // ~keep Tier-2's `skip_prefix` drops the prefix outright rather than
+    // ~keep collapsing it to a space (`<em>&nbsp;x</em>` alone renders `*x*`,
+    // ~keep not ` *x*`), so `document_start_strip` suppresses the migration.
     let leading_ws_migrates_out = at_inline_frame_start
+        && !document_start_strip
         && matches!(
             state.stack.last().map(|frame| frame.spec.kind),
             Some(TagKind::Strong | TagKind::Emphasis)
@@ -3317,7 +3458,7 @@ fn flush_text(
     let raw = if !in_pre
         && !in_code
         && (!state.in_table_cell() || in_link_frame)
-        && (at_inline_frame_start || block_separator_after)
+        && (at_inline_frame_start || block_separator_after || document_start_strip)
     {
         let trimmed = raw.trim_start_matches([' ', '\t', '\n', '\r']);
         if leading_ws_migrates_out && trimmed.len() < raw.len() {
@@ -3436,6 +3577,8 @@ fn flush_text(
     // ~keep because its target must be the *decoded* text with whitespace already
     // ~keep collapsed — exactly what Tier-2 hands to `text::escape`.
     let in_cell = state.in_table_cell();
+
+    indent_fresh_list_item_text_line(state);
 
     // ~keep A link label and a `<summary>` body are the exception: Tier-1 folds their
     // ~keep newlines into spaces while collapsing, but Tier-2 escapes the text node

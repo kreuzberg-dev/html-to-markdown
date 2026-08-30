@@ -51,7 +51,9 @@ fn render(md: &str) -> String {
     // ~keep would report a divergence that is its own blind spot rather than our bug.
     options.extension.table = true;
     options.extension.strikethrough = true;
-    options.extension.autolink = true;
+    // ~keep GFM autolinking is deliberately NOT enabled: core CommonMark's Autolinks section
+    // ~keep exists to show a bare URL in TEXT is not a link without `<...>`, so enabling it
+    // ~keep makes the renderer manufacture links those examples assert the absence of.
     options.render.r#unsafe = true;
     comrak::markdown_to_html(md, &options)
 }
@@ -76,12 +78,33 @@ fn escaping_options() -> ConversionOptions {
 
 /// Floor for examples that must reach a fixpoint with escaping enabled.
 ///
-/// ~keep A ratchet set to the measured value: 607 of 652 with escaping on, against 597 with
-/// ~keep the defaults. Escaping therefore explains only 10 of the 55 default-options failures
-/// ~keep -- the other 45 are genuine instability, concentrated in HTML blocks (raw passthrough,
-/// ~keep where some churn is expected), lists and list items, and autolinks. Those are a queue
-/// ~keep of real work, not noise. Raise this number as they are fixed; a drop is a regression.
-const MIN_STABLE_ESCAPED: usize = 607;
+/// ~keep A ratchet set to the measured value: 609 of 652 with escaping on, against 597 with
+/// ~keep the defaults. Fixed since the previous 607 floor: an `<a>`/`<img>` with no visible
+/// ~keep text falls back to its href as the label (`handlers/link.rs`); that fallback bypassed
+/// ~keep the normal text escaper entirely, so a raw `*`/`_` in the href round-tripped into real
+/// ~keep emphasis (476, 477). A related destination-escaping gap (`inline/link.rs`,
+/// ~keep `append_url_destination`) was also closed -- a literal backslash preceding the paren
+/// ~keep escaping in an unbalanced-parens destination was not itself escaped, and a raw line
+/// ~keep ending inside an angle-bracket-wrapped destination is not valid `CommonMark` at all --
+/// ~keep but every example that exercised it (21, 631, 642, 643) also happens to trip comrak's
+/// ~keep link-destination percent-encoding on the very next byte, so it stays unstable for that
+/// ~keep separate reason and the fix does not move this floor; it is still a real, verified
+/// ~keep content-preservation fix (see the PR/commit description for the byte-level evidence).
+/// ~keep A wider fix was investigated and deliberately not applied: the same leading-space
+/// ~keep instability affecting most of the remaining HTML-blocks failures traces to
+/// ~keep `text_node.rs`'s whitespace-collapsing (`skip_prefix`/the whitespace-only branch)
+/// ~keep having no way to tell "start of the real document/block output" apart from "start of
+/// ~keep a handler's private scratch buffer" (`emphasis.rs`, `typography.rs`'s sub/sup, and
+/// ~keep every other inline wrapper build their content into a fresh local `String` before
+/// ~keep splicing it into non-empty output) -- an `output.is_empty()` guard there fixed 16 of
+/// ~keep the 45 (entity refs 25/40, fenced code 138, HTML blocks 150/151/155/161/163-166/171/173/
+/// ~keep 184/186/189) but broke `test_subscript_leading_whitespace` / `test_superscript_leading_whitespace`
+/// ~keep in `integration_test.rs` (and, per the same mechanism, silently changed output for
+/// ~keep every inline wrapper whose first child starts with whitespace). It needs a real
+/// ~keep "am I at document start" signal threaded through every scratch-buffer call site, not
+/// ~keep a one-line guard -- left for follow-up. Raise this number as more are fixed; a drop is
+/// ~keep a regression.
+const MIN_STABLE_ESCAPED: usize = 609;
 
 #[test]
 fn commonmark_spec_examples_reach_a_conversion_fixpoint() {

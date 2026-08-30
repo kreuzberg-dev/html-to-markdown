@@ -445,20 +445,39 @@ pub fn append_url_destination(
         // ~keep angle-bracket destinations may contain raw parentheses, but a raw `<`, `>`, or
         // ~keep an unescaped `\` (which would otherwise merge with the next escaped char and
         // ~keep un-escape it) terminates the wrap early, so all three must be escaped inside it
-        // ~keep (CommonMark 6.3).
+        // ~keep (CommonMark 6.3). A literal line ending is not permitted inside `<...>` at all
+        // ~keep -- not even escaped -- so it is folded to a space rather than passed through;
+        // ~keep otherwise the destination is invalid Markdown that a parser refuses to read
+        // ~keep back as a link at all.
         output.push('<');
         for c in dest.chars() {
             match c {
                 '\\' => output.push_str("\\\\"),
                 '<' => output.push_str("\\<"),
                 '>' => output.push_str("\\>"),
+                '\n' => output.push(' '),
                 other => output.push(other),
             }
         }
         output.push('>');
     } else if parens_are_balanced(dest) {
+        // ~keep Deliberately left unescaped even though `dest` may still contain a literal
+        // ~keep `\`: `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...`
+        // ~keep (audit #24) established that a backslash here is only unsafe when the very
+        // ~keep next byte emitted (in the destination or, once it ends, whatever `output`
+        // ~keep gains next) is ASCII punctuation -- and this call does not know what that
+        // ~keep next byte will be, so guessing "escape unconditionally" traded one silent
+        // ~keep corruption for another (an oracle-observed content change) rather than fixing
+        // ~keep it. Only the unbalanced-parens arm below needs it, since it always knows the
+        // ~keep next byte it emits itself.
         output.push_str(dest);
     } else {
+        // ~keep A literal backslash immediately preceding the `)`/`(` this arm is about to
+        // ~keep escape would otherwise merge with that escape and un-escape it on reparse, so
+        // ~keep it must be doubled first -- this arm, unlike the balanced-parens one above,
+        // ~keep controls every byte that follows each backslash in `dest` and can decide
+        // ~keep safely.
+        let dest = dest.replace('\\', "\\\\");
         let escaped_dest = dest.replace('(', "\\(").replace(')', "\\)");
         output.push_str(&escaped_dest);
     }

@@ -171,3 +171,30 @@ fn should_still_delete_leading_whitespace_between_strong_close_and_summary_child
     // ~keep migrates.
     assert_tier1_matches_tier2("<details><summary>a <span>&nbsp;x</span></summary></details>");
 }
+
+#[test]
+fn should_drop_whitespace_only_text_between_leading_images_at_document_start() {
+    // ~keep Regression guard for `Tier1State::at_document_start`: an `<img>`
+    // ~keep never flips the flag (it isn't a text node), so a whitespace-only
+    // ~keep text node between two leading images — or between a leading image
+    // ~keep and following prose — must still be dropped outright, matching
+    // ~keep Tier-2's `was_fresh_block_start` staying true across non-text
+    // ~keep content. Without the fix Tier-1 kept a stray separating space here.
+    assert_tier1_matches_tier2("<p><img src=\"/a.png\" alt=\"a\"> <img src=\"/b.png\" alt=\"b\"> dolor</p>");
+}
+
+#[test]
+fn should_keep_space_after_leading_image_inside_heading() {
+    // ~keep Regression guard: a heading's `<img>` is flattened to bare alt text
+    // ~keep by Tier-2's heading-specific handler (an already allow-listed,
+    // ~keep out-of-scope divergence — see `tests/tier_parity_corpus.rs`'s
+    // ~keep `heading-inline-image-and-br` entry) rather than going through the
+    // ~keep generic `at_fresh_block_start` text-node pipeline, so it always
+    // ~keep keeps a real separating space after that alt text. Both
+    // ~keep `document_start_strip` and `document_start_drops_ws` must exclude
+    // ~keep heading context or they additionally drop that space, compounding
+    // ~keep the already-allowed divergence with a new one.
+    let html = "<h5><img src=\"/x.png\" alt=\"a\"> quick</h5>";
+    let t1 = run_tier1(html);
+    assert_eq!(t1, "##### ![a](/x.png) quick\n", "unexpected tier1 output for {html:?}");
+}
