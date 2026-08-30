@@ -57,10 +57,10 @@ fn collect_html(dir: &PathBuf, out: &mut Vec<(String, String)>) {
         let path = entry.path();
         if path.is_dir() {
             collect_html(&path, out);
-        } else if path.extension().is_some_and(|e| e == "html") {
-            if let Ok(text) = std::fs::read_to_string(&path) {
-                out.push((path.display().to_string(), text));
-            }
+        } else if path.extension().is_some_and(|e| e == "html")
+            && let Ok(text) = std::fs::read_to_string(&path)
+        {
+            out.push((path.display().to_string(), text));
         }
     }
 }
@@ -86,10 +86,7 @@ fn with_hang_guard(budget: Duration, body: impl FnOnce(&Mutex<String>) + Send + 
         .expect("spawn conversion thread");
 
     if rx.recv_timeout(budget).is_err() {
-        let stuck = current
-            .lock()
-            .map(|g| g.clone())
-            .unwrap_or_else(|e| e.into_inner().clone());
+        let stuck = current.lock().map_or_else(|e| e.into_inner().clone(), |g| g.clone());
         // ~keep The worker is left running on purpose: it is wedged by definition, and
         // ~keep detaching it lets the failure be reported instead of deadlocking the suite.
         panic!("conversion did not finish within {budget:?}; last input started: {stuck}");
@@ -102,9 +99,7 @@ fn with_hang_guard(budget: Duration, body: impl FnOnce(&Mutex<String>) + Send + 
 /// ~keep behaviour, crashing on it is not.
 fn convert_guarded(html: &str, options: ConversionOptions) -> Result<usize, String> {
     catch_unwind(AssertUnwindSafe(|| {
-        html_to_markdown_rs::convert(html, Some(options))
-            .map(|r| r.content.unwrap_or_default().len())
-            .unwrap_or(0)
+        html_to_markdown_rs::convert(html, Some(options)).map_or(0, |r| r.content.unwrap_or_default().len())
     }))
     .map_err(|_| "panicked".to_owned())
 }
@@ -172,7 +167,7 @@ fn should_survive_every_fixture_in_the_corpus() {
 struct Rng(u64);
 
 impl Rng {
-    fn next_u64(&mut self) -> u64 {
+    const fn next_u64(&mut self) -> u64 {
         self.0 = self.0.wrapping_add(0x9E37_79B9_7F4A_7C15);
         let mut z = self.0;
         z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
@@ -180,8 +175,13 @@ impl Rng {
         z ^ (z >> 31)
     }
 
-    fn below(&mut self, n: usize) -> usize {
-        (self.next_u64() % n as u64) as usize
+    const fn below(&mut self, n: usize) -> usize {
+        // ~keep The modulus is `n`, so the result is always < n and fits a usize on every
+        // ~keep target regardless of pointer width; the cast cannot truncate.
+        #[expect(clippy::cast_possible_truncation, reason = "value is reduced mod n first")]
+        {
+            (self.next_u64() % n as u64) as usize
+        }
     }
 }
 
