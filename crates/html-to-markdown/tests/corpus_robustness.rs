@@ -49,6 +49,20 @@ fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tools/benchmark-harness/fixtures")
 }
 
+/// Additional real-world HTML from the shared `test_documents` corpus.
+///
+/// ~keep Optional on purpose. `test_documents` is a sibling repository rather than part of
+/// ~keep this one, so a checkout without it must still run this test at full strength over
+/// ~keep the in-repo fixtures instead of failing or, worse, silently covering nothing. The
+/// ~keep required corpus is asserted non-empty separately.
+fn optional_extra_roots() -> Vec<PathBuf> {
+    let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    vec![manifest.join("../../../test_documents/html")]
+        .into_iter()
+        .filter(|p| p.is_dir())
+        .collect()
+}
+
 fn collect_html(dir: &PathBuf, out: &mut Vec<(String, String)>) {
     let Ok(entries) = std::fs::read_dir(dir) else {
         return;
@@ -144,6 +158,14 @@ fn should_survive_every_fixture_in_the_corpus() {
     let mut corpus = Vec::new();
     collect_html(&fixture_root(), &mut corpus);
     let root = fixture_root();
+    let required = corpus.len();
+    for extra in optional_extra_roots() {
+        collect_html(&extra, &mut corpus);
+    }
+    println!(
+        "corpus: {required} in-repo fixture(s) + {} from optional sibling corpora",
+        corpus.len() - required
+    );
 
     // ~keep A corpus that silently resolves to nothing is how this kind of test rots into a
     // ~keep no-op that passes forever. Fail loudly instead.
@@ -238,6 +260,18 @@ const FRAGMENTS: &[&str] = &[
     "<img src=\"i.png\" alt=\"a\">",
     "<!-- c -->",
     "<![CDATA[x]]>",
+    // ~keep Bogus-comment shapes. The pre-pass that removes these runs on every document
+    // ~keep and must step over real comments and CDATA without eating their terminators,
+    // ~keep so the interesting inputs interleave both kinds.
+    "<?php echo 1; ?>",
+    "<?",
+    "<!bogus>",
+    "</3>",
+    "<![if !vml]>",
+    "<![endif]>",
+    "<!--[if gte mso 9]>",
+    "<![endif]-->",
+    "<!doctype html>",
     "&amp;",
     "&#x1F600;",
     "&nbsp;",
