@@ -194,6 +194,23 @@ under any compliant reparse whatever we emit.
   suppressions were also removed from the oracle's allow-list, so it now generates those shapes
   freely instead of avoiding them; the four that remain are each documented in place.
 
+- **A hard line break inside a link's visible text survives a round trip.** A `<br>` in a link
+  label was collapsed to a space, so converting, rendering back to HTML, and converting again
+  lost the break -- yet a hard break inside link text is perfectly legal `CommonMark`. Ordinary
+  soft newlines from wrapped source text still collapse to a space, and a break at the very
+  start or end of a label is still dropped, having no line to break to.
+
+- **Four more places mistook inline content for a bare list marker.** The check was a two-byte
+  suffix test, and a closing `**bold**` plus its space ends in the same two bytes as a real `*`
+  bullet plus its space. A block quote after inline text in a list item lost its continuation
+  indent and fell out of the item entirely on reparse, since `CommonMark` matches containers per
+  line; a fenced code block was glued onto the preceding inline line, where the fence is not a
+  valid opener; a `<div>` ran straight onto the previous text with no separator at all; and
+  Tier-1's paragraph handler ran the check without first confirming an open list item, so
+  top-level text merely ending in a hyphen and a space lost the blank line before the next
+  paragraph. Several of these also omitted `+`, the third bullet in the default cycle, so they
+  misbehaved at every third nesting level.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
