@@ -41,11 +41,20 @@ fn should_indent_fence_and_following_paragraph_when_code_block_continues_a_list_
 /// A code block containing a blank line (`CommonMark` spec example 318): the blank line stays
 /// unindented (blank lines match any container depth), but the non-blank lines around it and
 /// the closing fence still carry the indent.
+///
+/// ~keep The middle item's bare `<pre>` (no `<p>`) still needs a blank-line separator from
+/// ~keep its neighbors to keep item boundaries unambiguous, and once that blank line exists
+/// ~keep ANYWHERE between two items, a CommonMark-compliant reparse concludes the whole list
+/// ~keep is loose and wraps every item's content in `<p>` -- including the plain-text "a" and
+/// ~keep "c" that had none originally. The previous expectation here (no blank line before the
+/// ~keep first fenced code item) was not itself a fixpoint: rendering it back to HTML and
+/// ~keep reconverting produced exactly this fully-loose form instead of reproducing itself. This is the
+/// ~keep `commonmark_spec_fixpoint` oracle's own verified-stable form for example 318.
 #[test]
 fn should_leave_blank_interior_lines_unindented_but_indent_surrounding_fence_lines() {
     let html = "<ul><li>a</li><li><pre><code>b\n\n\n</code></pre></li><li>c</li></ul>";
     let result = convert(html);
-    assert_eq!(result, "- a\n- ```\n  b\n\n  ```\n\n- c\n", "actual: {result:?}");
+    assert_eq!(result, "- a\n\n- ```\n  b\n\n  ```\n\n- c\n", "actual: {result:?}");
 }
 
 /// A heading followed by trailing sibling text directly inside the same `<li>` (`CommonMark`

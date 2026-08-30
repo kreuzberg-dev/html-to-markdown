@@ -159,6 +159,21 @@ pub fn handle_blockquote(
         } else if !output.is_empty() {
             if output.ends_with("\n\n") {
                 output.truncate(output.len() - 1);
+            } else if ctx.in_list_item {
+                // ~keep A blockquote directly following this item's own leading text (no
+                // ~keep explicit <p>, e.g. `<li>a<blockquote>`, which the preceding text
+                // ~keep handler ends with a single '\n' since it looks ahead to the next
+                // ~keep block-level sibling) still legally interrupts that text per
+                // ~keep CommonMark's "blockquote can interrupt a paragraph" rule -- no blank
+                // ~keep line is required for the reparse to recover the same two-block split.
+                // ~keep Forcing one here anyway (as the two branches below still do for the
+                // ~keep top-level, non-list case, and for `output` already ending in a full
+                // ~keep blank line) instead makes THIS specific text parse back as its own
+                // ~keep `<p>` on reparse, which flips the whole list loose and desyncs the
+                // ~keep next conversion pass from this one (spec examples 320, 321).
+                if !output.ends_with('\n') {
+                    output.push('\n');
+                }
             } else if !output.ends_with('\n') {
                 output.push_str("\n\n");
             } else if !output.ends_with("\n\n") {

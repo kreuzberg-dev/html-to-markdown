@@ -36,7 +36,14 @@ pub fn handle_li(
     depth: usize,
     dom_ctx: &DomContext,
 ) {
-    if ctx.list_depth > 0 {
+    // ~keep A nested list whose enclosing <li> has no other content renders directly after
+    // ~keep that parent's own bare marker on the SAME physical line (see
+    // ~keep `add_list_leading_separator`'s bare-marker exclusion) -- the parent marker's own
+    // ~keep printed width already reaches this item's target column, so pushing this
+    // ~keep indent too double-counts it, deeply nesting single-child lists into runaway
+    // ~keep padding that reparses as an indented code block (spec example 299). The indent is
+    // ~keep only needed when this item genuinely starts a fresh physical line.
+    if ctx.list_depth > 0 && (output.is_empty() || output.ends_with('\n')) {
         let indent = match options.list_indent_type {
             crate::options::ListIndentType::Tabs => "\t".repeat(ctx.list_depth),
             // ~keep `list_indent_columns` is the cumulative width of every ancestor <li>'s own

@@ -275,3 +275,47 @@ fn should_pin_counter_at_i64_max_without_overflow_when_list_exceeds_range() {
         )
     );
 }
+
+/// A nested list directly following inline content that ends in whitespace INSIDE an inline
+/// wrapper (`<strong>`, `<em>`) must still get its own line. `add_list_leading_separator`'s
+/// bare-marker check used to look only at the last two bytes of the buffer (`"* "`, `"- "`,
+/// `". "`); the closing `"**"` of `<strong>` followed by the wrapper's migrated trailing space
+/// produces the exact same two bytes as a real `"* "` bullet, so the separator was skipped and
+/// the nested list was flattened onto the parent line -- destroying it as a list on reparse.
+#[test]
+fn nested_list_after_strong_with_trailing_space_gets_its_own_line() {
+    let html = "<ul><li><strong>b </strong><ul><li>sub</li></ul></li></ul>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "- **b**\n  * sub\n");
+}
+
+/// Same trigger as above, but with a real-world Unicode whitespace character (EN SPACE,
+/// U+2002) instead of an ASCII space -- the shape that surfaced this in the generated fixture
+/// corpus (`generated:seed=15118233204572906709`).
+#[test]
+fn nested_list_after_strong_with_trailing_unicode_space_gets_its_own_line() {
+    let html = "<ul><li><strong>b\u{2002}</strong><ul><li>sub</li></ul></li></ul>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "- **b**\n  * sub\n");
+}
+
+/// Same trigger via `<em>` rather than `<strong>`: the closing single `"*"` plus the migrated
+/// trailing space is likewise indistinguishable from a bare `"* "` bullet by a plain suffix
+/// check.
+#[test]
+fn nested_list_after_emphasis_with_trailing_space_gets_its_own_line() {
+    let html = "<ul><li><em>b </em><ul><li>sub</li></ul></li></ul>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "- *b*\n  * sub\n");
+}
+
+/// A bare-marker check based on the buffer's last two bytes must not misfire on real inline
+/// content either: three single-child lists nested directly inside each other stack their bare
+/// markers on one physical line with nothing else between them (`CommonMark` spec example 299),
+/// and that must still be recognized as "just markers so far", not forced onto separate lines.
+#[test]
+fn deeply_nested_single_child_lists_stay_on_one_line() {
+    let html = "<ol><li><ul><li><ol start=\"2\"><li>foo</li></ol></li></ul></li></ol>";
+    let result = convert(html, None).unwrap();
+    assert_eq!(result, "1. - 2. foo\n");
+}

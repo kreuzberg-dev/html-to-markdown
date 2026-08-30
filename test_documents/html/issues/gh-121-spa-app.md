@@ -8,8 +8,11 @@
   * [Pending](/team-appraisal/pending)
 
 - [My Appraisals](/my-appraisal)
+
 - [My Feedbacks](/my-feedbacks)
+
 - [My Position](/my-position)
+
 - [My Competencies](/my-competencies)
 
 [Home](/) > [Team Appraisal](/team-appraisal) > Pending

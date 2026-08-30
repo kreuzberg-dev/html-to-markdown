@@ -4,6 +4,7 @@
 //! list spacing, and list child processing.
 
 use crate::converter::main_helpers::{tag_name_eq, trim_trailing_whitespace};
+use crate::converter::utility::content::normalized_tag_name;
 use crate::options::{ConversionOptions, ListIndentType};
 use tl;
 
@@ -79,10 +80,46 @@ pub const fn calculate_list_continuation_indent(depth: usize) -> usize {
     if depth > 0 { 2 * depth - 1 } else { 0 }
 }
 
+/// Direct-child tag names that force a list item's own trailing separator (kept in sync with
+/// `list/item.rs::has_block_children`'s identical match arms), for every item except the
+/// list's last.
+///
+/// ~keep A list item containing one of these -- even without a `<p>` -- still needs a blank
+/// ~keep line before/after it in our rendering to keep item boundaries unambiguous (a bare
+/// ~keep `<pre>` or `<blockquote>` sibling can't just run into the next `- ` marker). Once that
+/// ~keep blank line exists anywhere BETWEEN two items, every CommonMark-compliant reparse
+/// ~keep concludes the *whole* list is loose (blank lines are a per-list, not per-item-pair,
+/// ~keep signal) and re-wraps every item's content in `<p>`, including plain-text ones that had
+/// ~keep none originally. Treating this same trigger set as "loose" up front -- not just literal
+/// ~keep `<p>` -- renders every item with full blank-line separation from the first pass, which
+/// ~keep is what the second-generation reparse would force anyway (spec examples 278, 308, 318).
+/// ~keep Restricted to "not the last item": one of these tags in the list's OWN last item has
+/// ~keep no following sibling to create a boundary blank line with, so it never actually
+/// ~keep reparses the list as loose -- unlike literal `<p>`, which is excluded from this gate
+/// ~keep below because it is CommonMark's actual, unconditional looseness signal regardless of
+/// ~keep position (issue: an ordered list whose only loose-looking item is its last, e.g. a
+/// ~keep trailing `<table>`, incorrectly gained a leading blank line without this gate).
+const BLOCK_FORCING_CHILD_TAGS: [&str; 6] = ["div", "blockquote", "pre", "table", "hr", "dl"];
+
+/// Resolve a node's normalized tag name via the `DomContext` cache, falling back to the raw
+/// `tl` tag when no cached `TagInfo` exists for it.
+fn resolve_tag_name(node_handle: tl::NodeHandle, parser: &tl::Parser, dom_ctx: &DomContext) -> Option<String> {
+    if let Some(info) = dom_ctx.tag_info(node_handle.get_inner(), parser) {
+        return Some(info.name.clone());
+    }
+    match node_handle.get(parser) {
+        Some(tl::Node::Tag(tag)) => Some(normalized_tag_name(tag.name().as_utf8_str()).into_owned()),
+        _ => None,
+    }
+}
+
 /// Check if a list (ul or ol) is "loose".
 ///
-/// A loose list is one where any list item contains block-level elements
-/// like paragraphs (<p>). In loose lists, all items should have blank line
+/// A loose list is one where any list item contains block-level elements like paragraphs
+/// (`<p>`), or any other element that forces our own rendering to add a blank-line separator
+/// (see `BLOCK_FORCING_CHILD_TAGS`), or a nested sublist that is itself loose (a loose nested
+/// list's own trailing blank line becomes the boundary before the next item of THIS list when
+/// it is that item's last content). In loose lists, all items should have blank line
 /// separation (ending with \n\n) regardless of their own content.
 ///
 /// # Examples
@@ -101,42 +138,53 @@ pub const fn calculate_list_continuation_indent(depth: usize) -> usize {
 /// </ul>
 /// ```
 pub fn is_loose_list(node_handle: tl::NodeHandle, parser: &tl::Parser, dom_ctx: &DomContext) -> bool {
-    if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
-        let children = tag.children();
-        {
-            for child_handle in children.top().iter() {
-                let is_li = dom_ctx.tag_info(child_handle.get_inner(), parser).map_or_else(
-                    || {
-                        matches!(
-                            child_handle.get(parser),
-                            Some(tl::Node::Tag(child_tag))
-                                if tag_name_eq(child_tag.name().as_utf8_str(), "li")
-                        )
-                    },
-                    |info| info.name == "li",
-                );
-                if !is_li {
-                    continue;
-                }
+    let Some(tl::Node::Tag(tag)) = node_handle.get(parser) else {
+        return false;
+    };
 
-                if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {
-                    let li_children = child_tag.children();
-                    for li_child_handle in li_children.top().iter() {
-                        let is_p = dom_ctx.tag_info(li_child_handle.get_inner(), parser).map_or_else(
-                            || {
-                                matches!(
-                                    li_child_handle.get(parser),
-                                    Some(tl::Node::Tag(li_child_tag))
-                                        if tag_name_eq(li_child_tag.name().as_utf8_str(), "p")
-                                )
-                            },
-                            |info| info.name == "p",
-                        );
-                        if is_p {
-                            return true;
-                        }
-                    }
-                }
+    let children = tag.children();
+    let items: Vec<tl::NodeHandle> = children
+        .top()
+        .iter()
+        .copied()
+        .filter(|child_handle| {
+            dom_ctx.tag_info(child_handle.get_inner(), parser).map_or_else(
+                || {
+                    matches!(
+                        child_handle.get(parser),
+                        Some(tl::Node::Tag(child_tag))
+                            if tag_name_eq(child_tag.name().as_utf8_str(), "li")
+                    )
+                },
+                |info| info.name == "li",
+            )
+        })
+        .collect();
+    let Some(last_index) = items.len().checked_sub(1) else {
+        return false;
+    };
+
+    for (index, item_handle) in items.iter().enumerate() {
+        let Some(tl::Node::Tag(item_tag)) = item_handle.get(parser) else {
+            continue;
+        };
+        let is_last = index == last_index;
+        let li_children = item_tag.children();
+        for li_child_handle in li_children.top().iter() {
+            let Some(name) = resolve_tag_name(*li_child_handle, parser, dom_ctx) else {
+                continue;
+            };
+            if name == "p" {
+                return true;
+            }
+            if is_last {
+                continue;
+            }
+            if BLOCK_FORCING_CHILD_TAGS.contains(&name.as_str()) {
+                return true;
+            }
+            if matches!(name.as_str(), "ul" | "ol") && is_loose_list(*li_child_handle, parser, dom_ctx) {
+                return true;
             }
         }
     }
@@ -229,6 +277,116 @@ pub fn continuation_indent_string(
     }
 }
 
+/// If this list is immediately preceded by an HTML comment whose own immediately preceding
+/// sibling is a list of this same tag (`ul`/`ol`), return that comment's literal source text.
+///
+/// ~keep `CommonMark` merges two adjacent lists of the same type into one list unless
+/// ~keep something else -- and per the spec, only a raw HTML comment qualifies -- sits between
+/// ~keep them. This converter otherwise drops every HTML comment unconditionally (a real
+/// ~keep content-preservation policy for stray markup elsewhere), but dropping THIS one
+/// ~keep specific comment discards the only thing keeping the two lists apart, so it un-merges
+/// ~keep them on every reparse and the next conversion pass never recovers a matching
+/// ~keep separator (spec example 308). A comment anywhere else (inline text, the sole content
+/// ~keep of a block) is unrelated to this ambiguity and keeps the existing strip behavior --
+/// ~keep this check only fires for the exact position where CommonMark assigns the comment
+/// ~keep separator meaning.
+pub fn preceding_same_type_list_separator_comment(
+    node_handle: tl::NodeHandle,
+    parser: &tl::Parser,
+    dom_ctx: &DomContext,
+    tag_name: &str,
+) -> Option<String> {
+    let id = node_handle.get_inner();
+    let siblings = match dom_ctx.parent_of(id) {
+        Some(parent_id) => dom_ctx.children_of(parent_id)?,
+        None => &dom_ctx.root_children,
+    };
+    let position = dom_ctx
+        .sibling_index(id)
+        .or_else(|| siblings.iter().position(|handle| handle.get_inner() == id))?;
+
+    // ~keep The source text between two block siblings (e.g. the "\n" between `</ul>` and
+    // ~keep `<!-- -->`) parses as its own whitespace-only Raw sibling node -- skip those to
+    // ~keep find the nearest MEANINGFUL sibling on each side, exactly like
+    // ~keep `get_previous_sibling_tag` does for the tag-name-only lookup.
+    let mut cursor = position;
+    let comment_text = loop {
+        cursor = cursor.checked_sub(1)?;
+        match siblings.get(cursor)?.get(parser) {
+            Some(tl::Node::Comment(bytes)) => break bytes.as_utf8_str().into_owned(),
+            Some(tl::Node::Raw(raw)) if raw.as_utf8_str().trim().is_empty() => {}
+            _ => return None,
+        }
+    };
+
+    let previous_list_name = loop {
+        cursor = cursor.checked_sub(1)?;
+        let sibling = *siblings.get(cursor)?;
+        if let Some(tl::Node::Raw(raw)) = sibling.get(parser) {
+            if raw.as_utf8_str().trim().is_empty() {
+                continue;
+            }
+        }
+        break resolve_tag_name(sibling, parser, dom_ctx)?;
+    };
+
+    if previous_list_name == tag_name {
+        Some(comment_text)
+    } else {
+        None
+    }
+}
+
+/// Strip one bare list marker -- a single bullet char (`-`, `*`, `+`) followed by a space,
+/// or one-or-more ASCII digits followed by `". "` -- from the front of `text`, returning
+/// what remains after it. Returns `None` when `text` does not start with a marker.
+fn strip_leading_bare_marker(text: &str) -> Option<&str> {
+    let digit_count = text.bytes().take_while(u8::is_ascii_digit).count();
+    if digit_count > 0 {
+        if let Some(rest) = text[digit_count..].strip_prefix(". ") {
+            return Some(rest);
+        }
+    }
+    let mut chars = text.chars();
+    let first = chars.next()?;
+    if matches!(first, '-' | '*' | '+') {
+        return chars.as_str().strip_prefix(' ');
+    }
+    None
+}
+
+/// Whether the current line of `output` (from the last `\n`, or the very start of the
+/// buffer) is nothing but one or more bare list markers -- concatenated bullets
+/// (`"- "`, `"* "`, `"+ "`) and/or ordered markers (`"N. "`) -- with optional leading
+/// indentation and no other content.
+///
+/// ~keep A plain suffix check like `output.ends_with("* ")` also matches the closing
+/// ~keep `"**"` of `<strong>` (or the closing `"*"` of `<em>`) immediately followed by a
+/// ~keep migrated trailing space, e.g. `"**b** "`: its last two bytes are literally `'*'`
+/// ~keep and `' '`, indistinguishable by suffix alone from a real bare `"* "` bullet. That
+/// ~keep false positive suppressed the newline before a nested list, flattening it onto
+/// ~keep the parent line and destroying it on reparse. Requiring the WHOLE line (after
+/// ~keep stripping only leading indentation) to decompose into nothing but marker tokens
+/// ~keep rules that out: real inline content preceding a marker-looking tail is not itself
+/// ~keep a marker, so the decomposition fails and the check correctly returns `false`. This
+/// ~keep also naturally handles several single-child lists nested directly inside each
+/// ~keep other, whose bare markers stack on one physical line with nothing else between
+/// ~keep them (CommonMark spec example 299: `"1. - 2. foo"`).
+fn line_is_bare_list_marker(output: &str) -> bool {
+    let line_start = output.rfind('\n').map_or(0, |pos| pos + 1);
+    let mut rest = output[line_start..].trim_start_matches([' ', '\t']);
+    if rest.is_empty() {
+        return false;
+    }
+    while let Some(next) = strip_leading_bare_marker(rest) {
+        if next.is_empty() {
+            return true;
+        }
+        rest = next;
+    }
+    false
+}
+
 /// Add appropriate leading separator before a list.
 ///
 /// Lists need different separators depending on context:
@@ -246,8 +404,7 @@ pub fn add_list_leading_separator(output: &mut String, ctx: &Context) {
     }
 
     if !output.is_empty() && !ctx.in_list {
-        let needs_newline =
-            !output.ends_with("\n\n") && !output.ends_with("* ") && !output.ends_with("- ") && !output.ends_with(". ");
+        let needs_newline = !output.ends_with("\n\n") && !line_is_bare_list_marker(output);
         if needs_newline {
             output.push_str("\n\n");
         }
@@ -255,9 +412,29 @@ pub fn add_list_leading_separator(output: &mut String, ctx: &Context) {
     }
 
     if ctx.in_list_item && !output.is_empty() {
-        let needs_newline =
-            !output.ends_with('\n') && !output.ends_with("* ") && !output.ends_with("- ") && !output.ends_with(". ");
-        if needs_newline {
+        if line_is_bare_list_marker(output) {
+            return;
+        }
+
+        // ~keep A loose list wraps every item's leading text in a real <p> on any
+        // ~keep CommonMark-compliant reparse (looseness is a per-list, not per-item,
+        // ~keep property), and `block/paragraph.rs` always follows a <p> with a blank line
+        // ~keep even inside a list item. So a nested list that is this item's next sibling
+        // ~keep needs that same blank line here when the CONTAINING list is loose, even
+        // ~keep though the leading text itself arrived as bare inline text with no <p> --
+        // ~keep otherwise this pass's tighter join reparses with the blank line the loose
+        // ~keep list demands, moving the nested list's `<p>`-wrapped leading item further
+        // ~keep from a fixpoint instead of closer (spec example 319).
+        if ctx.loose_list {
+            trim_trailing_whitespace(output);
+            if !output.ends_with("\n\n") {
+                if output.ends_with('\n') {
+                    output.push('\n');
+                } else {
+                    output.push_str("\n\n");
+                }
+            }
+        } else if !output.ends_with('\n') {
             trim_trailing_whitespace(output);
             output.push('\n');
         }

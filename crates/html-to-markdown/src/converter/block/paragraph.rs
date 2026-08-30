@@ -33,11 +33,7 @@ pub fn handle(
     let is_table_continuation =
         ctx.in_table_cell && !output.is_empty() && !output.ends_with('|') && !output.ends_with("<br>");
 
-    let is_list_continuation = ctx.in_list_item
-        && !output.is_empty()
-        && !output.ends_with("* ")
-        && !output.ends_with("- ")
-        && !output.ends_with(". ");
+    let is_list_continuation = ctx.in_list_item && !output.is_empty() && !ends_with_bare_list_marker(output, options);
 
     let after_code_block = output.ends_with("```\n");
     // ~keep Inside a blockquote, sibling blocks (heading, list, table, pre) already manage
@@ -146,6 +142,28 @@ fn add_list_continuation_indent(
     for _ in 0..list_indent_columns {
         output.push(' ');
     }
+}
+
+/// Whether `output` ends with a bare list marker and nothing else: an ordered marker's
+/// "N. " (matched generically via the trailing ". ", regardless of digit count) or one of the
+/// user-configured bullet characters in `options.bullets` followed by its trailing space.
+///
+/// ~keep Hardcoding only '*' and '-' here missed any other configured bullet -- the default
+/// ~keep `bullets` cycle is "-*+", so a paragraph as the first content of a THIRD-level nested
+/// ~keep list item (marker "+ ") fell through this check, was wrongly treated as a
+/// ~keep mid-paragraph continuation, and got a second, redundant continuation indent stacked
+/// ~keep onto the very first line after its own marker (spec example 307).
+fn ends_with_bare_list_marker(output: &str, options: &ConversionOptions) -> bool {
+    if output.ends_with(". ") {
+        return true;
+    }
+    let mut chars = output.chars().rev();
+    if chars.next() != Some(' ') {
+        return false;
+    }
+    chars
+        .next()
+        .is_some_and(|marker_char| options.bullets.contains(marker_char))
 }
 
 /// Check if an element is empty (has no text content).

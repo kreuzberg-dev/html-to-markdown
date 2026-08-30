@@ -92,6 +92,38 @@ fn blockquote_continuation_indent_multiline() {
     assert_matches("<ul><li><p>a</p><blockquote>b\nc</blockquote></li></ul>");
 }
 
+/// A nested list directly following a `<strong>` that ends in whitespace must get its own
+/// line in both tiers -- the closing `"**"` plus the wrapper's migrated trailing space is
+/// literally the same two bytes as a bare `"* "` bullet marker, which used to make both
+/// tiers' bare-marker check false-positive and flatten the nested list onto the parent line.
+#[test]
+fn nested_list_after_strong_with_trailing_space_matches() {
+    assert_matches("<ul><li><strong>b </strong><ul><li>sub</li></ul></li></ul>");
+}
+
+/// Same trigger with a real-world Unicode whitespace character (EN SPACE, U+2002) -- the
+/// shape that surfaced this in the generated fixture corpus
+/// (`generated:seed=15118233204572906709`).
+#[test]
+fn nested_list_after_strong_with_trailing_unicode_space_matches() {
+    assert_matches("<ul><li><strong>b\u{2002}</strong><ul><li>sub</li></ul></li></ul>");
+}
+
+/// Same trigger via `<em>`.
+#[test]
+fn nested_list_after_emphasis_with_trailing_space_matches() {
+    assert_matches("<ul><li><em>b </em><ul><li>sub</li></ul></li></ul>");
+}
+
+/// Three single-child unordered lists nested directly inside each other stack their bare
+/// markers on one physical line with nothing else between them. All-unordered nesting is
+/// handled natively by Tier-1 (no ordered-list bail), so this exercises Tier-1's own
+/// bare-marker recursion rather than its Tier-2 fallback path.
+#[test]
+fn deeply_nested_single_child_unordered_lists_matches() {
+    assert_matches("<ul><li><ul><li><ul><li>x</li></ul></li></ul></li></ul>");
+}
+
 #[test]
 fn text_after_br_gets_list_continuation_indent() {
     assert_matches("<ul><li>a<br>b</li></ul>");

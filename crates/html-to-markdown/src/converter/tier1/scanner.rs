@@ -1257,6 +1257,56 @@ fn extract_language_from_class(attrs: &[(&[u8], Option<&[u8]>)]) -> Option<Strin
     None
 }
 
+/// Strip one bare list marker -- a single bullet char (`-`, `*`, `+`) followed by a space,
+/// or one-or-more ASCII digits followed by `". "` -- from the front of `text`, returning
+/// what remains after it. Returns `None` when `text` does not start with a marker. Mirrors
+/// Tier-2's `strip_leading_bare_marker` (`list/utils.rs`).
+fn strip_leading_bare_marker(text: &str) -> Option<&str> {
+    let digit_count = text.bytes().take_while(u8::is_ascii_digit).count();
+    if digit_count > 0 {
+        if let Some(rest) = text[digit_count..].strip_prefix(". ") {
+            return Some(rest);
+        }
+    }
+    let mut chars = text.chars();
+    let first = chars.next()?;
+    if matches!(first, '-' | '*' | '+') {
+        return chars.as_str().strip_prefix(' ');
+    }
+    None
+}
+
+/// Whether the current line of `output` (from the last `\n`, or the very start of the
+/// buffer) is nothing but one or more bare list markers -- concatenated bullets
+/// (`"- "`, `"* "`, `"+ "`) and/or ordered markers (`"N. "`) -- with optional leading
+/// indentation and no other content. Mirrors Tier-2's `line_is_bare_list_marker`
+/// (`list/utils.rs`).
+///
+/// ~keep A plain suffix check like `output.ends_with("* ")` also matches the closing
+/// ~keep `"**"` of `<strong>` (or the closing `"*"` of `<em>`) immediately followed by a
+/// ~keep migrated trailing space, e.g. `"**b** "`: its last two bytes are literally `'*'`
+/// ~keep and `' '`, indistinguishable by suffix alone from a real bare `"* "` bullet. That
+/// ~keep false positive suppressed the newline before a nested list, flattening it onto
+/// ~keep the parent line and destroying it on reparse. Requiring the WHOLE line (after
+/// ~keep stripping only leading indentation) to decompose into nothing but marker tokens
+/// ~keep rules that out, and also handles several single-child lists nested directly
+/// ~keep inside each other, whose bare markers stack on one physical line with nothing
+/// ~keep else between them.
+fn line_is_bare_list_marker(output: &str) -> bool {
+    let line_start = output.rfind('\n').map_or(0, |pos| pos + 1);
+    let mut rest = output[line_start..].trim_start_matches([' ', '\t']);
+    if rest.is_empty() {
+        return false;
+    }
+    while let Some(next) = strip_leading_bare_marker(rest) {
+        if next.is_empty() {
+            return true;
+        }
+        rest = next;
+    }
+    false
+}
+
 fn open_list(state: &mut Tier1State, kind: ListKind) {
     // ~keep When inside a table cell, mirror Tier-2's `add_list_leading_separator`:
     // ~keep push `<br>` if there is already cell content (but not if it already ends
@@ -1278,32 +1328,20 @@ fn open_list(state: &mut Tier1State, kind: ListKind) {
         if !dest.is_empty() {
             if current_list_depth == 0 {
                 // ~keep Mirror Tier-2's top-level `add_list_leading_separator` branch
-                // ~keep (`!ctx.in_list`, list/utils.rs) EXACTLY, literal-suffix
-                // ~keep collision included: it checks whether the tail ends in
-                // ~keep "\n\n", "* ", "- ", or ". " and otherwise blindly appends
-                // ~keep "\n\n" with NO trim first. When the immediately preceding
-                // ~keep content is a `<strong>`/`<em>`/`<b>` (default `*` marker)
-                // ~keep closed by exactly one space, the tail's last two bytes are
-                // ~keep "* " — the SAME two bytes as an unordered bullet marker —
-                // ~keep so the check false-negatives and no separator is added at
-                // ~keep all, leaving that one space as the sole boundary
-                // ~keep (`**y** - z`). This is a genuine, narrowly-scoped Tier-2
-                // ~keep quirk, not a general "a list always gets its own line"
-                // ~keep rule, so it must be reproduced literally, not "fixed" —
-                // ~keep hence no eager trim before this check (Tier-2 has none).
-                let needs_newline =
-                    !dest.ends_with("\n\n") && !dest.ends_with("* ") && !dest.ends_with("- ") && !dest.ends_with(". ");
+                // ~keep (`!ctx.in_list`, list/utils.rs): append "\n\n" unless the tail is
+                // ~keep already a blank line or the current line is nothing but a bare
+                // ~keep list marker (see `line_is_bare_list_marker`'s doc comment for why
+                // ~keep a plain suffix check on "* "/"- "/". " is not enough here).
+                let needs_newline = !dest.ends_with("\n\n") && !line_is_bare_list_marker(dest);
                 if needs_newline {
                     dest.push_str("\n\n");
                 }
             } else {
-                // ~keep Mirror Tier-2's `ctx.in_list_item` branch the same way: the
-                // ~keep same literal-suffix check (against a bare newline instead of
-                // ~keep a blank line), trimming ONLY once it actually decides to
-                // ~keep insert the separator — not eagerly beforehand, for the same
-                // ~keep reason as the top-level branch above.
-                let needs_newline =
-                    !dest.ends_with('\n') && !dest.ends_with("* ") && !dest.ends_with("- ") && !dest.ends_with(". ");
+                // ~keep Mirror Tier-2's `ctx.in_list_item` branch the same way: the same
+                // ~keep whole-line bare-marker check (against a bare newline instead of a
+                // ~keep blank line), trimming ONLY once it actually decides to insert the
+                // ~keep separator — not eagerly beforehand.
+                let needs_newline = !dest.ends_with('\n') && !line_is_bare_list_marker(dest);
                 if needs_newline {
                     crate::converter::tier1::state::trim_trailing_horizontal(dest);
                     dest.push('\n');
@@ -1342,16 +1380,23 @@ fn open_list_item(state: &mut Tier1State) {
     }
     let parent_kind = find_parent_list_kind(&state.stack);
     let indent_depth = state.list_depth.saturating_sub(1);
+    // ~keep Mirror Tier-2's fresh-line-only indent (list/item.rs): a nested list that is
+    // ~keep the sole/first content of its enclosing <li> renders directly after that
+    // ~keep parent's own bare marker on the SAME physical line -- the parent marker's own
+    // ~keep printed width already reaches this item's target column, so indenting here
+    // ~keep too would double-count it. The indent is only needed when this item genuinely
+    // ~keep starts a fresh physical line.
+    if indent_depth > 0 && (state.output.is_empty() || state.output.ends_with('\n')) {
+        push_list_item_indent(&mut state.output, indent_depth);
+    }
     if parent_kind == Some(ListKind::Ordered) {
         let counter = increment_ol_counter(&mut state.stack);
         let start = find_ol_start(&state.stack);
         let index = start.saturating_sub(1) + counter;
-        push_list_item_indent(&mut state.output, indent_depth);
         let marker = format!("{index}. ");
         state.list_item_marker_widths.push(marker.len());
         state.output.push_str(&marker);
     } else {
-        push_list_item_indent(&mut state.output, indent_depth);
         let bullet_idx = state.ul_depth.saturating_sub(1) as usize % TIER1_BULLETS.len();
         state.list_item_marker_widths.push(2);
         state.output.push(TIER1_BULLETS[bullet_idx] as char);

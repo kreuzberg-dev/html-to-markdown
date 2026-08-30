@@ -31,6 +31,15 @@ fn normalize_newlines(input: &str) -> String {
     input.replace("\r\n", "\n").replace('\r', "\n")
 }
 
+// ~keep The first `<li>` wraps its nested `<ul>` in a `<div class="children-container">`,
+// ~keep which forces our own rendering to add a blank-line separator around that item (a bare
+// ~keep `<div>` can't just run into the next `- ` marker). That blank line makes the WHOLE
+// ~keep list loose on any CommonMark-compliant reparse (looseness is a per-list, not
+// ~keep per-item-pair, property), so the fixture's remaining plain items must carry the same
+// ~keep blank-line separation to reach a fixpoint -- confirmed by rendering the old fixture's
+// ~keep markdown back to HTML and reconverting it, which produced exactly this fully-loose
+// ~keep form instead of reproducing the old fixture (see the `commonmark_spec_fixpoint`
+// ~keep oracle this mirrors).
 #[test]
 fn converts_spa_menu_fixture() {
     let html = fs::read_to_string(fixture_path("gh-121-spa-app.html")).expect("read spa html");

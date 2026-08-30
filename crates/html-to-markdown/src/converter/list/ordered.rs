@@ -8,7 +8,8 @@
 
 use super::utils::{
     DEFAULT_ORDERED_LIST_START, add_list_leading_separator, add_nested_list_trailing_separator,
-    calculate_list_nesting_depth, is_loose_list, parse_ordered_list_start, process_list_children,
+    calculate_list_nesting_depth, is_loose_list, parse_ordered_list_start, preceding_same_type_list_separator_comment,
+    process_list_children,
 };
 use crate::options::ConversionOptions;
 #[cfg(feature = "visitor")]
@@ -32,7 +33,12 @@ pub fn handle_ol(
     depth: usize,
     dom_ctx: &DomContext,
 ) {
+    let separator_comment = preceding_same_type_list_separator_comment(*node_handle, parser, dom_ctx, "ol");
     add_list_leading_separator(output, ctx);
+    if let Some(comment) = separator_comment {
+        output.push_str(&comment);
+        output.push_str("\n\n");
+    }
 
     let nested_depth = calculate_list_nesting_depth(ctx);
     let is_loose = is_loose_list(*node_handle, parser, dom_ctx);
