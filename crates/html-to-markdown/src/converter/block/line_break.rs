@@ -83,6 +83,15 @@ pub fn handle(
     if ctx.in_heading {
         trim_trailing_whitespace(output);
         output.push_str("  ");
+    } else if ctx.in_code {
+        // ~keep A code span reproduces its content literally, so a newline_style marker is
+        // ~keep not syntax here -- it is a character in the user's code. `CommonMark` gives a
+        // ~keep line ending inside a code span no hard-break meaning and renders it as a
+        // ~keep space (<https://spec.commonmark.org/spec#code-spans>), and inside a fenced
+        // ~keep block the marker would land in the code itself. Same reasoning as the
+        // ~keep table-cell branch below: the context cannot carry a hard break, so
+        // ~keep newline_style is never consulted and both styles agree byte for byte.
+        output.push('\n');
     } else if ctx.in_table_cell {
         // ~keep Shared with div/p continuations inside a cell (issue #453, #454): a cell
         // ~keep cannot contain a hard line break, so newline_style is never consulted and

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **A `<br>` inside a code span or fenced code block no longer injects a `newline_style`
+  marker into the code.** A code context reproduces its content literally, so the marker was
+  not syntax there -- it was a character in the user's code. `newline_style="backslash"` put a
+  literal `\` inside the span (`<pre><code>A<br>B</code></pre>` emitted `A\` on its own line),
+  and the two-space style injected trailing spaces. `CommonMark` gives a line ending inside a
+  code span no hard-break meaning at all, so the two styles now agree byte for byte there. This
+  is the rule the table-cell branch already applied for the same reason. A `<br>` *between* two
+  code spans is an ordinary hard break and is unaffected.
+
 - **A `<br>` at the end of any block no longer leaves a stray `\` under
   `newline_style="backslash"` ([#464](https://github.com/xberg-io/html-to-markdown/issues/464)).**
   3.11.6 claimed this was fixed, but the strip ran only inside the paragraph handler, so it
