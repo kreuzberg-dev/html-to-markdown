@@ -257,6 +257,20 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
   emitted the two-space hard-break marker, which has no meaning on a single line: a renderer
   collapses it, so the next conversion saw different bytes. It now emits one space.
 
+- **`br_in_tables: false` is honoured for lists inside a table cell.** Both converters emitted
+  a literal `<br>` between sibling `<li>` elements in a cell regardless of the option, so the
+  setting silently did nothing for the shape it most often applies to -- a list in a cell, as
+  MediaWiki sidebars produce. This also caused a round-trip instability: once a renderer
+  flattens the list, that same `<br>` took the ordinary option path on the second pass and
+  collapsed to a space, so the two passes disagreed.
+
+- **A non-breaking space between two `<br>` tags is no longer dropped.** The paragraph
+  pre-filter discarded a text node outright when trimming found it empty and both neighbours
+  were empty inline elements -- and trimming is Unicode-aware, so a lone U+00A0 counted as
+  empty even though it is visible content. It surfaced only on a second conversion, because the
+  source spells it `&nbsp;` (six ASCII bytes) while a renderer re-serializes it as the literal
+  character. Only genuine ASCII whitespace is dropped there now.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
