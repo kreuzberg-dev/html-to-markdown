@@ -1,7 +1,7 @@
 <!--
 AI-RULEZ :: GENERATED FILE — DO NOT EDIT
-Content-Hash: blake3:8ed4848ac660796356fab89003d9a449335bab39c241966b18f3685be730ecfd
-Source-Hash: blake3:1de3beedeededac1e1bfe684f0c4d1c49ede9f5a785c0ee54e47ac59a92de311
+Content-Hash: blake3:be4783d2fe21c314ceaef8d680c4a2de5db02fd3c2629d96dca58fe0a51def39
+Source-Hash: blake3:52e2f7bf6475d61d409641b65da7164a669b27e20ba0b97a87d02a68c5e0df36
 Schema-Version: v1
 -->
 
@@ -78,12 +78,16 @@ html-to-markdown [OPTIONS] [FILE]
 | `--no-autolinks`       | flag                    | off      | Disable autolinks. Autolinks are on by default: when link text equals the href, output `<url>` syntax. Pass this flag to output `[url](url)` instead. |
 | `--link-style <STYLE>` | `inline`, `reference`   | `inline` | Link rendering style. `inline`: `[text](url)`. `reference`: `[text][1]` with definitions at end. |
 | `--default-title`      | flag                    | off      | Use href as link title when no `title` attribute exists.                                    |
+| `--url-escape-style <STYLE>` | `angle`, `percent` | `angle` | Destination escaping. `angle`: wrap destinations containing spaces or newlines in `<...>`. `percent`: percent-encode every character that is not RFC 3986 unreserved or `/`. |
 
 ## Images
 
 | Flag                                 | Values                    | Default | Description                                                          |
 | ------------------------------------ | ------------------------- | ------- | -------------------------------------------------------------------- |
 | `--keep-inline-images-in <ELEMENTS>` | comma-separated tag names | none    | Keep images as Markdown in these parent elements. E.g. `"a,strong"`. |
+| `--max-image-size <BYTES>`           | integer                   | `5242880` | Skip inline images whose decoded payload exceeds this size. Requires `--extract-inline-images`. |
+| `--capture-svg`                      | flag                      | off     | Capture inline `<svg>` elements as extracted images. Requires `--extract-inline-images`. |
+| `--no-infer-dimensions`              | flag                      | off     | Skip inferring image width/height from the decoded payload when the HTML omits them. Inference is on by default. Requires `--extract-inline-images`. |
 
 ## Tables
 
@@ -143,6 +147,7 @@ Metadata is returned in `result.metadata` within the JSON output (use `--json` t
 | `--strip-tags <TAGS>`    | comma-separated | none      | HTML tags to strip entirely (output only text content). E.g. `"script,style"`.      |
 | `--preserve-tags <TAGS>` | comma-separated | none      | HTML tags to keep verbatim as raw HTML in the output. E.g. `"details,summary"`.     |
 | `--skip-images`          | flag            | off       | Omit all `<img>` elements from the output entirely.                                 |
+| `--exclude-selectors <SELECTORS>` | comma-separated CSS selectors | none | Remove matching elements and their descendants before conversion. E.g. `".ad,#sidebar"`. |
 | `--max-depth <N>`        | integer         | unlimited | Silently truncate subtrees beyond this DOM nesting depth. Omit for unlimited depth. |
 
 ## Preprocessing
@@ -159,6 +164,7 @@ Metadata is returned in `result.metadata` within the JSON output (use `--json` t
 | Flag                    | Short | Default | Description                               |
 | ----------------------- | ----- | ------- | ----------------------------------------- |
 | `--encoding <ENCODING>` | `-e`  | `utf-8` | Input character encoding. E.g. `latin-1`. |
+| `--tier-strategy <STRATEGY>` |  | `auto` | Conversion path selection: `auto` picks the fastest tier the input allows, `tier2` always takes the DOM-walk path. Output is identical either way; for benchmarking and bug isolation. |
 
 ## Output Format
 

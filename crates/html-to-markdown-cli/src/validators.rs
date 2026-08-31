@@ -7,7 +7,7 @@
 use clap::ValueEnum;
 use html_to_markdown_rs::{
     CodeBlockStyle, HeadingStyle, HighlightStyle, LinkStyle, ListIndentType, NewlineStyle, OutputFormat,
-    PreprocessingPreset, WhitespaceMode,
+    PreprocessingPreset, TierStrategy, UrlEscapeStyle, WhitespaceMode,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
@@ -177,6 +177,41 @@ impl From<CliLinkStyle> for LinkStyle {
         match style {
             CliLinkStyle::Inline => Self::Inline,
             CliLinkStyle::Reference => Self::Reference,
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+pub enum CliUrlEscapeStyle {
+    /// Wrap destinations containing spaces or newlines in angle brackets (default)
+    Angle,
+    /// Percent-encode all characters that are not RFC 3986 unreserved or `/`
+    Percent,
+}
+
+impl From<CliUrlEscapeStyle> for UrlEscapeStyle {
+    fn from(style: CliUrlEscapeStyle) -> Self {
+        match style {
+            CliUrlEscapeStyle::Angle => Self::Angle,
+            CliUrlEscapeStyle::Percent => Self::Percent,
+        }
+    }
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, ValueEnum)]
+pub enum CliTierStrategy {
+    /// Automatically pick the best conversion tier for the input (default)
+    Auto,
+    /// Always use the Tier-2 (DOM-walk) path, skipping Tier-1
+    #[value(name = "tier2")]
+    Tier2,
+}
+
+impl From<CliTierStrategy> for TierStrategy {
+    fn from(strategy: CliTierStrategy) -> Self {
+        match strategy {
+            CliTierStrategy::Auto => Self::Auto,
+            CliTierStrategy::Tier2 => Self::Tier2,
         }
     }
 }

@@ -106,6 +106,7 @@ html-to-markdown --url https://example.com > output.md
 | `--no-autolinks`     | —                     | off      | Disable autolink conversion. By default, when link text equals the href, the output is `<url>`. Pass this flag to emit `[url](url)` instead. |
 | `--default-title`    | —                     | off      | Use href as link title when no `title` attribute exists.                                                                                     |
 | `--link-style STYLE` | `inline`, `reference` | `inline` | `inline` emits `[text](url)`. `reference` emits `[text][1]` with numbered definitions at the end of the document.                            |
+| `--url-escape-style STYLE` | `angle`, `percent` | `angle` | `angle` wraps destinations containing spaces or newlines in `<...>`. `percent` percent-encodes every character that is not RFC 3986 unreserved or `/`. |
 
 ## Images
 
@@ -113,6 +114,9 @@ html-to-markdown --url https://example.com > output.md
 | ---------------------------------- | ----------------------------------------------------------------------------------- |
 | `--keep-inline-images-in ELEMENTS` | Comma-separated element names where images stay as `![alt](src)` (e.g. `a,strong`). |
 | `--skip-images`                    | Drop all `<img>` elements entirely. No `![alt](src)` output, no alt-text fallback.  |
+| `--max-image-size BYTES`           | Skip inline images whose decoded payload exceeds this size. Default `5242880` (5 MB). Requires `--extract-inline-images`. |
+| `--capture-svg`                    | Capture inline `<svg>` elements as extracted images. Requires `--extract-inline-images`. |
+| `--no-infer-dimensions`            | Skip inferring image width and height from the decoded payload when the HTML omits them. Requires `--extract-inline-images`. |
 
 ## Tables
 
@@ -142,6 +146,7 @@ html-to-markdown --url https://example.com > output.md
 | `--convert-as-inline`  | Treat block elements as inline (no paragraph breaks).                               |
 | `--strip-tags TAGS`    | Comma-separated tags to strip (text content preserved, no Markdown conversion).     |
 | `--preserve-tags TAGS` | Comma-separated tags to emit verbatim as raw HTML instead of converting.            |
+| `--exclude-selectors SELECTORS` | Comma-separated CSS selectors. Matching elements and their descendants are removed before conversion (e.g. `.ad,#sidebar`). |
 | `--max-depth N`        | Silently truncate subtrees beyond this DOM nesting depth. Omit for unlimited depth. |
 
 ## Metadata
@@ -176,6 +181,12 @@ html-to-markdown --url https://example.com > output.md
 | Flag      | Description                                 |
 | --------- | ------------------------------------------- |
 | `--debug` | Output diagnostic warnings and information. |
+
+## Advanced
+
+| Flag                     | Values          | Default | Description                                                                                          |
+| ------------------------ | --------------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| `--tier-strategy STRATEGY` | `auto`, `tier2` | `auto`  | `auto` picks the fastest conversion path the input allows. `tier2` always takes the DOM-walk path. Output is identical either way; this exists for benchmarking and bug isolation. |
 
 ## Shell Completions and Man Page
 
@@ -238,8 +249,12 @@ Each CLI flag has a corresponding `ConversionOptions` field. Library users can c
 | `--no-autolinks`                | `autolinks`                  | inverted: flag sets `autolinks = false`; default is `true` |
 | `--default-title`               | `default_title`              | boolean flag                                               |
 | `--link-style STYLE`            | `link_style`                 | `"inline"` \| `"reference"`                                |
+| `--url-escape-style STYLE`      | `url_escape_style`           | `"angle"` \| `"percent"`                                   |
 | `--keep-inline-images-in ELEMS` | `keep_inline_images_in`      | comma-separated tag list                                   |
 | `--skip-images`                 | `skip_images`                | boolean flag                                               |
+| `--max-image-size BYTES`        | `max_image_size`             | integer; default `5242880`                                 |
+| `--capture-svg`                 | `capture_svg`                | boolean flag                                               |
+| `--no-infer-dimensions`         | `infer_dimensions`           | inverted: flag sets `infer_dimensions = false`; default is `true` |
 | `--br-in-tables`                | `br_in_tables`               | boolean flag                                               |
 | `--compact-tables`              | `compact_tables`             | boolean flag                                               |
 | `--whitespace-mode MODE`        | `whitespace_mode`            | `"normalized"` \| `"strict"`                               |
@@ -249,6 +264,7 @@ Each CLI flag has a corresponding `ConversionOptions` field. Library users can c
 | `--convert-as-inline`           | `convert_as_inline`          | boolean flag                                               |
 | `--strip-tags TAGS`             | `strip_tags`                 | comma-separated tag list                                   |
 | `--preserve-tags TAGS`          | `preserve_tags`              | comma-separated tag list                                   |
+| `--exclude-selectors SELECTORS` | `exclude_selectors`          | comma-separated CSS selector list                          |
 | `--max-depth N`                 | `max_depth`                  | integer                                                    |
 | `--extract-metadata`            | `extract_metadata`           | boolean flag                                               |
 | `--include-structure`           | `include_document_structure` | boolean flag; `--json` only                                |
@@ -258,6 +274,7 @@ Each CLI flag has a corresponding `ConversionOptions` field. Library users can c
 | `--keep-navigation`             | `keep_navigation`            | boolean flag                                               |
 | `--keep-forms`                  | `keep_forms`                 | boolean flag                                               |
 | `-e, --encoding ENCODING`       | `encoding`                   | CLI only — decoded before `convert()`                      |
+| `--tier-strategy STRATEGY`      | `tier_strategy`              | `"auto"` \| `"tier2"`                                      |
 | `--debug`                       | `debug`                      | CLI only — diagnostic output to stderr                     |
 
 Flags without a `ConversionOptions` counterpart: `FILE`, `--url`, `--user-agent`, `-o/--output`, `--json`, `--no-content`, `--show-warnings`, `--generate-completion`, `--generate-man`.

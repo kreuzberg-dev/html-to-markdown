@@ -6,7 +6,8 @@
 
 use crate::validators::{
     CliCodeBlockStyle, CliHeadingStyle, CliHighlightStyle, CliLinkStyle, CliListIndentType, CliNewlineStyle,
-    CliOutputFormat, CliPreprocessingPreset, CliWhitespaceMode, validate_bullets, validate_strong_em_symbol,
+    CliOutputFormat, CliPreprocessingPreset, CliTierStrategy, CliUrlEscapeStyle, CliWhitespaceMode, validate_bullets,
+    validate_strong_em_symbol,
 };
 #[cfg(feature = "mcp")]
 use clap::Subcommand;
@@ -233,6 +234,15 @@ pub struct Cli {
     #[arg(help_heading = "Links")]
     pub default_title: bool,
 
+    /// URL escaping style for link and image destinations
+    ///
+    /// Controls how destinations are escaped:
+    /// - 'angle': Wrap destinations containing spaces or newlines in `<...>` (default)
+    /// - 'percent': Percent-encode all characters that are not RFC 3986 unreserved or `/`
+    #[arg(long, value_name = "STYLE")]
+    #[arg(help_heading = "Links")]
+    pub url_escape_style: Option<CliUrlEscapeStyle>,
+
     /// Keep inline images in specific elements
     ///
     /// Comma-separated list of HTML elements where images should remain
@@ -240,6 +250,33 @@ pub struct Cli {
     #[arg(long, value_name = "ELEMENTS", value_delimiter = ',')]
     #[arg(help_heading = "Images")]
     pub keep_inline_images_in: Option<Vec<String>>,
+
+    /// Maximum decoded image size in bytes
+    ///
+    /// Images larger than this after decoding are skipped. Default is
+    /// 5242880 (5 MB).
+    #[arg(long, value_name = "BYTES")]
+    #[arg(help_heading = "Images")]
+    #[arg(requires = "extract_inline_images")]
+    pub max_image_size: Option<u64>,
+
+    /// Capture inline `<svg>` elements as images
+    ///
+    /// Requires --extract-inline-images
+    #[arg(long)]
+    #[arg(help_heading = "Images")]
+    #[arg(requires = "extract_inline_images")]
+    pub capture_svg: bool,
+
+    /// Disable image dimension inference
+    ///
+    /// By default, image width and height are inferred from the decoded
+    /// image data when not present in the HTML. Pass this flag to skip
+    /// that inference. Requires --extract-inline-images
+    #[arg(long = "no-infer-dimensions")]
+    #[arg(help_heading = "Images")]
+    #[arg(requires = "extract_inline_images")]
+    pub no_infer_dimensions: bool,
 
     /// Use <br> in table cells
     ///
@@ -384,6 +421,14 @@ pub struct Cli {
     #[arg(help_heading = "Element Handling")]
     pub skip_images: bool,
 
+    /// CSS selectors for elements to exclude entirely
+    ///
+    /// Comma-separated list of CSS selectors. Matching elements and their
+    /// descendants are removed before conversion. Example: ".ad,#sidebar"
+    #[arg(long, value_name = "SELECTORS", value_delimiter = ',')]
+    #[arg(help_heading = "Element Handling")]
+    pub exclude_selectors: Option<Vec<String>>,
+
     /// Maximum DOM traversal depth
     ///
     /// Truncate subtrees beyond this nesting depth. Records a processing warning;
@@ -425,6 +470,15 @@ pub struct Cli {
     #[arg(help_heading = "Preprocessing")]
     #[arg(requires = "preprocess")]
     pub keep_forms: bool,
+
+    /// Conversion tier strategy
+    ///
+    /// Controls which internal conversion path is used:
+    /// - 'auto': Automatically pick the best tier for the input (default)
+    /// - 'tier2': Always use the Tier-2 (DOM-walk) path, skipping Tier-1
+    #[arg(long, value_name = "STRATEGY")]
+    #[arg(help_heading = "Advanced")]
+    pub tier_strategy: Option<CliTierStrategy>,
 
     /// Input character encoding
     ///

@@ -51,7 +51,7 @@ pub fn build_conversion_options(cli: &Cli) -> ConversionOptions {
             .clone()
             .unwrap_or(defaults.keep_inline_images_in),
         link_style: cli.link_style.map_or(defaults.link_style, Into::into),
-        url_escape_style: defaults.url_escape_style,
+        url_escape_style: cli.url_escape_style.map_or(defaults.url_escape_style, Into::into),
         skip_images: cli.skip_images,
         preprocessing,
         encoding: cli.encoding.clone(),
@@ -61,12 +61,12 @@ pub fn build_conversion_options(cli: &Cli) -> ConversionOptions {
         output_format: cli.output_format.map_or_else(OutputFormat::default, Into::into),
         include_document_structure: cli.include_structure,
         extract_images: cli.extract_inline_images,
-        max_image_size: 5_242_880,
-        capture_svg: false,
-        infer_dimensions: true,
+        max_image_size: cli.max_image_size.unwrap_or(defaults.max_image_size),
+        capture_svg: cli.capture_svg,
+        infer_dimensions: !cli.no_infer_dimensions,
         max_depth: cli.max_depth,
-        exclude_selectors: Vec::new(),
-        tier_strategy: defaults.tier_strategy,
+        exclude_selectors: cli.exclude_selectors.clone().unwrap_or(defaults.exclude_selectors),
+        tier_strategy: cli.tier_strategy.map_or(defaults.tier_strategy, Into::into),
         visitor: None,
     }
 }
