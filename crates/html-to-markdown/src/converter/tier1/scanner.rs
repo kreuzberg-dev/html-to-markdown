@@ -3162,7 +3162,7 @@ fn close_table(state: &mut Tier1State, table_probes: &mut Vec<TableLayoutProbe>)
         let mut nested = String::new();
         emit_gfm_table(&mut nested, ts);
         if nested.contains('|') {
-            nested = escape_bare_pipes_outside_code_spans(&nested);
+            nested = crate::converter::utility::content::escape_bare_pipes_outside_code_spans(&nested);
         }
         state.cell_or_output_mut().push_str(&nested);
     } else {
@@ -3264,75 +3264,6 @@ fn close_table_cell(state: &mut Tier1State, is_implicit: bool) -> Result<(), Bai
     ts.current_cell.clear();
     ts.current_cell_colspan = 1;
     Ok(())
-}
-
-/// Escape bare `|` characters in `text` outside of properly backtick-matched code spans.
-///
-/// ~keep Reimplements Tier-2's `block::table::cell::escape_bare_pipes_outside_code_spans`
-/// ~keep byte-for-byte (that module lives outside `tier1/`, and this scanner must not edit
-/// ~keep it). Used only for a nested `<table>`'s own flattened row/separator syntax landing
-/// ~keep in an outer cell -- see `close_table`'s `inline_mode` branch. A cell's ordinary
-/// ~keep literal text already goes through `close_table_cell`'s bail-on-bare-pipe path
-/// ~keep instead, which is simpler because it never has to tell a real code span's
-/// ~keep backticks apart from GFM table syntax.
-fn escape_bare_pipes_outside_code_spans(text: &str) -> String {
-    let chars: Vec<char> = text.chars().collect();
-    let mut out = String::with_capacity(text.len() + 4);
-    let mut i = 0usize;
-    while i < chars.len() {
-        let c = chars[i];
-        if c == '\\' && i + 1 < chars.len() {
-            out.push(c);
-            out.push(chars[i + 1]);
-            i += 2;
-            continue;
-        }
-        if c == '`' {
-            let run_start = i;
-            while i < chars.len() && chars[i] == '`' {
-                i += 1;
-            }
-            let run_len = i - run_start;
-            if let Some(close_start) = find_matching_backtick_run(&chars, i, run_len) {
-                out.extend(&chars[run_start..close_start + run_len]);
-                i = close_start + run_len;
-            } else {
-                out.extend(&chars[run_start..i]);
-            }
-            continue;
-        }
-        if c == '|' {
-            out.push('\\');
-            out.push('|');
-        } else {
-            out.push(c);
-        }
-        i += 1;
-    }
-    out
-}
-
-/// Find the start index of the next backtick run of exactly `run_len` backticks at or
-/// after `start`, treating a longer or shorter run as not matching (mirrors CommonMark
-/// code span matching, which requires an exact backtick-count match). Reimplements
-/// Tier-2's `block::table::cell::find_matching_backtick_run` -- see
-/// `escape_bare_pipes_outside_code_spans` above for why this is not shared directly.
-fn find_matching_backtick_run(chars: &[char], start: usize, run_len: usize) -> Option<usize> {
-    let mut i = start;
-    while i < chars.len() {
-        if chars[i] == '`' {
-            let candidate_start = i;
-            while i < chars.len() && chars[i] == '`' {
-                i += 1;
-            }
-            if i - candidate_start == run_len {
-                return Some(candidate_start);
-            }
-        } else {
-            i += 1;
-        }
-    }
-    None
 }
 
 /// Flush a raw HTML text segment into the output (or current cell buffer),
