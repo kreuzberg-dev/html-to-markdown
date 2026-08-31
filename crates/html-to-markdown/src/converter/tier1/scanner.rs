@@ -135,12 +135,19 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     // ~keep `flush_text`'s use of `next_tag_is_img` alongside
                     // ~keep `Tier1State::last_emitted_was_img`.
                     let next_tag_is_img = upcoming_tag_is_named(bytes, pos, b"img");
+                    // ~keep A trailing bare `\n` (no accompanying space/tab) on an
+                    // ~keep otherwise non-whitespace text node needs to know whether the
+                    // ~keep upcoming sibling is specifically `<span>` — see
+                    // ~keep `trailing_single_newline_join`'s doc comment for why that one
+                    // ~keep tag is special-cased.
+                    let next_tag_is_span = upcoming_tag_is_named(bytes, pos, b"span");
                     flush_text(
                         &mut state,
                         &html[text_start..pos],
                         text_start,
                         next_tag_is_list,
                         next_tag_is_img,
+                        next_tag_is_span,
                     )?;
                 }
 
@@ -189,7 +196,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 // ~keep bare `<x` as a text node). Emit the `<` and continue so
                 // ~keep we don't bail on commonly-unescaped source like `x < 5`.
                 if !parse::is_tag_name_start(next) {
-                    flush_text(&mut state, "<", pos, false, false)?;
+                    flush_text(&mut state, "<", pos, false, false, false)?;
                     pos += 1;
                     text_start = pos;
                     continue;
@@ -489,7 +496,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     if !spec_rules::should_close_for_new_tag(top.spec, spec) {
                         break;
                     }
-                    emit_close_for_implicit(&mut state, options)?;
+                    emit_close_for_implicit(&mut state, options, &mut table_probes)?;
                 }
 
                 // ~keep M9: Block-in-cell bail.
@@ -651,7 +658,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
     }
 
     if text_start < pos {
-        flush_text(&mut state, &html[text_start..pos], text_start, false, false)?;
+        flush_text(&mut state, &html[text_start..pos], text_start, false, false, false)?;
     }
 
     // ~keep Phase N2: implicitly close all remaining open elements at EOF.
@@ -673,7 +680,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
         while matches!(buf.as_bytes().last(), Some(b' ' | b'\t' | b'\n' | b'\r')) {
             buf.pop();
         }
-        emit_close_for_implicit(&mut state, options)?;
+        emit_close_for_implicit(&mut state, options, &mut table_probes)?;
     }
 
     // ~keep Mirror Tier-2's final render-stage order exactly (main.rs):
@@ -1252,7 +1259,43 @@ fn open_heading(state: &mut Tier1State) {
     if state.in_table_cell() {
         return;
     }
-    state.ensure_blank_line();
+    // ~keep A heading inside `<summary>`/`<figcaption>` is not in a table cell but
+    // ~keep also must not touch `state.output`: Tier-2's `handle_summary` walks
+    // ~keep children with a fresh LOCAL `content` buffer as `output`, so
+    // ~keep `heading.rs`'s leading-separator step runs against that buffer, not
+    // ~keep the real document output. `cell_or_output_mut` already resolves to the
+    // ~keep active summary/figcaption buffer here (it takes priority over table
+    // ~keep cells), so routing through it — instead of the hardcoded
+    // ~keep `state.ensure_blank_line()` — keeps the separator (and, in
+    // ~keep `close_heading`, the `#` prefix) inside the same buffer the heading's
+    // ~keep own text lands in. Without this, `content_start` (captured right after
+    // ~keep this call, from that same buffer's length) gets treated as an offset
+    // ~keep into `state.output` instead — an unrelated, much larger buffer — and
+    // ~keep `close_heading` splices its `#` prefix into the middle of whatever
+    // ~keep text happens to sit at that byte offset in the real output.
+    ensure_blank_line_buf(state.cell_or_output_mut());
+}
+
+/// Buffer-generic equivalent of [`Tier1State::ensure_blank_line`].
+///
+/// Operates on whichever accumulator buffer the caller passes in — `state.output`,
+/// a table cell, or a `<summary>`/`<figcaption>` wrap buffer — rather than assuming
+/// `state.output`. See `Tier1State::cell_or_output_mut`'s buffer-selection priority.
+fn ensure_blank_line_buf(buf: &mut String) {
+    if buf.is_empty() {
+        return;
+    }
+    while buf.ends_with(' ') || buf.ends_with('\t') {
+        buf.pop();
+    }
+    if buf.ends_with("\n\n") {
+        return;
+    }
+    if buf.ends_with('\n') {
+        buf.push('\n');
+    } else {
+        buf.push_str("\n\n");
+    }
 }
 
 fn open_blockquote(state: &mut Tier1State) {
@@ -1868,7 +1911,7 @@ fn emit_close(
             break;
         }
         if top.spec.optional_close.is_some() {
-            emit_close_for_implicit(state, options)?;
+            emit_close_for_implicit(state, options, table_probes)?;
         } else {
             break;
         }
@@ -2220,7 +2263,11 @@ fn close_inline_marker(state: &mut Tier1State, frame: &OpenTag, marker: &str) {
 /// Mirrors `emit_close` but skips the stack-pop search (we always close the
 /// literal top frame) and skips the tag-name lookup (we use the frame's spec
 /// directly).
-fn emit_close_for_implicit(state: &mut Tier1State, options: &ConversionOptions) -> Result<(), BailReason> {
+fn emit_close_for_implicit(
+    state: &mut Tier1State,
+    options: &ConversionOptions,
+    table_probes: &mut Vec<TableLayoutProbe>,
+) -> Result<(), BailReason> {
     let frame = state.stack.pop().ok_or_else(|| BailReason::DepthMismatch {
         tag: String::from("(implicit)"),
         expected: 1,
@@ -2264,11 +2311,18 @@ fn emit_close_for_implicit(state: &mut Tier1State, options: &ConversionOptions) 
         TagKind::Figcaption => close_figcaption(state, &frame),
         // ~keep Button (Phase T): emit `\n\n` on EOF close just like explicit close.
         TagKind::Button => close_button(state, &frame),
+        // ~keep An unclosed `<table>` at EOF (html5ever/tl both implicitly close every
+        // ~keep open element there, per the loop's own doc comment) used to hit the
+        // ~keep do-nothing arm below, discarding the WHOLE accumulated table --
+        // ~keep including fully-formed rows -- instead of rendering it. `close_table`
+        // ~keep already tolerates an incomplete/empty table (its `is_blank` check
+        // ~keep bails rather than emitting), so it is exactly as safe to call here as
+        // ~keep it is from `emit_close`'s explicit `</table>` arm.
+        TagKind::Table => close_table(state, table_probes)?,
         TagKind::Block | TagKind::Inline => {}
         TagKind::LineBreak
         | TagKind::Image
         | TagKind::Hr
-        | TagKind::Table
         | TagKind::TableHead
         | TagKind::TableBody
         | TagKind::TableFoot
@@ -2321,20 +2375,30 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
     }
 
     trim_trailing_inline_whitespace(state);
-    let content_start = clamp_to_char_boundary(&state.output, frame.content_start);
+    // ~keep All buffer touches below go through `cell_or_output_mut` rather than
+    // ~keep `state.output` directly. A heading inside `<summary>`/`<figcaption>`
+    // ~keep is not a table cell (the early return above doesn't catch it) but its
+    // ~keep `frame.content_start` was captured from the active wrap buffer's
+    // ~keep length (see the open-tag push site), not `state.output`'s — using
+    // ~keep `state.output` here would insert the `#` prefix at that same small
+    // ~keep offset into the real, much longer document output instead, splicing
+    // ~keep it into the middle of unrelated already-emitted text. See
+    // ~keep `open_heading`'s matching note.
+    let buf = state.cell_or_output_mut();
+    let content_start = clamp_to_char_boundary(buf, frame.content_start);
 
     if !is_implicit {
-        let content = &state.output[content_start..];
+        let content = &buf[content_start..];
         if content.trim().is_empty() {
             // ~keep Empty heading: Tier-2 emits nothing. Roll back to before
             // ~keep the heading's block separator was added.
-            state.output.truncate(content_start);
-            let trimmed_len = state.output.trim_end_matches('\n').len();
+            buf.truncate(content_start);
+            let trimmed_len = buf.trim_end_matches('\n').len();
             if trimmed_len > 0 {
-                state.output.truncate(trimmed_len);
-                state.output.push('\n');
+                buf.truncate(trimmed_len);
+                buf.push('\n');
             } else {
-                state.output.clear();
+                buf.clear();
             }
             return Ok(());
         }
@@ -2345,8 +2409,8 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
     // ~keep text-node normalization, folding `\n + indent` runs to a single space.
     // ~keep Mirror that here so `<h3>Mozilla\n   sponsorship</h3>` emits
     // ~keep `### Mozilla sponsorship` rather than `### Mozilla\n  sponsorship`.
-    if state.output[content_start..].contains('\n') {
-        let content = state.output[content_start..].to_owned();
+    if buf[content_start..].contains('\n') {
+        let content = buf[content_start..].to_owned();
         let mut normalized = String::with_capacity(content.len());
         let mut prev_was_space = false;
         for ch in content.chars() {
@@ -2361,8 +2425,8 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
                 prev_was_space = false;
             }
         }
-        state.output.truncate(content_start);
-        state.output.push_str(normalized.trim_end());
+        buf.truncate(content_start);
+        buf.push_str(normalized.trim_end());
     }
 
     // ~keep Tier-2's `text.trim()` (heading.rs) trims the ENTIRE rendered heading
@@ -2371,22 +2435,20 @@ fn close_heading(state: &mut Tier1State, frame: &OpenTag, n: u8, is_implicit: bo
     // ~keep `<em>`/`<strong>` open marker by `close_inline_marker`'s leading-migration
     // ~keep step) would otherwise double up against the "# " prefix's own trailing
     // ~keep space (`<h3>&nbsp;x</h3>` -> "###  x" instead of Tier-2's "### x").
-    let leading_ws_len = state.output[content_start..]
+    let leading_ws_len = buf[content_start..]
         .char_indices()
         .find(|&(_, c)| !c.is_whitespace())
-        .map_or(state.output.len() - content_start, |(i, _)| i);
+        .map_or(buf.len() - content_start, |(i, _)| i);
     if leading_ws_len > 0 {
-        state
-            .output
-            .replace_range(content_start..content_start + leading_ws_len, "");
+        buf.replace_range(content_start..content_start + leading_ws_len, "");
     }
 
     let prefix = heading_prefix(n);
-    state.output.insert_str(content_start, prefix);
+    buf.insert_str(content_start, prefix);
     // ~keep Tier-2 leaves a blank line ("\n\n") after a heading. A
     // ~keep following paragraph's "\n\n" guard then finds it already and appends
     // ~keep nothing, yielding the expected single blank line.
-    state.ensure_blank_line();
+    ensure_blank_line_buf(state.cell_or_output_mut());
     Ok(())
 }
 
@@ -3164,6 +3226,7 @@ fn flush_text(
     base_offset: usize,
     next_tag_is_list: bool,
     next_tag_is_img: bool,
+    next_tag_is_span: bool,
 ) -> Result<(), BailReason> {
     if raw.is_empty() {
         return Ok(());
@@ -3179,13 +3242,32 @@ fn flush_text(
     let after_img = state.last_emitted_was_img;
     state.last_emitted_was_img = false;
 
-    // ~keep Inside a table but outside a cell or caption: discard text (whitespace
-    // ~keep between structural tags like <table>...<tr> or <tr>...<td>).
-    // ~keep Tier-2 processes only tag children explicitly, ignoring text nodes at
-    // ~keep this level.  Caption content is the exception — Tier-2 walks caption
-    // ~keep children and accumulates their text into the caption output.
+    // ~keep Inside a table but outside a cell or caption: whitespace between
+    // ~keep structural tags (`<table>...<tr>`, `<tr>...<td>`) is insignificant and
+    // ~keep silently dropped here, matching Tier-2 (which processes only tag
+    // ~keep children of a table and never walks a stray whitespace text node).
+    // ~keep Caption content is the exception — Tier-2 walks caption children and
+    // ~keep accumulates their text into the caption output.
+    //
+    // ~keep Non-whitespace text at this position is HTML5 "foster parented"
+    // ~keep content: the real parsing algorithm relocates it to just before the
+    // ~keep `<table>` element rather than dropping it. Tier-2's own DOM (built by
+    // ~keep `tl`, not a full HTML5 tree-construction implementation) only
+    // ~keep sometimes surfaces it there — empirically, it depends on adjacency to
+    // ~keep a `<!--comment-->` in a way this single-pass byte scanner cannot
+    // ~keep reproduce byte-for-byte without a second pass over the table's
+    // ~keep contents. Bail instead of silently discarding real content (the
+    // ~keep original defect here): Tier-2's fallback renders whatever the true
+    // ~keep answer is. `raw.trim().is_empty()` is the same "is this
+    // ~keep insignificant" test already used everywhere else in this function,
+    // ~keep so a decoded whitespace-only entity run (e.g. `&nbsp;` alone) is
+    // ~keep treated as non-whitespace and bails too — overly conservative, but
+    // ~keep never wrong, and rare enough in practice to not matter.
     if !state.table_stack.is_empty() && !state.in_table_cell() && !state.in_table_caption() {
-        return Ok(());
+        if raw.trim().is_empty() {
+            return Ok(());
+        }
+        return Err(BailReason::Classifier);
     }
 
     let in_pre = state.escape_ctx.contains(EscapeCtx::PRE);
@@ -3639,7 +3721,7 @@ fn flush_text(
     // ~keep   prefix → `" "` if the run had any leading whitespace, else `""`
     // ~keep   suffix → `"\n\n"` if trailing run contained `\n\n`,
     // ~keep          → `" "`   if trailing run had space/tab (folding any `\n`),
-    // ~keep          → `""`    if trailing run was `\n` only.
+    // ~keep          → `trailing_single_newline_join(...)` if trailing run was `\n` only.
     // ~keep Without this, Tier-1 keeps the literal `\n  ` in text like
     // ~keep "The number of\n  " and emits `of\n ` while Tier-2 emits `of `,
     // ~keep and likewise the leading whitespace case `</em>\n  baz` produces
@@ -3674,7 +3756,7 @@ fn flush_text(
                 } else if trailing.bytes().any(|b| b == b' ' || b == b'\t') {
                     " "
                 } else if trail_has_nl {
-                    ""
+                    trailing_single_newline_join(state, next_tag_is_span)
                 } else {
                     trailing
                 };
@@ -4808,6 +4890,62 @@ fn upcoming_open_tag_name<'b>(bytes: &[u8], lt_pos: usize, buf: &'b mut [u8; MAX
     let name_start = lt_pos + 1;
     let name_end = parse::scan_tag_name(bytes, name_start);
     Some(lowercase_into(&bytes[name_start..name_end], buf))
+}
+
+/// Decide what a text node's trailing *bare* `\n` (no accompanying space/tab,
+/// not part of a `\n\n` run) collapses to.
+///
+/// Mirrors Tier-2's `has_trailing_single_newline` follow-up step
+/// (`text_node.rs`, the `else if has_trailing_single_newline` arm): `chomp()`
+/// itself reduces that trailing run to nothing, but a supplementary check then
+/// puts a joining character back unless the block already ends in a blank
+/// line. Only reachable from the non-inline, non-table-cell Phase Y branch in
+/// `flush_text`, so `state.output` — not `cell_or_output_mut()` — is always
+/// the right buffer to inspect here (mirrors Tier-2's `ctx.block_content_start`
+/// slice of the real `output`, which the same non-inline/non-cell precondition
+/// guarantees is `state.output` too).
+///
+/// - `<span>` is a hardcoded exception in Tier-2's source: no join at all.
+/// - Otherwise: a blank-line break already in place needs nothing either. The
+///   "already" is scoped to the enclosing `<p>`/`<div>`'s OWN content (Tier-2's
+///   `ctx.block_content_start`, i.e. `nearest_block_content_start` here) —
+///   never the whole document buffer. A paragraph that just opened right
+///   after a preceding one leaves the DOCUMENT ending in "\n\n" (its own
+///   leading separator) while its OWN content is still empty; scoping the
+///   check avoids reading that separator as "this text node already touches a
+///   blank line" and wrongly swallowing the join.
+/// - Otherwise: a paragraph ancestor, or a `<strong>`/`<em>` (Tier-2's
+///   `inline_depth`-incrementing wrappers) ancestor, joins with a single
+///   space; anything else (e.g. a bare `<div>`) joins with a literal newline.
+fn trailing_single_newline_join(state: &Tier1State, next_tag_is_span: bool) -> &'static str {
+    if next_tag_is_span {
+        return "";
+    }
+    let block_start = clamp_to_char_boundary(&state.output, nearest_block_content_start(state));
+    if state.output[block_start..].ends_with("\n\n") {
+        return "";
+    }
+    let in_paragraph_or_inline_wrapper = state.stack.iter().any(|frame| {
+        matches!(
+            frame.spec.kind,
+            TagKind::Paragraph | TagKind::Strong | TagKind::Emphasis
+        )
+    });
+    if in_paragraph_or_inline_wrapper { " " } else { "\n" }
+}
+
+/// Position where the innermost enclosing `<p>`/`<div>` frame's OWN content
+/// starts in `state.output` — Tier-1's equivalent of Tier-2's
+/// `ctx.block_content_start` (set in `block/paragraph.rs`, which handles both
+/// tags). Falls back to `0` (the whole buffer) when no such ancestor is open,
+/// matching `Context::default`'s `block_content_start: 0`.
+fn nearest_block_content_start(state: &Tier1State) -> usize {
+    state
+        .stack
+        .iter()
+        .rev()
+        .find(|frame| matches!(frame.spec.kind, TagKind::Paragraph | TagKind::Block))
+        .map_or(0, |frame| frame.content_start)
 }
 
 /// Peek whether the upcoming tag at `bytes[lt_pos]` is an opening `<ul>`/`<ol>`.
