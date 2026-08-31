@@ -111,6 +111,7 @@ const fn bail_variant_name(reason: &BailReason) -> &'static str {
         BailReason::UnknownEntity { .. } => "UnknownEntity",
         BailReason::HiddenElement { .. } => "HiddenElement",
         BailReason::ListNestedOrdered => "ListNestedOrdered",
+        BailReason::ListItemUnsupportedBlockChild => "ListItemUnsupportedBlockChild",
     }
 }
 

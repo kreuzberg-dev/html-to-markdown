@@ -542,6 +542,27 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     }
                 }
 
+                // ~keep See `BailReason::ListItemUnsupportedBlockChild`'s doc comment for the
+                // ~keep full root-cause writeup. `<blockquote>`/`<div>`/`<table>`/`<dl>` bail
+                // ~keep unconditionally inside a list item (any position); `<p>` bails only as
+                // ~keep a continuation of already-started text (its bare-marker/first-content
+                // ~keep shape is already correct); `<pre>` bails only as bare-marker/first
+                // ~keep content (its continuation shape is already correct).
+                if !state.in_table_cell() && state.list_continuation_indent_width() > 0 {
+                    let bare_marker_line = line_is_bare_list_marker(&state.output);
+                    let bails = match spec.kind {
+                        TagKind::Blockquote | TagKind::Table => true,
+                        TagKind::Block => name_lower == b"div",
+                        TagKind::List(ListKind::Definition) => true,
+                        TagKind::Paragraph => !bare_marker_line,
+                        TagKind::Pre => bare_marker_line,
+                        _ => false,
+                    };
+                    if bails {
+                        return Err(BailReason::ListItemUnsupportedBlockChild);
+                    }
+                }
+
                 let prev_ctx = state.escape_ctx;
                 let ol_start = if matches!(spec.kind, TagKind::List(ListKind::Ordered)) {
                     extract_ol_start(&attrs)

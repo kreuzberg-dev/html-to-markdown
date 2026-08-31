@@ -132,6 +132,34 @@ pub enum BailReason {
     /// which only holds when every list in the ancestor chain is unordered.
     /// Bail so Tier-2 (which computes cumulative marker widths) is authoritative.
     ListNestedOrdered,
+
+    /// A `<blockquote>`, `<div>` (or other generic block container), `<table>`,
+    /// `<dl>`, or a paragraph-continuation `<p>` opened while inside an open
+    /// list item, in a shape this scanner cannot render correctly.
+    ///
+    /// Tier-2 gives each of these kinds bespoke separator, indentation, and/or
+    /// loose-vs-tight handling once `ctx.in_list_item` is true — a wider
+    /// continuation indent for `<table>`, a same-line space-glued continuation
+    /// for a `<p>` that continues the item's already-started text, an
+    /// unindented description line for `<dl>`, and (for `<blockquote>`/`<div>`)
+    /// a continuation separator that is a single newline, never a blank line.
+    /// This scanner's generic block open/close helpers do not replicate any of
+    /// that. Worse, a correct fix for the `<blockquote>`/`<div>` case would also
+    /// have to rework `close_list_item`'s loose-list heuristic (which detects a
+    /// "loose" item by scanning its content for a literal `"\n\n"`): Tier-2's
+    /// correct continuation separator for those two never contains a blank
+    /// line, silently defeating the very signal that heuristic relies on. That
+    /// is exactly the kind of block-separator-deferral restructuring this
+    /// scanner does not do — bail instead of guessing.
+    ///
+    /// `<p>` and `<pre>` are exempt in the one shape each already gets right
+    /// without any of the above: as the item's own FIRST content, sitting
+    /// directly after the bare bullet marker with nothing else on that line
+    /// yet (Phase EE's existing inline-join for `<p>`; `<pre>`'s
+    /// list-item-agnostic `ensure_blank_line` already coincides with Tier-2
+    /// there). Only `<p>` opening as a CONTINUATION of already-started text
+    /// bails.
+    ListItemUnsupportedBlockChild,
 }
 
 impl fmt::Display for BailReason {
@@ -193,6 +221,12 @@ impl fmt::Display for BailReason {
                 write!(
                     f,
                     "nested list with an ordered ancestor or ordered self (cumulative indent width)"
+                )
+            }
+            Self::ListItemUnsupportedBlockChild => {
+                write!(
+                    f,
+                    "block-level child of a list item in a shape this scanner cannot render correctly"
                 )
             }
         }
