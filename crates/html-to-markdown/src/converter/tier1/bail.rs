@@ -160,6 +160,20 @@ pub enum BailReason {
     /// there). Only `<p>` opening as a CONTINUATION of already-started text
     /// bails.
     ListItemUnsupportedBlockChild,
+
+    /// An `<img>` had an empty (or whitespace-only) `src`, or a `src` that is a
+    /// `data:` URI, while also carrying one of the lazy-load fallback attributes
+    /// (`data-src`, `data-lazy-src`, `data-original`, `data-srcset`, `srcset`).
+    ///
+    /// Tier-2's `handle_img` (`handlers/image.rs`'s `resolve_effective_src`)
+    /// resolves the real image URL from those attributes in that precedence
+    /// order — including `pick_best_srcset_candidate`'s width/density-descriptor
+    /// comparison for `srcset`/`data-srcset` — whenever `src` looks like a
+    /// lazy-load placeholder. Reproducing that precedence and the `srcset`
+    /// descriptor grammar byte-for-byte in a single-pass scanner duplicates
+    /// non-trivial logic that would then have to stay in sync forever, for a
+    /// shape that is not on any hot path. Bail so Tier-2 (authoritative) wins.
+    ImageLazyLoadSrc,
 }
 
 impl fmt::Display for BailReason {
@@ -228,6 +242,9 @@ impl fmt::Display for BailReason {
                     f,
                     "block-level child of a list item in a shape this scanner cannot render correctly"
                 )
+            }
+            Self::ImageLazyLoadSrc => {
+                write!(f, "<img> has a lazy-load placeholder src and a fallback src attribute")
             }
         }
     }

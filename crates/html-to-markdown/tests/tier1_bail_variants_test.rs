@@ -131,21 +131,18 @@ fn should_handle_nested_table_inside_cell() {
     let html = "<table><tr><td><table><tr><td>inner</td></tr></table></td></tr></table>";
     let t1 = tier1_run(html).expect("Tier-1 should not bail on nested <table> (Phase HH)");
     let t2 = tier2(html);
-    // ~keep The two tiers now intentionally diverge here, in addition to the pre-existing
-    // ~keep separator-row dash-count divergence from #406 (Tier-1 measures the full rendered
-    // ~keep cell text; Tier-2's measurement pre-pass skips nested-table rendering to avoid the
-    // ~keep O(N²) cell × nested-cell explosion). Tier-2's `render_cell_text` (block/table/
-    // ~keep cell.rs) now escapes the bare `|`/`-` a nested table's own row/separator syntax
-    // ~keep leaves in the flattened cell: left unescaped, those characters are read as *the
-    // ~keep outer row's* cell boundaries on a real reparse, silently widening -- and on a
-    // ~keep second parse, truncating -- the containing row's column count (genuine content
-    // ~keep loss, reproduced in isolation by a real multi-cell outer row, unlike this
-    // ~keep single-cell/single-column fixture). Tier-1 still emits the unescaped form; bringing
-    // ~keep it in line with Tier-2's escaping is a follow-up, tracked alongside the #406
-    // ~keep measurement-width follow-up already noted above.
+    // ~keep The two tiers still intentionally diverge on the pre-existing separator-row
+    // ~keep dash-count difference from #406 (Tier-1 measures the full rendered cell text;
+    // ~keep Tier-2's measurement pre-pass skips nested-table rendering to avoid the O(N²)
+    // ~keep cell × nested-cell explosion) -- that one stays. But Tier-1 now also escapes
+    // ~keep the bare `|` a nested table's own row/separator syntax leaves in the flattened
+    // ~keep cell, matching Tier-2's `render_cell_text` (block/table/cell.rs, commit
+    // ~keep ee77eb2a18): left unescaped, those characters are read as *the outer row's*
+    // ~keep cell boundaries on a real reparse, silently widening -- and on a second parse,
+    // ~keep truncating -- the containing row's column count (genuine content loss).
     assert!(
-        t1.starts_with("| | inner | | ----- | |\n"),
-        "Tier-1 outer row content must include flattened nested table; got: {t1:?}"
+        t1.starts_with(r"| \| inner \| \| ----- \| |") && t1.ends_with('\n'),
+        "Tier-1 outer row content must include the flattened, pipe-escaped nested table; got: {t1:?}"
     );
     assert!(
         t2.starts_with(r"| \| inner \| \| ----- \| |") && t2.ends_with('\n'),

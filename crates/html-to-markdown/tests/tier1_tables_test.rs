@@ -310,17 +310,16 @@ fn test_list_in_cell_handled_natively() {
 }
 
 /// Test 18: nested `<table>` — Phase HH: flattened inline into the outer cell.
-/// Tier-1 no longer bails; it inlines the nested table as pipe-separated text.
-/// Separator-row dash counts diverge between tiers post-#406 (Tier-2's measurement
-/// pre-pass skips nested-table rendering to avoid the O(N²) explosion; Tier-1 still
-/// measures the rendered cell text and pads to the full width). Outer row content also now
-/// diverges: Tier-2's `render_cell_text` (block/table/cell.rs) escapes the bare `|`/`-` a
-/// flattened nested table's own row/separator syntax leaves behind, since left unescaped
-/// those characters are read as *the outer row's* cell boundaries on a real reparse --
-/// silently widening, and on a second parse truncating, the containing row's column count
-/// (genuine content loss on a multi-cell outer row; not reproducible in this single-column
-/// fixture). Tier-1 still emits the unescaped form; bringing it in line with Tier-2's
-/// escaping is a follow-up, alongside the #406 measurement-width follow-up above.
+/// Tier-1 no longer bails; it inlines the nested table as pipe-separated text, with the
+/// bare `|` its row/separator syntax leaves behind escaped to `\|`, matching Tier-2's
+/// `render_cell_text` (block/table/cell.rs, commit ee77eb2a18): left unescaped, those
+/// characters are read as *the outer row's* cell boundaries on a real reparse -- silently
+/// widening, and on a second parse truncating, the containing row's column count (genuine
+/// content loss on a multi-cell outer row; not reproducible in this single-column
+/// fixture). Separator-row dash counts still diverge between tiers post-#406 (Tier-2's
+/// measurement pre-pass skips nested-table rendering to avoid the O(N²) explosion; Tier-1
+/// still measures the rendered cell text and pads to the full width) -- that divergence
+/// stays, which is why this asserts `contains` rather than full byte equality.
 #[test]
 fn test_nested_table_flattened_natively() {
     let html = "<table>\
@@ -330,8 +329,8 @@ fn test_nested_table_flattened_natively() {
     let t1 = tier1_run(html).expect("Tier-1 should not bail on nested table (Phase HH)");
     let t2 = tier2(html);
     assert!(
-        t1.contains("| | inner | | ----- | |"),
-        "Tier-1 must inline nested table contents; got: {t1:?}"
+        t1.contains(r"| \| inner \| \| ----- \| |"),
+        "Tier-1 must inline the flattened, pipe-escaped nested table contents; got: {t1:?}"
     );
     assert!(
         t2.contains(r"| \| inner \| \| ----- \| |"),
@@ -533,27 +532,27 @@ fn byte_eq_block_child_bail_fallback() {
 
 #[test]
 fn byte_eq_nested_table_bail_fallback() {
-    // ~keep Post-#406: Tier-1 and Tier-2 separator-row dash counts diverge on the
+    // ~keep Post-#406: Tier-1 and Tier-2 separator-row dash counts still diverge on the
     // ~keep nested-table fallback (Tier-2 skips nested-table rendering during the
     // ~keep measurement pre-pass to avoid the O(N²) explosion; Tier-1 still inlines
-    // ~keep and measures the full rendered text). Outer row content now diverges too:
-    // ~keep Tier-2's `render_cell_text` (block/table/cell.rs) escapes the bare `|`/`-` a
-    // ~keep flattened nested table's own row/separator syntax leaves behind -- left
+    // ~keep and measures the full rendered text) -- that divergence stays. Outer row
+    // ~keep content itself now matches: Tier-1 escapes the bare `|` a flattened nested
+    // ~keep table's own row/separator syntax leaves behind, same as Tier-2's
+    // ~keep `render_cell_text` (block/table/cell.rs, commit ee77eb2a18) -- left
     // ~keep unescaped, those characters are read as *the outer row's* cell boundaries on a
     // ~keep real reparse, silently widening (and on a second parse, truncating) the
-    // ~keep containing row's column count. Tier-1 still emits the unescaped form; bringing
-    // ~keep it in line with Tier-2's escaping is a follow-up.
+    // ~keep containing row's column count.
     let html = "<table><tr><th>H</th></tr>\
         <tr><td><table><tr><td>inner</td></tr></table></td></tr></table>";
     let t1 = tier1(html);
     let t2 = tier2(html);
     assert!(
-        t1.contains("| | inner | | ----- | |"),
-        "Tier-1 must inline nested table contents; got: {t1:?}"
+        t1.contains(r"| \| inner \| \| ----- \| |"),
+        "Tier-1 must inline the flattened, pipe-escaped nested table contents; got: {t1:?}"
     );
     assert!(
         t2.contains(r"| \| inner \| \| ----- \| |"),
-        "Tier-2 must inline nested table contents; got: {t2:?}"
+        "Tier-2 must inline the flattened, pipe-escaped nested table contents; got: {t2:?}"
     );
 }
 

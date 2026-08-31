@@ -112,6 +112,7 @@ const fn bail_variant_name(reason: &BailReason) -> &'static str {
         BailReason::HiddenElement { .. } => "HiddenElement",
         BailReason::ListNestedOrdered => "ListNestedOrdered",
         BailReason::ListItemUnsupportedBlockChild => "ListItemUnsupportedBlockChild",
+        BailReason::ImageLazyLoadSrc => "ImageLazyLoadSrc",
     }
 }
 
