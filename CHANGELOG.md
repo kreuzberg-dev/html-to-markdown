@@ -238,6 +238,17 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
   the href and the link structure and leaving raw brackets in the rendered output. Both are now
   escaped; a trailing backslash followed by a title's space, which is harmless, still is not.
 
+- **The Tier-1 fast scanner no longer emits broken output for block children of a list item.**
+  A `<div>` inside an `<li>` came out with no continuation indent, so its content fell out of
+  the list on reparse; `<blockquote>`, `<table>`, `<dl>`, a `<p>` continuing existing text and a
+  `<pre>` as an item's first content were each wrong in their own way. Under the shipped
+  defaults Tier-1 is never reached for these, because metadata extraction and highlight styling
+  both force the DOM converter first -- but with those disabled, all six shapes diverged.
+  Rendering them correctly needs Tier-1 to defer its separator decisions the way the DOM
+  converter does, which also entangles the loose-list heuristic, so the scanner now declines
+  these shapes and falls back instead. No corpus coverage is lost: the new bail never fires
+  across either parity corpus.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
