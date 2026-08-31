@@ -4,7 +4,7 @@
 //! including validation and normalization checks.
 
 use crate::converter::dom_context::DomContext;
-use crate::converter::main_helpers::is_inline_element;
+use crate::converter::main_helpers::{is_ascii_whitespace_only, is_inline_element};
 use crate::converter::utility::attributes::{attribute_matches_any, element_has_navigation_hint};
 use crate::options::ConversionOptions;
 
@@ -59,6 +59,15 @@ impl MisnestState {
 /// unclosed `<p>`/`<div>` inside a list item causes it to nest the next `<li>`
 /// as a child instead of treating it as a sibling.
 ///
+/// Also detects a `<table>` with a direct child that HTML5's "in table" insertion
+/// mode would foster-parent (non-whitespace text) or restructure (any element
+/// outside the small set valid directly under `<table>`, e.g. a stray `<td>` or
+/// `<a>` with no `<tr>`). `tl` has no foster-parenting or table auto-fixup: it
+/// leaves such content exactly where it was written, as a direct child of the
+/// `<table>` node, and the table handler (`converter::block::table::builder`)
+/// only recognises `caption`/`thead`/`tbody`/`tfoot`/`tr`/`colgroup`/`col` there —
+/// silently dropping raw text and routing anything else through a no-op handler.
+///
 /// ~keep Walks the tree top-down exactly once, carrying inherited ancestor state
 /// ~keep (see [`MisnestState`]) instead of re-walking every node's ancestor chain.
 /// ~keep The original per-node ancestor walk was O(depth) per node — O(n²) total on
@@ -99,6 +108,16 @@ pub fn has_inline_block_misnest(dom_ctx: &DomContext, parser: &tl::Parser) -> bo
         }
 
         if let Some(children) = dom_ctx.children_of(node_id) {
+            // ~keep <table> with a direct child that a spec-compliant parser would
+            // ~keep foster-parent or restructure (see the doc comment above).
+            if info.name == "table"
+                && children
+                    .iter()
+                    .any(|child| is_foster_parenting_candidate(*child, parser, dom_ctx))
+            {
+                return true;
+            }
+
             let child_state = MisnestState {
                 inside_preformatted: self_inside_preformatted,
                 blocked_by_inline_ancestor: state.blocked_by_inline_ancestor
@@ -111,6 +130,40 @@ pub fn has_inline_block_misnest(dom_ctx: &DomContext, parser: &tl::Parser) -> bo
     }
 
     false
+}
+
+/// True if `child`, as a direct child of a `<table>` element, is content that a
+/// spec-compliant HTML5 parser would foster-parent (non-whitespace text) or
+/// restructure (an element outside the small set valid directly under `<table>`)
+/// rather than leave in place.
+///
+/// A comment is neither: HTML5's "in table" insertion mode inserts a comment token
+/// as a child of the current node (the table itself), so it is not lost and needs
+/// no repair.
+fn is_foster_parenting_candidate(child: tl::NodeHandle, parser: &tl::Parser, dom_ctx: &DomContext) -> bool {
+    match child.get(parser) {
+        Some(tl::Node::Raw(bytes)) => {
+            let raw = bytes.as_utf8_str();
+            let decoded = crate::text::decode_html_entities_cow(raw.as_ref());
+            !is_ascii_whitespace_only(&decoded)
+        }
+        Some(tl::Node::Tag(_)) => dom_ctx
+            .tag_name_for(child, parser)
+            .is_some_and(|name| !is_table_structural_child(name.as_ref())),
+        _ => false,
+    }
+}
+
+/// Tag names valid as a direct child of `<table>` per the HTML5 "in table" insertion
+/// mode: `caption`, `colgroup`, `col`, `thead`/`tbody`/`tfoot`, `tr`, plus
+/// `style`/`script`/`template`, which are left wherever they are written. `row` is
+/// this codebase's normalized alias for `tr` from non-HTML input sources (see
+/// `converter::block::table::scanner`).
+fn is_table_structural_child(tag_name: &str) -> bool {
+    matches!(
+        tag_name,
+        "caption" | "colgroup" | "col" | "thead" | "tbody" | "tfoot" | "tr" | "row" | "style" | "script" | "template"
+    )
 }
 
 /// Compute the `has_p_ancestor` scan result to hand down to a node's children,
