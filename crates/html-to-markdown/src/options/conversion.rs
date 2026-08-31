@@ -212,6 +212,13 @@ pub struct ConversionOptions {
     /// See [`crate::visitor::HtmlVisitor`].
     #[cfg(feature = "visitor")]
     #[cfg_attr(any(feature = "serde", feature = "metadata"), serde(skip))]
+    // ~keep Not a bindable options field: it holds a live handle, so there is no concrete
+    // ~keep default a target language could reproduce -- every binding would emit its own
+    // ~keep zero under a doc comment quoting the Rust default. Bindings reach the visitor
+    // ~keep through the `HtmlVisitor` trait bridge instead (`[crates.*] visitor_callbacks`),
+    // ~keep which is why `alef.toml` records that a binding unable to use that bridge has no
+    // ~keep visitor API at all rather than an options field to set.
+    #[cfg_attr(alef, alef(skip))]
     pub visitor: Option<crate::visitor::VisitorHandle>,
 }
 
