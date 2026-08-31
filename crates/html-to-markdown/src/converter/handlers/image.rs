@@ -265,7 +265,7 @@ fn format_image_markdown(
     buf.push_str(&escaped_alt);
     buf.push_str("](");
 
-    append_url_destination(&mut buf, src, url_escape_style);
+    append_url_destination(&mut buf, src, url_escape_style, title.is_some());
 
     if let Some(title_text) = title {
         buf.push_str(" \"");

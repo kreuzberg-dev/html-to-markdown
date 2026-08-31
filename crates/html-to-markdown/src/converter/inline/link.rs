@@ -447,6 +447,54 @@ fn parens_are_balanced(href: &str) -> bool {
     depth == 0
 }
 
+/// Escape a literal `\` in a raw (non-bracketed) link destination when the byte that will
+/// immediately follow it is ASCII punctuation.
+///
+/// A raw `\` followed by ASCII punctuation is a CommonMark backslash escape (6.1): a
+/// compliant parser consumes the `\` and keeps only the punctuation character, silently
+/// dropping a byte that was never meant as an escape. For a `\` that is not the last
+/// character of `dest`, that next byte is another character still inside `dest` -- this is
+/// the CommonMark spec fixpoint example 631 defect: `href="\*"` emitted verbatim as a bare
+/// destination `\*` reparses as destination `*`, permanently losing the backslash. Doubling
+/// the `\` (`\\*`) makes it reparse back to the original two bytes.
+///
+/// For a `\` that *is* the last character of `dest`, the next byte is whatever
+/// `append_url_destination`'s caller emits right after the destination closes: a literal
+/// space before an opening title quote, or the closing `)` when no title follows --
+/// `title_follows` tells this function which. A space is not ASCII punctuation, so a
+/// trailing `\` before a title is left alone (audit #24's
+/// `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...` pins exactly
+/// this case). `)` *is* ASCII punctuation, so a trailing `\` with no title must be doubled or
+/// `\)` reparses as an escaped paren: the destination never closes, and the whole link
+/// degrades to literal bracket text (`href="x\"` with no title emits `(x\)`, which reparses
+/// as plain text `[t](x)`, losing both the destination and the link itself -- worse than
+/// example 631's single dropped byte).
+#[must_use]
+fn escape_ambiguous_destination_backslashes(dest: &str, title_follows: bool) -> std::borrow::Cow<'_, str> {
+    if !dest.contains('\\') {
+        return std::borrow::Cow::Borrowed(dest);
+    }
+    let chars: Vec<char> = dest.chars().collect();
+    let last_index = chars.len() - 1;
+    let mut escaped = String::with_capacity(dest.len() + 4);
+    for (index, &c) in chars.iter().enumerate() {
+        if c == '\\' {
+            let next_is_punctuation = if index == last_index {
+                !title_follows
+            } else {
+                chars.get(index + 1).is_some_and(char::is_ascii_punctuation)
+            };
+            if next_is_punctuation {
+                escaped.push('\\');
+            }
+            escaped.push('\\');
+        } else {
+            escaped.push(c);
+        }
+    }
+    std::borrow::Cow::Owned(escaped)
+}
+
 /// Escape a Markdown title's backslashes and double quotes for interpolation into a
 /// double-quoted title `"..."`.
 ///
@@ -469,10 +517,15 @@ pub fn escape_markdown_title(text: &str) -> std::borrow::Cow<'_, str> {
 /// destination gets the same treatment — empty-destination handling, percent-encoding,
 /// space-triggered angle-bracket wrapping with backslash-safe `<`/`>` escaping inside it, and
 /// paren-balance escaping — no matter which element produced it.
+///
+/// `title_follows` must be `true` exactly when the caller is about to emit a title
+/// (` "..."`) after this destination, and `false` when the closing `)` comes next -- see
+/// [`escape_ambiguous_destination_backslashes`] for why the balanced-parens arm needs it.
 pub fn append_url_destination(
     output: &mut String,
     dest: &str,
     url_escape_style: crate::options::validation::UrlEscapeStyle,
+    title_follows: bool,
 ) {
     if dest.is_empty() {
         output.push_str("<>");
@@ -525,16 +578,13 @@ pub fn append_url_destination(
         }
         output.push('>');
     } else if parens_are_balanced(dest) {
-        // ~keep Deliberately left unescaped even though `dest` may still contain a literal
-        // ~keep `\`: `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...`
-        // ~keep (audit #24) established that a backslash here is only unsafe when the very
-        // ~keep next byte emitted (in the destination or, once it ends, whatever `output`
-        // ~keep gains next) is ASCII punctuation -- and this call does not know what that
-        // ~keep next byte will be, so guessing "escape unconditionally" traded one silent
-        // ~keep corruption for another (an oracle-observed content change) rather than fixing
-        // ~keep it. Only the unbalanced-parens arm below needs it, since it always knows the
-        // ~keep next byte it emits itself.
-        output.push_str(dest);
+        // ~keep See `escape_ambiguous_destination_backslashes` for the full rationale: a `\`
+        // ~keep followed by ASCII punctuation -- inside `dest`, or (via `title_follows`) the
+        // ~keep `)`/space this call emits right after -- is doubled so a compliant reparse
+        // ~keep cannot consume it as a CommonMark backslash escape. Audit #24's original
+        // ~keep "this call does not know the next byte" premise no longer holds: the caller
+        // ~keep always knows whether a title follows before it calls this function.
+        output.push_str(&escape_ambiguous_destination_backslashes(dest, title_follows));
     } else {
         // ~keep A literal backslash immediately preceding the `)`/`(` this arm is about to
         // ~keep escape would otherwise merge with that escape and un-escape it on reparse, so
@@ -591,7 +641,8 @@ pub fn append_markdown_link(
     output.push_str(label);
     output.push_str("](");
 
-    append_url_destination(output, href, options.url_escape_style);
+    let title_follows = title.is_some() || (options.default_title && raw_text == href);
+    append_url_destination(output, href, options.url_escape_style, title_follows);
 
     if let Some(title_text) = title {
         output.push_str(" \"");
@@ -895,5 +946,48 @@ mod tests {
         let options = opts_with_style(UrlEscapeStyle::Angle);
         append_markdown_link(&mut out, "text", "/my file\\>.pdf", None, "text", &options, None);
         assert_eq!(out, "[text](</my file\\\\\\>.pdf>)");
+    }
+
+    // ~keep Regression for CommonMark spec fixpoint example 631: a `\` immediately followed by
+    // ~keep ASCII punctuation in a *balanced* (non-angle-bracket) destination must be doubled,
+    // ~keep or a compliant reparse consumes it as a backslash escape and silently drops the
+    // ~keep byte -- `href="\*"` emitted verbatim as `\*` reparses as destination `*`.
+    #[test]
+    fn append_markdown_link_escapes_a_backslash_before_punctuation_in_a_balanced_destination() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "\\*", None, "text", &options, None);
+        assert_eq!(out, "[text](\\\\*)");
+    }
+
+    // ~keep A `\` that is the *last* character of a balanced destination is left unescaped:
+    // ~keep this call cannot see what byte `output` gains next (title quote or closing `)`), and
+    // ~keep escaping it unconditionally was the audit #24 regression pinned by
+    // ~keep `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...` above.
+    // ~keep Regression: a trailing `\` in a balanced destination with no title next escapes
+    // ~keep the closing `)` on reparse (`\)` is a CommonMark backslash escape) unless doubled.
+    // ~keep Left unescaped, `href="x\"` with no title emitted `(x\)` reparses as `\[t\](x)` --
+    // ~keep the destination never closes and the whole link degrades to literal bracket text,
+    // ~keep which is worse than example 631's single dropped byte. `title_follows` is `false`
+    // ~keep here because the very next byte this call emits is the closing `)`.
+    #[test]
+    fn append_markdown_link_escapes_a_trailing_backslash_in_a_balanced_destination_with_no_title() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "/path\\", None, "text", &options, None);
+        assert_eq!(out, "[text](/path\\\\)");
+    }
+
+    // ~keep A trailing `\` in a balanced destination is left unescaped when a title follows:
+    // ~keep the next byte this call emits is a literal space, and `\ ` is not a CommonMark
+    // ~keep backslash escape (only ASCII punctuation may be escaped), so the `\` is already
+    // ~keep safe. Escaping it here would be the audit #24 regression pinned by
+    // ~keep `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...` above.
+    #[test]
+    fn append_markdown_link_leaves_a_trailing_backslash_in_a_balanced_destination_unescaped_when_a_title_follows() {
+        let mut out = String::new();
+        let options = opts_with_style(UrlEscapeStyle::Angle);
+        append_markdown_link(&mut out, "text", "/path\\", Some("t"), "text", &options, None);
+        assert_eq!(out, "[text](/path\\ \"t\")");
     }
 }

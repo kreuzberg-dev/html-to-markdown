@@ -88,15 +88,45 @@ fn escaping_options() -> ConversionOptions {
 /// ~keep a compliant reparse -- they merge into one block whatever we emit. Emitting an
 /// ~keep unrequested separator to force a fixpoint would corrupt the far more common case.
 ///
-/// ~keep Renderer re-encoding we deliberately do not mirror (21, 344, 631, 642, 643): each
-/// ~keep carries an ASCII character in a link destination -- a backslash, a backtick, or a raw
-/// ~keep space -- that a compliant renderer percent-encodes on its way back to HTML. Our own
-/// ~keep escaping already round-trips the content losslessly, so only the byte spelling of the
-/// ~keep destination differs. Matching it would mean reimplementing the renderer's full
-/// ~keep safe-character set as our default and would disturb the documented backslash tradeoff
-/// ~keep in `inline/link.rs`. Note that 642/643 also exercised a genuine hard-break defect in
-/// ~keep `normalize_link_label`, which is fixed -- they reach a fixpoint once the destination
-/// ~keep is clean, and remain listed here only for the encoding difference.
+/// ~keep Renderer re-encoding we deliberately do not mirror (21, 344, 631, 642, 643): each was
+/// ~keep measured (byte-for-byte, across two render/convert cycles, not assumed from a shared
+/// ~keep label) to place an ASCII character in a link destination -- a backslash, a backtick,
+/// ~keep or a raw space -- that a compliant renderer percent-encodes on its way back to HTML.
+/// ~keep All five reach a fixpoint on the *second* cycle (`md2 == md3`), so none of them drift
+/// ~keep or corrupt further; they only fail this test's stricter one-cycle (`md1 == md2`)
+/// ~keep check. Matching the renderer's choice on the first cycle would mean reimplementing its
+/// ~keep full safe-character set as our default and would disturb the documented backslash
+/// ~keep tradeoff in `inline/link.rs`. Note that 642/643 also exercised a genuine hard-break
+/// ~keep defect in `normalize_link_label`, which is fixed -- they reach this same
+/// ~keep second-cycle-stable state only once the destination is clean, and remain listed here
+/// ~keep only for the encoding difference.
+///
+/// ~keep 631 was, until it was fixed, a different and genuinely lossy defect wearing the same
+/// ~keep label: `href="\*"` has a `\` immediately followed by ASCII punctuation in a *balanced*
+/// ~keep destination, and `append_url_destination` left it unescaped -- a compliant reparse
+/// ~keep consumes the `\` as a `CommonMark` escape of `*`, permanently dropping a byte the source
+/// ~keep document had. That is not a byte-spelling difference; percent-encoding was never
+/// ~keep involved in producing it. `escape_ambiguous_destination_backslashes` in `inline/link.rs`
+/// ~keep now doubles a `\` there whenever the following byte is ASCII punctuation. 631 still
+/// ~keep appears in the list above because, once its destination is correctly escaped, it
+/// ~keep degrades into exactly the same one-cycle renderer re-encoding case as 21 -- confirmed
+/// ~keep by the same `md1 != md2, md2 == md3` measurement.
+///
+/// ~keep A `\` that is the *last* character of `dest` was originally left unescaped
+/// ~keep unconditionally, on the premise (the original audit #24 finding) that this call could
+/// ~keep not know the byte `output` gains once the destination ends. That premise stopped being
+/// ~keep true once `escape_ambiguous_destination_backslashes` gained a `title_follows` flag:
+/// ~keep `append_markdown_link` and the image/graphic handlers always know, before calling
+/// ~keep this function, whether a title is about to follow, so the next byte is either a
+/// ~keep literal space (before a title -- not ASCII punctuation, so the `\` is already safe and
+/// ~keep stays unescaped, preserving the case
+/// ~keep `append_markdown_link_escapes_a_trailing_backslash_in_default_title_...` pins) or the
+/// ~keep closing `)` (no title -- ASCII punctuation, so the `\` must be doubled). Leaving it
+/// ~keep unescaped in the no-title case was worse than 631: `href="x\"` with no title emitted
+/// ~keep `(x\)`, whose trailing `\)` reparses as an escaped paren, so the destination never
+/// ~keep closes and the whole link -- not just one byte of it -- degrades to literal bracket
+/// ~keep text. This is now fixed and does not affect `MIN_STABLE_ESCAPED`: no `CommonMark` spec
+/// ~keep example exercises a no-title link whose destination ends in `\`.
 const MIN_STABLE_ESCAPED: usize = 644;
 
 #[test]
