@@ -26,6 +26,19 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **A table nested inside another table's cell no longer destroys the inner cells.** The
+  nested table's own row and separator syntax was flattened into the outer cell unescaped, so
+  its bare `|` characters were read as additional cell boundaries for the *outer* row. GFM
+  truncates a row to the header's column count, so the inner cells were dropped outright on
+  reparse. The flattened content is now pipe-escaped outside code spans.
+
+- **A run of `&nbsp;` between two inline elements survives.** A whitespace-only text node
+  between inline siblings was collapsed to a single plain space unconditionally. `str::trim`
+  is Unicode-aware and counts `U+00A0` as whitespace, so the run was destroyed on the first
+  conversion, not merely on a round trip. The same collapse also ran without checking whether
+  the output already ended in a space, stacking a real inter-element space against the
+  synthetic one left behind by `<style>` removal into a literal double space.
+
 - **Content written directly inside `<table>`, outside any row or cell, is no longer dropped.**
   HTML5's "in table" insertion mode foster-parents such content: it moves to just before the
   table and survives. The parser this crate uses performs no such fixup and the table builder
