@@ -26,6 +26,21 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **Five Tier-1/Tier-2 divergences closed.** `<blockquote>` omitted its trailing blank line
+  in the fast scanner, invisible to every existing test because they all placed the
+  blockquote last; fixing it exposed a `<pre>` fence stripping one trailing newline where the
+  converter strips all of them. A text node's leading space survived at the start of a bare
+  `<span>`/`<u>`, producing a double space across the Google Docs and WordPress fixtures.
+  `<address>`, `<search>`, `<hgroup>` and `<center>` emitted a block separator the converter
+  does not. Images with a lazy-load `src` and flattened nested-table pipes now agree as well.
+
+- **An HTML comment no longer forces a redundant reparse of the whole document.** Custom
+  elements are detected by looking for a hyphen in a tag name, but the scan treated the text
+  inside `<!--...-->` as a tag name -- `!--c--` contains a hyphen -- so any document with any
+  comment was reparsed through the repair path for nothing. On a 200-element document
+  producing byte-identical output, a single comment cost 1.8x. Comments are near-universal in
+  real pages, so most documents were paying it.
+
 - **A table nested inside another table's cell no longer destroys the inner cells.** The
   nested table's own row and separator syntax was flattened into the outer cell unescaped, so
   its bare `|` characters were read as additional cell boundaries for the *outer* row. GFM
