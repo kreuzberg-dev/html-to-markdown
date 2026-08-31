@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  ffi:
+    dependency: "direct main"
+    description:
+      name: ffi
+      sha256: "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   file:
     dependency: transitive
     description:
@@ -101,10 +109,10 @@ packages:
     dependency: transitive
     description:
       name: flutter_rust_bridge
-      sha256: e87d6b9ee934dcd24a128ccb2bd91905d2d5fe5c06245d6a8f5477d4907a437a
+      sha256: ec69331e2335ab4d456c0a9fc700892c2c85b72b9c0cb39df3ecfe8833d5d5c8
       url: "https://pub.dev"
     source: hosted
-    version: "2.12.0"
+    version: "2.13.0"
   freezed_annotation:
     dependency: transitive
     description:
@@ -133,10 +141,10 @@ packages:
     dependency: "direct main"
     description:
       name: h2m
-      sha256: "1be6744f1e48f343135dd7d8bb7b86aef319180c42636aa4da518dae050decd5"
+      sha256: "0abfc51928d421c5837b2fe148e2a9a8a3edc6e69e477df1fde3d76fe7de8df2"
       url: "https://pub.dev"
     source: hosted
-    version: "3.6.0-rc.25"
+    version: "3.11.5"
   http:
     dependency: "direct dev"
     description:

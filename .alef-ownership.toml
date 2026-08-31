@@ -145,6 +145,7 @@ owned_paths = [
   "packages/ruby/Gemfile",
   "packages/ruby/LICENSE",
   "packages/ruby/README.md",
+  "packages/ruby/Rakefile",
   "packages/ruby/Steepfile",
   "packages/ruby/html_to_markdown.gemspec",
   "packages/ruby/sig/types.rbs",

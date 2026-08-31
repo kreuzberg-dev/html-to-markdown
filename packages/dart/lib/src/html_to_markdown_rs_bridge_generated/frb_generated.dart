@@ -271,7 +271,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => 1406531119;
+  int get rustContentHash => 1173341130;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -286,6 +286,10 @@ abstract class RustLibApi extends BaseApi {
   Future<ConversionResult> crateConvert({
     required String html,
     ConversionOptions? options,
+  });
+
+  Future<AnnotationKind> crateCreateAnnotationKindFromJson({
+    required String json,
   });
 
   Future<ConversionOptions> crateCreateConversionOptionsFromJson({
@@ -414,13 +418,21 @@ abstract class RustLibApi extends BaseApi {
     required String json,
   });
 
+  Future<ImageType> crateCreateImageTypeFromJson({required String json});
+
   Future<LinkMetadata> crateCreateLinkMetadataFromJson({required String json});
+
+  Future<LinkType> crateCreateLinkTypeFromJson({required String json});
 
   Future<MetadataEntry> crateCreateMetadataEntryFromJson({
     required String json,
   });
 
+  Future<NodeContent> crateCreateNodeContentFromJson({required String json});
+
   Future<NodeContext> crateCreateNodeContextFromJson({required String json});
+
+  Future<NodeType> crateCreateNodeTypeFromJson({required String json});
 
   Future<PreprocessingOptions> crateCreatePreprocessingOptionsFromJson({
     required String json,
@@ -437,6 +449,10 @@ abstract class RustLibApi extends BaseApi {
     required String json,
   });
 
+  Future<StructuredDataType> crateCreateStructuredDataTypeFromJson({
+    required String json,
+  });
+
   Future<TableData> crateCreateTableDataFromJson({required String json});
 
   Future<TableGrid> crateCreateTableGridFromJson({required String json});
@@ -444,6 +460,16 @@ abstract class RustLibApi extends BaseApi {
   Future<TextAnnotation> crateCreateTextAnnotationFromJson({
     required String json,
   });
+
+  Future<TextDirection> crateCreateTextDirectionFromJson({
+    required String json,
+  });
+
+  Future<TierStrategy> crateCreateTierStrategyFromJson({required String json});
+
+  Future<VisitResult> crateCreateVisitResultFromJson({required String json});
+
+  Future<WarningKind> crateCreateWarningKindFromJson({required String json});
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_VisitorHandle;
@@ -496,7 +522,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "convert", argNames: ["html", "options"]);
 
   @override
-  Future<ConversionOptions> crateCreateConversionOptionsFromJson({
+  Future<AnnotationKind> crateCreateAnnotationKindFromJson({
     required String json,
   }) {
     return handler.executeNormal(
@@ -508,6 +534,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_annotation_kind,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateAnnotationKindFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateAnnotationKindFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_annotation_kind_from_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<ConversionOptions> crateCreateConversionOptionsFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
             port: port_,
           );
         },
@@ -545,7 +604,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 3,
+            funcId: 4,
             port: port_,
           );
         },
@@ -578,7 +637,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 4,
+            funcId: 5,
             port: port_,
           );
         },
@@ -611,7 +670,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 5,
+            funcId: 6,
             port: port_,
           );
         },
@@ -644,7 +703,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -675,7 +734,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 8,
             port: port_,
           );
         },
@@ -708,7 +767,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 9,
             port: port_,
           );
         },
@@ -739,7 +798,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 10,
             port: port_,
           );
         },
@@ -772,7 +831,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 11,
             port: port_,
           );
         },
@@ -803,7 +862,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 12,
             port: port_,
           );
         },
@@ -1074,7 +1133,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 13,
             port: port_,
           );
         },
@@ -1189,7 +1248,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 14,
             port: port_,
           );
         },
@@ -1222,7 +1281,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 15,
             port: port_,
           );
         },
@@ -1244,6 +1303,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<ImageType> crateCreateImageTypeFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 16,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_image_type,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateImageTypeFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateImageTypeFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_image_type_from_json",
+        argNames: ["json"],
+      );
+
+  @override
   Future<LinkMetadata> crateCreateLinkMetadataFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -1253,7 +1343,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 17,
             port: port_,
           );
         },
@@ -1275,6 +1365,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<LinkType> crateCreateLinkTypeFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 18,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_link_type,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateLinkTypeFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateLinkTypeFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_link_type_from_json",
+        argNames: ["json"],
+      );
+
+  @override
   Future<MetadataEntry> crateCreateMetadataEntryFromJson({
     required String json,
   }) {
@@ -1286,7 +1407,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 19,
             port: port_,
           );
         },
@@ -1308,6 +1429,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<NodeContent> crateCreateNodeContentFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 20,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_node_content,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateNodeContentFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateNodeContentFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_node_content_from_json",
+        argNames: ["json"],
+      );
+
+  @override
   Future<NodeContext> crateCreateNodeContextFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -1317,7 +1469,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 21,
             port: port_,
           );
         },
@@ -1339,6 +1491,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<NodeType> crateCreateNodeTypeFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 22,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_node_type,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateNodeTypeFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateNodeTypeFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_node_type_from_json",
+        argNames: ["json"],
+      );
+
+  @override
   Future<PreprocessingOptions> crateCreatePreprocessingOptionsFromJson({
     required String json,
   }) {
@@ -1350,7 +1533,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 23,
             port: port_,
           );
         },
@@ -1382,7 +1565,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 24,
             port: port_,
           );
         },
@@ -1415,7 +1598,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1448,7 +1631,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1470,6 +1653,39 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<StructuredDataType> crateCreateStructuredDataTypeFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 27,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_structured_data_type,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateStructuredDataTypeFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateStructuredDataTypeFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_structured_data_type_from_json",
+        argNames: ["json"],
+      );
+
+  @override
   Future<TableData> crateCreateTableDataFromJson({required String json}) {
     return handler.executeNormal(
       NormalTask(
@@ -1479,7 +1695,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1510,7 +1726,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 23,
+            funcId: 29,
             port: port_,
           );
         },
@@ -1543,7 +1759,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 30,
             port: port_,
           );
         },
@@ -1561,6 +1777,132 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateCreateTextAnnotationFromJsonConstMeta =>
       const TaskConstMeta(
         debugName: "create_text_annotation_from_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<TextDirection> crateCreateTextDirectionFromJson({
+    required String json,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 31,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_text_direction,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateTextDirectionFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateTextDirectionFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_text_direction_from_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<TierStrategy> crateCreateTierStrategyFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 32,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_tier_strategy,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateTierStrategyFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateTierStrategyFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_tier_strategy_from_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<VisitResult> crateCreateVisitResultFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 33,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_visit_result,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateVisitResultFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateVisitResultFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_visit_result_from_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<WarningKind> crateCreateWarningKindFromJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 34,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_warning_kind,
+          decodeErrorData: sse_decode_String,
+        ),
+        constMeta: kCrateCreateWarningKindFromJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateCreateWarningKindFromJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "create_warning_kind_from_json",
         argNames: ["json"],
       );
 

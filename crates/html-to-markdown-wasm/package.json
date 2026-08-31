@@ -41,5 +41,9 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf pkg dist"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.11"
   }
 }
