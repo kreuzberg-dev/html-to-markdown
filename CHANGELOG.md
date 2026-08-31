@@ -249,6 +249,14 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
   these shapes and falls back instead. No corpus coverage is lost: the new bail never fires
   across either parity corpus.
 
+- **A lone significant character after a `<br>` is no longer dropped.** `<p>a<br>&nbsp;</p>`
+  kept its non-breaking space, but the same markup with a newline after the `<br>` lost it --
+  so whether content survived depended on nothing but whether the source HTML happened to be
+  pretty-printed. A rendered `<br>` is always followed by a literal newline, which flipped the
+  handler into a branch that discarded the run wholesale. Separately, a `<br>` inside a heading
+  emitted the two-space hard-break marker, which has no meaning on a single line: a renderer
+  collapses it, so the next conversion saw different bytes. It now emits one space.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
