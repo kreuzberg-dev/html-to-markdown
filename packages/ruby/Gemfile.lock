@@ -2,7 +2,7 @@ PATH
   remote: .
   specs:
     html-to-markdown (3.12.0)
-      rb_sys (>= 0.9, < 0.9.128)
+      rb_sys (>= 0.9.130, < 0.10)
       sorbet-runtime (~> 0.5)
 
 GEM
@@ -61,7 +61,7 @@ GEM
     rb-fsevent (0.11.2)
     rb-inotify (0.11.1)
       ffi (~> 1.0)
-    rb_sys (0.9.127)
+    rb_sys (0.9.130)
       rake-compiler-dock (= 1.12.0)
     rbs (3.10.4)
       logger
@@ -141,7 +141,7 @@ PLATFORMS
 DEPENDENCIES
   html-to-markdown!
   rake-compiler (~> 1.2)
-  rb_sys (>= 0.9, < 0.9.128)
+  rb_sys (>= 0.9.130, < 0.10)
   rspec (~> 3.0)
   rubocop (~> 1.0)
   rubocop-performance (~> 1.0)
@@ -181,7 +181,7 @@ CHECKSUMS
   rake-compiler-dock (1.12.0) sha256=f13205c2738f3d2053afcd03491a9e4541b22a59a0bfc53fc8bc883bd8188023
   rb-fsevent (0.11.2) sha256=43900b972e7301d6570f64b850a5aa67833ee7d87b458ee92805d56b7318aefe
   rb-inotify (0.11.1) sha256=a0a700441239b0ff18eb65e3866236cd78613d6b9f78fea1f9ac47a85e47be6e
-  rb_sys (0.9.127) sha256=e9f90df3bb0577472d26d96127d5b5774b98f44de881e7d36aeefd28d6337847
+  rb_sys (0.9.130) sha256=7d486d99c1da02635515deaf9860fc5aea90bb4ab2589b2deec7fdc7d3548615
   rbs (3.10.4) sha256=b17d7c4be4bb31a11a3b529830f0aa206a807ca42f2e7921a3027dfc6b7e5ce8
   regexp_parser (2.12.0) sha256=35a916a1d63190ab5c9009457136ae5f3c0c7512d60291d0d1378ba18ce08ebb
   rspec (3.13.2) sha256=206284a08ad798e61f86d7ca3e376718d52c0bc944626b2349266f239f820587

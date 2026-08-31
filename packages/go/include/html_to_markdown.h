@@ -2027,15 +2027,6 @@ char *htm_conversion_options_update_exclude_selectors(HTMAlefHandle handle);
 HTMAlefHandle htm_conversion_options_update_tier_strategy(HTMAlefHandle handle);
 
 /**
- * Get the `visitor` field from a `ConversionOptionsUpdate`.
- * A non-null returned handle is owned by the caller.
- * It must be freed with `htm_visitor_handle_free`.
- * # Safety
- * Pointer must be a valid handle returned by this library.
- */
-HTMAlefHandle htm_conversion_options_update_visitor(HTMAlefHandle handle);
-
-/**
  * Create a `ConversionResult` from a JSON string. Returns null on failure.
  * # Safety
  * JSON string must be valid UTF-8 and null-terminated.
