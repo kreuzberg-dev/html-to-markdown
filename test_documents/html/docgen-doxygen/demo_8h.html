@@ -1,0 +1,108 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce Doxygen's structural signature; not real generator output. -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
+<title>Demo: demo.h File Reference</title>
+<link href="tabs.css" rel="stylesheet" type="text/css"/>
+<link href="doxygen.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+<div id="top">
+<div id="titlearea">
+<table cellspacing="0" cellpadding="0">
+ <tbody>
+ <tr style="height: 56px;">
+  <td id="projectname">Demo&#160;<span id="projectnumber">1.0</span></td>
+ </tr>
+ </tbody>
+</table>
+</div>
+</div>
+<div id="doc-content">
+<div class="header">
+  <div class="summary">
+<a href="#func-members">Functions</a></div>
+  <div class="headertitle"><div class="title">demo.h File Reference</div></div>
+</div>
+<div class="contents">
+<table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:a1b2c3"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1b2c3">demo_add</a> (int a, int b)</td></tr>
+<tr class="memdesc:a1b2c3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds two integers together. <a href="#a1b2c3">More...</a><br /></td></tr>
+<tr class="separator:a1b2c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:d4e5f6"><td class="memItemLeft" align="right" valign="top">struct demo_context *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#d4e5f6">demo_context_create</a> (const char *name)</td></tr>
+<tr class="memdesc:d4e5f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates a new context. <a href="#d4e5f6">More...</a><br /></td></tr>
+<tr class="separator:d4e5f6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="a1b2c3" name="a1b2c3"></a>
+<h2 class="memtitle">&#9670;&#160;demo_add()</h2>
+<div class="memitem">
+<div class="memproto">
+<table class="memname">
+<tr>
+<td class="memname">int demo_add </td>
+<td>(</td>
+<td class="paramtype">int&#160;</td>
+<td class="paramname"><em>a</em>, </td>
+</tr>
+<tr>
+<td class="paramkey"></td>
+<td></td>
+<td class="paramtype">int&#160;</td>
+<td class="paramname"><em>b</em>&#160;</td>
+</tr>
+<tr>
+<td></td>
+<td>)</td>
+<td></td><td></td>
+</tr>
+</table>
+</div>
+<div class="memdoc">
+<p>Adds two integers together.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">a</td><td>the first operand</td></tr>
+    <tr><td class="paramname">b</td><td>the second operand</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>the sum of <code>a</code> and <code>b</code>.</dd></dl>
+</div>
+</div>
+<a id="d4e5f6" name="d4e5f6"></a>
+<h2 class="memtitle">&#9670;&#160;demo_context_create()</h2>
+<div class="memitem">
+<div class="memproto">
+<table class="memname">
+<tr>
+<td class="memname">struct demo_context* demo_context_create </td>
+<td>(</td>
+<td class="paramtype">const char *&#160;</td>
+<td class="paramname"><em>name</em>&#160;</td>
+</tr>
+<tr>
+<td></td>
+<td>)</td>
+<td></td><td></td>
+</tr>
+</table>
+</div>
+<div class="memdoc">
+<p>Allocates a new context with the given name.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">name</td><td>a human-readable label for the context</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>a pointer to the new context, or <code>NULL</code> on allocation failure.</dd></dl>
+<dl class="section note"><dt>Note</dt><dd>The caller is responsible for freeing the returned context with <code>demo_context_free()</code>.</dd></dl>
+</div>
+</div>
+</div>
+</body>
+</html>

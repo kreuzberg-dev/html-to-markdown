@@ -1,0 +1,111 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce discourse-forum structural signature; not captured from a live source. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Panic when parsing deeply nested tables? - Support - Community Forum</title>
+<meta name="generator" content="Discourse 3.2.0">
+</head>
+<body class="crawler discourse-index">
+<div id="main-outlet" class="wrap">
+<div class="container posts">
+
+<h1 class="topic-title"><a href="/t/panic-when-parsing-deeply-nested-tables/1231">Panic when parsing deeply nested tables?</a></h1>
+<div class="topic-category">
+  <span class="badge-category" style="background-color: #92D5E6;">support</span>
+</div>
+
+<div class="topic-post" id="post_1" data-post-id="500123">
+<div class="topic-body">
+<div class="topic-meta-data" itemprop="author">
+  <a class="username" href="/u/alice">alice</a>
+  <span class="post-date" title="2026-07-14 09:12">Jul 14</span>
+</div>
+<div class="regular contents">
+<div class="cooked">
+
+<p>I'm hitting a panic in our ingestion pipeline whenever a table has more than about 40 levels of nested <code>&lt;div&gt;</code> wrappers around the cell content. Repro is below &mdash; anyone seen this?</p>
+
+<pre><code class="lang-rust hljs"><span class="hljs-keyword">fn</span> <span class="hljs-title function_">build_nested</span>(<span class="hljs-params">depth: <span class="hljs-built_in">usize</span></span>) -&gt; <span class="hljs-built_in">String</span> {
+    <span class="hljs-keyword">let</span> <span class="hljs-keyword">mut</span> out = <span class="hljs-built_in">String</span>::new();
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..depth {
+        out.push_str(<span class="hljs-string">"&lt;div&gt;"</span>);
+    }
+    out.push_str(<span class="hljs-string">"&lt;p&gt;cell&lt;/p&gt;"</span>);
+    <span class="hljs-keyword">for</span> _ <span class="hljs-keyword">in</span> <span class="hljs-number">0</span>..depth {
+        out.push_str(<span class="hljs-string">"&lt;/div&gt;"</span>);
+    }
+    out
+}
+</code></pre>
+
+<p>I dug through the crate source a bit and think the recursive descent visitor might not be tail-call optimized. Filed as an issue against the upstream repo:</p>
+
+<aside class="onebox githubrepo" data-onebox-src="https://github.com/example-org/html-to-markdown-rs">
+<header class="source">
+<a href="https://github.com/example-org/html-to-markdown-rs" target="_blank" rel="noopener">github.com/example-org/html-to-markdown-rs</a>
+</header>
+<article class="onebox-body">
+<div class="github-row">
+<div class="github-icon-container"><img src="https://cdn.example.com/icons/github.svg" class="thumbnail onebox-avatar" width="60" height="60"></div>
+<div class="github-info-container">
+<h4><a href="https://github.com/example-org/html-to-markdown-rs" target="_blank" rel="noopener">example-org/html-to-markdown-rs</a></h4>
+<p class="github-description">A fast, dependency-light HTML to Markdown converter written in Rust.</p>
+</div>
+</div>
+<div class="date">
+<span>opened issue #217</span>
+<span class="discourse-tag">bug</span>
+</div>
+</article>
+</aside>
+
+<p>Full stack trace attached to the issue. Let me know if you need the flamegraph too.</p>
+
+</div>
+</div>
+</div>
+</div>
+
+<div class="topic-post" id="post_2" data-post-id="500124">
+<div class="topic-body">
+<div class="topic-meta-data" itemprop="author">
+  <a class="username" href="/u/bob">bob</a>
+  <span class="post-date" title="2026-07-14 11:45">Jul 14</span>
+</div>
+<div class="regular contents">
+<div class="cooked">
+
+<aside class="quote no-group" data-username="alice" data-post="1" data-topic="1231">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" width="20" height="20" src="/user_avatar/example.com/alice/40/1.png" class="avatar">
+alice said:
+</div>
+<blockquote>
+<p>I'm hitting a panic in our ingestion pipeline whenever a table has more than about 40 levels of nested <code>&lt;div&gt;</code> wrappers around the cell content. Repro is below &mdash; anyone seen this?</p>
+</blockquote>
+</aside>
+
+<p>Yeah, we hit this too. It's not actually the nesting depth itself &mdash; it's the combination of nesting <em>plus</em> a table cell that also contains a self-closing <code>&lt;br/&gt;</code> right before the closing tag. Workaround for now:</p>
+
+<ol>
+<li>Pre-flatten wrapper <code>&lt;div&gt;</code>s with a DOM pass before handing off to the converter</li>
+<li>Or cap recursion depth in your own preprocessing step and log a warning</li>
+</ol>
+
+<blockquote>
+<p>Note: this is unrelated to the <code>&lt;table&gt;</code> rowspan bug from last month &mdash; that one was already fixed in 3.1.9.</p>
+</blockquote>
+
+<p>Will open a PR against the repo linked above once I've got a minimal repro.</p>
+
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+</body>
+</html>

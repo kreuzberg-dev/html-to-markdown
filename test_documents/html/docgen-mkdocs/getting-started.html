@@ -1,0 +1,71 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce MkDocs (Material theme)'s structural signature; not real generator output. -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Getting Started - Demo Docs</title>
+    <link rel="stylesheet" href="../assets/stylesheets/main.css" />
+    <link rel="stylesheet" href="../assets/_mkdocstrings.css" />
+    <script src="../assets/javascripts/bundle.js" defer></script>
+  </head>
+  <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo">
+    <div class="md-container">
+      <main class="md-main">
+        <div class="md-main__inner md-grid">
+          <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation"></div>
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              <h1 id="getting-started">Getting Started<a href="#getting-started" class="headerlink" title="Permanent link">&para;</a></h1>
+              <p>This guide walks through installing the <code>demo</code> CLI and running your first command.</p>
+              <h2 id="installation">Installation<a href="#installation" class="headerlink" title="Permanent link">&para;</a></h2>
+              <div class="admonition note">
+                <p class="admonition-title">Note</p>
+                <p>The CLI requires Python 3.10 or newer. Check your version with <code>python --version</code>
+                before continuing.</p>
+              </div>
+              <div class="highlight">
+                <pre><span></span><code><span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>demo-cli
+<span class="gp">$ </span>demo<span class="w"> </span>--version
+demo<span class="w"> </span><span class="m">1</span>.4.0
+</code></pre>
+              </div>
+              <h2 id="configuration-options">Configuration Options<a href="#configuration-options" class="headerlink" title="Permanent link">&para;</a></h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Option</th>
+                    <th>Default</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>--config</code></td>
+                    <td><code>./demo.toml</code></td>
+                    <td>Path to the configuration file.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--verbose</code></td>
+                    <td><code>false</code></td>
+                    <td>Enable verbose logging output.</td>
+                  </tr>
+                  <tr>
+                    <td><code>--timeout</code></td>
+                    <td><code>30</code></td>
+                    <td>Request timeout, in seconds.</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="admonition warning">
+                <p class="admonition-title">Warning</p>
+                <p>Setting <code>--timeout</code> below <code>5</code> seconds may cause requests to
+                large hosts to fail spuriously.</p>
+              </div>
+            </article>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

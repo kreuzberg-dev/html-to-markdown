@@ -1,0 +1,387 @@
+# Manifest of the real-world / structurally-diverse HTML test corpus.
+#
+# Each [[document]] entry records, for one file under this directory:
+#   path        - relative path from this file's directory (test_documents/html/)
+#   family      - the generator/producer this fixture exercises (one directory per family)
+#   source      - the origin URL, or "synthesized" for a hand-built fixture
+#   license     - the license governing the vendored content, or an "N/A (original work)"
+#                 note for synthesized fixtures (original authorship, MIT via this repo)
+#   retrieved   - ISO 8601 date the content was captured/authored
+#   synthesized - true for hand-built fixtures that mimic a generator's known structural
+#                 signature (no live document was captured); false for vendored/real content
+#   features    - one line on the structural constructs this fixture exercises
+#
+# See ATTRIBUTIONS.md for full attribution text on every vendored (non-synthesized) source.
+#
+# Loaded by crates/html-to-markdown/tests/support/mod.rs, which the corpus-consuming test
+# files use to enumerate and cross-check this corpus (see manifest_consistency_test.rs).
+
+# ---- html5lib-tests / MDN / Stack Overflow / Gutenberg / govt / GitHub-rendered README ----
+
+[[document]]
+path = "html5lib/adoption-agency-a-across-p.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/adoption01.dat (test index 0)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Adoption agency algorithm: <a> reopened across a mis-nested <p> boundary"
+
+[[document]]
+path = "html5lib/adoption-agency-nested-b-across-p.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/adoption01.dat (test index 8)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Adoption agency algorithm: two nested <b> formatting elements reopened across <a>/<p> boundaries"
+
+[[document]]
+path = "html5lib/table-foster-parenting-anchor-td.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/adoption01.dat (test index 10)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Table foster parenting combined with adoption agency: <a> content foster-parented out of <table> around a <td>"
+
+[[document]]
+path = "html5lib/table-foster-parenting-text.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/adoption01.dat (test index 11)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Table foster parenting: bare text nodes before/after <td> are foster-parented out of the <table>"
+
+[[document]]
+path = "html5lib/adoption-agency-b-across-p.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/adoption02.dat (test index 0)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Adoption agency algorithm: <b> reopened across a mis-nested <p> boundary (canonical case)"
+
+[[document]]
+path = "html5lib/unclosed-li-siblings-nested-ul.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests1.dat (test index 33)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Unclosed <li> elements as implicit siblings, with a <ul> nested inside one before the next <li> closes it"
+
+[[document]]
+path = "html5lib/unclosed-p-div-across-marquee.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests1.dat (test index 25)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Unclosed <p>/<div> spanning a <marquee> boundary with mis-nested closing tags"
+
+[[document]]
+path = "html5lib/anchor-foster-parented-into-table.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests1.dat (test index 77)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "An <a> opened before a <table> and reopened inside it is foster-parented; text/tr/td interleaved"
+
+[[document]]
+path = "html5lib/table-foster-parenting-text-comment.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests19.dat (test index 24)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Table foster parenting: bare text and a trailing comment inside <table> with no rows/cells"
+
+[[document]]
+path = "html5lib/table-adoption-agency-div-combo.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests19.dat (test index 90)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Combined table foster parenting + adoption agency: <i>/<b>/<a> mis-nested around a <div> inside <table>"
+
+[[document]]
+path = "html5lib/unclosed-a-across-div.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests19.dat (test index 103)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Unclosed <a> element spanning a </div> close tag, followed by mis-nested <p>"
+
+[[document]]
+path = "html5lib/adoption-agency-nobr-chain.html"
+family = "html5lib-tests"
+source = "https://raw.githubusercontent.com/html5lib/html5lib-tests/python-0.95/tree-construction/tests26.dat (test index 0)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Adoption agency stress case: repeated <a>/<nobr> chain reopened across three anchors (classic browser interop regression)"
+
+[[document]]
+path = "mdn/array-reference.html"
+family = "mdn"
+source = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array (Description, Constructor, Static/Instance properties+methods, start of Examples)"
+license = "CC BY-SA 2.5 (or later)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Nested unordered lists, a data table (mutating vs. non-mutating methods), <dl> definition-list sections for properties/methods, and a syntax-highlighted JS code example"
+
+[[document]]
+path = "stackoverflow/regex-html-parsing.html"
+family = "stackoverflow"
+source = "https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags (question + top 2 answers, via api.stackexchange.com)"
+license = "CC BY-SA 4.0"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Code blocks, bulleted list, heavily mixed/overlapping inline formatting (b/i/strike) including Unicode combining-character (Zalgo) text, <hr>, and a <blockquote>"
+
+[[document]]
+path = "gutenberg/pride-and-prejudice-chapter-3.html"
+family = "gutenberg"
+source = "https://www.gutenberg.org/files/1342/1342-h/1342-h.htm (Pride and Prejudice, Chapter III)"
+license = "Public Domain (US)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Prose with <i> emphasis, page-number anchor spans mid-sentence, figure/caption divs with images, chapter heading with embedded image"
+
+[[document]]
+path = "govt/usa-gov-federal-holidays.html"
+family = "govt"
+source = "https://www.usa.gov/holidays"
+license = "Public Domain (17 U.S.C. 105)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "Data table with a nested <ul><li> inside one <td>, USWDS accordion widget (<h2>/<button> pairs with hidden content panels), realistic Drupal wrapper-div nesting"
+
+[[document]]
+path = "github-markdown/readme-quick-start-excerpt.html"
+family = "github-markdown"
+source = "https://github.com/xberg-io/html-to-markdown README, live GitHub-rendered HTML (What and Why? through AI Coding Assistants)"
+license = "MIT"
+retrieved = "2026-08-31"
+synthesized = false
+features = "GitHub header-anchor structure (id=\"user-content-*\" + permalink svg), syntax-highlighted code spans (class=\"pl-*\"), GFM table, collapsible <details>/<summary> blocks, live-rendered (not API-rendered) markup"
+
+# ---- Office-suite HTML export (synthesized) ----
+
+[[document]]
+path = "office-word/word-mso-fake-list.html"
+family = "microsoft-word-export"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Word's span-based fake list markup (no real <ul>/<li>), MsoNormal/MsoListParagraphCxSp{First,Middle,Last} paragraphs, mso-list:Ignore bullet and number spans, o:p empty-paragraph markers, mso-spacerun:yes nbsp-run indentation, downlevel-hidden [if !supportLists]/[endif] blocks"
+
+[[document]]
+path = "office-word/word-conditional-comments-table.html"
+family = "microsoft-word-export"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Full unfiltered Word export: [if gte mso 9] downlevel-revealed conditional comments wrapping <xml><w:WordDocument>/<w:LatentStyles> blocks, w:/o:/m: XML namespaces, MsoTableGrid Excel-in-Word pasted table with mso-border-alt cell styles and bold totals row, Times New Roman MsoNormal body text, o:p markers"
+
+[[document]]
+path = "office-gdocs/gdocs-bold-wrapper-span-soup.html"
+family = "google-docs-export"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Copy-to-clipboard export: outer <b id=\"docs-internal-guid-...\"> wrapper with font-weight:normal (bold tag used as non-bold container), <!--StartFragment-->/<!--EndFragment--> pair, font-weight:700 inline spans instead of <strong>, font-style:italic spans instead of <em>, <ul class=\"... li-bullet-0\">, background-color highlight span, plain <a> link"
+
+[[document]]
+path = "office-gdocs/gdocs-web-page-export.html"
+family = "google-docs-export"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "File > Download > Web Page export: full document with internal <style> defining .c1..cN paragraph/run classes and lst-kix_list-N-0 counter-reset rules, .title/.subtitle classes, real <h1>/<h2> alongside span-based bold (c3) runs, <ol start=\"1\"> and <ul> both classed with lst-kix_list ids"
+
+[[document]]
+path = "office-libreoffice/libreoffice-font-tags-footnotes.html"
+family = "libreoffice-writer-export"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "meta name=generator LibreOffice 7.6.4.1 (Linux) tell, legacy <font face=\"Liberation Serif, serif\" size=\"3\"> tags nested inside real <strong>/<em>, class=\"western\" on headings/paragraphs, inline margin-bottom/line-height styles on every <p>, real semantic <ol>/<ul>/<li>, sdfootnoteanc footnote anchor pair (superscript ref + footnote body) with mismatched anc/sym href/name pattern"
+
+# ---- CMS output (synthesized) ----
+
+[[document]]
+path = "wordpress/wp-gutenberg-blocks-article.html"
+family = "wordpress"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Gutenberg wp:paragraph/wp:image/wp:columns/wp:code/wp:table/wp:quote block-comment markers, wp-block-image+figcaption, wp-block-columns/wp-block-column, wp-block-list, has-text-align-center, wp-block-code, wp-block-table figure-wrapped table, verbose post-<id> body classes, Jetpack related-posts and sharedaddy share-button noise widgets"
+
+[[document]]
+path = "drupal/drupal-node-article-views.html"
+family = "drupal"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "node--type-article BEM field classes (field--name-body, field--name-field-image, field--name-field-tags), image-style-large field image, breadcrumb nav with ol/li, two Views blocks (views-row repeated 3x for related content, 2x for a comment view), a sidebar region Views block for a series list"
+
+[[document]]
+path = "ghost/ghost-koenig-cards-post.html"
+family = "ghost"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "post-full/post-full-content/post-content kg-canvas wrapper, kg-image-card with figcaption, kg-callout-card (blue/yellow/green variants) with emoji+text sibling divs, kg-bookmark-card with block-level divs inside an anchor, kg-gallery-card with nested image rows, language-js code block"
+
+[[document]]
+path = "squarespace/squarespace-layout-grid-page.html"
+family = "squarespace"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "deeply nested sqs-layout/sqs-row/sqs-col-12/sqs-block-html/sqs-block-content chain, image block using data-src instead of src, sqs-gallery-container with 3 stacked slide images, a code block, and an accordion block with sibling title/content divs"
+
+# ---- Documentation generators ----
+
+[[document]]
+path = "docgen-sphinx/api-reference.html"
+family = "sphinx"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "py:function/py:class signature blocks (dl.py, dt.sig), headerlink pilcrow anchors, admonition note, pygments-style code-block, cross-reference links"
+
+[[document]]
+path = "docgen-mkdocs/getting-started.html"
+family = "mkdocs"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Material theme md-content/article structure, pymdownx permalink headerlinks, admonition note/warning, fenced code block, options table"
+
+[[document]]
+path = "docgen-docusaurus/quick-start.html"
+family = "docusaurus"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "theme-doc-markdown article, hash-link headings with zero-width-space anchor text, tip/caution admonitions, theme-code-block with Prism tokens and copy button"
+
+[[document]]
+path = "docgen-javadoc/sensorreading-class.html"
+family = "javadoc"
+source = "generated locally by javadoc 25.0.2 (Temurin) from original throwaway input authored for this test"
+license = "N/A (tool output; input authored for this task)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "class page: member-signature blocks, class/method docblocks, notes dl with Parameters/Returns/Throws"
+
+[[document]]
+path = "docgen-doxygen/demo_8h.html"
+family = "doxygen"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "C header file-reference page: memberdecls summary table, memitem/memproto/memname signature table, memdoc with params/return/note dl sections"
+
+[[document]]
+path = "docgen-rustdoc/struct-sample.html"
+family = "rustdoc"
+source = "generated locally by rustdoc 1.98.0 from original throwaway input authored for this test"
+license = "N/A (tool output; input authored for this task)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "struct page: docblock prose, embedded rust-example-rendered code block, Implementations section with method signatures, auto-trait and blanket-impl lists"
+
+[[document]]
+path = "docgen-rustdoc/enum-samplestate.html"
+family = "rustdoc"
+source = "generated locally by rustdoc 1.98.0 from original throwaway input authored for this test"
+license = "N/A (tool output; input authored for this task)"
+retrieved = "2026-08-31"
+synthesized = false
+features = "enum page: variant list with per-variant docblocks including a struct-like variant with a named field, doc-anchor section headers"
+
+# ---- Email / forum / legacy / news-ecommerce (synthesized) ----
+
+[[document]]
+path = "email/marketing-email-vml-button.html"
+family = "email-html"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Nested role=presentation tables for layout, inline style soup on every tag, Outlook VML conditional bulletproof-button (mso / !mso comment pair), bgcolor/font/align legacy attributes, head <style> media query mixed with body inline styles, hidden preheader div"
+
+[[document]]
+path = "discourse/topic-thread-quote-onebox-code.html"
+family = "discourse-forum"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "topic-body/regular contents/cooked wrapper chain, quote-reply aside with quote-controls and blockquote, githubrepo onebox link-preview embed, hljs-highlighted <pre><code class=\"lang-rust hljs\"> block, two topic-post divs (original + quoting reply)"
+
+[[document]]
+path = "legacy/table-layout-font-tags-homepage.html"
+family = "legacy-hand-written-html"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "HTML 4.01 Transitional doctype, 3-column table-for-layout homepage, <font face/size/color>, <center>, <b>/<i> instead of strong/em, <marquee> ticker, nested data table"
+
+[[document]]
+path = "legacy/frameset-nav-content.html"
+family = "legacy-hand-written-html"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "HTML 4.01 Frameset doctype, nested <frameset> (cols then rows then cols) with no real <body>, <noframes> fallback body as the only convertible content"
+
+[[document]]
+path = "legacy/broken-tag-soup-unclosed.html"
+family = "legacy-hand-written-html"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Deliberately malformed: unclosed <p> chain, <b> opened in one paragraph and closed three paragraphs later, <a> left open across a <div> boundary, <table> missing </tr> between rows, mismatched </b> where <font> was opened"
+
+[[document]]
+path = "news-ecommerce/news-article-deep-wrappers.html"
+family = "news-ecommerce-deep-nesting"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "5-6 level div wrapper stacks around each paragraph, figure/figure-wrapper/caption-wrapper image block, inline-related-widget interrupting the body mid-article"
+
+[[document]]
+path = "news-ecommerce/product-page-accordion-specs.html"
+family = "news-ecommerce-deep-nesting"
+source = "synthesized"
+license = "N/A (original work)"
+retrieved = "2026-08-31"
+synthesized = true
+features = "Deeply nested product-detail/product-info-wrapper/product-price-wrapper divs, price-current/price-was pair, accordion-widget with three accordion-item feature/materials/shipping sections, product-specs table"

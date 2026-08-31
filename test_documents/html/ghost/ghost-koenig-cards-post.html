@@ -1,0 +1,157 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce Ghost structural signature; not captured from a live site. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Why We Moved Our Build Cache to a Local Cluster</title>
+<meta name="generator" content="Ghost 5.78" />
+<link rel="stylesheet" href="/assets/built/screen.css" />
+</head>
+<body class="post-template">
+<div class="site-wrapper">
+  <header class="gh-head">
+    <div class="gh-head-inner">
+      <a href="/" class="gh-head-logo">Signal &amp; Noise</a>
+    </div>
+  </header>
+
+  <main class="site-main">
+    <article class="post-full post tag-infrastructure">
+      <header class="post-full-header">
+        <div class="post-full-tags"><a href="/tag/infrastructure/">Infrastructure</a></div>
+        <h1 class="post-full-title">Why We Moved Our Build Cache to a Local Cluster</h1>
+        <p class="post-full-custom-excerpt">Cloud egress fees quietly became our third-largest infra line item. Here's what replaced it.</p>
+        <div class="post-full-byline">
+          <div class="post-full-byline-content">
+            <span class="author-name">Dana Kowalski</span>
+            <time class="post-full-byline-date" datetime="2026-08-10">10 August 2026</time>
+          </div>
+        </div>
+      </header>
+
+      <figure class="post-full-image">
+        <img src="https://example.test/content/images/2026/08/rack.jpg" alt="A half-populated server rack with cache nodes labeled by color" />
+      </figure>
+
+      <section class="post-full-content">
+        <div class="post-content kg-canvas">
+
+          <p>Our CI cluster was pulling the same layers from a cloud registry hundreds of times a day. Egress alone ran close to $4,000 a month before we did anything about it. This is the walkthrough of what replaced it.</p>
+
+          <h2 id="the-numbers">The Numbers</h2>
+          <p>Three months of billing data made the case for us on its own, without any need to argue about it in a meeting.</p>
+
+          <figure class="kg-card kg-image-card kg-card-hascaption">
+            <img src="https://example.test/content/images/2026/08/egress-chart.png" class="kg-image" alt="Bar chart of monthly egress cost trending upward" width="1200" height="600" loading="lazy" />
+            <figcaption>Monthly egress cost, January through July 2026.</figcaption>
+          </figure>
+
+          <div class="kg-card kg-callout-card kg-callout-card-blue">
+            <div class="kg-callout-emoji">💡</div>
+            <div class="kg-callout-text">A local pull-through cache doesn't need to be highly available &mdash; a cache miss just falls back to the origin registry, so a single node is fine to start.</div>
+          </div>
+
+          <h2 id="the-setup">The Setup</h2>
+          <p>We run a single bare-metal box in the office closet as a pull-through cache for our container registry:</p>
+
+          <pre><code class="language-js">const cache = createRegistryMirror({
+  upstream: "registry-1.docker.io",
+  storagePath: "/mnt/cache",
+  maxSizeGb: 500,
+  evictionPolicy: "lru",
+});
+
+cache.on("miss", (ref) =&gt; {
+  metrics.increment("cache.miss", { ref });
+});</code></pre>
+
+          <p>Within the first week, cache hit rate climbed above 85% for our most common base images. For background on pull-through mirrors generally, this write-up from Docker's own docs was useful context:</p>
+
+          <figure class="kg-card kg-bookmark-card">
+            <a class="kg-bookmark-container" href="https://docs.docker.com/docker-hub/mirror/">
+              <div class="kg-bookmark-content">
+                <div class="kg-bookmark-title">Registry as a pull through cache</div>
+                <div class="kg-bookmark-description">Configure a local mirror to reduce Docker Hub pull traffic and rate limiting.</div>
+                <div class="kg-bookmark-metadata">
+                  <span class="kg-bookmark-publisher">Docker Docs</span>
+                </div>
+              </div>
+              <div class="kg-bookmark-thumbnail">
+                <img src="https://example.test/content/images/2026/08/docker-og.png" alt="" />
+              </div>
+            </a>
+          </figure>
+
+          <h2 id="what-we-d-do-differently">What We'd Do Differently</h2>
+          <ul>
+            <li>Provision the cache disk larger than you think you need &mdash; we resized twice in the first month</li>
+            <li>Put the cache behind the same VPN as CI runners, not the public office network</li>
+            <li>Monitor cache disk usage, not just hit rate &mdash; eviction silently degrades hit rate before you notice</li>
+          </ul>
+
+          <blockquote>
+            <p>Egress fees are a tax on not owning your own disks.</p>
+          </blockquote>
+
+          <h2 id="the-rack">The Rack, Two Months In</h2>
+          <p>We eventually split the single box into three cache nodes behind a round-robin DNS entry, mostly so a disk failure wouldn't take the whole cache offline mid-build. The photos below are from that upgrade.</p>
+
+          <div class="kg-card kg-gallery-card">
+            <div class="kg-gallery-container">
+              <div class="kg-gallery-row">
+                <div class="kg-gallery-image">
+                  <img src="https://example.test/content/images/2026/08/rack-node-1.jpg" width="1000" height="667" alt="Cache node one, freshly racked" />
+                </div>
+                <div class="kg-gallery-image">
+                  <img src="https://example.test/content/images/2026/08/rack-node-2.jpg" width="1000" height="667" alt="Cache node two, cabling in progress" />
+                </div>
+              </div>
+              <div class="kg-gallery-row">
+                <div class="kg-gallery-image">
+                  <img src="https://example.test/content/images/2026/08/rack-node-3.jpg" width="1000" height="667" alt="All three nodes cabled and labeled by color" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="kg-card kg-callout-card kg-callout-card-yellow">
+            <div class="kg-callout-emoji">⚠️</div>
+            <div class="kg-callout-text">Round-robin DNS does not detect a dead node. We layer a health check in front of it now after one node silently served stale cache entries for two days.</div>
+          </div>
+
+          <h2 id="results">Results</h2>
+          <p>Egress cost dropped from roughly $4,000/month to under $300/month, and median CI job time for cache-heavy pipelines fell by about 40%. The office electricity bill went up by a number small enough that nobody has bothered to isolate it on a separate circuit yet.</p>
+
+          <h2 id="open-questions">Open Questions</h2>
+          <p>We haven't solved cache warming yet &mdash; a cold node after a reboot still has to pull everything from upstream once before hit rate recovers. A couple of things we're considering for the next iteration:</p>
+          <ol>
+            <li>Periodically syncing the cache directory between nodes so a fresh node inherits a warm working set</li>
+            <li>Pinning the most frequently used base images so they survive LRU eviction regardless of recency</li>
+            <li>Moving from a single shared volume to per-node local NVMe, trading some duplication for lower latency</li>
+          </ol>
+
+          <div class="kg-card kg-callout-card kg-callout-card-green">
+            <div class="kg-callout-emoji">✅</div>
+            <div class="kg-callout-text">If your CI egress bill is a rounding error, none of this is worth the operational overhead. It only paid off once our monthly pull volume crossed a few terabytes.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <footer class="post-full-footer">
+        <div class="post-full-footer-content">
+          <p>Discuss this post on our <a href="https://example.test/community">community forum</a>, or reach out directly if you're running a similar setup and want to compare notes on cache sizing.</p>
+        </div>
+      </footer>
+
+      <section class="post-full-comments">
+        <h3 class="comments-title">Discussion</h3>
+        <div class="comment-list">
+          <p>Comments are hosted on our community forum linked above rather than embedded here.</p>
+        </div>
+      </section>
+    </article>
+  </main>
+</div>
+</body>
+</html>

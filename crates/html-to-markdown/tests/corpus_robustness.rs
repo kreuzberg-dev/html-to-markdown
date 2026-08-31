@@ -50,15 +50,26 @@ fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tools/benchmark-harness/fixtures")
 }
 
-/// Additional real-world HTML from the shared `test_documents` corpus.
+/// Additional real-world HTML from the `test_documents` corpus.
 ///
-/// ~keep Optional on purpose. `test_documents` is a sibling repository rather than part of
-/// ~keep this one, so a checkout without it must still run this test at full strength over
-/// ~keep the in-repo fixtures instead of failing or, worse, silently covering nothing. The
-/// ~keep required corpus is asserted non-empty separately.
+/// ~keep Optional on purpose, and kept as a filtered `is_dir` check rather than an
+/// ~keep unconditional path (even though `test_documents` is tracked inside this repo, two
+/// ~keep levels up from `CARGO_MANIFEST_DIR`, same as `fixture_root`'s
+/// ~keep `tools/benchmark-harness/fixtures`): a checkout that is missing this directory for
+/// ~keep any reason must still run this test at full strength over the in-repo fixtures
+/// ~keep instead of failing or, worse, silently covering nothing. The required corpus is
+/// ~keep asserted non-empty separately.
+/// ~keep
+/// ~keep Was `../../../test_documents/html` (three levels up, landing outside the repo)
+/// ~keep until this was found and fixed. In CI, and in any clean checkout, nothing exists at
+/// ~keep that path, so the `is_dir` filter above silently dropped it and this corpus
+/// ~keep contributed zero fixtures with no test failure to signal it. It went unnoticed
+/// ~keep because a developer machine with the polyrepo checked out DOES have a
+/// ~keep `test_documents` directory one level above this repository, so the path resolved
+/// ~keep locally -- to the wrong corpus -- while covering nothing wherever it mattered.
 fn optional_extra_roots() -> Vec<PathBuf> {
     let manifest = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    vec![manifest.join("../../../test_documents/html")]
+    vec![manifest.join("../../test_documents/html")]
         .into_iter()
         .filter(|p| p.is_dir())
         .collect()

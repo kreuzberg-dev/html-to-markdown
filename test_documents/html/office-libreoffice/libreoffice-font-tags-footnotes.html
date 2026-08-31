@@ -1,0 +1,63 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce LibreOffice Writer HTML-export structural signature; not captured from a live document. -->
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<title></title>
+<meta name="generator" content="LibreOffice 7.6.4.1 (Linux)">
+<style type="text/css">
+	body,div,table,thead,tbody,tfoot,tr,th,td,p { font-family:"Liberation Serif"; font-size:x-small }
+	a.comment-indicator:hover + comment { background:#ffd; position:absolute; display:block; border:1px solid black; padding:0.5em; }
+	a.comment-indicator { background:rgba(255,235,15,0.5); display:inline-block; border:1px solid black; width:0.9em; height:0.8em; }
+	@page { size: 8.5in 11in; margin: 0.7874in }
+	p { margin-bottom: 0.1in; line-height: 115%; background: transparent }
+	h1 { margin-bottom: 0.08in; background: transparent; page-break-after: avoid }
+	h1.western { font-family: "Liberation Sans", sans-serif; font-size: 18pt; font-weight: bold }
+	p.sdfootnote-western { margin-bottom: 0in; line-height: 100%; font-size: 8pt }
+	a.sdfootnoteanc { font-size: 57% }
+</style>
+</head>
+<body lang="en-US" dir="ltr">
+<h1 class="western">Migration Guide</h1>
+<p style="margin-bottom: 0.1in; line-height: 115%;" class="western" align="justify">
+	<font face="Liberation Serif, serif" size="3">This guide covers moving the
+	shared database cluster to the new region. Read the whole document before
+	starting; the process is not fully reversible past </font>
+	<font face="Liberation Serif, serif" size="3"><strong>step 4</strong></font>
+	<font face="Liberation Serif, serif" size="3">.<a class="sdfootnoteanc" href="#sdfootnote1sym" name="sdfootnote1anc" sdfixed>
+	<sup>1</sup></a></font>
+</p>
+<p style="margin-bottom: 0.1in; line-height: 115%;" class="western" align="justify">
+	<font face="Liberation Serif, serif" size="3">Confirm you have <em>write
+	access</em> to the target project before proceeding, and that the
+	maintenance window has been announced.</font>
+</p>
+<ol>
+	<li><p style="margin-bottom: 0in; line-height: 115%;" class="western">
+		<font face="Liberation Serif, serif" size="3">Snapshot the source
+		cluster.</font></p></li>
+	<li><p style="margin-bottom: 0in; line-height: 115%;" class="western">
+		<font face="Liberation Serif, serif" size="3">Provision the target
+		cluster with matching <font face="Liberation Mono, monospace" size="3">instance_type</font>.</font></p></li>
+	<li><p style="margin-bottom: 0.1in; line-height: 115%;" class="western">
+		<font face="Liberation Serif, serif" size="3">Replicate data and verify
+		checksums before cutover.</font></p></li>
+</ol>
+<p style="margin-bottom: 0.1in; line-height: 115%;" class="western">
+	<font face="Liberation Serif, serif" size="3">Rollback is only supported
+	before step 4:</font>
+</p>
+<ul>
+	<li><p style="margin-bottom: 0in; line-height: 115%;" class="western">
+		<font face="Liberation Serif, serif" size="3">Stop replication.</font></p></li>
+	<li><p style="margin-bottom: 0.1in; line-height: 115%;" class="western">
+		<font face="Liberation Serif, serif" size="3">Point traffic back at the
+		source cluster.</font></p></li>
+</ul>
+<p class="sdfootnote-western">
+	<a class="sdfootnoteanc" href="#sdfootnote1anc" name="sdfootnote1sym"><sup>1</sup></a>
+	<font face="Liberation Serif, serif" size="1">Steps 1-3 write only to the
+	target cluster and can be safely re-run.</font>
+</p>
+</body>
+</html>

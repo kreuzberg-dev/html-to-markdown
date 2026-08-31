@@ -1,0 +1,82 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce Docusaurus's structural signature; not real generator output. -->
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quick Start | Demo Docs</title>
+    <link rel="stylesheet" href="/assets/css/styles.css" />
+  </head>
+  <body>
+    <div id="__docusaurus">
+      <main class="docMainContainer_gTbr">
+        <div class="container padding-top--md padding-bottom--lg">
+          <div class="row">
+            <div class="col docItemCol_VOVn">
+              <div class="docItemContainer_Djhp">
+                <article>
+                  <header>
+                    <h1 class="anchor" id="quick-start">Quick Start<a href="#quick-start" class="hash-link" aria-label="Direct link to Quick Start" title="Direct link to Quick Start">&#8203;</a></h1>
+                  </header>
+                  <div class="theme-doc-markdown markdown">
+                    <p>Follow the steps below to get the <code>demo</code> SDK running in a fresh project.</p>
+                    <div class="theme-admonition theme-admonition-tip alert alert--success admonition_LlT9" role="alert">
+                      <div class="admonitionHeading_tbUL">
+                        <span class="admonitionIcon_kALy">
+                          <svg viewBox="0 0 12 16"><path fill-rule="evenodd" d="M6.5 0C3.48 0 1 2.19 1 5c0 .92.55 2.25 1 3 1.34 2.25 1.78 2.78 2 4v1h5v-1c.22-1.22.66-1.75 2-4 .45-.75 1-2.08 1-3 0-2.81-2.48-5-5.5-5z"></path></svg>
+                        </span>
+                        Tip
+                      </div>
+                      <div class="admonitionContent_BuS1">
+                        <p>Node.js 18 or later is required. Older versions are not tested in CI.</p>
+                      </div>
+                    </div>
+                    <h2 class="anchor" id="install-the-sdk">Install the SDK<a href="#install-the-sdk" class="hash-link" aria-label="Direct link to Install the SDK" title="Direct link to Install the SDK">&#8203;</a></h2>
+                    <div role="tabpanel" class="margin-top--md">
+                      <div class="theme-code-block codeBlockContainer_Ckt0" style="--prism-color:#393A34;">
+                        <div class="codeBlockContent_biex">
+                          <pre tabindex="0" class="prism-code language-bash codeBlock_bY9V thin-scrollbar"><code class="codeBlockLines_e6Vv"><span class="token-line"><span class="token plain">npm install </span><span class="token">@demo/sdk</span></span></code></pre>
+                          <button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn copyButton_i1lm">
+                            <span class="copyButtonIcons_eSgA" aria-hidden="true">
+                              <svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg>
+                              <svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg>
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <h2 class="anchor" id="initialize-a-client">Initialize a client<a href="#initialize-a-client" class="hash-link" aria-label="Direct link to Initialize a client" title="Direct link to Initialize a client">&#8203;</a></h2>
+                    <div class="theme-code-block codeBlockContainer_Ckt0" style="--prism-color:#393A34;">
+                      <div class="codeBlockContent_biex">
+                        <pre tabindex="0" class="prism-code language-javascript codeBlock_bY9V thin-scrollbar"><code class="codeBlockLines_e6Vv"><span class="token-line"><span class="token keyword">import</span><span class="token plain"> </span><span class="token punctuation">{</span><span class="token plain"> Client </span><span class="token punctuation">}</span><span class="token plain"> </span><span class="token keyword">from</span><span class="token plain"> </span><span class="token string">'@demo/sdk'</span><span class="token punctuation">;</span></span>
+<span class="token-line"></span>
+<span class="token-line"><span class="token keyword">const</span><span class="token plain"> client </span><span class="token operator">=</span><span class="token plain"> </span><span class="token keyword">new</span><span class="token plain"> </span><span class="token class-name">Client</span><span class="token punctuation">(</span><span class="token punctuation">{</span><span class="token plain"> apiKey</span><span class="token operator">:</span><span class="token plain"> process</span><span class="token punctuation">.</span><span class="token plain">env</span><span class="token punctuation">.</span><span class="token plain">DEMO_API_KEY </span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></span></code></pre>
+                        <button type="button" aria-label="Copy code to clipboard" title="Copy" class="clean-btn copyButton_i1lm">
+                          <span class="copyButtonIcons_eSgA" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" class="copyButtonIcon_y97N"><path d="M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z"></path></svg>
+                            <svg viewBox="0 0 24 24" class="copyButtonSuccessIcon_LjdS"><path d="M21,7L9,19L3.5,13.5L4.91,12.09L9,16.17L19.59,5.59L21,7Z"></path></svg>
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="theme-admonition theme-admonition-caution alert alert--warning admonition_LlT9" role="alert">
+                      <div class="admonitionHeading_tbUL">
+                        <span class="admonitionIcon_kALy">
+                          <svg viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.893 1.5c-.183-.31-.52-.5-.887-.5s-.703.19-.886.5L.138 13.499a.98.98 0 0 0 0 1.001c.193.31.53.501.886.501h13.964c.367 0 .704-.19.877-.5a1.03 1.03 0 0 0 .01-1.002L8.893 1.5z"></path></svg>
+                        </span>
+                        Caution
+                      </div>
+                      <div class="admonitionContent_BuS1">
+                        <p>Never commit <code>DEMO_API_KEY</code> to version control. Load it from an
+                        environment variable or secret manager instead.</p>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

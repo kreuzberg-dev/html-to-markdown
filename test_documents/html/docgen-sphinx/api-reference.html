@@ -1,0 +1,96 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce Sphinx (alabaster theme)'s structural signature; not real generator output. -->
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Reference &#8212; Demo 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=f2a433a1"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  </head>
+  <body>
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            <section id="api-reference">
+              <h1>API Reference<a class="headerlink" href="#api-reference" title="Link to this heading">&para;</a></h1>
+              <p>This page documents the public interface of the <code class="docutils literal notranslate"><span class="pre">demo</span></code> package.</p>
+              <dl class="py function">
+                <dt class="sig sig-object py" id="demo.connect">
+                <span class="sig-prename descclassname"><span class="pre">demo.</span></span><span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">host</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8080</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#demo.connect" title="Link to this definition">&para;</a></dt>
+                <dd>
+                  <p>Opens a connection to the given host and port.</p>
+                  <dl class="field-list simple">
+                    <dt class="field-odd">Parameters<span class="colon">:</span></dt>
+                    <dd class="field-odd">
+                      <ul class="simple">
+                        <li><p><strong>host</strong> (<em>str</em>) &#8211; the hostname to connect to.</p></li>
+                        <li><p><strong>port</strong> (<em>int</em>) &#8211; the TCP port, defaults to <code class="docutils literal notranslate"><span class="pre">8080</span></code>.</p></li>
+                      </ul>
+                    </dd>
+                    <dt class="field-even">Returns<span class="colon">:</span></dt>
+                    <dd class="field-even">
+                      <p>an open <a class="reference internal" href="#demo.Connection" title="demo.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a> object.</p>
+                    </dd>
+                    <dt class="field-odd">Return type<span class="colon">:</span></dt>
+                    <dd class="field-odd">
+                      <p><a class="reference internal" href="#demo.Connection" title="demo.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a></p>
+                    </dd>
+                  </dl>
+                  <div class="admonition note">
+                    <p class="admonition-title">Note</p>
+                    <p>The connection is not automatically retried on failure. Wrap calls to
+                    <a class="reference internal" href="#demo.connect" title="demo.connect"><code class="xref py py-func docutils literal notranslate"><span class="pre">connect()</span></code></a>
+                    in your own retry loop if the remote host is unreliable.</p>
+                  </div>
+                  <p>Example usage:</p>
+                  <div class="highlight-python notranslate">
+                    <div class="highlight">
+<pre><span></span><span class="kn">import</span> <span class="nn">demo</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">demo</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;localhost&quot;</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">9090</span><span class="p">)</span>
+<span class="n">conn</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="s2">&quot;ping&quot;</span><span class="p">)</span>
+</pre>
+                    </div>
+                  </div>
+                </dd>
+              </dl>
+              <dl class="py class">
+                <dt class="sig sig-object py" id="demo.Connection">
+                <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">demo.</span></span><span class="sig-name descname"><span class="pre">Connection</span></span><a class="headerlink" href="#demo.Connection" title="Link to this definition">&para;</a></dt>
+                <dd>
+                  <p>A handle to an open connection returned by
+                  <a class="reference internal" href="#demo.connect" title="demo.connect"><code class="xref py py-func docutils literal notranslate"><span class="pre">connect()</span></code></a>.</p>
+                  <dl class="py method">
+                    <dt class="sig sig-object py" id="demo.Connection.close">
+                    <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#demo.Connection.close" title="Link to this definition">&para;</a></dt>
+                    <dd><p>Closes the connection and releases the underlying socket.</p></dd>
+                  </dl>
+                </dd>
+              </dl>
+            </section>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+          <h1 class="logo"><a href="index.html">Demo</a></h1>
+          <h3>Navigation</h3>
+          <ul>
+            <li class="toctree-l1"><a class="reference internal" href="api-reference.html">API Reference</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2026, Demo Authors. Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
+    </div>
+  </body>
+</html>

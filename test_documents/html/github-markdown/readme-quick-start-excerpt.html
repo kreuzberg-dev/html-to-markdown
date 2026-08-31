@@ -1,0 +1,199 @@
+<!-- source: https://github.com/xberg-io/html-to-markdown README (live GitHub-rendered HTML, article.markdown-body, excerpt covering "What and Why?" through "AI Coding Assistants"); license: MIT (this repository's own content); retrieved: 2026-08-31 -->
+<article class="markdown-body entry-content container-lg" itemprop="text">
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto">What and Why?</h2><a id="user-content-what-and-why" class="anchor" aria-label="Permalink: What and Why?" href="#what-and-why"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">Feed html-to-markdown the HTML you actually have — unclosed tags, CDATA, custom elements, broken entities, nested tables, mixed encodings — and get back clean CommonMark (or Djot) without losing content. One <code>convert()</code> call does it, and it returns the same result whether you run it from Python, TypeScript, Go, Ruby, Java, or 11 more languages.</p>
+<p dir="auto">You get more than the text: pull page metadata (Open Graph, Twitter, JSON-LD) and structured tables in the same pass, or hook into the conversion to reshape the output. It is fast enough for whole-corpus jobs, and the messy-input handling is automatic — you never choose a parsing strategy or tune anything to get correct output.</p>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Features</h3><a id="user-content-features" class="anchor" aria-label="Permalink: Features" href="#features"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<markdown-accessiblity-table><table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>16 languages, one Rust core</strong></td>
+<td>Rust, Python, Node.js, WASM, Java, Go, C#, PHP, Ruby, Elixir, R, Dart, Kotlin (Android), Swift, Zig, and a C ABI</td>
+</tr>
+<tr>
+<td><strong>Tiered dispatch</strong></td>
+<td>Byte scanner → DOM walker → <code>html5ever</code> repair, with byte-equal output across tiers</td>
+</tr>
+<tr>
+<td><strong>Real-HTML robust</strong></td>
+<td>Unclosed tags, CDATA, custom elements, malformed entities, nested tables, mixed encodings — handled without losing content</td>
+</tr>
+<tr>
+<td><strong>GFM tables</strong></td>
+<td>Padded cells, alignment, and pipe escaping</td>
+</tr>
+<tr>
+<td><strong>Djot output</strong></td>
+<td>Set <code>output_format = "djot"</code> to emit Djot instead of Markdown</td>
+</tr>
+<tr>
+<td><strong>Metadata extraction</strong></td>
+<td>Parse <code>&lt;head&gt;</code> into structured metadata (Open Graph, Twitter, JSON-LD, microdata, RDFa, header hierarchy)</td>
+</tr>
+<tr>
+<td><strong>Inline images</strong></td>
+<td>Opt-in mirroring of data URIs and remote image references</td>
+</tr>
+<tr>
+<td><strong>Visitor API</strong></td>
+<td>Feature-gated traversal to transform the converted Markdown AST</td>
+</tr>
+<tr>
+<td><strong>Configurable preprocessing</strong></td>
+<td>Standard, strict, and lenient presets — or build your own</td>
+</tr>
+<tr>
+<td><strong>Fast</strong></td>
+<td>19–116 MB/s on the Wikipedia/mdream corpus; per-group regression thresholds enforced on every PR</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<div align="center" dir="auto">
+  <a href="https://github.com/xberg-io/html-to-markdown/stargazers">
+    <img src="/xberg-io/html-to-markdown/raw/main/docs/assets/star.gif" alt="Star html-to-markdown on GitHub" width="640" data-animated-image="" style="max-width: 100%;">
+  </a>
+</div>
+<p align="center" dir="auto"><strong>⭐ Star this repo to show your support — it helps others discover html-to-markdown.</strong></p>
+<div class="markdown-heading" dir="auto"><h2 tabindex="-1" class="heading-element" dir="auto">Quick Start</h2><a id="user-content-quick-start" class="anchor" aria-label="Permalink: Quick Start" href="#quick-start"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto"><code>convert()</code> is the single entry point — it returns a structured result with <code>content</code>, <code>warnings</code>, and optional <code>metadata</code>.</p>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">Language Packages</h3><a id="user-content-language-packages" class="anchor" aria-label="Permalink: Language Packages" href="#language-packages"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<details open="">
+<summary><strong>Rust</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="cargo add html-to-markdown-rs"><pre>cargo add html-to-markdown-rs</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown">Rust README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Python</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="pip install html-to-markdown"><pre>pip install html-to-markdown</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/python">Python README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Node.js</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="npm install @xberg-io/html-to-markdown"><pre>npm install @xberg-io/html-to-markdown</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-node">Node.js README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Go</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="go get github.com/xberg-io/html-to-markdown/packages/go/v3"><pre>go get github.com/xberg-io/html-to-markdown/packages/go/v3</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/go">Go README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Java</strong></summary>
+<p dir="auto">Available on Maven Central as <code>io.xberg:html-to-markdown</code>. See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/java">Java README</a> for the dependency snippet and current version.</p>
+</details>
+<details>
+<summary><strong>C#</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="dotnet add package XbergIo.HtmlToMarkdown"><pre>dotnet add package XbergIo.HtmlToMarkdown</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/csharp">C# README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Ruby</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="gem install html-to-markdown"><pre>gem install html-to-markdown</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/ruby">Ruby README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>PHP</strong></summary>
+<p dir="auto">This is a native PHP extension (Rust <code>ext-php-rs</code>), so install it with <a href="https://github.com/php/pie">PIE</a> — not <code>composer require</code>:</p>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="pie install xberg-io/html-to-markdown"><pre>pie install xberg-io/html-to-markdown</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-php">PHP README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Elixir</strong></summary>
+<p dir="auto">Add <code>{:html_to_markdown, "~&gt; 3.6"}</code> to your <code>mix.exs</code> dependencies. See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/elixir">Elixir README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>R</strong></summary>
+<div class="highlight highlight-source-r notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="install.packages(&quot;htmltomarkdown&quot;, repos = &quot;https://xberg-io.r-universe.dev&quot;)"><pre>install.packages(<span class="pl-s"><span class="pl-pds">"</span>htmltomarkdown<span class="pl-pds">"</span></span>, <span class="pl-v">repos</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>https://xberg-io.r-universe.dev<span class="pl-pds">"</span></span>)</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/r">R README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Dart / Flutter</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="dart pub add h2m"><pre>dart pub add h2m</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/dart">Dart README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Kotlin (Android)</strong></summary>
+<p dir="auto">Available on Maven Central as <code>io.xberg:html-to-markdown-android</code>. See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/kotlin-android">Kotlin README</a> for the dependency snippet and current version.</p>
+</details>
+<details>
+<summary><strong>Swift</strong></summary>
+<p dir="auto">Add via Swift Package Manager. See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/swift">Swift README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>Zig</strong></summary>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/packages/zig">Zig README</a> for installation and usage.</p>
+</details>
+<details>
+<summary><strong>WebAssembly</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="npm install @xberg-io/html-to-markdown-wasm"><pre>npm install @xberg-io/html-to-markdown-wasm</pre></div>
+<p dir="auto">See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-wasm">WebAssembly README</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>C/C++ (FFI)</strong></summary>
+<p dir="auto">Pre-built <code>.so</code> / <code>.dll</code> / <code>.dylib</code> from <a href="https://github.com/xberg-io/html-to-markdown/releases">GitHub Releases</a>. See <a href="https://github.com/xberg-io/html-to-markdown/tree/main/crates/html-to-markdown-ffi">FFI crate</a> for full documentation.</p>
+</details>
+<details>
+<summary><strong>CLI</strong></summary>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="cargo install html-to-markdown-cli"><pre>cargo install html-to-markdown-cli</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="# Or install the prebuilt binary via cargo-binstall:
+cargo binstall html-to-markdown-cli"><pre><span class="pl-c"><span class="pl-c">#</span> Or install the prebuilt binary via cargo-binstall:</span>
+cargo binstall html-to-markdown-cli</pre></div>
+<div class="highlight highlight-source-shell notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="brew install xberg-io/tap/html-to-markdown"><pre>brew install xberg-io/tap/html-to-markdown</pre></div>
+<p dir="auto">See <a href="https://docs.html-to-markdown.xberg.io" rel="nofollow">CLI usage</a> for full documentation.</p>
+</details>
+<div class="markdown-heading" dir="auto"><h3 tabindex="-1" class="heading-element" dir="auto">AI Coding Assistants</h3><a id="user-content-ai-coding-assistants" class="anchor" aria-label="Permalink: AI Coding Assistants" href="#ai-coding-assistants"><svg data-component="Octicon" class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg></a></div>
+<p dir="auto">Install the html-to-markdown plugin from <a href="https://github.com/xberg-io/html-to-markdown"><code>xberg-io/html-to-markdown</code></a>. It ships the html-to-markdown agent skills and works with every major coding agent — expand your harness below.</p>
+<details open="">
+<summary><strong>Claude Code</strong></summary>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="/plugin marketplace add xberg-io/html-to-markdown
+/plugin install html-to-markdown@html-to-markdown"><pre lang="text" class="notranslate"><code>/plugin marketplace add xberg-io/html-to-markdown
+/plugin install html-to-markdown@html-to-markdown
+</code></pre></div>
+</details>
+<details>
+<summary><strong>Codex CLI</strong></summary>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="/plugins add https://github.com/xberg-io/html-to-markdown"><pre lang="text" class="notranslate"><code>/plugins add https://github.com/xberg-io/html-to-markdown
+</code></pre></div>
+<p dir="auto">Then search for <code>html-to-markdown</code> and select <strong>Install Plugin</strong>.</p>
+</details>
+<details>
+<summary><strong>Cursor</strong></summary>
+<p dir="auto">Settings → Plugins → Add from URL → <code>https://github.com/xberg-io/html-to-markdown</code>, then select <strong>html-to-markdown</strong>.</p>
+</details>
+<details>
+<summary><strong>Gemini CLI</strong></summary>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="gemini extensions install https://github.com/xberg-io/html-to-markdown"><pre lang="text" class="notranslate"><code>gemini extensions install https://github.com/xberg-io/html-to-markdown
+</code></pre></div>
+</details>
+<details>
+<summary><strong>Factory Droid</strong></summary>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="droid plugin marketplace add https://github.com/xberg-io/html-to-markdown
+droid plugin install html-to-markdown@html-to-markdown"><pre lang="text" class="notranslate"><code>droid plugin marketplace add https://github.com/xberg-io/html-to-markdown
+droid plugin install html-to-markdown@html-to-markdown
+</code></pre></div>
+</details>
+<details>
+<summary><strong>GitHub Copilot CLI</strong></summary>
+<div class="snippet-clipboard-content notranslate position-relative overflow-auto" data-snippet-clipboard-copy-content="copilot plugin marketplace add https://github.com/xberg-io/html-to-markdown
+copilot plugin install html-to-markdown@html-to-markdown"><pre lang="text" class="notranslate"><code>copilot plugin marketplace add https://github.com/xberg-io/html-to-markdown
+copilot plugin install html-to-markdown@html-to-markdown
+</code></pre></div>
+</details>
+<details>
+<summary><strong>opencode</strong></summary>
+<p dir="auto">Add the package to <code>opencode.json</code>:</p>
+<div class="highlight highlight-source-json notranslate position-relative overflow-auto" dir="auto" data-snippet-clipboard-copy-content="{
+  &quot;$schema&quot;: &quot;https://opencode.ai/config.json&quot;,
+  &quot;plugin&quot;: [&quot;@xberg-io/opencode-html-to-markdown&quot;]
+}"><pre>{
+  <span class="pl-ent">"$schema"</span>: <span class="pl-s"><span class="pl-pds">"</span>https://opencode.ai/config.json<span class="pl-pds">"</span></span>,
+  <span class="pl-ent">"plugin"</span>: [<span class="pl-s"><span class="pl-pds">"</span>@xberg-io/opencode-html-to-markdown<span class="pl-pds">"</span></span>]
+}</pre></div>
+</details>
+</article>

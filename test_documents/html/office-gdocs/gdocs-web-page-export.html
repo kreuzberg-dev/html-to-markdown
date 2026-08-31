@@ -1,0 +1,59 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce Google Docs HTML-export structural signature; not captured from a live document. -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Release Runbook</title>
+<style type="text/css">
+ol.lst-kix_list-2-0 { list-style-type: none; }
+.lst-kix_list-2-0 > li:before { content: "\0025cf  "; }
+.lst-kix_list-1-0 > li:before { content: "\0025cf  "; }
+ul.lst-kix_list-1-0 { list-style-type: none; }
+.c1 { padding-top: 0pt; padding-bottom: 0pt; line-height: 1.15; text-align: left; }
+.c2 { padding-top: 0pt; padding-bottom: 0pt; line-height: 1.38; text-align: left; margin-left: 36pt; }
+.c3 { font-weight: 700; font-family: "Arial"; font-size: 11pt; }
+.c4 { font-family: "Arial"; font-size: 11pt; font-weight: 400; }
+.c5 { color: #000000; text-decoration: none; vertical-align: baseline; }
+.c6 { font-size: 20pt; font-weight: 700; font-family: "Arial"; }
+.title { padding-top: 20pt; line-height: 1.15; text-align: left; padding-bottom: 3pt; }
+.subtitle { padding-top: 4pt; line-height: 1.15; text-align: left; padding-bottom: 12pt; }
+li { color: #000000; font-size: 11pt; font-family: "Arial"; }
+p { margin: 0; color: #000000; font-size: 11pt; font-family: "Arial"; }
+h1 { padding-top: 20pt; color: #000000; font-weight: 700; font-size: 20pt; padding-bottom: 6pt; line-height: 1.15; text-align: left; }
+h2 { padding-top: 18pt; color: #000000; font-weight: 700; font-size: 16pt; padding-bottom: 4pt; line-height: 1.15; text-align: left; }
+</style>
+</head>
+<body class="c0 doc-content">
+<p class="title c1" id="h.title"><span class="c6">Release Runbook</span></p>
+<p class="subtitle c1"><span class="c4">Draft — v0.3</span></p>
+<h1 dir="ltr"><span>Pre-flight checks</span></h1>
+<p class="c1" dir="ltr">
+  <span class="c4">Run through this list before cutting a release. Steps marked with </span>
+  <span class="c3">bold</span>
+  <span class="c4"> emphasis block the release if skipped.</span>
+</p>
+<ol class="c5 lst-kix_list-2-0 start" start="1">
+  <li class="c2 li-bullet-0" dir="ltr">
+    <span class="c3">Freeze the branch</span><span class="c4"> and announce in #releases.</span>
+  </li>
+  <li class="c2 li-bullet-0" dir="ltr">
+    <span class="c4">Run the full test matrix on CI.</span>
+  </li>
+  <li class="c2 li-bullet-0" dir="ltr">
+    <span class="c3">Bump the version</span><span class="c4"> in the manifest and changelog.</span>
+  </li>
+</ol>
+<h2 dir="ltr"><span>Rollback plan</span></h2>
+<ul class="c5 lst-kix_list-1-0 start">
+  <li class="c2 li-bullet-0" dir="ltr">
+    <span class="c4">Revert the tag if smoke tests fail within 30 minutes.</span>
+  </li>
+  <li class="c2 li-bullet-0" dir="ltr">
+    <span class="c4">Page the on-call engineer listed in </span>
+    <span class="c5"><a href="https://example.com/oncall">the on-call schedule</a></span>
+    <span class="c4">.</span>
+  </li>
+</ul>
+<p class="c1" dir="ltr"><span class="c4">&nbsp;</span></p>
+</body>
+</html>

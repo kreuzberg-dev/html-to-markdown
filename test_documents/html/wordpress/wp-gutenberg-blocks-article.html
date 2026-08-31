@@ -1,0 +1,194 @@
+<!-- SYNTHESIZED FIXTURE: hand-built to reproduce WordPress structural signature; not captured from a live site. -->
+<!doctype html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8" />
+<title>Understanding Soil Moisture Sensors &#8211; The Garden Almanac</title>
+<link rel="stylesheet" id="twentytwentyfour-style-css" href="/wp-content/themes/twentytwentyfour/style.css?ver=1.2" media="all" />
+<link rel="stylesheet" id="wp-block-library-css" href="/wp-includes/css/dist/block-library/style.min.css?ver=6.5.3" media="all" />
+</head>
+<body class="post-template-default single single-post postid-4821 single-format-standard wp-embed-responsive is-light-theme wp-theme-twentytwentyfour">
+<div id="page" class="site">
+  <header id="masthead" class="wp-block-template-part site-header">
+    <div class="wp-block-group">
+      <nav class="wp-block-navigation" aria-label="Primary">
+        <ul class="wp-block-navigation__container">
+          <li class="wp-block-navigation-item"><a href="/">Home</a></li>
+          <li class="wp-block-navigation-item"><a href="/blog/">Blog</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="primary" class="site-main">
+    <article id="post-4821" class="post-4821 post type-post status-publish format-standard has-post-thumbnail hentry category-gardening tag-irrigation tag-sensors">
+      <header class="entry-header">
+        <h1 class="entry-title">Understanding Soil Moisture Sensors</h1>
+        <div class="entry-meta">
+          <span class="posted-on">Posted on <time class="entry-date published" datetime="2026-08-12T09:00:00+00:00">August 12, 2026</time></span>
+          <span class="byline"> by <span class="author vcard"><a class="url fn n" href="/author/rgreen/">R. Green</a></span></span>
+        </div>
+      </header>
+
+      <div class="entry-content">
+
+        <!-- wp:paragraph -->
+        <p>Soil moisture sensors let a drip-irrigation controller decide <em>when</em> to water instead of watering on a fixed timer. This guide covers the two dominant sensing technologies, how to wire them into an ESP32, and where growers commonly place them wrong.</p>
+        <!-- /wp:paragraph -->
+
+        <!-- wp:image {"id":456,"sizeSlug":"large","linkDestination":"none"} -->
+        <figure class="wp-block-image size-large">
+          <img src="https://example.test/wp-content/uploads/2026/08/capacitive-probe-1024x683.jpg" alt="A capacitive soil moisture probe inserted into potting mix" class="wp-image-456" width="1024" height="683" />
+          <figcaption class="wp-element-caption">A capacitive probe avoids the corrosion that plagues resistive probes within a season.</figcaption>
+        </figure>
+        <!-- /wp:image -->
+
+        <!-- wp:paragraph {"align":"center"} -->
+        <p class="has-text-align-center">Figure 1 &#8212; typical placement depth is 5&#8211;7&nbsp;cm for shallow-rooted vegetables.</p>
+        <!-- /wp:paragraph -->
+
+        <!-- wp:heading -->
+        <h2 class="wp-block-heading">Resistive vs. Capacitive</h2>
+        <!-- /wp:heading -->
+
+        <!-- wp:columns -->
+        <div class="wp-block-columns are-vertically-aligned-top">
+          <!-- wp:column -->
+          <div class="wp-block-column">
+            <!-- wp:heading {"level":3} -->
+            <h3 class="wp-block-heading">Resistive</h3>
+            <!-- /wp:heading -->
+            <!-- wp:list -->
+            <ul class="wp-block-list">
+              <li>Cheap, often under $2 per unit</li>
+              <li>Corrodes within one growing season</li>
+              <li>Reading drifts as corrosion progresses</li>
+            </ul>
+            <!-- /wp:list -->
+          </div>
+          <!-- /wp:column -->
+
+          <!-- wp:column -->
+          <div class="wp-block-column">
+            <!-- wp:heading {"level":3} -->
+            <h3 class="wp-block-heading">Capacitive</h3>
+            <!-- /wp:heading -->
+            <!-- wp:list -->
+            <ul class="wp-block-list">
+              <li>Higher unit cost, roughly $6&#8211;$10</li>
+              <li>No exposed electrodes, so no corrosion</li>
+              <li>Stable readings across multiple seasons</li>
+            </ul>
+            <!-- /wp:list -->
+          </div>
+          <!-- /wp:column -->
+        </div>
+        <!-- /wp:columns -->
+
+        <!-- wp:heading -->
+        <h2 class="wp-block-heading">Reading the Sensor from an ESP32</h2>
+        <!-- /wp:heading -->
+
+        <!-- wp:paragraph -->
+        <p>The probe outputs an analog voltage proportional to moisture. Wire the signal pin to an ADC-capable GPIO and average several samples to reduce noise:</p>
+        <!-- /wp:paragraph -->
+
+        <!-- wp:code -->
+        <pre class="wp-block-code"><code>const int SENSOR_PIN = 34;
+
+int readMoisturePercent() {
+  long total = 0;
+  for (int i = 0; i &lt; 10; i++) {
+    total += analogRead(SENSOR_PIN);
+    delay(10);
+  }
+  int raw = total / 10;
+  // Calibrate DRY_VALUE and WET_VALUE for your specific probe.
+  return map(raw, DRY_VALUE, WET_VALUE, 0, 100);
+}</code></pre>
+        <!-- /wp:code -->
+
+        <!-- wp:heading -->
+        <h2 class="wp-block-heading">Calibration Reference Table</h2>
+        <!-- /wp:heading -->
+
+        <!-- wp:table -->
+        <figure class="wp-block-table">
+          <table>
+            <thead>
+              <tr><th>Medium</th><th>Dry (raw ADC)</th><th>Wet (raw ADC)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Potting mix</td><td>3200</td><td>1250</td></tr>
+              <tr><td>Sandy loam</td><td>3450</td><td>1400</td></tr>
+              <tr><td>Coco coir</td><td>2900</td><td>1100</td></tr>
+            </tbody>
+          </table>
+          <figcaption class="wp-element-caption">Approximate raw ADC readings; recalibrate per sensor.</figcaption>
+        </figure>
+        <!-- /wp:table -->
+
+        <!-- wp:quote -->
+        <blockquote class="wp-block-quote">
+          <p>Water on demand, not on a schedule &#8212; the plant doesn&#8217;t know what day it is.</p>
+          <cite>Old greenhouse saying</cite>
+        </blockquote>
+        <!-- /wp:quote -->
+
+        <!-- wp:paragraph -->
+        <p>Once calibrated, set your controller to irrigate when the reading drops below roughly 35% for most vegetable beds, adjusting for species and pot size.</p>
+        <!-- /wp:paragraph -->
+
+      </div>
+
+      <footer class="entry-footer">
+        <span class="cat-links">Posted in <a href="/category/gardening/" rel="category tag">Gardening</a></span>
+        <span class="tags-links">Tagged <a href="/tag/irrigation/" rel="tag">irrigation</a>, <a href="/tag/sensors/" rel="tag">sensors</a></span>
+      </footer>
+    </article>
+
+    <div class="jp-relatedposts" id="jp-relatedposts">
+      <h3 class="jp-relatedposts-headline"><em>Related</em></h3>
+      <div class="jp-relatedposts-items">
+        <div class="jp-relatedposts-post jp-relatedposts-post0">
+          <div class="jp-relatedposts-post-a">
+            <div class="jp-relatedposts-post-title">
+              <div><div><div><a href="/2026/06/drip-lines/">Choosing Drip Line Emitters</a></div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="jp-relatedposts-post jp-relatedposts-post1">
+          <div class="jp-relatedposts-post-a">
+            <div class="jp-relatedposts-post-title">
+              <div><div><div><a href="/2026/04/rain-barrels/">Sizing a Rain Barrel</a></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sharedaddy sd-sharing-enabled">
+      <div class="sd-block sd-sharing">
+        <div class="sd-content">
+          <ul class="share-buttons">
+            <li class="share-facebook"><div class="share-facebook"><a href="#" class="share-facebook sd-button"><span>Facebook</span></a></div></li>
+            <li class="share-twitter"><div class="share-twitter"><a href="#" class="share-twitter sd-button"><span>X</span></a></div></li>
+            <li class="share-email"><div class="share-email"><a href="#" class="share-email sd-button"><span>Email</span></a></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside id="secondary" class="widget-area">
+    <div class="widget widget_recent_entries">
+      <h2 class="widget-title">Recent Posts</h2>
+      <ul>
+        <li><a href="/2026/07/compost-tea/">Brewing Compost Tea</a></li>
+        <li><a href="/2026/05/raised-beds/">Building Raised Beds</a></li>
+      </ul>
+    </div>
+  </aside>
+</div>
+</body>
+</html>

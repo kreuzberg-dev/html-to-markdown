@@ -1549,6 +1549,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "toml 1.1.4+spec-1.1.0",
  "tower",
  "tower-http 0.7.0",
  "tracing",

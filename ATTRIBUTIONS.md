@@ -257,3 +257,110 @@ The Vendoring Policy in `CONTRIBUTING.md` ("permissively licensed, no copyleft a
 excluding this file. That wording postdates the file by nine months and is aimed at vendored
 code compiled into the product; this is non-distributed test data. Treat this section as the
 recorded exception until that policy is reworded.
+
+## Real-world/adversarial HTML test corpus (`test_documents/html/`)
+
+`test_documents/html/MANIFEST.toml` records, per fixture file, its source (or `"synthesized"`),
+license, retrieval date, and the generator family/structural features it exercises. The sections
+below cover every fixture that is vendored third-party content; everything else added alongside
+them (the `office-word/`, `office-gdocs/`, `office-libreoffice/`, `wordpress/`, `drupal/`,
+`ghost/`, `squarespace/`, `docgen-sphinx/`, `docgen-mkdocs/`, `docgen-docusaurus/`,
+`docgen-doxygen/`, `email/`, `discourse/`, `legacy/`, and `news-ecommerce/` fixtures, plus the two
+`docgen-rustdoc/` and one `docgen-javadoc/` pages, which are real tool output rendered from
+original throwaway input authored for this repository) is original work with no third-party
+content, licensed under this repository's own MIT license like the rest of the codebase.
+
+### html5lib-tests tree-construction data
+
+- **Files**: `test_documents/html/html5lib/*.html` (12 fixtures)
+- **Original authors**: James Graham, Geoffrey Sneddon, and other contributors to the html5lib
+  project
+- **Repository**: <https://github.com/html5lib/html5lib-tests>
+- **License**: MIT
+- **Retrieved**: 2026-08-31, from the repository's historical `python-0.95` tag
+
+Each fixture is one `#data` fragment extracted verbatim, unmodified, from a `tree-construction/*.dat`
+file: adversarial, real-browser-interop-derived malformed HTML exercising the adoption agency
+algorithm (mis-nested `<a>`/`<b>`/`<nobr>` reopened across block boundaries) and table
+foster-parenting (bare text/elements displaced out of a `<table>`). Upstream's `master` branch no
+longer carries the `tree-construction/` directory -- it migrated tree-construction testing to
+`web-platform-tests/wpt`, which uses full `testharness.js` documents rather than the compact
+`#data`/`#errors` fragment format needed here -- so these were retrieved from the `python-0.95`
+tag, which still has them in the original format. The repository's MIT `LICENSE` file (same
+copyright: "James Graham, Geoffrey Sneddon, and other contributors") applies project-wide and
+covers this historical tag; no separate per-tag license exists or is needed.
+
+### MDN Web Docs
+
+- **File**: `test_documents/html/mdn/array-reference.html`
+- **Original authors**: Mozilla and the MDN community
+- **Source**: <https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array>
+- **License**: Creative Commons Attribution-ShareAlike 2.5 (or later), per MDN's own
+  Attribution/Copyright/License guideline (the page footer itself links a generic "Creative
+  Commons license" without naming the version)
+- **Retrieved**: 2026-08-31
+
+An excerpt of the `Array` reference page (Description, Constructor, static/instance property and
+method listings, and the start of Examples), trimmed from the full page's navigation/site chrome,
+to exercise nested lists, a data table, `<dl>` definition-list sections, and a syntax-highlighted
+code example -- structural conventions MediaWiki (the corpus's dominant existing source) does not
+produce.
+
+### Stack Overflow
+
+- **File**: `test_documents/html/stackoverflow/regex-html-parsing.html`
+- **Original authors**: the respective Stack Overflow post authors
+- **Source**: <https://stackoverflow.com/questions/1732348/regex-match-open-tags-except-xhtml-self-contained-tags>
+  (question and top two answers)
+- **License**: Creative Commons Attribution-ShareAlike 4.0 International, confirmed via the
+  `content_license` field returned for this question and each answer by the Stack Exchange REST
+  API (`api.stackexchange.com`)
+- **Retrieved**: 2026-08-31
+
+The direct site page could not be fetched (blocked by bot protection), so the same post-body HTML
+Stack Overflow serves for this content was retrieved via the official Stack Exchange REST API and
+assembled into a minimal question/answer wrapper (site chrome/sidebar/related-questions cruft
+dropped, per this project's size-discipline and vendoring-scope rules, not the license). Exercises
+code blocks, a bulleted list, heavily mixed/overlapping inline formatting, and a blockquote.
+
+### Project Gutenberg
+
+- **File**: `test_documents/html/gutenberg/pride-and-prejudice-chapter-3.html`
+- **Work**: *Pride and Prejudice* by Jane Austen (published 1813)
+- **Source**: <https://www.gutenberg.org/files/1342/1342-h/1342-h.htm> (Project Gutenberg EBook
+  #1342)
+- **License**: Public Domain in the United States (the underlying 1813 work); Project Gutenberg's
+  own HTML transcription is additionally covered by the Project Gutenberg License, which permits
+  free reuse -- see <https://www.gutenberg.org/policy/license.html>
+- **Retrieved**: 2026-08-31
+
+Chapter III, extracted verbatim, exercising prose conventions distinct from MediaWiki: `<i>`
+emphasis, page-number anchor spans embedded mid-sentence, and figure/caption markup.
+
+### USA.gov (U.S. General Services Administration)
+
+- **File**: `test_documents/html/govt/usa-gov-federal-holidays.html`
+- **Source**: <https://www.usa.gov/holidays>
+- **License**: Public Domain in the United States under 17 U.S.C. §105 (a work of the U.S. federal
+  government; USAGov is operated by GSA's Technology Transformation Services, an executive-branch
+  agency)
+- **Retrieved**: 2026-08-31
+
+Exercises a data table containing a nested `<ul><li>` inside one cell, a USWDS accordion widget
+(`<h2>`/`<button>` pairs with hidden content panels), and realistic Drupal-CMS wrapper-div
+nesting (usa.gov itself runs on Drupal).
+
+### This repository's own README (GitHub-rendered)
+
+- **File**: `test_documents/html/github-markdown/readme-quick-start-excerpt.html`
+- **Source**: `README.md` in this repository, as rendered live by GitHub
+  (<https://github.com/xberg-io/html-to-markdown>)
+- **License**: MIT (this repository's own license; this is our own content, not third-party)
+- **Retrieved**: 2026-08-31
+
+An excerpt of GitHub's actual server-rendered HTML for this repository's README ("What and Why?"
+through "AI Coding Assistants"), captured from the live rendering rather than the
+`api.github.com/markdown` endpoint so it retains GitHub's real header-anchor structure
+(`id="user-content-*"` plus a permalink SVG), `class="pl-*"` syntax-highlighting spans on code,
+a GFM table, and collapsible `<details>`/`<summary>` blocks -- none of which the anonymous
+markdown-render API applies.
