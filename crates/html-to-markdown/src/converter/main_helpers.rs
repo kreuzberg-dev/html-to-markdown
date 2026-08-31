@@ -34,6 +34,22 @@ pub fn trim_trailing_whitespace(output: &mut String) {
     }
 }
 
+/// Whether `text` is empty or composed only of plain ASCII whitespace (`' '`,
+/// `'\t'`, `'\n'`, `'\r'`).
+///
+/// ~keep Unlike `str::trim().is_empty()`, this does NOT treat other Unicode
+/// ~keep whitespace (a decoded `&nbsp;`, a thin space, etc.) as "empty": such a
+/// ~keep character trims to nothing under `str::trim`'s Unicode-aware definition,
+/// ~keep but it is still significant, visible content. A caller deciding whether a
+/// ~keep whitespace-looking text node carries zero content -- safe to collapse or
+/// ~keep drop outright -- must use this instead, or it silently swallows real
+/// ~keep content that merely LOOKS like formatting whitespace. `block/paragraph.rs`'s
+/// ~keep empty-inline-neighbour skip used to do exactly that: a lone nbsp between
+/// ~keep two `<br>`s vanished because the skip used the Unicode-aware check.
+pub fn is_ascii_whitespace_only(text: &str) -> bool {
+    text.chars().all(|c| matches!(c, ' ' | '\t' | '\n' | '\r'))
+}
+
 /// Strip a trailing run of backslash hard-break markers from the end of a block's content.
 ///
 /// CommonMark's hard-break rule has no effect at the end of a block: there is no next line
@@ -580,5 +596,18 @@ mod tests {
         let mut s = "hello, world\t\t  \n.abc def \t \t".to_owned();
         trim_line_end_whitespace(&mut s);
         assert_eq!("hello, world  \n.abc def\n", s.as_str());
+    }
+
+    #[test]
+    fn test_is_ascii_whitespace_only() {
+        assert!(is_ascii_whitespace_only(""));
+        assert!(is_ascii_whitespace_only(" \t\n\r"));
+        assert!(is_ascii_whitespace_only("\n\n"));
+        // ~keep A decoded `&nbsp;` trims to empty under `str::trim`'s Unicode-aware
+        // ~keep definition but must NOT be treated as safe-to-drop formatting whitespace.
+        assert!(!is_ascii_whitespace_only("\u{a0}"));
+        assert!(!is_ascii_whitespace_only("\n\u{a0}"));
+        assert!(!is_ascii_whitespace_only("a"));
+        assert!(!is_ascii_whitespace_only(" a "));
     }
 }

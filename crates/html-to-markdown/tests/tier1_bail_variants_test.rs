@@ -204,25 +204,49 @@ fn sibling_list_items_in_a_table_cell_are_separated() {
     // ~keep `should_handle_list_in_table_cell` above uses a single <li>, which is why
     // ~keep this regression went unnoticed: with the marker stripped for cell context,
     // ~keep consecutive items were appended with no separator at all, so <li>a</li><li>b</li>
-    // ~keep rendered as the fabricated word `ab`. Both tiers now emit the same <br>
-    // ~keep boundary already used between sibling <p>/<div> in a cell.
-    for (html, expected_cell) in [
+    // ~keep rendered as the fabricated word `ab`. Both tiers now emit the same
+    // ~keep `br_in_tables`-gated boundary already used between sibling <p>/<div> in a
+    // ~keep cell: a literal `<br>` when true, a single space when false (see
+    // ~keep `main_helpers::emit_table_cell_break`) -- `br_in_tables: false` used to be
+    // ~keep ignored here and a literal `<br>` was emitted regardless of the option.
+    for (html, expected_cell_br_true, expected_cell_br_false) in [
         (
             "<table><tr><td><ul><li>a</li><li>b</li></ul></td></tr></table>",
             "a<br>b",
+            "a b",
         ),
         (
             "<table><tr><td><ol><li>one</li><li>two</li></ol></td></tr></table>",
             "one<br>two",
+            "one two",
         ),
     ] {
-        let t2 = tier2(html);
-        assert!(
-            t2.contains(expected_cell),
-            "Tier-2 cell should contain `{expected_cell}`, got:\n{t2}"
-        );
-        assert!(!t2.contains("ab |"), "list items must not be concatenated, got:\n{t2}");
-        let t1 = tier1_run(html).expect("Tier-1 should not bail on a list in a cell");
-        assert_eq!(t1, t2, "Tier-1 and Tier-2 must agree byte-for-byte");
+        for (br_in_tables, expected_cell) in [(true, expected_cell_br_true), (false, expected_cell_br_false)] {
+            let opts = ConversionOptions {
+                tier_strategy: TierStrategy::Tier2,
+                extract_metadata: false,
+                br_in_tables,
+                ..ConversionOptions::default()
+            };
+            let t2 = convert(html, Some(opts)).unwrap().content.unwrap_or_default();
+            assert!(
+                t2.contains(expected_cell),
+                "Tier-2 cell (br_in_tables: {br_in_tables}) should contain `{expected_cell}`, got:\n{t2}"
+            );
+            assert!(!t2.contains("ab |"), "list items must not be concatenated, got:\n{t2}");
+
+            let (cleaned, report) = prescan::run(html);
+            let opts1 = ConversionOptions {
+                tier_strategy: TierStrategy::Tier1,
+                extract_metadata: false,
+                br_in_tables,
+                ..ConversionOptions::default()
+            };
+            let t1 = tier1::run(cleaned.as_ref(), &report, &opts1).expect("Tier-1 should not bail on a list in a cell");
+            assert_eq!(
+                t1, t2,
+                "Tier-1 and Tier-2 must agree byte-for-byte (br_in_tables: {br_in_tables})"
+            );
+        }
     }
 }

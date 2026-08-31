@@ -7,6 +7,7 @@
 //! - Empty element filtering
 //! - Visitor callbacks for custom paragraph processing
 
+use crate::converter::main_helpers::is_ascii_whitespace_only;
 use crate::options::{ConversionOptions, NewlineStyle};
 use tl::{NodeHandle, Parser};
 
@@ -82,7 +83,13 @@ pub fn handle(
                 if let Some(node) = child_handle.get(parser) {
                     if let tl::Node::Raw(bytes) = node {
                         let text = bytes.as_utf8_str();
-                        if text.trim().is_empty() && i > 0 && i < child_handles.len() - 1 {
+                        // ~keep `is_ascii_whitespace_only`, not `text.trim().is_empty()`: a
+                        // ~keep raw byte that is significant, Unicode-whitespace content (a
+                        // ~keep literal decoded nbsp, not the `&nbsp;` entity) trims to empty
+                        // ~keep under `str::trim`'s broader definition, but dropping it here
+                        // ~keep outright discarded real content -- it must only be skipped
+                        // ~keep when it is genuinely pure ASCII formatting whitespace.
+                        if is_ascii_whitespace_only(&text) && i > 0 && i < child_handles.len() - 1 {
                             let prev = &child_handles[i - 1];
                             let next = &child_handles[i + 1];
                             if is_empty_inline_element(prev, parser, dom_ctx)

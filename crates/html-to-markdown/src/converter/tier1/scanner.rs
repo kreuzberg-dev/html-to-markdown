@@ -604,7 +604,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                     });
                 }
 
-                emit_open(&mut state, spec, &attrs, &mut table_probes)?;
+                emit_open(&mut state, spec, &attrs, &mut table_probes, options)?;
 
                 // ~keep Record the content-start position AFTER emit_open so that
                 // ~keep close-side post-processing operates on the correct slice.
@@ -1037,6 +1037,7 @@ fn emit_open(
     spec: &'static TagSpec,
     attrs: &[(&[u8], Option<&[u8]>)],
     table_probes: &mut Vec<TableLayoutProbe>,
+    options: &ConversionOptions,
 ) -> Result<(), BailReason> {
     // ~keep Opening any tag ends the "just closed a custom element" boundary
     // ~keep window (see the field's doc comment on `Tier1State`).
@@ -1070,8 +1071,8 @@ fn emit_open(
         TagKind::Blockquote => open_blockquote(state),
         TagKind::Pre => open_pre(state, attrs),
         TagKind::List(ListKind::Definition) => open_dl(state),
-        TagKind::List(kind) => open_list(state, kind),
-        TagKind::ListItem => open_list_item(state),
+        TagKind::List(kind) => open_list(state, kind, options),
+        TagKind::ListItem => open_list_item(state, options),
         TagKind::DefinitionTerm => open_dt(state),
         TagKind::DefinitionDescription => open_dd(state),
         TagKind::Strong => {
@@ -1340,14 +1341,20 @@ fn line_is_bare_list_marker(output: &str) -> bool {
     false
 }
 
-fn open_list(state: &mut Tier1State, kind: ListKind) {
+fn open_list(state: &mut Tier1State, kind: ListKind, options: &ConversionOptions) {
     // ~keep When inside a table cell, mirror Tier-2's `add_list_leading_separator`:
-    // ~keep push `<br>` if there is already cell content (but not if it already ends
-    // ~keep with `|`, ` `, or `<br>`).  Do not touch `state.output`.
+    // ~keep emit a line-break separator if there is already cell content (but not if it
+    // ~keep already ends with `|`, ` `, or `<br>`) -- a literal `<br>` under
+    // ~keep `br_in_tables`, otherwise a single space, exactly like
+    // ~keep `main_helpers::emit_table_cell_break`.  Do not touch `state.output`.
     if state.in_table_cell() {
         let cell_buf = state.cell_or_output_mut();
         if !cell_buf.is_empty() && !cell_buf.ends_with('|') && !cell_buf.ends_with(' ') && !cell_buf.ends_with("<br>") {
-            cell_buf.push_str("<br>");
+            if options.br_in_tables {
+                cell_buf.push_str("<br>");
+            } else {
+                cell_buf.push(' ');
+            }
         }
         state.list_depth = state.list_depth.saturating_add(1);
         if matches!(kind, ListKind::Unordered) {
@@ -1393,21 +1400,27 @@ fn open_list(state: &mut Tier1State, kind: ListKind) {
 /// the literal default, so this hardcoded cycle reproduces Tier-2 byte-for-byte.
 const TIER1_BULLETS: [u8; 3] = [b'-', b'*', b'+'];
 
-fn open_list_item(state: &mut Tier1State) {
+fn open_list_item(state: &mut Tier1State, options: &ConversionOptions) {
     // ~keep When inside a table cell, Tier-2 does NOT emit bullet/number prefixes
     // ~keep for list items (see list/item.rs: `if !ctx.in_table_cell { ... bullet ... }`).
     // ~keep Sibling <li>s still need a boundary though — mirror Tier-2's reuse of
     // ~keep `add_list_leading_separator` per item (list/item.rs's `else if
-    // ~keep ctx.in_table_cell` arm) with the same `<br>`-if-continuation condition
-    // ~keep already used by `open_list` above, so `<li>a</li><li>b</li>` in a cell
-    // ~keep becomes `a<br>b` instead of the two items' raw text running together.
+    // ~keep ctx.in_table_cell` arm) with the same continuation condition already used by
+    // ~keep `open_list` above: a literal `<br>` under `br_in_tables`, otherwise a single
+    // ~keep space (mirroring `main_helpers::emit_table_cell_break`), so
+    // ~keep `<li>a</li><li>b</li>` in a cell becomes `a<br>b` (or `a b` with
+    // ~keep `br_in_tables: false`) instead of the two items' raw text running together.
     if state.in_table_cell() {
         if find_parent_list_kind(&state.stack) == Some(ListKind::Ordered) {
             increment_ol_counter(&mut state.stack);
         }
         let cell_buf = state.cell_or_output_mut();
         if !cell_buf.is_empty() && !cell_buf.ends_with('|') && !cell_buf.ends_with(' ') && !cell_buf.ends_with("<br>") {
-            cell_buf.push_str("<br>");
+            if options.br_in_tables {
+                cell_buf.push_str("<br>");
+            } else {
+                cell_buf.push(' ');
+            }
         }
         return;
     }

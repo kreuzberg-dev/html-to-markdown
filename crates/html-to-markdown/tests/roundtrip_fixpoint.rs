@@ -30,10 +30,14 @@
 //!   [`commonmark_strips_leading_space_after_soft_break`].
 //!
 //! Five genuine, minimised converter bugs were found this way; each has its own
-//! `known_issue_*` characterisation test below and is named in
-//! [`KNOWN_DIVERGENCES`], which is the only thing narrowing the strict property.
-//! Nothing is silently skipped: every corpus fixture, allow-listed or not, is
-//! still required to pass [`content_preservation_holds_across_corpus`]. ~keep
+//! characterisation test below and is named in [`KNOWN_DIVERGENCES`], which is
+//! the only thing narrowing the strict property. One (Bucket B, the list-in-a-
+//! table-cell `<br>` ignoring `br_in_tables`) is now fixed --
+//! `list_in_table_cell_br_now_respects_br_in_tables_and_reaches_a_fixpoint`
+//! documents the fix instead of the former divergence -- so four `known_issue_*`
+//! tests remain for the other, still-open buckets. Nothing is silently skipped:
+//! every corpus fixture, allow-listed or not, is still required to pass
+//! [`content_preservation_holds_across_corpus`]. ~keep
 
 #![allow(missing_docs)]
 
@@ -176,31 +180,38 @@ const KNOWN_DIVERGENCES: &[(&str, &str)] = &[
         "real-world/issues/gh-190/plusblog.html",
         "soft-break/blank-line whitespace normalisation, including nbsp-derived run-width changes",
     ),
-    // --- Bucket B: genuine bug -- see
-    // `known_issue_br_in_table_cell_from_flattened_list_loses_line_breaks`.
+    // --- Bucket B: WAS a genuine bug ("br-in-table-cell-from-list": a list-derived
+    // `<br>` between sibling `<li>`s in a table cell ignored `br_in_tables` and
+    // always emitted a literal `<br>`, which downgraded to a space once comrak
+    // flattened the list on the second pass). Fixed -- see
+    // `list_in_table_cell_br_now_respects_br_in_tables_and_reaches_a_fixpoint`,
+    // which reproduces the minimised shape in isolation and confirms it is now a
+    // fixpoint under both `br_in_tables` settings. These six fixtures remain
+    // allow-listed because each still diverges for a *different*, separate cause
+    // not diagnosed or fixed as part of that work (see the per-fixture note).
     (
         "mdream/wikipedia-small.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: a double space before inline text next to a closing '**' collapses to one space on the second pass",
     ),
     (
         "real-world/wikipedia/large_rust.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
     ),
     (
         "real-world/wikipedia/lists_timeline.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: a blank table cell's padding whitespace differs on the second pass",
     ),
     (
         "real-world/wikipedia/medium_python.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
     ),
     (
         "real-world/wikipedia/small_html.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
     ),
     (
         "real-world/wikipedia/tables_countries.html",
-        "br-in-table-cell-from-list: <br> from a flattened nested list downgrades to a space on the second pass",
+        "unrelated: a run of nbsp characters between an image and a link collapses to one space on the second pass",
     ),
     // --- Bucket C: genuine bug -- see
     // `known_issue_contentless_link_fallback_bypasses_autolink_promotion`.
@@ -511,39 +522,50 @@ fn commonmark_strips_leading_space_after_soft_break() {
 }
 
 #[test]
-fn known_issue_br_in_table_cell_from_flattened_list_loses_line_breaks() {
-    // ~keep Bucket B. MediaWiki's "hlist" sidebar pattern nests a real <ul>/<li>
-    // ~keep list inside a <td>; this crate serialises each <br> between such
-    // ~keep list-derived items as literal raw `<br>` HTML (preserving one visual
-    // ~keep line per item). Once comrak regenerates that HTML the list is gone --
-    // ~keep it is now flat inline siblings -- so the *same* `<br>` now hits the
-    // ~keep plain `br_in_tables = false` fallback and collapses to a single
-    // ~keep space, losing the per-item line break. No words are dropped (see
-    // ~keep content_preservation_holds_across_corpus), only the line-break
-    // ~keep formatting between generations.
+fn list_in_table_cell_br_now_respects_br_in_tables_and_reaches_a_fixpoint() {
+    // ~keep Formerly Bucket B / `known_issue_br_in_table_cell_from_flattened_list_
+    // ~keep loses_line_breaks`: MediaWiki's "hlist" sidebar pattern nests a real
+    // ~keep <ul>/<li> list inside a <td>. `add_list_leading_separator`
+    // ~keep (list/utils.rs) used to serialise every `<br>` boundary between such
+    // ~keep list-derived items as a literal raw `<br>` HTML tag UNCONDITIONALLY,
+    // ~keep ignoring `br_in_tables`. Once comrak regenerated that HTML the list
+    // ~keep was gone -- flattened into inline siblings -- so the *same* `<br>` hit
+    // ~keep the ordinary `br_in_tables = false` path on the second pass and
+    // ~keep collapsed to a single space, losing the per-item line break: a
+    // ~keep round-trip instability. Fixed by routing this separator through
+    // ~keep `main_helpers::emit_table_cell_break` like every other break-in-cell
+    // ~keep site, so both passes now agree regardless of `br_in_tables`.
     let html = concat!(
         "<table><tr><td class=\"hlist\"><ul>",
         "<li><a href=\"/a\">A</a></li>",
         "<li><a href=\"/b\">B</a></li>",
         "</ul></td></tr></table>",
     );
-    let options = base_options();
-    let md1 = convert_content(html, &options);
-    assert!(
-        md1.contains("<br>"),
-        "expected literal <br> preserving the list's line breaks: {md1:?}"
-    );
+    for br_in_tables in [false, true] {
+        let options = ConversionOptions {
+            br_in_tables,
+            ..base_options()
+        };
+        let md1 = convert_content(html, &options);
+        if br_in_tables {
+            assert!(
+                md1.contains("<br>"),
+                "br_in_tables: true should still preserve a literal <br>: {md1:?}"
+            );
+        } else {
+            assert!(
+                !md1.contains("<br>"),
+                "br_in_tables: false should collapse the list-item boundary to a space, not <br>: {md1:?}"
+            );
+        }
 
-    let html2 = render_markdown_to_html(&md1);
-    let md2 = convert_content(&html2, &options);
-    assert!(
-        !md2.contains("<br>"),
-        "expected the <br> to have downgraded to a space on the second pass: {md2:?}"
-    );
-    assert_ne!(
-        md1, md2,
-        "this is exactly the instability KNOWN_DIVERGENCES documents for this root cause"
-    );
+        let html2 = render_markdown_to_html(&md1);
+        let md2 = convert_content(&html2, &options);
+        assert_eq!(
+            md1, md2,
+            "list-in-table-cell round-trip must now be a fixpoint for br_in_tables: {br_in_tables}"
+        );
+    }
 }
 
 #[test]

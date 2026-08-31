@@ -247,7 +247,7 @@ pub fn handle_li(
             // ~keep with zero separator. Reuse the same leading-separator helper used before
             // ~keep the enclosing <ul>/<ol> opens so consecutive items get the identical
             // ~keep <br> boundary already established for <p>/<div> siblings in a cell.
-            add_list_leading_separator(output, ctx);
+            add_list_leading_separator(output, ctx, options);
         } else if ctx.in_ordered_list {
             use std::fmt::Write;
             let _ = write!(output, "{}. ", ctx.list_counter);

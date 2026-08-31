@@ -203,3 +203,66 @@ fn significant_whitespace_after_a_hard_break_survives_before_inline_content_too(
     );
     assert_round_trip_is_a_fixpoint(html, &options, "nbsp before inline content, after a hard break");
 }
+
+#[test]
+fn significant_whitespace_between_two_hard_breaks_survives_a_round_trip() {
+    // ~keep The void-element follow-up flagged above: a text node consisting solely of a
+    // ~keep decoded `&nbsp;` sandwiched between two `<br>`s is whitespace-only by
+    // ~keep `str::trim`'s Unicode-aware definition, so `block/paragraph.rs`'s
+    // ~keep empty-inline-neighbour pre-filter (`is_empty_inline_element` matches `br`)
+    // ~keep used to skip walking that child NODE ENTIRELY -- not merely collapse it --
+    // ~keep whenever both its neighbours were themselves `<br>`/`hr`/`img`/`input`/`link`.
+    // ~keep The first conversion never hits that filter (the source spells the nbsp as
+    // ~keep the `&nbsp;` ENTITY, six plain ASCII bytes that do not trim to empty), but a
+    // ~keep compliant HTML renderer serialises it back out as the literal `\u{a0}` byte,
+    // ~keep which does -- so the character survived pass one and silently vanished on
+    // ~keep pass two, breaking round-trip stability (real content loss, not just a
+    // ~keep formatting difference). Fixed by checking `is_ascii_whitespace_only`
+    // ~keep (main_helpers.rs) instead, which does not treat significant Unicode
+    // ~keep whitespace as "safe to drop".
+    let html = ";<br>&nbsp;<br>&amp;";
+    let options = escaping_options();
+    let md1 = convert_with(html, &options);
+    assert_eq!(
+        md1, ";  \n\u{a0}  \n\\&\n",
+        "first conversion should already preserve the nbsp"
+    );
+    assert_round_trip_is_a_fixpoint(html, &options, "nbsp between two hard breaks");
+}
+
+#[test]
+fn significant_whitespace_between_two_hard_breaks_matches_tier1_when_tier1_handles_it() {
+    // ~keep With no escape overrides `router.rs::classify` allows Tier-1 to handle this
+    // ~keep shape (unlike `significant_whitespace_between_two_hard_breaks_survives_a_
+    // ~keep round_trip` above, whose `escape_misc`/`escape_asterisks`/`escape_underscores`
+    // ~keep gate Tier-1 off entirely per the option table in `router.rs`). Tier-1's byte
+    // ~keep scanner never had this bug in the first place: `raw_is_whitespace`
+    // ~keep (scanner.rs) checks ASCII whitespace BYTES only, so a raw nbsp byte sequence
+    // ~keep always fails that check and the text is routed through ordinary content
+    // ~keep emission rather than the whitespace-collapse fast path. Pin that Tier-1 and
+    // ~keep the now-fixed Tier-2 agree byte for byte on this shape.
+    use html_to_markdown_rs::TierStrategy;
+    use html_to_markdown_rs::prescan::PrescanReport;
+    use html_to_markdown_rs::tier1;
+
+    let html = "<p>a<br>&nbsp;<br>b</p>";
+    let options = ConversionOptions {
+        extract_metadata: false,
+        ..Default::default()
+    };
+
+    let mut tier2_options = options.clone();
+    tier2_options.tier_strategy = TierStrategy::Tier2;
+    let tier2 = convert_with(html, &tier2_options);
+
+    let mut tier1_options = options;
+    tier1_options.tier_strategy = TierStrategy::Tier1;
+    let report = PrescanReport::default();
+    let tier1_forced = tier1::run(html, &report, &tier1_options).expect("Tier-1 should not bail on this shape");
+
+    assert_eq!(tier1_forced, tier2, "Tier-1 and Tier-2 must agree byte-for-byte");
+    assert!(
+        tier2.contains('\u{a0}'),
+        "the nbsp between the two <br>s must survive: {tier2:?}"
+    );
+}

@@ -34,7 +34,7 @@ pub fn handle_ol(
     dom_ctx: &DomContext,
 ) {
     let separator_comment = preceding_same_type_list_separator_comment(*node_handle, parser, dom_ctx, "ol");
-    add_list_leading_separator(output, ctx);
+    add_list_leading_separator(output, ctx, options);
     if let Some(comment) = separator_comment {
         output.push_str(&comment);
         output.push_str("\n\n");

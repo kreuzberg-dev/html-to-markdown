@@ -396,15 +396,25 @@ pub fn line_is_bare_list_marker(output: &str) -> bool {
 /// Add appropriate leading separator before a list.
 ///
 /// Lists need different separators depending on context:
-/// - In table cells: <br> tag if there's already content
+/// - In table cells: a line-break separator if there's already content -- a literal `<br>`
+///   under `br_in_tables`, otherwise a single space (see `emit_table_cell_break`)
 /// - Outside lists: blank line (\n\n) if needed
 /// - Inside list items: blank line before nested list
-pub fn add_list_leading_separator(output: &mut String, ctx: &Context) {
+///
+/// ~keep A GFM pipe cell cannot hold a literal newline, so the two adjacent `<li>`s (or the
+/// ~keep prior cell content and this list) need an in-cell substitute for the line break a
+/// ~keep block boundary would normally get. `br_in_tables` governs exactly this substitution
+/// ~keep everywhere else it applies (`main_helpers::emit_table_cell_break`, consulted by
+/// ~keep `<br>`/`<div>`/`<p>` continuations in a cell) — reusing it here keeps list-in-cell
+/// ~keep breaks consistent with every other break-in-cell site instead of hardcoding `<br>`
+/// ~keep regardless of the option (issue: `br_in_tables: false` was ignored for list items
+/// ~keep sharing a table cell).
+pub fn add_list_leading_separator(output: &mut String, ctx: &Context, options: &ConversionOptions) {
     if ctx.in_table_cell {
         let is_table_continuation =
             !output.is_empty() && !output.ends_with('|') && !output.ends_with(' ') && !output.ends_with("<br>");
         if is_table_continuation {
-            output.push_str("<br>");
+            crate::converter::main_helpers::emit_table_cell_break(output, options.br_in_tables);
         }
         return;
     }
