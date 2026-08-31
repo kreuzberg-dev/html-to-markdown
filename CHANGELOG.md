@@ -19,10 +19,10 @@ a conversion-fixpoint oracle (the exact-match test compares against the spec's o
 it can only run on the 131 examples admitting a single valid form), a Tier-1/Tier-2 differential
 oracle over the benchmark corpus and a generated document set, and a fuzz target.
 
-Against that fixpoint oracle, 642 of the 652 examples now round-trip unchanged with escaping
-enabled and 628 with the shipped defaults, up from 607 and 597. Of the 10 that remain, three are
-inherent to the round trip -- adjacent block quotes, and adjacent lists sharing a bullet, merge
-under any compliant reparse whatever we emit.
+Against that fixpoint oracle, 644 of the 652 examples now round-trip unchanged with escaping
+enabled and 629 with the shipped defaults, up from 607 and 597. Of the 8 that remain, three are inherent to the round trip -- adjacent
+block quotes, and adjacent lists sharing a bullet, merge under any compliant reparse whatever we
+emit -- and the other five differ only in the byte spelling of a link destination.
 
 ### Fixed
 
@@ -210,6 +210,25 @@ under any compliant reparse whatever we emit.
   top-level text merely ending in a hyphen and a space lost the blank line before the next
   paragraph. Several of these also omitted `+`, the third bullet in the default cycle, so they
   misbehaved at every third nesting level.
+
+- **An unclosed `<p>` or `<div>` in a list item no longer swallows the next item.**
+  `<ul><li><div></li><li>foo</li></ul>` converted to `- - foo`, turning two sibling items into
+  one item holding a nested list, and `<ul><li><p>x</li><li>foo</li></ul>` converted to
+  `- x- foo`, running both onto one line so the second stopped being a list item at all.
+  Closing the tag explicitly was already correct, so this hit precisely the shape the HTML5
+  parsing algorithm resolves with an implied end tag -- ordinary markup, not an edge case. The
+  primary parser nests the following item under the unclosed element; the misparse detector
+  that already re-parses such trees with the spec-compliant fallback only recognized a block
+  nested under an *inline* ancestor, so a `div` or `p` never triggered it. Genuinely nested
+  lists are unaffected.
+
+- **Leading whitespace on soft-wrapped continuation lines no longer shrinks on every pass.**
+  A run of spaces after a newline in block text collapsed to one space, but `CommonMark`
+  strips a line's leading whitespace entirely when assembling a paragraph, so a renderer
+  dropped the space that was kept and the next conversion saw one fewer -- the text never
+  stabilized. Such runs now collapse to nothing, which is what a round trip already forces.
+  Whitespace at a text node's own edge is untouched, since that is what keeps adjacent words
+  apart.
 
 ## [3.11.6] - 2026-08-28
 
