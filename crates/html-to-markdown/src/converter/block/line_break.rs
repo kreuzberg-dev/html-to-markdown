@@ -81,8 +81,18 @@ pub fn handle(
     }
 
     if ctx.in_heading {
+        // ~keep A single-line ATX heading cannot carry a hard break at all, so any marker
+        // ~keep here is inherently lossy. A single space is the only choice that is
+        // ~keep round-trip stable: a renderer's own HTML whitespace collapsing already
+        // ~keep reduces a run of literal spaces to one on the next parse, so a
+        // ~keep two-space marker here only survives the FIRST conversion before
+        // ~keep collapsing on the second, and never reaches a fixpoint. Matches
+        // ~keep Tier-1: `tier1/scanner.rs`'s `TagKind::LineBreak` handling emits the same
+        // ~keep "  \n" marker regardless of heading context, but `close_heading` then
+        // ~keep folds every whitespace run (including that marker) in the finished
+        // ~keep heading body down to one space.
         trim_trailing_whitespace(output);
-        output.push_str("  ");
+        output.push(' ');
     } else if ctx.in_code {
         // ~keep A code span reproduces its content literally, so a newline_style marker is
         // ~keep not syntax here -- it is a character in the user's code. `CommonMark` gives a

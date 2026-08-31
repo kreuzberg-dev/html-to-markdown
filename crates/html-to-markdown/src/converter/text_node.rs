@@ -105,13 +105,45 @@ pub fn process_text_node(
                 return;
             }
             if !output.ends_with("\n\n") {
-                if let Some(next_tag) = get_next_sibling_tag(node_handle, parser, dom_ctx) {
+                // ~keep A run that mixes a newline with a more "significant" Unicode
+                // ~keep whitespace character (a decoded `&nbsp;`, thin space, etc.) is
+                // ~keep still whitespace-only by `str::trim`'s definition, but a compliant
+                // ~keep HTML renderer's own pretty-printing can insert a leading `\n` in
+                // ~keep front of this exact same content at any time (a rendered `<br>` is
+                // ~keep always followed by a literal newline before its next text node).
+                // ~keep Every branch below used to collapse a lone significant character to
+                // ~keep a bare separating space -- or drop it outright when no separator was
+                // ~keep needed -- which meant identical logical content survived or vanished
+                // ~keep depending only on whether the HTML happened to be pretty-printed,
+                // ~keep breaking round-trip stability. A lone significant character now
+                // ~keep survives verbatim in every branch; more than one still collapses to
+                // ~keep a single space.
+                let significant: String = text
+                    .as_ref()
+                    .chars()
+                    .filter(|c| !matches!(c, ' ' | '\t' | '\n' | '\r'))
+                    .collect();
+                let lone_significant_char = (!has_more_than_one_char(&significant))
+                    .then(|| significant.chars().next())
+                    .flatten();
+
+                let next_tag = get_next_sibling_tag(node_handle, parser, dom_ctx);
+                if let Some(next_tag) = next_tag {
                     if is_inline_element(next_tag) {
-                        if !output.ends_with(' ') && !output.ends_with('\n') {
+                        if let Some(ch) = lone_significant_char {
+                            output.push(ch);
+                        } else if !output.ends_with(' ') && !output.ends_with('\n') {
                             output.push(' ');
                         }
                         return;
                     }
+                } else if let Some(ch) = lone_significant_char {
+                    // ~keep This text node has no next sibling at all -- it is the tail of
+                    // ~keep its parent's content -- so there is no "needs a separating
+                    // ~keep space before the next word" question to ask; the lone
+                    // ~keep significant character is preserved unconditionally.
+                    output.push(ch);
+                    return;
                 } else if newline_span_needs_separating_space(node_handle, parser, dom_ctx)
                     && !output.ends_with(' ')
                     && !output.ends_with('\n')
@@ -120,6 +152,9 @@ pub fn process_text_node(
                     // ~keep <span>) has no in-parent next sibling, but when that wrapper
                     // ~keep is itself followed by inline content the newline still
                     // ~keep separates words — collapse it to a single space.
+                    output.push(' ');
+                    return;
+                } else if !significant.is_empty() && !output.ends_with(' ') && !output.ends_with('\n') {
                     output.push(' ');
                     return;
                 }
