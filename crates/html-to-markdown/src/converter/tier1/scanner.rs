@@ -1788,7 +1788,9 @@ fn emit_void(
                 alt_owned = canonicalize_attr_entities(&decode_attr(alt)?).into_owned();
                 &alt_owned
             } else {
-                std::str::from_utf8(alt).map_err(|_| BailReason::Classifier)?
+                let raw = std::str::from_utf8(alt).map_err(|_| BailReason::Classifier)?;
+                bail_if_canonicalization_is_undecidable(raw, &decode_attr(alt)?)?;
+                raw
             };
 
             let keep_as_markdown = should_keep_image_as_markdown(html, &state.stack, options);
@@ -1811,7 +1813,9 @@ fn emit_void(
                         title_owned = canonicalize_attr_entities(&decode_attr(title_bytes)?).into_owned();
                         &title_owned
                     } else {
-                        std::str::from_utf8(title_bytes).map_err(|_| BailReason::Classifier)?
+                        let raw = std::str::from_utf8(title_bytes).map_err(|_| BailReason::Classifier)?;
+                        bail_if_canonicalization_is_undecidable(raw, &decode_attr(title_bytes)?)?;
+                        raw
                     };
                     #[allow(clippy::format_push_string)]
                     dest.push_str(&format!("![{escaped_alt}]({src} \"{title_str}\")"));
@@ -4513,6 +4517,37 @@ fn decode_attr(bytes: &[u8]) -> Result<String, BailReason> {
     let mut out = String::with_capacity(s.len());
     decode_entities_into(&mut out, s, 0)?;
     Ok(out)
+}
+
+/// Bail when this scanner cannot know whether Tier-2 will canonicalize an image's
+/// `alt`/`title` entities, and the answer would be visible in the output.
+///
+/// ~keep `canonicalize_attr_entities` is set from `has_custom_element_tags` alone,
+/// ~keep because that is the one repair trigger a byte scanner can evaluate. It is not
+/// ~keep the only one: `has_inline_block_misnest` routes a document through the same
+/// ~keep html5ever roundtrip, and that check needs a parsed DOM, which Tier-1 runs
+/// ~keep before anything has been parsed and exists precisely to avoid building.
+///
+/// ~keep So when the flag is false the scanner has not established that Tier-2 will
+/// ~keep leave entities alone -- only that ONE of the reasons to rewrite them does not
+/// ~keep apply. Emitting the raw form on that basis is a guess. It was previously right
+/// ~keep by accident: `has_custom_element_tags` treated any `<!--comment-->` as a custom
+/// ~keep element, so nearly every real document set the flag and the gap stayed hidden
+/// ~keep until that false positive was fixed.
+///
+/// ~keep Bailing is safe in both directions -- Tier-2's fallback produces Tier-2's answer
+/// ~keep whether or not it repairs -- so the only cost is losing the fast path. Restricting
+/// ~keep it to values where the two branches genuinely disagree keeps that cost off the
+/// ~keep common cases. The comparison is against what the canonicalizing branch would have
+/// ~keep emitted -- `canonicalize_attr_entities(decode_attr(raw))` -- not against `raw`
+/// ~keep itself: an `alt` written `&amp;` decodes to `&` and canonicalizes straight back to
+/// ~keep `&amp;`, so both branches agree and there is nothing to decide. Only a spelling the
+/// ~keep roundtrip would rewrite, such as `&#x22;` becoming `&quot;`, actually forks.
+fn bail_if_canonicalization_is_undecidable(raw: &str, decoded: &str) -> Result<(), BailReason> {
+    if canonicalize_attr_entities(decoded) != raw {
+        return Err(BailReason::Classifier);
+    }
+    Ok(())
 }
 
 /// Canonicalize the special-character set in an attribute value to match

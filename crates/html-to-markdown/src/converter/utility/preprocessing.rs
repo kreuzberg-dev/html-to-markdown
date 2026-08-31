@@ -378,11 +378,17 @@ pub fn eq_ascii_insensitive(a: &[u8], b: &[u8]) -> bool {
 /// contains more than two dashes before the `>` (e.g. `<!-- foo --->` or
 /// `<!-- foo ---->`).  When it encounters such a comment it creates an empty
 /// comment node and silently discards every byte that follows, so all document
-/// content after the comment is lost.
+/// content after the comment is lost. It also mishandles the opposite,
+/// too-few-dashes shape: `<!-->` and `<!--->`, HTML5's "abrupt-closing-of-
+/// empty-comment" quirk, where the closing `-->` shares its dashes with the
+/// opening `<!--`. With no unshared `-->` left in the remaining input, `tl`
+/// treats the comment as unterminated and drops everything after it, exactly
+/// like the excess-dash case.
 ///
-/// This function rewrites those bogus closings: every `--[-]+>` sequence that
-/// terminates an HTML comment is normalised to `-->`.  Regular `-->` closings
-/// are left unchanged.
+/// This function rewrites both bogus shapes: every `--[-]+>` sequence that
+/// terminates an HTML comment is normalised to `-->`, and every abrupt
+/// `<!-->`/`<!--->` open+close is normalised to the well-formed empty comment
+/// `<!---->`.  Regular `-->` closings are left unchanged.
 ///
 /// # Algorithm
 ///
@@ -393,12 +399,14 @@ pub fn eq_ascii_insensitive(a: &[u8], b: &[u8]) -> bool {
 /// - Any other character after `--` resets back into the comment body.
 ///
 /// If the actual number of leading dashes before `>` is more than two the
-/// closing sequence is replaced with `-->`.
+/// closing sequence is replaced with `-->`. If `>` (or `->`) appears
+/// immediately after the opening `<!--`, with no other content consumed, the
+/// whole `<!-->`/`<!--->` run is replaced with `<!---->`.
 pub fn normalize_bogus_comment_endings(input: &str) -> Cow<'_, str> {
     let bytes = input.as_bytes();
     let len = bytes.len();
 
-    if len < 7 || !bytes.windows(4).any(|w| w == b"<!--") {
+    if len < 5 || !bytes.windows(4).any(|w| w == b"<!--") {
         return Cow::Borrowed(input);
     }
 
@@ -413,6 +421,28 @@ pub fn normalize_bogus_comment_endings(input: &str) -> Cow<'_, str> {
         }
 
         idx += 4;
+
+        // ~keep `<!-->` (zero shared dashes) and `<!--->` (one shared dash) never
+        // ~keep accumulate `consecutive_dashes >= 2` below, so the general scan can
+        // ~keep never see them as closed -- it would run to EOF looking for an
+        // ~keep unshared `-->` and swallow the rest of the document. Caught here,
+        // ~keep before that scan starts.
+        if bytes.get(idx) == Some(&b'>') {
+            let out = output.get_or_insert_with(|| String::with_capacity(len));
+            out.push_str(&input[last..idx - 4]);
+            out.push_str("<!---->");
+            idx += 1;
+            last = idx;
+            continue;
+        }
+        if bytes.get(idx) == Some(&b'-') && bytes.get(idx + 1) == Some(&b'>') {
+            let out = output.get_or_insert_with(|| String::with_capacity(len));
+            out.push_str(&input[last..idx - 4]);
+            out.push_str("<!---->");
+            idx += 2;
+            last = idx;
+            continue;
+        }
 
         let mut consecutive_dashes: usize = 0;
 
@@ -1559,6 +1589,19 @@ mod tests {
         let input = "<p>A</p><!-- x ---><p>B</p><!-- y ----><p>C</p>";
         let result = normalize_bogus_comment_endings(input);
         assert_eq!(result.as_ref(), "<p>A</p><!-- x --><p>B</p><!-- y --><p>C</p>");
+    }
+
+    #[test]
+    fn normalize_bogus_comment_endings_rewrites_abrupt_closing_of_empty_comment() {
+        // ~keep `<!-->` and `<!--->` are HTML5's "abrupt-closing-of-empty-comment"
+        // ~keep quirk: legal, empty comments whose open and close share dashes.
+        let input = "<p>Before</p><!--><p>After</p>";
+        let result = normalize_bogus_comment_endings(input);
+        assert_eq!(result.as_ref(), "<p>Before</p><!----><p>After</p>");
+
+        let input = "<p>Before</p><!---><p>After</p>";
+        let result = normalize_bogus_comment_endings(input);
+        assert_eq!(result.as_ref(), "<p>Before</p><!----><p>After</p>");
     }
 
     #[test]

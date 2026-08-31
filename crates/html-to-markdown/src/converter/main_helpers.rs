@@ -180,48 +180,91 @@ pub fn trim_line_end_whitespace(output: &mut String) {
 
 /// Check if HTML contains custom element tags.
 pub fn has_custom_element_tags(html: &str) -> bool {
-    // ~keep Custom elements must have a hyphen in their TAG NAME, not in attributes
-    // ~keep Look for patterns like <foo-bar> or </foo-bar>
+    // ~keep Custom elements must have a hyphen in their TAG NAME, not in attributes.
+    // ~keep Look for patterns like <foo-bar> or </foo-bar>.
+    // ~keep A markup declaration/comment (`<!...>`), a processing instruction (`<?...?>`),
+    // ~keep or a CDATA section is NOT a tag — its "name" is arbitrary content that may
+    // ~keep itself contain a hyphen (`<!--c-->` naively yields `!--c--`, which contains
+    // ~keep one), so every comment-bearing document was misreported as having a custom
+    // ~keep element. Those constructs are skipped wholesale instead of scanned for a name.
+    // ~keep HTML5 begins a tag name only when `<`/`</` is IMMEDIATELY followed by an ASCII
+    // ~keep letter (see `tier1::parse::is_tag_name_start`) — no whitespace skip first, so
+    // ~keep `< div>`/`</ div>` are left as plain text rather than treated as tags.
     let bytes = html.as_bytes();
     let len = bytes.len();
     let mut i = 0;
 
     while i < len {
-        if bytes[i] == b'<' {
+        if bytes[i] != b'<' {
             i += 1;
-            if i >= len {
+            continue;
+        }
+
+        let after_lt = i + 1;
+        let Some(&next) = bytes.get(after_lt) else {
+            break;
+        };
+
+        if next == b'!' {
+            i = skip_markup_declaration(bytes, i);
+            continue;
+        }
+
+        if next == b'?' {
+            i = skip_to_after_gt(bytes, after_lt);
+            continue;
+        }
+
+        let name_start = if next == b'/' { after_lt + 1 } else { after_lt };
+
+        if name_start >= len || !crate::converter::tier1::parse::is_tag_name_start(bytes[name_start]) {
+            // ~keep Not a real tag start (e.g. `< div>`, `</ div>`, `</>`) — leave it as
+            // ~keep text and resume scanning right after the `<`.
+            i = after_lt;
+            continue;
+        }
+
+        let tag_start = name_start;
+        let mut tag_end = tag_start;
+        while tag_end < len {
+            let ch = bytes[tag_end];
+            if ch == b'>' || ch == b'/' || ch.is_ascii_whitespace() {
                 break;
             }
-
-            if bytes[i] == b'/' {
-                i += 1;
-                if i >= len {
-                    break;
-                }
-            }
-
-            while i < len && bytes[i].is_ascii_whitespace() {
-                i += 1;
-            }
-
-            let tag_start = i;
-            while i < len {
-                let ch = bytes[i];
-                if ch == b'>' || ch == b'/' || ch.is_ascii_whitespace() {
-                    let tag_name = &bytes[tag_start..i];
-                    if tag_name.contains(&b'-') {
-                        return true;
-                    }
-                    break;
-                }
-                i += 1;
-            }
-        } else {
-            i += 1;
+            tag_end += 1;
         }
+
+        if bytes[tag_start..tag_end].contains(&b'-') {
+            return true;
+        }
+
+        i = tag_end;
     }
 
     false
+}
+
+/// Skip a `<!...>` construct — an HTML comment, a CDATA section, or another
+/// markup declaration such as `<!doctype html>` — starting at the `<` at
+/// `lt_idx`. Returns the index just past the construct (or `bytes.len()` if
+/// it is never terminated).
+fn skip_markup_declaration(bytes: &[u8], lt_idx: usize) -> usize {
+    // ~keep Reuses the exact comment/CDATA terminator scan `strip_hidden_elements`
+    // ~keep relies on, rather than re-implementing it a third time in this crate.
+    if let Some(end) = crate::converter::utility::preprocessing::skip_opaque_region(bytes, lt_idx) {
+        return end;
+    }
+    skip_to_after_gt(bytes, lt_idx + 2)
+}
+
+/// Index just past the next `>` at or after `from`, or `bytes.len()` if none
+/// exists (an unterminated declaration/processing-instruction runs to EOF).
+fn skip_to_after_gt(bytes: &[u8], from: usize) -> usize {
+    let start = from.min(bytes.len());
+    match bytes[start..].iter().position(|&b| b == b'>') {
+        Some(offset) => start + offset + 1,
+        None => bytes.len(),
+    }
 }
 
 /// HTML5 void elements that are self-closing by spec and must NOT be expanded.
@@ -609,5 +652,68 @@ mod tests {
         assert!(!is_ascii_whitespace_only("\n\u{a0}"));
         assert!(!is_ascii_whitespace_only("a"));
         assert!(!is_ascii_whitespace_only(" a "));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_ignores_comments() {
+        // ~keep Regression for the bug this module fixed: a comment's own text
+        // ~keep (`!--c--`) contains a hyphen and must not be mistaken for a tag name.
+        assert!(!has_custom_element_tags("<!--c-->"));
+        assert!(!has_custom_element_tags("<p><!-- a routine comment --></p>"));
+        assert!(!has_custom_element_tags("<!-- multiple -- dashes -- here -->"));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_detects_real_custom_element() {
+        assert!(has_custom_element_tags("<my-widget></my-widget>"));
+        assert!(has_custom_element_tags("<p></p><my-widget></my-widget>"));
+        assert!(has_custom_element_tags("<div></my-widget>"));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_detects_custom_element_alongside_comment() {
+        assert!(has_custom_element_tags(
+            "<!-- a routine comment --><my-widget>hi</my-widget>"
+        ));
+        assert!(has_custom_element_tags(
+            "<my-widget><!-- nested comment -->hi</my-widget>"
+        ));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_ignores_comment_mentioning_custom_element() {
+        // ~keep A custom-element-shaped tag written INSIDE a comment is text, not markup.
+        assert!(!has_custom_element_tags("<!-- <my-widget>hi</my-widget> -->"));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_ignores_processing_instruction() {
+        assert!(!has_custom_element_tags("<?php echo 'a-b'; ?>"));
+        assert!(!has_custom_element_tags(
+            "<?xml-stylesheet type=\"text/xsl\" href=\"a-b.xsl\"?>"
+        ));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_ignores_cdata_section() {
+        assert!(!has_custom_element_tags(
+            "<svg><![CDATA[<my-widget>a-b</my-widget>]]></svg>"
+        ));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_ignores_doctype() {
+        assert!(!has_custom_element_tags("<!doctype html>"));
+        assert!(!has_custom_element_tags("<!DOCTYPE html><p>no custom elements</p>"));
+        // ~keep A real custom element after the doctype must still be detected.
+        assert!(has_custom_element_tags("<!DOCTYPE html><my-widget></my-widget>"));
+    }
+
+    #[test]
+    fn test_has_custom_element_tags_rejects_whitespace_before_name() {
+        // ~keep HTML5 does not skip whitespace after `<`/`</` before the tag name:
+        // ~keep `< div>` and `</ div>` are plain text, not tags, in a real parser.
+        assert!(!has_custom_element_tags("< my-widget>"));
+        assert!(!has_custom_element_tags("</ my-widget>"));
     }
 }
