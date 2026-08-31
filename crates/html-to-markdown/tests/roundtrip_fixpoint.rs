@@ -186,16 +186,40 @@ const KNOWN_DIVERGENCES: &[(&str, &str)] = &[
     // flattened the list on the second pass). Fixed -- see
     // `list_in_table_cell_br_now_respects_br_in_tables_and_reaches_a_fixpoint`,
     // which reproduces the minimised shape in isolation and confirms it is now a
-    // fixpoint under both `br_in_tables` settings. These six fixtures remain
-    // allow-listed because each still diverges for a *different*, separate cause
-    // not diagnosed or fixed as part of that work (see the per-fixture note).
+    // fixpoint under both `br_in_tables` settings. Three further, distinct causes
+    // across these six fixtures are now ALSO fixed -- see
+    // `roundtrip_fixpoint_bucket_b_test.rs`'s three minimised regression tests:
+    // (1) a whitespace-only text node of more than one character between two
+    // inline siblings collapsed to a single space unconditionally, without
+    // checking whether `output` already ended with one, so a real inter-element
+    // space stacked with a `<style>`/`<script>`-removal's own synthetic
+    // replacement space into a literal double space
+    // (`text_node.rs::process_text_node`); (2) a `<table>` nested inside another
+    // table's cell had its own row/separator syntax flattened into the outer
+    // cell unescaped, so its bare `|` characters were read as additional outer-
+    // row cell boundaries on reparse -- silently widening, and on a further
+    // parse truncating, the row: genuine content loss, now fixed by escaping
+    // them (`block/table/cell.rs::render_cell_text`); (3) the same whitespace-
+    // only-node collapse in (1) also discarded a run of decoded `&nbsp;`
+    // characters between two inline siblings down to one plain space, because
+    // `str::trim`'s Unicode-aware definition treats U+00A0 as insignificant --
+    // the same class of bug `main_helpers::is_ascii_whitespace_only` exists to
+    // avoid. All three fixtures below remain allow-listed because each still
+    // diverges for other, separate, pre-existing causes not part of this fix
+    // (see the per-fixture note).
     (
         "mdream/wikipedia-small.html",
-        "unrelated: a double space before inline text next to a closing '**' collapses to one space on the second pass",
+        "unrelated: issue #406's nested-table width-measurement pre-pass (which skips full \
+         nested-table rendering to stay linear) pads a column narrower than the full render, \
+         changing separator-row width on the second pass; a set of adjacent same-marker \
+         category lists also merges into one list on reparse (CommonMark-inherent, not a \
+         crate defect -- see the module doc comment)",
     ),
     (
         "real-world/wikipedia/large_rust.html",
-        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
+        "unrelated: issue #406's nested-table width-measurement pre-pass (which skips full \
+         nested-table rendering to stay linear) pads a column narrower than the full render, \
+         changing separator-row width on the second pass",
     ),
     (
         "real-world/wikipedia/lists_timeline.html",
@@ -203,15 +227,26 @@ const KNOWN_DIVERGENCES: &[(&str, &str)] = &[
     ),
     (
         "real-world/wikipedia/medium_python.html",
-        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
+        "unrelated: issue #406's nested-table width-measurement pre-pass (which skips full \
+         nested-table rendering to stay linear) pads a column narrower than the full render, \
+         changing separator-row width on the second pass",
     ),
     (
         "real-world/wikipedia/small_html.html",
-        "unrelated: table row/cell count shrinks on the second pass (likely blank-row collapsing)",
+        "unrelated: issue #406's nested-table width-measurement pre-pass (which skips full \
+         nested-table rendering to stay linear) pads a column narrower than the full render, \
+         changing separator-row width on the second pass; a separate, newly-observed \
+         table-cell block-continuation double-space (a `<div>` continuing a table cell emits \
+         its own separating space, then its first text child's own leading whitespace \
+         collapses to a second space, uncoordinated with the first) is out of scope for this \
+         fix and not yet diagnosed further",
     ),
     (
         "real-world/wikipedia/tables_countries.html",
-        "unrelated: a run of nbsp characters between an image and a link collapses to one space on the second pass",
+        "unrelated: issue #406's nested-table width-measurement pre-pass pads a column \
+         narrower than the full render on the second pass; a nested list flattened for a \
+         layout-table cell also produces a double space between two of its rendered items, \
+         a separate, not-yet-diagnosed cause out of scope for this fix",
     ),
     // --- Bucket C: genuine bug -- see
     // `known_issue_contentless_link_fallback_bypasses_autolink_promotion`.

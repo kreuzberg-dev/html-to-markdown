@@ -10,7 +10,7 @@
 use std::borrow::Cow;
 
 use crate::converter::dom_context::DomContext;
-use crate::converter::main_helpers::{has_more_than_one_char, is_inline_element};
+use crate::converter::main_helpers::{has_more_than_one_char, is_ascii_whitespace_only, is_inline_element};
 use crate::converter::utility::siblings::{
     get_next_sibling_tag, next_sibling_is_inline_tag, previous_sibling_is_inline_tag,
 };
@@ -162,17 +162,38 @@ pub fn process_text_node(
             return;
         }
 
+        // ~keep A single-whitespace-character text node (typically the sole survivor of a
+        // ~keep `<script>`/`<style>` removal that had to insert its own separating space --
+        // ~keep see `preprocessing.rs`'s "neither side already has whitespace" guard --
+        // ~keep landing next to a real, already-emitted trailing space) must still check
+        // ~keep `output.ends_with(' ')` before pushing, exactly like the multi-char run just
+        // ~keep above: otherwise two independently-legitimate single spaces stack into a
+        // ~keep literal double space that only the first Markdown->HTML->Markdown hop
+        // ~keep collapses back down, breaking round-trip stability.
         if previous_sibling_is_inline_tag(node_handle, parser, dom_ctx)
             && next_sibling_is_inline_tag(node_handle, parser, dom_ctx)
         {
             if has_more_than_one_char(text.as_ref()) {
-                if !output.ends_with(' ') {
-                    output.push(' ');
+                // ~keep A run collapses to one plain space only when it is genuinely ASCII
+                // ~keep formatting whitespace. A run that is -- or contains -- a decoded
+                // ~keep `&nbsp;`/other significant Unicode whitespace trims to empty under
+                // ~keep `str::trim`'s definition (which is why this whole node reached the
+                // ~keep "whitespace-only" branch), but collapsing it the same way discards
+                // ~keep real, visible content: an `<img>`...`&nbsp;&nbsp;&nbsp;`...`<a>` run
+                // ~keep between two inline siblings must survive verbatim, the same as it
+                // ~keep already does one branch below when the two siblings are not both
+                // ~keep directly adjacent.
+                if is_ascii_whitespace_only(text.as_ref()) {
+                    if !output.ends_with(' ') {
+                        output.push(' ');
+                    }
+                } else {
+                    output.push_str(text.as_ref());
                 }
-            } else {
+            } else if !output.ends_with(' ') {
                 output.push_str(text.as_ref());
             }
-        } else {
+        } else if !output.ends_with(' ') {
             output.push_str(text.as_ref());
         }
         return;

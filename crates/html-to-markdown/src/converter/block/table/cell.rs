@@ -154,7 +154,43 @@ pub fn render_cell_text(
 
         if has_tag_child {
             for child_handle in children.top().iter() {
-                super::super::super::walk_node(child_handle, parser, &mut text, options, cell_ctx, depth + 1, dom_ctx);
+                // ~keep A nested `<table>` renders its own row/separator syntax straight into
+                // ~keep `text` via `walk_node`, bypassing `text_node.rs`'s per-text-node pipe
+                // ~keep escaping entirely -- that escaping only ever sees literal text, never
+                // ~keep structural markdown another handler emitted. The newline-to-space fold
+                // ~keep below then flattens the inner table onto this outer cell's single line,
+                // ~keep so its `|` delimiters would read as *the outer row's* cell boundaries on
+                // ~keep reparse, silently widening -- and on a second parse, truncating -- the
+                // ~keep containing row's column count: real content loss, not a cosmetic diff.
+                // ~keep Scoped to nested-table children only: other block content a cell may
+                // ~keep hold (`<pre>`, code spans) is deliberately left byte-for-byte alone by
+                // ~keep their own handlers (issues #455/#456) and must not be touched here.
+                if super::utils::is_tag_name(child_handle, parser, dom_ctx, "table") {
+                    let mut nested = String::new();
+                    super::super::super::walk_node(
+                        child_handle,
+                        parser,
+                        &mut nested,
+                        options,
+                        cell_ctx,
+                        depth + 1,
+                        dom_ctx,
+                    );
+                    if nested.contains('|') {
+                        nested = escape_bare_pipes_outside_code_spans(&nested);
+                    }
+                    text.push_str(&nested);
+                } else {
+                    super::super::super::walk_node(
+                        child_handle,
+                        parser,
+                        &mut text,
+                        options,
+                        cell_ctx,
+                        depth + 1,
+                        dom_ctx,
+                    );
+                }
             }
         } else {
             let raw = dom_ctx.text_content(*node_handle, parser);
@@ -179,6 +215,77 @@ pub fn render_cell_text(
         text = text.replace('\n', " ");
     }
     text
+}
+
+/// Escape any bare pipe left in a nested table's rendered markdown: one that is neither
+/// already backslash-escaped nor inside a matched backtick code span (a `CommonMark`-
+/// compliant reparse does not treat either as a cell delimiter, so this must not touch
+/// them either).
+///
+/// Scoped to a nested `<table>`'s own rendered text (see the call site in
+/// [`render_cell_text`]) rather than applied to a whole cell's composed text: other block
+/// content a cell may hold, such as `<pre>`, is deliberately left byte-for-byte alone by
+/// its own handler (issues #455/#456) and must not be escaped here.
+///
+/// Walks backtick runs the same way a spec-compliant parser does: a run of N backticks
+/// opens a code span only if a later run of exactly N backticks closes it; otherwise the
+/// backticks are literal text and any pipes among them still need escaping.
+fn escape_bare_pipes_outside_code_spans(text: &str) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::with_capacity(text.len() + 4);
+    let mut i = 0usize;
+    while i < chars.len() {
+        let c = chars[i];
+        if c == '\\' && i + 1 < chars.len() {
+            out.push(c);
+            out.push(chars[i + 1]);
+            i += 2;
+            continue;
+        }
+        if c == '`' {
+            let run_start = i;
+            while i < chars.len() && chars[i] == '`' {
+                i += 1;
+            }
+            let run_len = i - run_start;
+            if let Some(close_start) = find_matching_backtick_run(&chars, i, run_len) {
+                out.extend(&chars[run_start..close_start + run_len]);
+                i = close_start + run_len;
+            } else {
+                out.extend(&chars[run_start..i]);
+            }
+            continue;
+        }
+        if c == '|' {
+            out.push('\\');
+            out.push('|');
+        } else {
+            out.push(c);
+        }
+        i += 1;
+    }
+    out
+}
+
+/// Find the start index of the next backtick run of exactly `run_len` backticks at or
+/// after `start`, treating a longer or shorter run as not matching (mirroring `CommonMark`
+/// code span matching, which requires an exact backtick-count match).
+fn find_matching_backtick_run(chars: &[char], start: usize, run_len: usize) -> Option<usize> {
+    let mut i = start;
+    while i < chars.len() {
+        if chars[i] == '`' {
+            let candidate_start = i;
+            while i < chars.len() && chars[i] == '`' {
+                i += 1;
+            }
+            if i - candidate_start == run_len {
+                return Some(candidate_start);
+            }
+        } else {
+            i += 1;
+        }
+    }
+    None
 }
 
 /// Trim leading and trailing whitespace without reallocating.

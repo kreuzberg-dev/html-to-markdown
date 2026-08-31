@@ -131,20 +131,25 @@ fn should_handle_nested_table_inside_cell() {
     let html = "<table><tr><td><table><tr><td>inner</td></tr></table></td></tr></table>";
     let t1 = tier1_run(html).expect("Tier-1 should not bail on nested <table> (Phase HH)");
     let t2 = tier2(html);
-    // ~keep Both tiers emit the same outer row content (nested table flattened to inline GFM
-    // ~keep markdown).  Separator-row dash counts diverge: Tier-1 measures the rendered cell
-    // ~keep text (including the flattened nested-table separator) so it pads to the full width,
-    // ~keep while Tier-2's measurement pre-pass deliberately skips nested-table rendering to
-    // ~keep avoid the O(N²) cell × nested-cell measurement explosion (#406).  Both shapes are
-    // ~keep valid GFM; bringing Tier-1 into alignment with Tier-2's narrower measurement is a
-    // ~keep follow-up.
+    // ~keep The two tiers now intentionally diverge here, in addition to the pre-existing
+    // ~keep separator-row dash-count divergence from #406 (Tier-1 measures the full rendered
+    // ~keep cell text; Tier-2's measurement pre-pass skips nested-table rendering to avoid the
+    // ~keep O(N²) cell × nested-cell explosion). Tier-2's `render_cell_text` (block/table/
+    // ~keep cell.rs) now escapes the bare `|`/`-` a nested table's own row/separator syntax
+    // ~keep leaves in the flattened cell: left unescaped, those characters are read as *the
+    // ~keep outer row's* cell boundaries on a real reparse, silently widening -- and on a
+    // ~keep second parse, truncating -- the containing row's column count (genuine content
+    // ~keep loss, reproduced in isolation by a real multi-cell outer row, unlike this
+    // ~keep single-cell/single-column fixture). Tier-1 still emits the unescaped form; bringing
+    // ~keep it in line with Tier-2's escaping is a follow-up, tracked alongside the #406
+    // ~keep measurement-width follow-up already noted above.
     assert!(
         t1.starts_with("| | inner | | ----- | |\n"),
         "Tier-1 outer row content must include flattened nested table; got: {t1:?}"
     );
     assert!(
-        t2.starts_with("| | inner | | ----- | |\n"),
-        "Tier-2 outer row content must include flattened nested table; got: {t2:?}"
+        t2.starts_with(r"| \| inner \| \| ----- \| |") && t2.ends_with('\n'),
+        "Tier-2 outer row content must include the flattened, pipe-escaped nested table; got: {t2:?}"
     );
 }
 
