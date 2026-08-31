@@ -230,6 +230,14 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
   Whitespace at a text node's own edge is untouched, since that is what keeps adjacent words
   apart.
 
+- **A literal backslash in a link destination is no longer swallowed.** Two shapes lost data.
+  A backslash before ASCII punctuation was consumed as a `CommonMark` escape of that character
+  on reparse, so `href="\*"` came back as `href="*"`. A backslash at the end of a destination
+  with no title after it merged with the closing parenthesis into an escaped `\)`, so the
+  destination never terminated -- `href="x\"` reparsed as the literal text `[t](x)`, losing
+  the href and the link structure and leaving raw brackets in the rendered output. Both are now
+  escaped; a trailing backslash followed by a title's space, which is harmless, still is not.
+
 ## [3.11.6] - 2026-08-28
 
 Re-release of 3.11.5, which never reached any registry: the publish run failed and crates.io
