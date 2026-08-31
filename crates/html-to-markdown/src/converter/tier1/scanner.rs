@@ -1041,24 +1041,27 @@ const fn bail_unsupported(spec: &TagSpec, _offset: usize) -> Result<(), BailReas
 
 // ~keep `TagKind::Block` is Tier-1's catch-all for HTML5 "generic block container"
 // ~keep elements, but Tier-2's `main.rs` dispatch match does NOT give every one of
-// ~keep them a dedicated separator-emitting handler. `<div>` (block/div.rs) and the
+// ~keep them a dedicated separator-emitting handler. `<div>` (block/div.rs), the
 // ~keep semantic/media/form-dispatched names (section, article, header, footer,
 // ~keep aside, main, nav, details, dialog, figure, menu, audio, video, fieldset,
-// ~keep legend, form) all render through a handler that pushes a leading and/or
-// ~keep trailing `"\n\n"`. Every name below instead falls through to Tier-2's
-// ~keep `_ =>` arm (`block::unknown::handle`) or, for `html`/`body`,
+// ~keep legend, form), and -- as of the fix below -- `address`/`search`/`hgroup`/
+// ~keep `center` (routed straight to `block::div::handle`, since they are
+// ~keep content-bearing containers with no formatting beyond block separation) all
+// ~keep render through a handler that pushes a leading and/or trailing `"\n\n"`.
+// ~keep The names below are the ones that still fall through to Tier-2's `_ =>` arm
+// ~keep (`block::unknown::handle`) or, for `html`/`body`,
 // ~keep `block::container::handle_structural_container` -- both of which just walk
-// ~keep children with NO separator of their own. Confirmed empirically: adjacent
-// ~keep `<address>foo</address><address>bar</address>` renders as `"foobar\n"` under
-// ~keep Tier-2, not `"foo\n\nbar\n"`. `nav`/`form`/`header`/`footer`/`aside` are
-// ~keep excluded from this list even though they can also hit a preprocessing-strip
-// ~keep shortcut elsewhere (`is_preprocessing_skip_candidate`): when that shortcut
-// ~keep does NOT fire, they get semantic-handler separator behaviour like `<div>`.
+// ~keep children with NO separator of their own, and deliberately so:
+// ~keep `colgroup`/`col` are table-internal metadata (never render visible content
+// ~keep of their own), `base` is void metadata, and `html`/`body` are document
+// ~keep wrappers whose children ARE the document -- giving them a separator would
+// ~keep change the shape of every converted document, not fix a content-merging bug.
+// ~keep `nav`/`form`/`header`/`footer`/`aside` are excluded from this list even
+// ~keep though they can also hit a preprocessing-strip shortcut elsewhere
+// ~keep (`is_preprocessing_skip_candidate`): when that shortcut does NOT fire, they
+// ~keep get semantic-handler separator behaviour like `<div>`.
 fn block_container_is_passthrough(name_lower: &[u8]) -> bool {
-    matches!(
-        name_lower,
-        b"address" | b"search" | b"hgroup" | b"center" | b"colgroup" | b"col" | b"base" | b"html" | b"body"
-    )
+    matches!(name_lower, b"colgroup" | b"col" | b"base" | b"html" | b"body")
 }
 
 fn emit_open(

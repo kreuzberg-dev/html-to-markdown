@@ -209,11 +209,11 @@ fn is_mark_escaping_artifact(html: &str, md1: &str, md2: &str) -> bool {
 
 /// Floor for documents that reach a fixpoint on the very first render/convert cycle.
 ///
-/// ~keep Measured value: 54 of 99. Raise it as more documents are fixed into this bucket; a
+/// ~keep Measured value: 55 of 99. Raise it as more documents are fixed into this bucket; a
 /// ~keep drop is a regression. Documents that stabilize on a later cycle, or that are excluded
 /// ~keep as `<mark>`-syntax artifacts, do not count against this floor -- see the module doc
 /// ~keep comment.
-const MIN_STABLE_CORPUS: usize = 54;
+const MIN_STABLE_CORPUS: usize = 55;
 
 /// Ceiling on documents whose instability is neither a one-extra-pass stabilisation nor a
 /// `<mark>`-syntax artifact.

@@ -621,6 +621,20 @@ pub fn walk_node(
                 "div" => {
                     crate::converter::block::div::handle(node_handle, parser, output, options, ctx, depth, dom_ctx);
                 }
+
+                // ~keep `<address>`/`<search>`/`<hgroup>`/`<center>` are content-bearing block
+                // ~keep containers with no formatting of their own beyond block separation --
+                // ~keep the same shape as `<div>`. Routing them through `div::handle` (rather
+                // ~keep than a semantic-module dispatcher) matters for Tier-1 parity: Tier-1's
+                // ~keep generic `TagKind::Block` open/close handling in
+                // ~keep `tier1/scanner.rs` mirrors `div::handle` byte-for-byte (leading `\n\n`,
+                // ~keep table-cell `"  \n"` continuation, list-item indent), so reusing
+                // ~keep `div::handle` here -- instead of `semantic::sectioning::handle`, which
+                // ~keep has no table-cell/list-item special-casing -- keeps both tiers in
+                // ~keep agreement. See `tests/tier1_address_block_separator_test.rs`.
+                "address" | "search" | "hgroup" | "center" => {
+                    crate::converter::block::div::handle(node_handle, parser, output, options, ctx, depth, dom_ctx);
+                }
                 "caption" => crate::converter::block::table::handle_caption(
                     node_handle,
                     parser,
