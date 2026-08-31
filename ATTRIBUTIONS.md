@@ -231,13 +231,29 @@ END OF TERMS AND CONDITIONS
   `crates/html-to-markdown/tests/commonmark_spec_fixpoint.rs`
 - **License**: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
 
-The file is the 652 worked examples from the CommonMark specification, generated from that
-project's `spec.txt` (the `start_line` / `end_line` fields are offsets into it). It is test
-data only: no part of it is compiled into the library, and it is not carried by any published
-artifact -- the two test files that read it are excluded from the packaged crate.
+The file is the 652 worked examples from the CommonMark specification, extracted verbatim from
+that project's `spec.txt` (the `start_line` / `end_line` fields are offsets into it). Upstream
+does not publish this JSON directly; it is produced from `spec.txt` by their
+`test/spec_tests.py --dump-tests`. That extraction tool is BSD 2-Clause, but the examples it
+emits are the specification's own content, so CC BY-SA 4.0 -- which upstream's `LICENSE` applies
+to `spec.txt` and `CommonMark.dtd` -- governs this file. As a format conversion of CC BY-SA
+material it is an adaptation, and it is redistributed here under that same license, with the
+attribution above.
 
-Note that CC BY-SA is a share-alike license, which the Vendoring Policy in `CONTRIBUTING.md`
-("permissively licensed, no copyleft at all") does not currently admit. The file predates that
-policy text. It is recorded here so the attribution requirement is met either way; whether to
-keep it, replace it with a generated fixture, or carve out an explicit exception for test
-fixtures is an open decision.
+**Decision: retained.** The share-alike obligation attaches to this file and to adaptations of
+it, not to the crate. The test code that reads it is independently authored and incorporates
+none of the content, so it is not an adaptation, and the crate's own MIT license is unaffected.
+Nor does the file reach users: it is test data, no part of it is compiled into the library, and
+it appears in no published artifact -- it lives outside the Rust crate root and the two test
+files that read it are in the package `exclude` list, and it is absent from the Python sdist
+(verified by building one). Its only distribution is the public repository, where verbatim
+redistribution with attribution and the same license is precisely what CC BY-SA permits.
+
+Replacing it with a hand-written fixture was considered and rejected: the value of this corpus
+is that it is the *authoritative* set of specification examples, so a substitute of our own
+construction would prove much less while costing the round-trip oracle that depends on it.
+
+The Vendoring Policy in `CONTRIBUTING.md` ("permissively licensed, no copyleft at all") reads as
+excluding this file. That wording postdates the file by nine months and is aimed at vendored
+code compiled into the product; this is non-distributed test data. Treat this section as the
+recorded exception until that policy is reworded.
