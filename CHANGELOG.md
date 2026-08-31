@@ -7,6 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.12.0] - 2026-08-31
+
+Correctness release. A broad pass over converter correctness: defects in the shipped output,
+plus a run of cases where the Tier-1 fast scanner and the Tier-2 converter disagreed on the same
+input -- the library picks a tier automatically, so those meant one document could convert two
+ways.
+
+Test coverage behind it: every one of the 652 `CommonMark` spec examples is now exercised through
+a conversion-fixpoint oracle (the exact-match test compares against the spec's own rendering, so
+it can only run on the 131 examples admitting a single valid form), a Tier-1/Tier-2 differential
+oracle over the benchmark corpus and a generated document set, and a fuzz target.
+
+Against that fixpoint oracle, 644 of the 652 examples now round-trip unchanged with escaping
+enabled and 629 with the shipped defaults, up from 607 and 597. Of the 8 that remain, three are inherent to the round trip -- adjacent
+block quotes, and adjacent lists sharing a bullet, merge under any compliant reparse whatever we
+emit -- and the other five differ only in the byte spelling of a link destination.
+
+### Removed
+
+- **`htm_conversion_options_update_visitor` is gone from the C API.** The getter documented a
+  non-null return as caller-owned data, but `ConversionOptionsUpdate` is only ever constructed
+  through `htm_conversion_options_update_from_json`, and its `visitor` field carries a full
+  `serde(skip)` -- so `Deserialize` could never populate it and no FFI setter existed. The symbol
+  could only ever return `0`. **Breaking for C consumers:** it disappears from
+  `html_to_markdown.h` and from the compiled library, so a call that used to yield `NULL` at
+  runtime is now a link error. Nothing that worked stops working. `ConversionOptions.visitor` is
+  unaffected -- it carries the same attribute but is genuinely reachable, because
+  `htm_options_set_visitor` writes it directly, bypassing serde.
+
+### Added
+
+- CLI flags for six `ConversionOptions` fields that the library and the MCP surface already
+  exposed but the CLI hardcoded: `--exclude-selectors`, `--url-escape-style`,
+  `--max-image-size`, `--capture-svg`, `--no-infer-dimensions` and `--tier-strategy`. Each
+  now defaults to the library's own default, so an invocation that omits them is unchanged.
+  The three image flags require `--extract-inline-images`, which they are inert without.
+
+### Performance
+
+- `escape_link_label` returns `Cow<'_, str>` and skips its two allocations when the text
+  contains no `[` or `]`, which is the common case for link labels, image alt text and
+  titles. The two-pass design is unchanged -- it exists to avoid an O(n^2) `String::insert`
+  shape.
+
 ### Fixed
 
 - **Uppercase attribute names no longer discard link destinations and image sources.**
@@ -33,39 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on the benchmark corpus, none of the 889 scheme-href links that carry nested markup trigger
   it, so decorated links keep the fast path.
 
-### Added
-
-- CLI flags for six `ConversionOptions` fields that the library and the MCP surface already
-  exposed but the CLI hardcoded: `--exclude-selectors`, `--url-escape-style`,
-  `--max-image-size`, `--capture-svg`, `--no-infer-dimensions` and `--tier-strategy`. Each
-  now defaults to the library's own default, so an invocation that omits them is unchanged.
-  The three image flags require `--extract-inline-images`, which they are inert without.
-
-### Performance
-
-- `escape_link_label` returns `Cow<'_, str>` and skips its two allocations when the text
-  contains no `[` or `]`, which is the common case for link labels, image alt text and
-  titles. The two-pass design is unchanged -- it exists to avoid an O(n^2) `String::insert`
-  shape.
-
-## [3.12.0] - 2026-08-30
-
-Correctness release. A broad pass over converter correctness: defects in the shipped output,
-plus a run of cases where the Tier-1 fast scanner and the Tier-2 converter disagreed on the same
-input -- the library picks a tier automatically, so those meant one document could convert two
-ways.
-
-Test coverage behind it: every one of the 652 `CommonMark` spec examples is now exercised through
-a conversion-fixpoint oracle (the exact-match test compares against the spec's own rendering, so
-it can only run on the 131 examples admitting a single valid form), a Tier-1/Tier-2 differential
-oracle over the benchmark corpus and a generated document set, and a fuzz target.
-
-Against that fixpoint oracle, 644 of the 652 examples now round-trip unchanged with escaping
-enabled and 629 with the shipped defaults, up from 607 and 597. Of the 8 that remain, three are inherent to the round trip -- adjacent
-block quotes, and adjacent lists sharing a bullet, merge under any compliant reparse whatever we
-emit -- and the other five differ only in the byte spelling of a link destination.
-
-### Fixed
 
 - **`<address>`, `<search>`, `<hgroup>` and `<center>` no longer merge into their neighbours.**
   All four are block-level, but they reached a pass-through handler that emits no separator,
