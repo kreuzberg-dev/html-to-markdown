@@ -26,6 +26,20 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **Content written directly inside `<table>`, outside any row or cell, is no longer dropped.**
+  HTML5's "in table" insertion mode foster-parents such content: it moves to just before the
+  table and survives. The parser this crate uses performs no such fixup and the table builder
+  recognised only `caption`/`colgroup`/`col`/`thead`/`tbody`/`tfoot`/`tr` there, so raw text
+  was silently discarded and stray elements went through a no-op handler --
+  `<table>abc</table>` converted to nothing at all.
+
+  It appeared to work whenever a comment happened to sit nearby, but that was coincidence: a
+  separate defect treats `!--c--` as a tag name, sees a hyphen, and reroutes any
+  comment-bearing document through the html5ever repair path, which does implement foster
+  parenting. The text survived by accident. That path is now entered deliberately for this
+  shape. Comments themselves are excluded, since HTML5 keeps them as children of the table
+  and nothing is lost.
+
 - **Lazy-loaded images resolve to their real address instead of converting to nothing.**
   Lazy-loading libraries leave `src` empty or holding a 1x1 `data:` placeholder and put the
   actual URL in `data-src`, `data-lazy-src`, `data-original`, `data-srcset` or `srcset`, so
