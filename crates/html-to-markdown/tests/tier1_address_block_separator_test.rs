@@ -86,31 +86,25 @@ fn lone_address_element_renders_plain() {
 }
 
 #[test]
-fn address_inside_table_cell_gets_a_separator_but_tier1_diverges() {
-    // ~keep Routing `<address>` to `block::div::handle` means it now inherits
-    // ~keep `div::handle`'s `is_table_continuation` behaviour: Tier-2 emits a single
-    // ~keep space between the two cell contents via `emit_table_cell_break`. This is a
-    // ~keep genuine, pre-existing Tier-1/Tier-2 divergence -- NOT introduced by this
-    // ~keep fix and NOT specific to `<address>`: plain `<div>` has the identical gap
-    // ~keep (verified separately: `<table><tr><td><div>a</div><div>b</div></td></tr></table>`
-    // ~keep also renders `"| a b |\n| --- |\n"` under Tier-2 but
-    // ~keep `"| a   b |\n| ----- |\n"` under Tier-1). Tier-1's generic `TagKind::Block`
-    // ~keep in-cell handling (`scanner.rs`) pushes `"  \n"` before the next block
-    // ~keep container's content, which the table-cell finalizer turns into three spaces
-    // ~keep instead of Tier-2's one. `<address>` simply inherits this existing `<div>`
-    // ~keep gap by inheriting its handler; fixing the underlying `<div>` divergence is
-    // ~keep out of scope here.
-    let html = "<table><tr><td><address>a</address><address>b</address></td></tr></table>";
-    assert_eq!(
-        run_tier2(html),
-        "| a b |\n| --- |\n",
-        "tier2 ground truth changed; update this test"
-    );
-    assert_eq!(
-        run_tier1(html),
-        "| a   b |\n| ----- |\n",
-        "tier1 ground truth changed; update this test"
-    );
+fn block_containers_in_one_table_cell_agree_across_tiers() {
+    // ~keep Routing `<address>` to `block::div::handle` made it inherit that handler's
+    // ~keep `is_table_continuation` behaviour, which exposed a pre-existing Tier-1 gap
+    // ~keep that plain `<div>` had too: Tier-2 separates the two cell contents with
+    // ~keep `emit_table_cell_break`, honouring `br_in_tables` (false by default, so one
+    // ~keep space), while Tier-1 pushed `"  \n"` unconditionally -- which the table-cell
+    // ~keep finalizer's `replace('\n', ' ')` turned into a three-space run. The list path
+    // ~keep had already been moved onto the shared helper; the block path had not.
+    // ~keep Both tags are asserted because the divergence was never specific to
+    // ~keep `<address>` -- it was `<div>`'s, inherited.
+    for tag in ["address", "div"] {
+        let html = format!("<table><tr><td><{tag}>a</{tag}><{tag}>b</{tag}></td></tr></table>");
+        assert_eq!(
+            run_tier2(&html),
+            "| a b |\n| --- |\n",
+            "tier2 ground truth changed for <{tag}>; update this test"
+        );
+        assert_tier1_matches_tier2(&html);
+    }
 }
 
 #[test]

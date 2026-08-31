@@ -1185,16 +1185,23 @@ fn emit_open(
                 // ~keep handler for these names never emits one. See
                 // ~keep `block_container_is_passthrough`'s doc comment.
             } else if state.in_table_cell() {
+                let br_in_tables = options.br_in_tables;
                 let cell_buf = state.cell_or_output_mut();
                 if !cell_buf.is_empty()
                     && !cell_buf.ends_with('|')
                     && !cell_buf.ends_with("<br>")
                     && !cell_buf.ends_with("  \n")
                 {
-                    while cell_buf.ends_with(' ') || cell_buf.ends_with('\t') {
-                        cell_buf.pop();
-                    }
-                    cell_buf.push_str("  \n");
+                    // ~keep Routed through the same helper Tier-2's `is_table_continuation`
+                    // ~keep branch uses (`block/div.rs` -> `emit_table_cell_break`) rather
+                    // ~keep than pushing `"  \n"` unconditionally. The hardcoded form ignored
+                    // ~keep `br_in_tables`, which defaults to false: Tier-2 emits a single
+                    // ~keep space, while `"  \n"` survives `close_table_cell`'s
+                    // ~keep `replace('\n', ' ')` as a three-space run, so two sibling block
+                    // ~keep containers in one cell rendered `a   b` here against Tier-2's
+                    // ~keep `a b`. The list path was already moved onto this helper; the
+                    // ~keep block path was missed.
+                    crate::converter::main_helpers::emit_table_cell_break(cell_buf, br_in_tables);
                 }
             } else {
                 // ~keep Tier-2's `needs_leading_sep` (block/div.rs) appends "\n\n" BLINDLY
