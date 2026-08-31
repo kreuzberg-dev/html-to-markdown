@@ -26,6 +26,15 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **Lazy-loaded images resolve to their real address instead of converting to nothing.**
+  Lazy-loading libraries leave `src` empty or holding a 1x1 `data:` placeholder and put the
+  actual URL in `data-src`, `data-lazy-src`, `data-original`, `data-srcset` or `srcset`, so
+  those images came out as `![alt]()` or a base64 blob -- effectively invisible on a large
+  share of modern pages. The fallback applies only when `src` is already empty or a `data:`
+  URI, so a plain `<img src="...">` is byte-identical to before. A populated non-`data:` `src`
+  is trusted even when it looks like a placeholder, since some pages carry the real photo
+  there while `srcset` holds only the lazy-load stand-in.
+
 - **A heading inside `<summary>` or `<figcaption>` no longer splices its `#` prefix into
   unrelated text.** Tier-1 records a heading's content offset against whichever buffer is
   active when the tag opens, and `<summary>`/`<figcaption>` accumulate into their own buffer.
