@@ -59,7 +59,7 @@ serde_json = "1.0"
 tempfile = "3.27"
 thiserror = "2.0"
 tikv-jemallocator = "0.7"
-tl = { package = "astral-tl", version = "0.7.11" }
+tl = { package = "astral-tl", version = "0.8.0" }
 toml = "1.1"
 tracing = "0.1"
 which = "8"

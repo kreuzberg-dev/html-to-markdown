@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Uppercase attribute names no longer discard link destinations and image sources.**
+  HTML attribute names are case-insensitive, but the Tier-2 converter matched them
+  byte-for-byte as written, so `<a HREF="up.html">link</a>` converted to bare `link` and
+  `<img SRC="a.png" ALT="cat">` to `![](<>)` -- the destination and the alt text were
+  dropped, not merely reformatted. The Tier-1 fast scanner has always compared attribute
+  names case-insensitively, so these inputs were also a tier disagreement: the same
+  document converted two ways depending on which tier ran. The `astral-tl` 0.8.0 parser
+  upgrade lowercases attribute keys at parse time, which fixes both.
+
 ## [3.12.0] - 2026-08-30
 
 Correctness release. A broad pass over converter correctness: defects in the shipped output,
