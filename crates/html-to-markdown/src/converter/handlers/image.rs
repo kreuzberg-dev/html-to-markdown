@@ -47,10 +47,10 @@ pub fn handle_img(
     depth: usize,
     dom_ctx: &DomContext,
 ) {
-    let src = tag.attributes().get("src").flatten().map_or(Cow::Borrowed(""), |v| {
-        let s = v.as_utf8_str();
-        Cow::Owned(sanitize_markdown_url(&s).into_owned())
-    });
+    let src: Cow<'_, str> = {
+        let resolved = resolve_effective_src(tag);
+        Cow::Owned(sanitize_markdown_url(&resolved).into_owned())
+    };
 
     let alt = tag
         .attributes()
@@ -225,6 +225,119 @@ pub fn handle_img(
         let alt_opt = if alt.is_empty() { None } else { Some(alt.as_ref()) };
         sc.borrow_mut().push_image(src_opt, alt_opt);
     }
+}
+
+/// Single-URL attributes checked, in priority order, when `src` is missing or a
+/// `data:` URI. See [`resolve_effective_src`] for the full precedence rule.
+const LAZY_SINGLE_URL_ATTRIBUTES: [&str; 3] = ["data-src", "data-lazy-src", "data-original"];
+
+/// Resolve the effective image address for an `<img>` element, falling back to
+/// common lazy-loading attributes when `src` is empty or a `data:` URI.
+///
+/// ~keep Precedence, and why:
+/// ~keep 1. `src`, when non-empty and not a `data:` URI — trusted as-is even if it
+/// ~keep    happens to be a tiny placeholder graphic, because this crate cannot fetch
+/// ~keep    the URL to inspect its pixel dimensions, and some real pages already have
+/// ~keep    the genuine image in `src` while only the *other* attributes carry lazy
+/// ~keep    -load scaffolding (see `test_documents/html/issues/gh-190/rbloggers.html`'s
+/// ~keep    "jetpack-lazy-image" `<img>`: `src` is already the real photo URL, while
+/// ~keep    `srcset` holds nothing but the lazy-load 1x1 `data:` placeholder — treating
+/// ~keep    every populated `src` with suspicion would discard that real image).
+/// ~keep 2. `data-src`, `data-lazy-src`, `data-original`, in that order — each holds
+/// ~keep    exactly one URL, deliberately written by a lazy-load library as "the real
+/// ~keep    address", so they outrank the multi-candidate srcset attributes below,
+/// ~keep    which require guessing which listed candidate is "best".
+/// ~keep 3. `data-srcset`, then `srcset` — each may list several URLs with width/
+/// ~keep    density descriptors; the highest-resolution candidate is used (see
+/// ~keep    `pick_best_srcset_candidate`). `data-srcset` (explicitly a lazy-load
+/// ~keep    attribute) outranks plain `srcset`, which may itself have been
+/// ~keep    placeholder-ized by the same lazy-load pass that placeholder-ized `src`.
+/// ~keep 4. Otherwise, the original `src` (possibly empty, possibly a `data:` URI) is
+/// ~keep    kept unchanged. This is also what makes a plain `<img src="...">` with none
+/// ~keep    of the above attributes byte-identical to output produced before this
+/// ~keep    fallback existed.
+fn resolve_effective_src<'a>(tag: &'a tl::HTMLTag<'a>) -> Cow<'a, str> {
+    let raw_src = tag
+        .attributes()
+        .get("src")
+        .flatten()
+        .map_or(Cow::Borrowed(""), |v| v.as_utf8_str());
+
+    if !raw_src.trim().is_empty() && !raw_src.trim_start().starts_with("data:") {
+        return raw_src;
+    }
+
+    for attr_name in LAZY_SINGLE_URL_ATTRIBUTES {
+        if let Some(value) = tag.attributes().get(attr_name).flatten().map(|v| v.as_utf8_str()) {
+            if !value.trim().is_empty() {
+                return value;
+            }
+        }
+    }
+
+    for attr_name in ["data-srcset", "srcset"] {
+        if let Some(value) = tag.attributes().get(attr_name).flatten().map(|v| v.as_utf8_str()) {
+            if let Some(candidate) = pick_best_srcset_candidate(&value) {
+                return Cow::Owned(candidate.to_string());
+            }
+        }
+    }
+
+    raw_src
+}
+
+/// Parse a `srcset`-shaped attribute value and return the URL of its highest
+/// -resolution candidate.
+///
+/// ~keep `srcset` lists one or more `"<url> [descriptor]"` candidates separated by
+/// ~keep commas, where a descriptor is a pixel density (`2x`) or a width (`800w`).
+/// ~keep Markdown has no responsive-image equivalent, so this picks a single URL: the
+/// ~keep candidate with the largest numeric descriptor, i.e. the highest-quality image
+/// ~keep offered (a high-resolution image degrades gracefully wherever it is viewed; a
+/// ~keep low-resolution one does not). A candidate with no descriptor is treated as the
+/// ~keep first candidate when no other candidate carries one either — the HTML spec
+/// ~keep allows at most one descriptor-less candidate, so there is nothing to compare it
+/// ~keep against in that case.
+/// ~keep
+/// ~keep Splitting on `,` is a simplification of the full HTML `srcset` grammar, which
+/// ~keep in rare cases allows a literal comma inside an unescaped URL; it matches every
+/// ~keep real-world `srcset` value this crate has been fed.
+fn pick_best_srcset_candidate(value: &str) -> Option<&str> {
+    let mut best: Option<(&str, f64)> = None;
+    let mut first_url: Option<&str> = None;
+
+    for entry in value.split(',') {
+        let entry = entry.trim();
+        if entry.is_empty() {
+            continue;
+        }
+        let mut parts = entry.split_whitespace();
+        let Some(url) = parts.next() else {
+            continue;
+        };
+        if first_url.is_none() {
+            first_url = Some(url);
+        }
+
+        let score = parts.next().and_then(|descriptor| {
+            if descriptor.len() < 2 || !(descriptor.ends_with('w') || descriptor.ends_with('x')) {
+                return None;
+            }
+            descriptor[..descriptor.len() - 1].parse::<f64>().ok()
+        });
+
+        if let Some(score) = score {
+            let is_better = match best {
+                Some((_, best_score)) => score > best_score,
+                None => true,
+            };
+            if is_better {
+                best = Some((url, score));
+            }
+        }
+    }
+
+    best.map(|(url, _)| url).or(first_url)
 }
 
 /// Format an image as Markdown syntax.
