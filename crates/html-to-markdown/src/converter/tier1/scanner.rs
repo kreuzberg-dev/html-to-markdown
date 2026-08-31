@@ -3825,6 +3825,18 @@ fn decode_and_collapse_into_inner(
     let bytes = s.as_bytes();
     let mut i = 0;
     let mut prev_was_space = false;
+    // ~keep Mirrors Tier-2's `normalize_block_whitespace_cow` (text.rs): when a literal
+    // ~keep `\n` survives into the output (only possible here when `collapse_newlines`
+    // ~keep is false -- the `true` variant folds `\n` straight into a space below and
+    // ~keep never leaves one in `out`), a run of spaces/tabs immediately after it is a
+    // ~keep Markdown continuation line's leading indentation. A compliant parser drops
+    // ~keep that entirely on reparse regardless of width (CommonMark spec 4.9), so
+    // ~keep collapsing it to one space here was not a fixed point -- see the CommonMark
+    // ~keep spec fixpoint oracle, example 182. Zero is. `s` has already had its own
+    // ~keep leading/trailing whitespace resolved into a synthetic prefix/suffix by the
+    // ~keep caller's Phase Y step, so every `\n` this sees with more content after it is
+    // ~keep a genuine mid-text line break, never the text node's own edge.
+    let mut at_line_start = false;
     while i < bytes.len() {
         let next_special = match (has_entities, collapse_newlines) {
             (true, true) => {
@@ -3845,8 +3857,12 @@ fn decode_and_collapse_into_inner(
             if pos > i {
                 out.push_str(&s[i..pos]);
                 prev_was_space = false;
+                at_line_start = !collapse_newlines && bytes[pos - 1] == b'\n';
             }
             match bytes[pos] {
+                b' ' | b'\t' if at_line_start => {
+                    i = pos + 1;
+                }
                 b' ' | b'\t' => {
                     if !prev_was_space {
                         out.push(' ');
@@ -3863,6 +3879,7 @@ fn decode_and_collapse_into_inner(
                 }
                 b'&' => {
                     prev_was_space = false;
+                    at_line_start = false;
                     i = decode_entity_at(bytes, s, pos, out, base_offset)?;
                 }
                 _ => unreachable!(),

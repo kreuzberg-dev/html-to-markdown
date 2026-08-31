@@ -195,9 +195,19 @@ pub fn process_text_node(
         let has_trailing_single_newline =
             text.ends_with('\n') && !text.ends_with("\n\n") && !text.ends_with("\r\n\r\n");
 
+        // ~keep `prefix`/`suffix` presence and the trailing-`"\n\n"` special case are
+        // ~keep unaffected by whitespace collapsing (both only ask "is there any
+        // ~keep whitespace here", not "how much"), so deriving them from the collapsed
+        // ~keep text is safe and keeps `chomp`'s Unicode-aware boundary detection intact.
+        // ~keep The *content* fed to `normalize_block_whitespace_cow` below must be the
+        // ~keep raw, pre-collapse core, though: only once its own leading/trailing
+        // ~keep whitespace is already gone (by trimming the same boundaries `chomp` just
+        // ~keep found) does every remaining `\n`-adjacent run inside it sit strictly
+        // ~keep between two pieces of real content -- never at the text node's own edge,
+        // ~keep where a *different* rule applies (see that function's doc comment).
         let normalized_text = text::normalize_whitespace_cow(text.as_ref());
-
-        let (prefix, suffix, core) = text::chomp(normalized_text.as_ref());
+        let (prefix, suffix, _) = text::chomp(normalized_text.as_ref());
+        let core = text::normalize_block_whitespace_cow(text.trim());
 
         let skip_prefix = (was_fresh_block_start && !ctx.convert_as_inline && !ctx.in_table_cell && !ctx.in_list_item)
             || output.ends_with("\n\n")
@@ -216,7 +226,7 @@ pub fn process_text_node(
         }
 
         let escaped_core = text::escape(
-            core,
+            core.as_ref(),
             options.escape_misc,
             options.escape_asterisks,
             options.escape_underscores,

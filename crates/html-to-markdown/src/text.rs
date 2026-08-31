@@ -351,6 +351,97 @@ fn normalize_whitespace_cow_slow(text: &str) -> Cow<'_, str> {
     Cow::Borrowed(text)
 }
 
+/// Normalize whitespace for a text node's already-trimmed core content, for the case
+/// where an embedded `\n` is kept as a literal newline in the Markdown output.
+///
+/// Identical to [`normalize_whitespace_cow`] except for one case: a run of spaces/tabs
+/// that immediately follows a newline collapses to nothing instead of to a single space.
+///
+/// ~keep Collapsing to one space is not a fixed point here. A CommonMark-compliant parser
+/// ~keep forms a paragraph's raw content by removing each line's leading whitespace
+/// ~keep entirely (spec 4.9) regardless of how many columns of indentation it had, so a
+/// ~keep single space we chose to keep is silently dropped by the very first round trip
+/// ~keep through a real renderer. That made `normalize_whitespace_cow` shrink such content
+/// ~keep by one more space every pass until it reached zero (`CommonMark` spec example 182:
+/// ~keep `<![CDATA[...]]>` whose body is indented source lines). Dropping straight to zero
+/// ~keep matches what the round trip already forces, so it is stable on the very first pass.
+/// ~keep Also sidesteps the four-space indented-code-block threshold: since no continuation
+/// ~keep line is ever left with 1-4+ leading spaces, none can be reinterpreted as an
+/// ~keep indented code block after a blank line splits the text into separate paragraphs on
+/// ~keep re-parse.
+///
+/// ~keep Callers MUST pass text that already has its own leading/trailing whitespace
+/// ~keep trimmed off (e.g. `chomp()`'s `core`, or `str::trim()`) rather than a raw,
+/// ~keep untrimmed text node. The "collapse to nothing" rule applies only to a run that
+/// ~keep sits strictly between two pieces of real content; at the text node's own edge, a
+/// ~keep trailing `\n` + spaces is not an in-Markdown line break at all -- it is folded by
+/// ~keep `text_node.rs`'s prefix/suffix handling into a plain word-separating space (or
+/// ~keep dropped), so no literal newline byte survives there for a reparse to disagree
+/// ~keep about. Running this function over that edge too would delete a space `chomp`'s
+/// ~keep suffix computation still expects to find, concatenating words that must stay
+/// ~keep separated (e.g. `<p>of\n  <kbd>#</kbd></p>` losing the space before `` `#` ``).
+#[must_use]
+pub fn normalize_block_whitespace_cow(text: &str) -> Cow<'_, str> {
+    let bytes = text.as_bytes();
+    let mut prev_was_space = false;
+    let mut at_line_start = false;
+    for &b in bytes {
+        if b >= 0x80 {
+            return Cow::Owned(normalize_block_whitespace(text));
+        }
+        if b == b'\n' {
+            prev_was_space = false;
+            at_line_start = true;
+            continue;
+        }
+        let is_space = b == b' ' || b == b'\t';
+        if is_space {
+            if at_line_start || prev_was_space {
+                return Cow::Owned(normalize_block_whitespace(text));
+            }
+            prev_was_space = true;
+        } else {
+            prev_was_space = false;
+            at_line_start = false;
+        }
+    }
+    Cow::Borrowed(text)
+}
+
+/// Char-aware implementation backing [`normalize_block_whitespace_cow`]'s owned path.
+///
+/// Handles Unicode space characters the same way [`normalize_whitespace`] does, in addition
+/// to dropping a post-newline leading run entirely.
+#[cold]
+fn normalize_block_whitespace(text: &str) -> String {
+    let mut result = String::with_capacity(text.len());
+    let mut prev_was_space = false;
+    let mut at_line_start = false;
+    for ch in text.chars() {
+        if ch == '\n' {
+            result.push(ch);
+            prev_was_space = false;
+            at_line_start = true;
+            continue;
+        }
+        let is_space = ch == ' ' || ch == '\t' || is_unicode_space(ch);
+        if is_space {
+            if at_line_start {
+                continue;
+            }
+            if !prev_was_space {
+                result.push(' ');
+                prev_was_space = true;
+            }
+        } else {
+            result.push(ch);
+            prev_was_space = false;
+            at_line_start = false;
+        }
+    }
+    result
+}
+
 /// Normalize whitespace inside a Markdown table cell.
 ///
 /// A table cell cannot contain a hard line break, so unlike

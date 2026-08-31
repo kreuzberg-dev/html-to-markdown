@@ -58,3 +58,20 @@ fn newline_preserved_inside_em() {
 fn leading_newline_run_after_em() {
     assert_matches("<p>foo <em>bar</em>\n  baz</p>");
 }
+
+#[test]
+fn internal_indented_continuation_lines_collapse_leading_whitespace_to_zero() {
+    // ~keep Regression for the CommonMark spec example 182 fixpoint defect
+    // ~keep (`<![CDATA[...]]>` with indented source lines, which Tier-1 always
+    // ~keep bails on -- see `text_node_block_whitespace_fixpoint_test.rs` for
+    // ~keep that exact shape). This is the same pattern without CDATA, so it
+    // ~keep exercises Tier-1's own `decode_and_collapse_into_inner` collapse
+    // ~keep pass rather than just the CDATA bail-and-fall-back path. Leading
+    // ~keep whitespace on a continuation line used to collapse to one space
+    // ~keep (not a fixed point -- a compliant reparse drops it entirely,
+    // ~keep shrinking the run by one space every pass); both tiers now
+    // ~keep collapse it to zero on the very first pass.
+    let html = "<p>foo\n    bar\n\n    baz</p>";
+    assert_matches(html);
+    assert_eq!(tier2(html), "foo\nbar\n\nbaz\n");
+}

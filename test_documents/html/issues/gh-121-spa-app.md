@@ -20,5 +20,5 @@
 ### Pending Appraisals
 
 *The system collects colleagues who work together in a project, if you
- have ever not worked directly with any Reviewee then you are able to
- select 'Cannot review'.*
+have ever not worked directly with any Reviewee then you are able to
+select 'Cannot review'.*

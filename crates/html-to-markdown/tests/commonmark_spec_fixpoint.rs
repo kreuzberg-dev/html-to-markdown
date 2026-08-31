@@ -78,29 +78,26 @@ fn escaping_options() -> ConversionOptions {
 
 /// Floor for examples that must reach a fixpoint with escaping enabled.
 ///
-/// ~keep A ratchet set to the measured value: 642 of 652 with escaping on, against 628 with
-/// ~keep the shipped defaults. Raise it as more are fixed; a drop is a regression.
+/// ~keep A ratchet set to the measured value: 644 of 652 with escaping on. Raise it as more
+/// ~keep are fixed; a drop is a regression.
 ///
-/// ~keep The 10 that remain fall into three groups.
+/// ~keep The 8 that remain fall into two groups.
 ///
 /// ~keep Inherent to the round trip (252, 301, 302): two adjacent block quotes, or two
 /// ~keep adjacent lists using the same bullet, have no separator in the source that survives
 /// ~keep a compliant reparse -- they merge into one block whatever we emit. Emitting an
 /// ~keep unrequested separator to force a fixpoint would corrupt the far more common case.
 ///
-/// ~keep Renderer re-encoding we deliberately do not mirror (21, 344, 631): these carry
-/// ~keep ASCII characters (backslash, backtick) that a compliant renderer percent-encodes in
-/// ~keep a destination. Our own escaping already round-trips the content losslessly -- the
-/// ~keep second and third conversions agree -- so only the byte spelling differs. Matching it
-/// ~keep would mean reimplementing the renderer's full safe-character set as our default and
-/// ~keep would disturb the documented backslash tradeoff in `inline/link.rs`.
-///
-/// ~keep Known open defects (175, 182, 642, 643): 642/643 are a real bug, not an artifact --
-/// ~keep `normalize_link_label` collapses a hard line break inside a link label, so a `<br>`
-/// ~keep there is lost on the second conversion. It is left alone deliberately: several
-/// ~keep `~keep` comments in `tier1/scanner.rs` depend on the current behaviour for parity,
-/// ~keep so it needs a coordinated two-tier change rather than a local edit.
-const MIN_STABLE_ESCAPED: usize = 642;
+/// ~keep Renderer re-encoding we deliberately do not mirror (21, 344, 631, 642, 643): each
+/// ~keep carries an ASCII character in a link destination -- a backslash, a backtick, or a raw
+/// ~keep space -- that a compliant renderer percent-encodes on its way back to HTML. Our own
+/// ~keep escaping already round-trips the content losslessly, so only the byte spelling of the
+/// ~keep destination differs. Matching it would mean reimplementing the renderer's full
+/// ~keep safe-character set as our default and would disturb the documented backslash tradeoff
+/// ~keep in `inline/link.rs`. Note that 642/643 also exercised a genuine hard-break defect in
+/// ~keep `normalize_link_label`, which is fixed -- they reach a fixpoint once the destination
+/// ~keep is clean, and remain listed here only for the encoding difference.
+const MIN_STABLE_ESCAPED: usize = 644;
 
 #[test]
 fn commonmark_spec_examples_reach_a_conversion_fixpoint() {
