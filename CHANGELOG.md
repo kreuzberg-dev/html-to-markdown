@@ -17,6 +17,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   names case-insensitively, so these inputs were also a tier disagreement: the same
   document converted two ways depending on which tier ran. The `astral-tl` 0.8.0 parser
   upgrade lowercases attribute keys at parse time, which fixes both.
+- **Tier-1 and Tier-2 disagreed on GFM autolinks.** `autolinks` defaults to `true` but was
+  not gated in the Tier-1 router, and the Tier-1 scanner had no autolink branch, so
+  `<a href="https://x.com">https://x.com</a>` converted to `<https://x.com>` on Tier-2 and
+  `[https://x.com](https://x.com)` on Tier-1 -- the library picks a tier automatically, so
+  the same document converted two ways. Tier-1 now implements the autolink form rather than
+  being gated off it, since gating a default-`true` option would have made the fast path
+  unreachable for ordinary input.
+- **Tier-1 could return the wrong output for an autolink whose label carried inline markup.**
+  Tier-2 tests its autolink predicate against the tag-stripped text, so
+  `<a href="https://x.com"><b>https://x.com</b></a>` still autolinks there; Tier-1 compared
+  its rendered label (`**https://x.com**`), never matched, and emitted
+  `[**https://x.com**](https://x.com)`. Tier-1 now bails to Tier-2 on this shape. The bail is
+  guarded by a subsequence precheck so it fires only when an autolink is actually possible:
+  on the benchmark corpus, none of the 889 scheme-href links that carry nested markup trigger
+  it, so decorated links keep the fast path.
+
+### Added
+
+- CLI flags for six `ConversionOptions` fields that the library and the MCP surface already
+  exposed but the CLI hardcoded: `--exclude-selectors`, `--url-escape-style`,
+  `--max-image-size`, `--capture-svg`, `--no-infer-dimensions` and `--tier-strategy`. Each
+  now defaults to the library's own default, so an invocation that omits them is unchanged.
+  The three image flags require `--extract-inline-images`, which they are inert without.
+
+### Performance
+
+- `escape_link_label` returns `Cow<'_, str>` and skips its two allocations when the text
+  contains no `[` or `]`, which is the common case for link labels, image alt text and
+  titles. The two-pass design is unchanged -- it exists to avoid an O(n^2) `String::insert`
+  shape.
 
 ## [3.12.0] - 2026-08-30
 
