@@ -6,8 +6,8 @@
 //! Tier-2 and still produces a valid result (the fallback is transparent to
 //! the caller via `convert()`).
 //!
-//! All tests use `extract_metadata: false` and `hocr_spatial_tables: false` so
-//! the Tier-1 classifier can accept inputs it would otherwise reject.
+//! All tests use `extract_metadata: false` so the Tier-1 classifier can accept
+//! inputs it would otherwise reject.
 
 #![cfg(feature = "testkit")]
 

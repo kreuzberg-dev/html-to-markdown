@@ -174,6 +174,23 @@ pub enum BailReason {
     /// non-trivial logic that would then have to stay in sync forever, for a
     /// shape that is not on any hot path. Bail so Tier-2 (authoritative) wins.
     ImageLazyLoadSrc,
+
+    /// A `<a>` element's href satisfies every structural autolink precondition
+    /// (`options.autolinks`, `!options.default_title`, a non-empty href with a
+    /// URI scheme) while at least one child tag opened inside the link before
+    /// it closed.
+    ///
+    /// Tier-2's `is_autolink` predicate compares `href` against the label's
+    /// TAG-STRIPPED text content (`get_text_content`/`collect_link_label_text`
+    /// walk past inline tags and concatenate only their text), so a nested
+    /// `<b>`/`<code>`/etc. is invisible to it. Tier-1's label is the RENDERED
+    /// buffer (e.g. `**https://x.com**`), which can never equal the bare href
+    /// even when Tier-2's stripped text would — so a literal buffer comparison
+    /// can only produce a false negative here, never a false positive.
+    /// Reproducing Tier-2's tag-stripping inside a single-pass scanner
+    /// duplicates non-trivial logic that would then have to stay in sync
+    /// forever; bail instead so Tier-2 (authoritative) decides.
+    LinkAutolinkNestedMarkup,
 }
 
 impl fmt::Display for BailReason {
@@ -245,6 +262,12 @@ impl fmt::Display for BailReason {
             }
             Self::ImageLazyLoadSrc => {
                 write!(f, "<img> has a lazy-load placeholder src and a fallback src attribute")
+            }
+            Self::LinkAutolinkNestedMarkup => {
+                write!(
+                    f,
+                    "autolink-eligible <a> href had a nested tag inside the label before close"
+                )
             }
         }
     }

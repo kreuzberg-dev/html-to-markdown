@@ -20,7 +20,6 @@
 use html_to_markdown_rs::{ConversionOptions, TierStrategy, convert};
 
 /// Convert with `Tier1` + `extract_metadata: true`.
-/// `hocr_spatial_tables` must be disabled so the router can reach Tier-1.
 fn t1(html: &str) -> String {
     let opts = ConversionOptions {
         tier_strategy: TierStrategy::Tier1,
@@ -186,9 +185,9 @@ fn tier1_yaml_quotes_colon_in_value() {
 
 #[test]
 fn auto_routing_with_extract_metadata_can_use_tier1() {
-    // ~keep With hocr_spatial_tables=false and no other Tier-2 signals, Auto should
-    // ~keep allow the classifier to pick Tier-1 when extract_metadata=true (M5 removes
-    // ~keep that guard).  The output must still match Tier-2.
+    // ~keep With no other Tier-2 signals, Auto should allow the classifier to pick
+    // ~keep Tier-1 when extract_metadata=true (M5 removes that guard).  The output
+    // ~keep must still match Tier-2.
     let html = "<html><head><title>AutoTest</title></head><body><p>content</p></body></html>";
     let opts_auto = ConversionOptions {
         tier_strategy: TierStrategy::Auto,

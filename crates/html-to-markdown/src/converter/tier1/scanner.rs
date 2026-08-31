@@ -19,6 +19,7 @@
 //! section-order violations, and any HTML construct with in-text whitespace
 //! complexity or unclosed tags.
 
+use crate::converter::inline::link::has_uri_scheme;
 use crate::converter::tier1::bail::BailReason;
 use crate::converter::tier1::parse;
 use crate::converter::tier1::spec_rules;
@@ -472,6 +473,18 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
 
                 pos = close.0 + 1;
 
+                // ~keep Any child tag opening while a link is on the stack means that
+                // ~keep link's label buffer is no longer flat text — Tier-2's autolink
+                // ~keep predicate strips such tags before comparing to href, so
+                // ~keep `close_link` cannot safely trust a literal buffer mismatch here.
+                // ~keep Mark every currently open link (not just the innermost, in case
+                // ~keep of malformed nested `<a>`) so `close_link` can bail via
+                // ~keep `BailReason::LinkAutolinkNestedMarkup` instead of risking a false
+                // ~keep negative against Tier-2's tag-stripped text.
+                for entry in &mut state.link_stack {
+                    entry.2 = true;
+                }
+
                 if spec.is_void || close.1 {
                     emit_void(&mut state, spec, &attrs, html, options)?;
                     text_start = pos;
@@ -578,7 +591,7 @@ pub fn scan(html: &str, options: &ConversionOptions) -> Result<ScanOutput, BailR
                 };
                 if matches!(spec.kind, TagKind::Link) {
                     let (href, title) = extract_link_attrs(&attrs)?;
-                    state.link_stack.push((href, title));
+                    state.link_stack.push((href, title, false));
                 }
                 // ~keep Mirror Tier-2's `semantic/attributes.rs::handle_abbr`:
                 // ~keep capture the abbreviation's `title` attribute and emit
@@ -2018,7 +2031,7 @@ fn emit_close(
             if state.escape_ctx.contains(EscapeCtx::CODE) || state.escape_ctx.contains(EscapeCtx::PRE) => {}
         TagKind::Inserted => close_inline_marker(state, &frame, "=="),
         TagKind::Code => close_code(state, &frame),
-        TagKind::Link => close_link(state, &frame),
+        TagKind::Link => close_link(state, &frame, options)?,
         TagKind::List(ListKind::Definition) => close_dl(state, &frame),
         TagKind::List(kind) => close_list(state, kind),
         TagKind::ListItem => close_list_item(state, &frame),
@@ -2373,7 +2386,7 @@ fn emit_close_for_implicit(
             if state.escape_ctx.contains(EscapeCtx::CODE) || state.escape_ctx.contains(EscapeCtx::PRE) => {}
         TagKind::Inserted => close_inline_marker(state, &frame, "=="),
         TagKind::Code => close_code(state, &frame),
-        TagKind::Link => close_link(state, &frame),
+        TagKind::Link => close_link(state, &frame, options)?,
         TagKind::List(ListKind::Definition) => close_dl(state, &frame),
         TagKind::List(kind) => close_list(state, kind),
         TagKind::ListItem => close_list_item(state, &frame),
@@ -2856,11 +2869,115 @@ fn min_safe_code_span_delimiter_length(content: &str) -> usize {
     candidate
 }
 
-fn close_link(state: &mut Tier1State, frame: &OpenTag) {
+/// Returns `true` if every byte of `needle` appears in `haystack`, in order, not
+/// necessarily contiguously (a byte-level subsequence test). O(haystack.len()), no
+/// allocation.
+///
+/// ~keep Used by `close_link`'s nested-markup autolink guard: greedy left-to-right
+/// ~keep matching is correct for subsequence testing regardless of UTF-8 char
+/// ~keep boundaries — if a char sequence is a subsequence of another, each char's
+/// ~keep byte run appears intact and in order, so the greedy byte scan below always
+/// ~keep finds it. A byte-level "match" that happens to straddle char boundaries can
+/// ~keep only make this return `true` MORE often than a char-aware version would,
+/// ~keep never less — which only makes the caller's bail more conservative, never
+/// ~keep less safe.
+fn is_byte_subsequence(needle: &str, haystack: &str) -> bool {
+    let mut needle_bytes = needle.bytes();
+    let Some(mut want) = needle_bytes.next() else {
+        return true;
+    };
+    for byte in haystack.bytes() {
+        if byte == want {
+            match needle_bytes.next() {
+                Some(next_want) => want = next_want,
+                None => return true,
+            }
+        }
+    }
+    false
+}
+
+/// Rewrites the link the scanner has already opened in `dest` into GFM autolink form
+/// (`<href>`) when Tier-2 would do the same, returning `Ok(true)` when it did.
+///
+/// Mirrors Tier-2's predicate at `handlers/link.rs:91-101` exactly: `options.autolinks &&
+/// !options.default_title && href non-empty && has_uri_scheme(href) && (label == href ||
+/// (mailto: && label == href[7..]))`. `dest[trim_start..]` is Tier-2's `raw_text` for the
+/// common flat-text case -- both sides have already collapsed whitespace/NBSP the same way,
+/// and neither has run `escape_link_label` or bracket-wrapping yet.
+fn try_emit_autolink(
+    dest: &mut String,
+    trim_start: usize,
+    frame: &OpenTag,
+    href_str: &str,
+    has_nested_tag: bool,
+    options: &ConversionOptions,
+) -> Result<bool, BailReason> {
+    if !options.autolinks || options.default_title || href_str.is_empty() || !has_uri_scheme(href_str) {
+        return Ok(false);
+    }
+    let mailto_suffix = href_str.strip_prefix("mailto:");
+    let label = &dest[trim_start..];
+    if has_nested_tag {
+        // ~keep A nested tag means the buffer is no longer flat text, so a literal
+        // ~keep `label == href` compare is untrustworthy: `<b>u</b>` renders as `**u**`,
+        // ~keep which never equals bare `u`, yet Tier-2 -- which compares against the
+        // ~keep TAG-STRIPPED text -- would autolink it. Bailing on every nested tag is not
+        // ~keep the fix either: measured against `tools/benchmark-harness/fixtures`,
+        // ~keep 85-100% of scheme-href `<a>` elements on every fixture that has any are
+        // ~keep wrapped in at least a `<span>`, so a blanket bail would drop nearly every
+        // ~keep real page off the Tier-1 fast path.
+        // ~keep
+        // ~keep Instead, a cheap PROVABLY CONSERVATIVE precheck. Every transformation
+        // ~keep Tier-1 applies while rendering a label (emphasis/strong/strikethrough and
+        // ~keep inserted markers, code-span backtick fences, label-bracket escaping,
+        // ~keep `![alt](src)` for a nested `<img>`) only INSERTS characters; none delete or
+        // ~keep substitute the underlying text. Tier-2's `raw_text` is that same underlying
+        // ~keep text with tags stripped and whitespace collapsed, both of which only REMOVE
+        // ~keep characters. So `raw_text` is always a subsequence of this buffer, and if
+        // ~keep `raw_text == target` then `target` is a subsequence of the buffer too.
+        // ~keep Contrapositive: a `target` that is NOT a subsequence proves Tier-2 cannot
+        // ~keep autolink either, so falling through to the normal link form is safe. Bail
+        // ~keep only when the precheck cannot rule it out.
+        let could_be_autolink = is_byte_subsequence(href_str, label)
+            || mailto_suffix.is_some_and(|suffix| is_byte_subsequence(suffix, label));
+        if could_be_autolink {
+            return Err(BailReason::LinkAutolinkNestedMarkup);
+        }
+        // ~keep Ruled out above, so the exact `label == target` match below cannot fire
+        // ~keep either -- equality would imply the subsequence that was just disproved.
+    }
+    let rendered = if label == href_str {
+        href_str
+    } else if mailto_suffix == Some(label) {
+        // ~keep `mailto_suffix` is `Some` on this arm by construction.
+        mailto_suffix.unwrap_or(href_str)
+    } else {
+        return Ok(false);
+    };
+    // ~keep An autolink has no bracket wrapping at all, but the scanner already emitted
+    // ~keep the opening `[` at link-open time, before it could know the label. Remove it,
+    // ~keep mirroring the href-less branch in `close_link` that does the same cleanup.
+    let bracket_search_end = clamp_to_char_boundary(dest, frame.content_start);
+    let label_start = if let Some(bracket_pos) = dest[..bracket_search_end].rfind('[') {
+        dest.remove(bracket_pos);
+        trim_start - 1
+    } else {
+        trim_start
+    };
+    let rendered = rendered.to_owned();
+    dest.truncate(label_start);
+    dest.push('<');
+    dest.push_str(&rendered);
+    dest.push('>');
+    Ok(true)
+}
+
+fn close_link(state: &mut Tier1State, frame: &OpenTag, options: &ConversionOptions) -> Result<(), BailReason> {
     // ~keep Close the link: `](href "title")` or `](href)`
     // ~keep If no href, just emit the text as-is (Tier-2 behaviour: no link markup).
     // ~keep Link state was pushed to state.link_stack at open; pop it now.
-    let (href, title) = state.link_stack.pop().unwrap_or((None, None));
+    let (href, title, has_nested_tag) = state.link_stack.pop().unwrap_or((None, None, false));
     let dest = state.cell_or_output_mut();
     // ~keep Trim trailing whitespace inside the link label so `[text  ](url)`
     // ~keep collapses to `[text](url)` — matches Tier-2's normalize_link_label
@@ -2881,6 +2998,11 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
             .collect();
         dest.truncate(trim_start);
         dest.push_str(&normalised);
+    }
+    if let Some(href_str) = href.as_deref() {
+        if try_emit_autolink(dest, trim_start, frame, href_str, has_nested_tag, options)? {
+            return Ok(());
+        }
     }
     // ~keep Wikipedia back-reference normalisation (Tier-2 `handlers/link.rs:205`):
     // ~keep a label of exactly `^` paired with an `#anchor` href is rewritten to
@@ -2905,9 +3027,16 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
         // ~keep the caret rewrite above (matching Tier-2's order); `↑` contains
         // ~keep no bracket so the rewrite is a no-op for `escape_link_label`
         // ~keep either way.
-        let escaped_label = crate::converter::utility::content::escape_link_label(&dest[trim_start..]);
-        dest.truncate(trim_start);
-        dest.push_str(&escaped_label);
+        // ~keep `escaped_label` borrows from `dest` when unescaped (the common case), so it
+        // ~keep cannot outlive the `truncate`/`push_str` below that mutably borrows `dest` --
+        // ~keep only rewrite `dest` when escaping actually produced an owned copy.
+        match crate::converter::utility::content::escape_link_label(&dest[trim_start..]) {
+            std::borrow::Cow::Borrowed(_) => {}
+            std::borrow::Cow::Owned(escaped_label) => {
+                dest.truncate(trim_start);
+                dest.push_str(&escaped_label);
+            }
+        }
         if let Some(title) = title {
             // ~keep Tier-2 in production HTML fixtures HTML-encodes a literal `"`
             // ~keep in the title attribute to `&quot;` (rather than the
@@ -2934,6 +3063,7 @@ fn close_link(state: &mut Tier1State, frame: &OpenTag) {
             dest.remove(bracket_pos);
         }
     }
+    Ok(())
 }
 
 fn close_list(state: &mut Tier1State, kind: ListKind) {

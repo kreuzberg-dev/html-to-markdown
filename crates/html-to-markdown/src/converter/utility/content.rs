@@ -254,9 +254,19 @@ pub const fn floor_char_boundary(s: &str, index: usize) -> usize {
 /// Input:  "[foo](uri2)"
 /// Output: "\\[foo\\](uri2)"
 /// ```
-pub fn escape_link_label(text: &str) -> String {
+///
+/// Returns `Cow::Borrowed` when `text` contains neither `[` nor `]` (escaping is then
+/// necessarily a no-op), or `Cow::Owned` with the escaped text otherwise.
+pub fn escape_link_label(text: &str) -> Cow<'_, str> {
     if text.is_empty() {
-        return String::new();
+        return Cow::Borrowed("");
+    }
+
+    // ~keep Escapes are only ever inserted at `[`/`]` byte positions (see the match below),
+    // ~keep so when neither appears the two-pass logic further down is guaranteed to be a
+    // ~keep no-op -- skip both its allocations (the `escape_at` vec and the output String).
+    if memchr::memchr2(b'[', b']', text.as_bytes()).is_none() {
+        return Cow::Borrowed(text);
     }
 
     // ~keep Two linear passes rather than one pass that mutates the output string as it
@@ -331,7 +341,7 @@ pub fn escape_link_label(text: &str) -> String {
         result.push(ch);
     }
 
-    result
+    Cow::Owned(result)
 }
 
 /// Helper for block-level element detection.

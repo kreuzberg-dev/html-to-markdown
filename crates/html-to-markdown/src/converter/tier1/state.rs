@@ -177,13 +177,21 @@ pub struct Tier1State {
     /// is emitted as `" (title)"` after the abbreviation text, mirroring
     /// Tier-2's `semantic/attributes.rs::handle_abbr` (line 104-111).
     pub abbr_titles: Vec<Option<String>>,
-    /// Stack of `(href, title)` pairs for currently-open `<a>` elements.
+    /// Stack of `(href, title, has_nested_tag)` triples for currently-open `<a>`
+    /// elements.
     ///
     /// HTML5 forbids nested `<a>`, but the stack handles malformed input safely.
     /// Holding link state off `OpenTag` saves two `Option<String>` slots per
     /// every non-link tag frame (24 bytes × every tag on Wikipedia pages with
     /// thousands of tags), and avoids per-frame `Clone` cost.
-    pub link_stack: Vec<(Option<String>, Option<String>)>,
+    ///
+    /// `has_nested_tag` starts `false` and is set `true` by the scanner's tag-open
+    /// dispatch the moment ANY child tag opens while this link is on the stack
+    /// (every entry, not just the innermost, so malformed nested `<a>` still marks
+    /// its ancestor). `close_link` reads it to bail (`BailReason::LinkAutolinkNestedMarkup`)
+    /// rather than risk a false negative against Tier-2's tag-stripped autolink
+    /// predicate — see that bail reason's doc comment.
+    pub link_stack: Vec<(Option<String>, Option<String>, bool)>,
     /// Byte range of `<head>…</head>` content (between the tags) in the
     /// input the scanner walked.  Populated by the `TagKind::Ignored`
     /// dispatch when a non-void Ignored tag (`<head>`) is encountered;

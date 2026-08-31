@@ -339,7 +339,7 @@ fn bails_on_textarea() {
 #[test]
 fn auto_routes_through_tier1_for_clean_paragraph() {
     // ~keep Clean paragraph with no complex constructs → Auto picks Tier-1 when
-    // ~keep extract_metadata=false and hocr_spatial_tables=false.
+    // ~keep extract_metadata=false.
     // ~keep Both tiers must produce identical output.
     let html = "<p>Hello <strong>world</strong></p>";
     assert_eq!(auto(html), tier2(html));

@@ -23,7 +23,6 @@ pub enum RouterDecision {
 /// - `report.had_unescaped_lt` — bare `<` that the prescan escaped
 /// - `options.wrap` — wrapping logic lives in the Tier-2 path (for now)
 /// - `options.convert_as_inline` — inline-conversion mode not yet in Tier-1
-/// - `options.hocr_spatial_tables` — hOCR spatial reconstruction is Tier-2 only
 /// - `options.preprocessing.preset != PreprocessingPreset::Standard`
 ///   — non-standard preprocessing has Tier-2-specific semantics
 /// - `!options.strip_tags.is_empty()` — tag stripping requires DOM awareness
@@ -134,7 +133,7 @@ pub enum RouterDecision {
 /// | `whitespace_mode`    | `WhitespaceMode::Normalized`            | Yes — Strict                             |
 /// | `newline_style`      | `NewlineStyle::Spaces`                  | Yes — Backslash                          |
 /// | `code_language`      | irrelevant (Indented style)             | No — gated via `code_block_style`        |
-/// | `autolinks`          | not implemented in Tier-1               | No — Tier-1 never transforms bare URLs   |
+/// | `autolinks`          | implements the GFM autolink form (`<href>`) for a flat-text label; a label built from nested inline markup (e.g. `<b>`) bails (`BailReason::LinkAutolinkNestedMarkup`) instead of guessing — see `close_link`'s doc comment | No |
 /// | `default_title`      | `false` (not honored)                   | Yes — `true`                             |
 /// | `sub_symbol`         | `""` (transparent pass-through)         | Yes — non-empty                          |
 /// | `sup_symbol`         | `""` (transparent pass-through)         | Yes — non-empty                          |
@@ -143,7 +142,6 @@ pub enum RouterDecision {
 /// | `url_escape_style`   | `UrlEscapeStyle::Angle` (raw href)      | Yes — Percent                            |
 /// | `compact_tables`     | `false` (padded cells: `\| cell \|`)    | Yes — `true`                             |
 /// | `br_in_tables`       | honored in cells (literal `<br>` vs space) | No — scanner reads the option directly |
-/// | `hocr_spatial_tables`| Tier-2 only (structural gate)           | Already gated above                      |
 ///
 /// # Practical reachability & benchmark findings
 ///

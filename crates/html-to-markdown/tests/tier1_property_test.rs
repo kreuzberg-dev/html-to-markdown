@@ -78,6 +78,26 @@ const SNIPPETS: &[&str] = &[
     r#"<p>Visit <a href="/path">here</a> for details.</p>"#,
     r#"<p><a href="https://x.com" title="X site">X</a></p>"#,
     r#"<a href="https://example.com"><strong>bold link</strong></a>"#,
+    // ~keep All four fixtures above have label != href, so none of them exercise the
+    // ~keep GFM-autolink predicate (`label == href`) at all -- the oracle stayed green
+    // ~keep through the missing-autolink bug (Tier-1 always emitted `[text](href)`) the
+    // ~keep same way it stayed green through the uppercase `HREF`/`SRC` data-loss bug
+    // ~keep before `uppercase_attribute_names_test.rs` existed. These five close that
+    // ~keep gap: flat-text label == href, the nested-markup variant (must bail cleanly,
+    // ~keep not `Ok([**u**](u))`), both mailto forms, and an uppercase
+    // ~keep attribute name combined with label == href.
+    r#"<a href="https://x.com">https://x.com</a>"#,
+    r#"<a href="https://x.com"><b>https://x.com</b></a>"#,
+    r#"<a href="mailto:a@b.com">a@b.com</a>"#,
+    r#"<a href="mailto:a@b.com">mailto:a@b.com</a>"#,
+    r#"<a HREF="https://x.com">https://x.com</a>"#,
+    // ~keep Pins the other side of the nested-markup autolink guard: a scheme href
+    // ~keep whose decorated label text is unrelated to it must NOT bail. `href` is not
+    // ~keep a byte-subsequence of `**Some Title**`, so the guard's subsequence precheck
+    // ~keep rules out an autolink without needing to inspect the tag-stripped text, and
+    // ~keep this stays on the Tier-1 fast path. See `tier1_decorated_link_with_unrelated_text_stays_on_tier1`
+    // ~keep below for a stronger pin (asserts `Ok`, not just "matches or bails").
+    r#"<p><a href="https://example.com/foo"><b>Some Title</b></a></p>"#,
     "<ul><li>Item one</li><li>Item two</li></ul>",
     "<ul><li>A</li><li>B</li><li>C</li></ul>",
     "<p>Before</p><ul><li>X</li></ul><p>After</p>",
@@ -201,4 +221,20 @@ fn tier1_pre_code_block_output_is_correct() {
 #[test]
 fn tier1_hr_output_is_correct() {
     assert_tier1_matches_tier2_or_bails("<p>Before</p><hr><p>After</p>");
+}
+
+#[test]
+fn tier1_decorated_link_with_unrelated_text_stays_on_tier1() {
+    // ~keep `assert_tier1_matches_tier2_or_bails` tolerates a bail as a pass, which is
+    // ~keep exactly right for the corpus loop above but too weak here: this test exists
+    // ~keep to pin that the nested-markup autolink guard's subsequence precheck does NOT
+    // ~keep widen into a blanket "any nested tag in an autolink-eligible link bails". A
+    // ~keep future change that dropped the precheck back to the old `has_nested_tag`-only
+    // ~keep bail would still pass `assert_tier1_matches_tier2_or_bails` (bailing is always
+    // ~keep "acceptable") and go unnoticed. Assert `Ok` explicitly instead.
+    let html = r#"<p><a href="https://example.com/foo"><b>Some Title</b></a></p>"#;
+    match tier1_direct(html) {
+        Ok(t1_out) => assert_eq!(t1_out, tier2_output(html)),
+        Err(reason) => panic!("expected Tier-1 to take the fast path, got a bail: {reason:?}"),
+    }
 }
