@@ -27,6 +27,9 @@ struct MisnestState {
     blocked_by_inline_ancestor: bool,
     /// Result of a `has_p_ancestor` scan started at this node (used by its children).
     p_ancestor_state: bool,
+    /// True if a strict ancestor is `<li>`/`<dt>`/`<dd>` with no intervening
+    /// `<ul>`/`<ol>`/`<dl>` (i.e. we are still "inside" that same list item).
+    list_item_ancestor_state: bool,
 }
 
 impl MisnestState {
@@ -34,6 +37,7 @@ impl MisnestState {
         inside_preformatted: false,
         blocked_by_inline_ancestor: false,
         p_ancestor_state: false,
+        list_item_ancestor_state: false,
     };
 }
 
@@ -46,6 +50,14 @@ impl MisnestState {
 /// a structural impossibility in valid HTML that signals the `tl` parser absorbed
 /// a table into a paragraph because of an unclosed `<p>` (common in Word/Outlook
 /// HTML such as `<p class='MsoNormal'>` cells). Issue #336.
+///
+/// Also detects a `<li>`/`<dt>`/`<dd>` nested under another `<li>`/`<dt>`/`<dd>`
+/// with no intervening `<ul>`/`<ol>`/`<dl>`. `<li>content<div><li>more` is a
+/// structural impossibility in valid HTML: the HTML5 spec implies a closing
+/// `</li>` when a new `<li>` starts, regardless of what block elements (`<p>`,
+/// `<div>`, …) are still open inside it. `tl` does not apply that rule, so an
+/// unclosed `<p>`/`<div>` inside a list item causes it to nest the next `<li>`
+/// as a child instead of treating it as a sibling.
 ///
 /// ~keep Walks the tree top-down exactly once, carrying inherited ancestor state
 /// ~keep (see [`MisnestState`]) instead of re-walking every node's ancestor chain.
@@ -79,12 +91,20 @@ pub fn has_inline_block_misnest(dom_ctx: &DomContext, parser: &tl::Parser) -> bo
             return true;
         }
 
+        // ~keep <li>/<dt>/<dd> nested under another one without an intervening list
+        // ~keep container: tl absorbed the next item because a <p>/<div> inside the
+        // ~keep previous one was left unclosed.
+        if matches!(info.name.as_str(), "li" | "dt" | "dd") && state.list_item_ancestor_state {
+            return true;
+        }
+
         if let Some(children) = dom_ctx.children_of(node_id) {
             let child_state = MisnestState {
                 inside_preformatted: self_inside_preformatted,
                 blocked_by_inline_ancestor: state.blocked_by_inline_ancestor
                     || (is_inline_element(&info.name) && !inline_ancestor_allows_block(&info.name)),
                 p_ancestor_state: p_ancestor_state_for(&info.name, state.p_ancestor_state),
+                list_item_ancestor_state: list_item_ancestor_state_for(&info.name, state.list_item_ancestor_state),
             };
             stack.extend(children.iter().map(|child| (*child, child_state)));
         }
@@ -103,6 +123,24 @@ fn p_ancestor_state_for(tag_name: &str, inherited: bool) -> bool {
     if tag_name == "p" {
         true
     } else if matches!(tag_name, "table" | "body" | "html") {
+        false
+    } else {
+        inherited
+    }
+}
+
+/// Compute the `list_item_ancestor_state` scan result to hand down to a node's
+/// children, given the node's own tag name and the state its own parent handed down.
+///
+/// A `<li>`/`<dt>`/`<dd>` ancestor found before crossing a `<ul>`/`<ol>`/`<dl>`
+/// (a new list context) counts; crossing into a new list container, or the
+/// `table`/`body`/`html` boundary, resets the search — a `<li>` nested inside a
+/// genuinely new list (or a new formatting context such as a table cell) is not
+/// misnesting.
+fn list_item_ancestor_state_for(tag_name: &str, inherited: bool) -> bool {
+    if matches!(tag_name, "li" | "dt" | "dd") {
+        true
+    } else if matches!(tag_name, "ul" | "ol" | "dl" | "table" | "body" | "html") {
         false
     } else {
         inherited
