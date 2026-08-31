@@ -26,6 +26,18 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **`<address>`, `<search>`, `<hgroup>` and `<center>` no longer merge into their neighbours.**
+  All four are block-level, but they reached a pass-through handler that emits no separator,
+  so `<address>foo</address><address>bar</address>` produced `foobar` -- nothing in the output
+  recorded that these were ever distinct blocks. `<colgroup>`, `<col>`, `<base>`, `<html>` and
+  `<body>` share the same internal classification and are deliberately unchanged: the first
+  three are table-internal or void metadata, and the last two wrap every document.
+
+- **Two block containers in one table cell are separated by one space, not three.** The fast
+  scanner emitted a hard line break between them regardless of `br_in_tables`, and the
+  table-cell finalizer turned it into a three-space run, where the converter emits a single
+  space under the default options.
+
 - **Five Tier-1/Tier-2 divergences closed.** `<blockquote>` omitted its trailing blank line
   in the fast scanner, invisible to every existing test because they all placed the
   blockquote last; fixing it exposed a `<pre>` fence stripping one trailing newline where the
