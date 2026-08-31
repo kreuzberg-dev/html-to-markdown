@@ -26,6 +26,21 @@ emit -- and the other five differ only in the byte spelling of a link destinatio
 
 ### Fixed
 
+- **A heading inside `<summary>` or `<figcaption>` no longer splices its `#` prefix into
+  unrelated text.** Tier-1 records a heading's content offset against whichever buffer is
+  active when the tag opens, and `<summary>`/`<figcaption>` accumulate into their own buffer.
+  Only table cells were special-cased, so a heading in a `<summary>` took a small
+  buffer-relative offset and used it to index the whole document output instead -- inserting
+  heading prefixes into the middle of already-emitted text. Rustdoc's
+  `<details><summary><h3 class="code-header">` shape turned `Sample` into `Samp#### #### le`.
+  This corrupted adjacent content, not just the heading.
+
+- **An unclosed `<table>` no longer discards its rows.** Every element still open at end of
+  input is closed implicitly, but Tier-1's implicit-close path did nothing for `<table>`,
+  dropping the entire accumulated table -- fully-formed rows included -- where the explicit
+  `</table>` path rendered it correctly. Text sitting directly inside `<table>` outside any
+  row or cell is now routed to Tier-2 rather than silently discarded.
+
 - **An empty `title=""` is treated as absent instead of rendered as `(url "")`.** The empty
   annotation carries no information and no Markdown serializer round-trips it, so converting
   the re-rendered output produced different Markdown than the first pass. Applies to links,
