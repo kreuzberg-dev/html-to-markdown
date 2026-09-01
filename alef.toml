@@ -289,6 +289,14 @@ path = "test_apps/rust/Cargo.toml"
 search = 'package = "html-to-markdown-rs", version = "[^"]*"'
 replace = 'package = "html-to-markdown-rs", version = "{version}"'
 
+[[workspace.sync.text_replacements]]
+# The swift e2e app consumes the release/swift/<version> branch the release workflow
+# publishes, not a `from:` semver bound, so alef's built-in `from:` sync never reaches it.
+# Without this entry the pin silently stayed four releases behind. ~keep
+path = "test_apps/swift_e2e/Package.swift"
+search = 'release/swift/[^"]*'
+replace = 'release/swift/{version}'
+
 [workspace.poly]
 # Skip poly's whole-project lint phase in `poly lint`: the shared CI validate job installs only
 # Rust/Python/Java, so the other whole-workspace linters (credo, dart-analyze, golangci-lint,
