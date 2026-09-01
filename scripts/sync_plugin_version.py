@@ -58,6 +58,12 @@ def transform(version: str) -> tuple[str, str]:
     Hermes wheel.
     """
     original = PLUGIN_CONFIG.read_text(encoding="utf-8")
+    # ~keep A `re.sub` that matches nothing returns the input unchanged, and main() cannot tell
+    # that apart from "already in sync" -- so a renamed or reformatted `[plugin]` table would
+    # make both the apply path and the `--check` CI gate exit 0 having done nothing. Assert the
+    # pattern is present before substituting instead of inferring it from the result afterwards.
+    if not PLUGIN_VERSION_RE.search(original):
+        sys.exit(f"could not read [plugin].version from {PLUGIN_CONFIG.relative_to(ROOT)}")
     updated = PLUGIN_VERSION_RE.sub(rf"\g<1>{version}\g<3>", original, count=1)
     return original, updated
 
