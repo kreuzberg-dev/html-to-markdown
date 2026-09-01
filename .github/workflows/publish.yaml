@@ -61,6 +61,10 @@ jobs:
     outputs:
       tag: ${{ steps.meta.outputs.tag }}
       version: ${{ steps.meta.outputs.version }}
+      # ~keep PyPI and RubyGems respell a semver prerelease, so the release version cannot be
+      # handed to their publish guards verbatim. See the step that computes these below.
+      pypi_version: ${{ steps.version_forms.outputs.pypi_version }}
+      gem_version: ${{ steps.version_forms.outputs.gem_version }}
       ref: ${{ steps.meta.outputs.ref }}
       checkout_ref: ${{ steps.meta.outputs.checkout_ref }}
       target_sha: ${{ steps.meta.outputs.target_sha }}
@@ -122,6 +126,28 @@ jobs:
       - name: Resolve release metadata
         id: meta
         uses: xberg-io/actions/prepare-release-metadata@v1
+
+      # ~keep The publish actions compare `expected-version` against the artifact's own version
+      # string, and two ecosystems respell a semver prerelease: PyPI dist filenames carry the
+      # PEP 440 form (1.9.0-rc.2 -> 1.9.0rc2) and gem filenames the RubyGems form
+      # (1.9.0-rc.2 -> 1.9.0.pre.rc.2). Those are the spellings alef writes into the manifests
+      # the artifacts are built from, so the guard has to be handed the same spelling or every
+      # prerelease would fail it on a version that is in fact correct. A final release has no
+      # suffix and passes through both expressions untouched.
+      - name: Respell the release version for PyPI and RubyGems
+        id: version_forms
+        shell: bash
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          set -euo pipefail
+          pypi="$(printf '%s' "${VERSION}" \
+            | sed -E 's/-alpha\.?([0-9]+)$/a\1/; s/-beta\.?([0-9]+)$/b\1/; s/-([A-Za-z]+)\.?([0-9]+)$/\1\2/')"
+          gem="$(printf '%s' "${VERSION}" | sed -E 's/^([^-]+)-(.*)$/\1.pre.\2/' | tr '_-' '..')"
+          {
+            echo "pypi_version=${pypi}"
+            echo "gem_version=${gem}"
+          } >>"$GITHUB_OUTPUT"
 
       - name: Ensure GitHub Release exists for tag
         if: ${{ steps.meta.outputs.is_tag == 'true' && steps.meta.outputs.dry_run != 'true' }}
@@ -1816,6 +1842,7 @@ jobs:
         with:
           packages-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.pypi_version }}
 
       - name: Verify PyPI indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -1856,6 +1883,7 @@ jobs:
         with:
           gems-dir: dist
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.gem_version }}
 
       - name: Verify RubyGems indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -1941,6 +1969,7 @@ jobs:
           packages-dir: crates/html-to-markdown-node/npm
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
 
       - name: Verify platform packages on npm
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -1958,6 +1987,7 @@ jobs:
           package-dir: crates/html-to-markdown-node
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
 
       - name: Wait for main Node package indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -2005,6 +2035,7 @@ jobs:
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           provenance: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
 
       - name: Verify npm indexing
         if: ${{ needs.prepare.outputs.dry_run != 'true' }}
@@ -2093,6 +2124,7 @@ jobs:
           maven-profile: publish
           extra-args: -DskipTests
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
         env:
           MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
@@ -2181,6 +2213,7 @@ jobs:
         with:
           packages-dir: dist/nuget
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
         env:
           NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
 
@@ -2232,6 +2265,7 @@ jobs:
         with:
           package-dir: packages/elixir
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
 
@@ -3175,6 +3209,7 @@ jobs:
           npm-tag: ${{ needs.prepare.outputs.npm_tag }}
           provenance: "true"
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.version }}
 
   publish-plugin-hermes:
     name: Publish Hermes plugin to PyPI
@@ -3224,6 +3259,7 @@ jobs:
         with:
           packages-dir: dist-hermes
           dry-run: ${{ needs.prepare.outputs.dry_run }}
+          expected-version: ${{ needs.prepare.outputs.pypi_version }}
 
   # --- Release outcome report -------------------------------------------------------------------
   # Terminal job. The spine above deliberately lets a release complete with a per-language artifact
