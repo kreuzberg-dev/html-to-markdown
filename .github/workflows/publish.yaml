@@ -1687,7 +1687,7 @@ jobs:
   upload-elixir-release:
     name: Upload Elixir NIF archives to GitHub Release
     needs: [prepare, validate-versions, elixir-natives]
-    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.elixir-natives.result == 'success' }}
+    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.validate-versions.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1867,7 +1867,7 @@ jobs:
   publish-rubygems:
     name: Publish Ruby gems
     needs: [prepare, validate-versions, ruby-gem, check-rubygems]
-    if: ${{ needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.ruby-gem.result == 'success' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    if: ${{ needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.validate-versions.result == 'success' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -2241,7 +2241,7 @@ jobs:
   publish-hex:
     name: Publish Hex package
     needs: [prepare, validate-versions, elixir-package, upload-elixir-release, check-hex]
-    if: ${{ needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.elixir-package.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    if: ${{ needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.validate-versions.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
