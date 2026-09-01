@@ -1839,7 +1839,11 @@ jobs:
   publish-pypi:
     name: Publish to PyPI
     needs: [prepare, validate-versions, python-wheels, python-sdist, check-pypi]
-    if: ${{ needs.prepare.outputs.release_python == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.python-wheels.result == 'success' && needs.python-sdist.result == 'success' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    # ~keep See `upload-elixir-release`: `python-sdist` reaches this job through the
+    # `crates-gate` chain and survives a partial-target dispatch only via its own
+    # `!cancelled()`. Without one here the propagated skip wins over the `if:`. Both build
+    # needs are already named explicitly, which is what opting out of propagation requires.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_python == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.validate-versions.result == 'success' && needs.python-wheels.result == 'success' && needs.python-sdist.result == 'success' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
