@@ -1578,7 +1578,7 @@ jobs:
 
   upload-cli-release:
     name: Build & upload CLI binaries
-    needs: [prepare, check-cli]
+    needs: [prepare, validate-versions, check-cli]
     if: ${{ needs.prepare.outputs.release_cli == 'true' && (needs.check-cli.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
     permissions:
       contents: write
@@ -1617,7 +1617,7 @@ jobs:
 
   upload-go-release:
     name: Upload Go FFI archives to GitHub Release
-    needs: [prepare, go-ffi-libraries]
+    needs: [prepare, validate-versions, go-ffi-libraries]
     if: ${{ needs.prepare.outputs.release_go == 'true' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.go-ffi-libraries.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
@@ -1640,7 +1640,7 @@ jobs:
 
   upload-c-ffi-release:
     name: Upload C FFI archives to GitHub Release
-    needs: [prepare, c-ffi-libraries]
+    needs: [prepare, validate-versions, c-ffi-libraries]
     if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.c-ffi-libraries.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
@@ -1663,7 +1663,7 @@ jobs:
 
   upload-swift-release:
     name: Upload Swift Artifact Bundle to GitHub Release
-    needs: [prepare, swift-artifactbundle]
+    needs: [prepare, validate-versions, swift-artifactbundle]
     if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.swift-artifactbundle.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
@@ -1686,7 +1686,7 @@ jobs:
 
   upload-elixir-release:
     name: Upload Elixir NIF archives to GitHub Release
-    needs: [prepare, elixir-natives]
+    needs: [prepare, validate-versions, elixir-natives]
     if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.elixir-natives.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
@@ -1707,8 +1707,11 @@ jobs:
 
   upload-php-pie-release:
     name: Upload PHP PIE archives to GitHub Release
-    needs: [prepare, php-extension]
-    if: ${{ !cancelled() && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.php-extension.result != 'skipped' }}
+    needs: [prepare, validate-versions, php-extension]
+    # ~keep `!cancelled()` opts this job out of failure propagation, so the `needs:` edge on
+    # validate-versions orders it but does not gate it. The explicit `.result == 'success'`
+    # term is what actually blocks publishing when the manifest versions do not match the tag.
+    if: ${{ !cancelled() && needs.validate-versions.result == 'success' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.php-extension.result != 'skipped' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1828,7 +1831,7 @@ jobs:
 
   publish-pypi:
     name: Publish to PyPI
-    needs: [prepare, python-wheels, python-sdist, check-pypi]
+    needs: [prepare, validate-versions, python-wheels, python-sdist, check-pypi]
     if: ${{ needs.prepare.outputs.release_python == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.python-wheels.result == 'success' && needs.python-sdist.result == 'success' && (needs.check-pypi.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     environment: pypi
@@ -1863,7 +1866,7 @@ jobs:
 
   publish-rubygems:
     name: Publish Ruby gems
-    needs: [prepare, ruby-gem, check-rubygems]
+    needs: [prepare, validate-versions, ruby-gem, check-rubygems]
     if: ${{ needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.ruby-gem.result == 'success' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
@@ -1904,7 +1907,7 @@ jobs:
 
   publish-node:
     name: Publish Node packages
-    needs: [prepare, node-bindings, node-typescript-defs, check-npm]
+    needs: [prepare, validate-versions, node-bindings, node-typescript-defs, check-npm]
     if: ${{ needs.prepare.outputs.release_node == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.node-bindings.result == 'success' && needs.node-typescript-defs.result == 'success' && (needs.check-npm.outputs.node_exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
@@ -2008,7 +2011,7 @@ jobs:
 
   publish-wasm:
     name: Publish WASM package
-    needs: [prepare, wasm-bindings, check-wasm]
+    needs: [prepare, validate-versions, wasm-bindings, check-wasm]
     if: ${{ needs.prepare.outputs.release_wasm == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.wasm-bindings.result == 'success' && (needs.check-wasm.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
@@ -2056,10 +2059,11 @@ jobs:
 
   publish-packagist:
     name: Trigger Packagist update
-    needs: [prepare, upload-php-pie-release, check-packagist]
+    needs: [prepare, validate-versions, upload-php-pie-release, check-packagist]
     # ~keep Packagist indexes the git tag, not the PIE archives, so a dropped PHP matrix cell must
     # not stop it. `!cancelled()` opts out of the failure that propagates from `php-extension`.
-    if: ${{ !cancelled() && needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    # It also opts out of a failed validate-versions, hence the explicit result term below.
+    if: ${{ !cancelled() && needs.validate-versions.result == 'success' && needs.prepare.outputs.release_php == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-packagist.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: xberg-io/actions/publish-packagist@v1
@@ -2083,7 +2087,7 @@ jobs:
 
   publish-maven:
     name: Publish Maven (Java) package
-    needs: [prepare, java-natives, check-maven]
+    needs: [prepare, validate-versions, java-natives, check-maven]
     if: ${{ needs.prepare.outputs.release_java == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.java-natives.result == 'success' && (needs.check-maven.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -2149,7 +2153,7 @@ jobs:
 
   publish-nuget:
     name: Publish NuGet package
-    needs: [prepare, csharp-natives, check-nuget]
+    needs: [prepare, validate-versions, csharp-natives, check-nuget]
     if: ${{ needs.prepare.outputs.release_csharp == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.csharp-natives.result == 'success' && (needs.check-nuget.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
@@ -2236,7 +2240,7 @@ jobs:
 
   publish-hex:
     name: Publish Hex package
-    needs: [prepare, elixir-package, upload-elixir-release, check-hex]
+    needs: [prepare, validate-versions, elixir-package, upload-elixir-release, check-hex]
     if: ${{ needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.elixir-package.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -2329,7 +2333,7 @@ jobs:
 
   publish-kotlin-android:
     name: Publish Kotlin Android to Maven Central
-    needs: [prepare, kotlin-android-natives, check-maven-kotlin]
+    needs: [prepare, validate-versions, kotlin-android-natives, check-maven-kotlin]
     if: ${{ needs.prepare.outputs.release_kotlin == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-maven-kotlin.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -2377,7 +2381,10 @@ jobs:
 
   trigger-pubdev:
     name: Trigger pub.dev publish workflow
-    needs: [prepare, check-pub, assemble-dart-package]
+    # ~keep Named `trigger-` rather than `publish-`, but it dispatches publish-pubdev.yaml, which
+    # publishes to pub.dev. pub.dev refuses to replace a published version, so it needs the same
+    # validate-versions gate as the jobs that publish directly.
+    needs: [prepare, validate-versions, check-pub, assemble-dart-package]
     if: ${{ needs.prepare.outputs.release_dart == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && (needs.check-pub.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
@@ -2406,7 +2413,7 @@ jobs:
 
   publish-zig:
     name: Publish Zig package metadata
-    needs: [prepare, check-zig, assemble-zig-package]
+    needs: [prepare, validate-versions, check-zig, assemble-zig-package]
     if: ${{ needs.prepare.outputs.release_zig == 'true' && needs.prepare.outputs.is_tag == 'true' && (needs.check-zig.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') && needs.assemble-zig-package.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -2507,7 +2514,7 @@ jobs:
 
   publish-homebrew-formula:
     name: Update Homebrew formulas
-    needs: [prepare, check-homebrew, upload-cli-release, upload-c-ffi-release]
+    needs: [prepare, validate-versions, check-homebrew, upload-cli-release, upload-c-ffi-release]
     if: ${{ needs.prepare.outputs.release_homebrew == 'true' && needs.upload-cli-release.result == 'success' && needs.upload-c-ffi-release.result == 'success' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && (needs.check-homebrew.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -2587,7 +2594,7 @@ jobs:
   # is already a no-op. ~keep
   publish-scoop-manifest:
     name: Update Scoop manifest
-    needs: [prepare, upload-cli-release]
+    needs: [prepare, validate-versions, upload-cli-release]
     if: ${{ needs.prepare.outputs.release_scoop == 'true' && needs.upload-cli-release.result == 'success' && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') }}
     runs-on: ubuntu-latest
     steps:
@@ -2711,11 +2718,12 @@ jobs:
 
   publish-homebrew-bottles:
     name: Merge Homebrew bottle DSL
-    needs: [prepare, publish-homebrew-formula, homebrew-bottles, promote-release]
+    needs: [prepare, validate-versions, publish-homebrew-formula, homebrew-bottles, promote-release]
     # ~keep `homebrew-bottles.result` is poisoned by anything upstream of promote-release, so gate
     # on the two clean signals instead. A genuinely failed bottle leg still turns the run red on
     # its own, and this job then fails loudly on the missing bottle JSON rather than vanishing.
-    if: ${{ !cancelled() && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.publish-homebrew-formula.result == 'success' && needs.promote-release.outputs.promoted == 'true' }}
+    # `!cancelled()` also waives a failed validate-versions, hence the explicit result term.
+    if: ${{ !cancelled() && needs.validate-versions.result == 'success' && needs.prepare.outputs.release_homebrew == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.publish-homebrew-formula.result == 'success' && needs.promote-release.outputs.promoted == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
@@ -2993,7 +3001,7 @@ jobs:
 
   upload-r-release:
     name: Upload R source tarball to GitHub Release
-    needs: [prepare, build-r-package]
+    needs: [prepare, validate-versions, build-r-package]
     if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.build-r-package.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
