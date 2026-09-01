@@ -29,6 +29,9 @@ WORKSPACE_LINTS_HEADER_RE = re.compile(r"^\[workspace\.lints(\.[^\]]+)?\]\s*$")
 TABLE_HEADER_RE = re.compile(r"^\[")
 # ~keep The inheritance marker a workspace member uses to pull in `[workspace.lints]`.
 CRATE_LINTS_INHERIT_RE = re.compile(r"(?m)^\[lints\]\nworkspace = true\n?")
+# ~keep Every spelling of workspace inheritance, used to assert none survived vendoring:
+# `foo.workspace = true`, `foo = { workspace = true, ... }`, and a bare `workspace = true`.
+WORKSPACE_INHERIT_RESIDUE_RE = re.compile(r"\.workspace\s*=\s*true|\bworkspace\s*=\s*true")
 
 
 def get_repo_root() -> Path:
@@ -221,6 +224,20 @@ def replace_workspace_refs(
         pattern_extra = rf"^{re.escape(name)} = \{{ workspace = true, (.+?) \}}$"
         content = re.sub(pattern_extra, _make_fields_replacer(name, dep_spec), content, flags=re.MULTILINE | re.DOTALL)
 
+    # ~keep Counting matches per substitution is the wrong guard here: this loop walks every
+    # workspace dependency, and most do not appear in this crate's manifest at all, so zero
+    # matches is the normal case. The load-bearing postcondition is structural instead -- the
+    # vendored crate has no parent workspace, so any surviving inheritance marker is a manifest
+    # cargo cannot read. Without this, a spelling none of the three patterns match is silently
+    # copied through and only surfaces much later as a bare "'workspace.lints' was not defined".
+    leftovers = [
+        f"  line {number}: {line.strip()}"
+        for number, line in enumerate(content.splitlines(), start=1)
+        if WORKSPACE_INHERIT_RESIDUE_RE.search(line)
+    ]
+    if leftovers:
+        raise RuntimeError(f"{toml_path} still inherits from a workspace after substitution:\n" + "\n".join(leftovers))
+
     with toml_path.open("w") as f:
         f.write(content)
 
@@ -258,10 +275,14 @@ def main() -> None:
             f.unlink()
 
     vendor_toml = dest_vendor / "Cargo.toml"
-    if vendor_toml.exists():
-        replace_workspace_refs(vendor_toml, version, pkg, deps, lints_block)
-        inlined = "inlined [workspace.lints]" if lints_block else "no [workspace.lints] to inline"
-        print(f"Updated vendor/html-to-markdown-rs/Cargo.toml ({inlined})")
+    # ~keep Skipping this silently used to print "Vendoring complete" for a vendor tree whose
+    # manifest still inherited from the workspace, so the no-op looked identical to success.
+    if not vendor_toml.exists():
+        print(f"Error: vendored manifest not found at {vendor_toml}", file=sys.stderr)
+        sys.exit(1)
+    replace_workspace_refs(vendor_toml, version, pkg, deps, lints_block)
+    inlined = "inlined [workspace.lints]" if lints_block else "no [workspace.lints] to inline"
+    print(f"Updated vendor/html-to-markdown-rs/Cargo.toml ({inlined})")
 
     print(f"\nVendoring complete (version: {version})")
 
