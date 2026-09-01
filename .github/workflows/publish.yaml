@@ -2889,9 +2889,30 @@ jobs:
           VERSION="${{ needs.prepare.outputs.version }}"
           CHECKSUM=$(cat swift-checksums/*.checksum | tr -d '[:space:]')
 
-          # Replace placeholders in Package.swift
-          sed -i "s/__ALEF_SWIFT_VERSION__/${VERSION}/g" Package.swift
+          # ~keep A bare `sed -i` that matches nothing exits 0, so a placeholder alef stops
+          # emitting -- or renames -- turns this step into a silent no-op and the tag below is
+          # force-pushed carrying an unsubstituted manifest that breaks every Swift consumer.
+          # crawlberg's equivalent step was dead from v1.4.0 and nothing noticed. Count the
+          # pattern first and fail on zero; a `__ALEF_SWIFT_VERSION__` sed used to sit here and
+          # was already dead, because alef now bakes the concrete version into the binaryTarget
+          # URL at generation time and only the checksum is deferred to release time.
+          if ! [[ "${CHECKSUM}" =~ ^[0-9a-f]{64}$ ]]; then
+            echo "::error::Expected a single sha256 checksum, got: '${CHECKSUM}'"
+            exit 1
+          fi
+
+          matches=$(grep -c '__ALEF_SWIFT_CHECKSUM__' Package.swift || true)
+          if [ "${matches}" -eq 0 ]; then
+            echo "::error::Package.swift contains no __ALEF_SWIFT_CHECKSUM__ placeholder to substitute"
+            exit 1
+          fi
           sed -i "s/__ALEF_SWIFT_CHECKSUM__/${CHECKSUM}/g" Package.swift
+
+          # ~keep The count above cannot see a placeholder alef renamed. This catches that case.
+          if grep -nE '__ALEF_[A-Z0-9_]+__' Package.swift; then
+            echo "::error::Package.swift still contains an unsubstituted alef placeholder"
+            exit 1
+          fi
 
           echo "Updated Package.swift:"
           head -30 Package.swift
