@@ -2127,15 +2127,36 @@ jobs:
           path: dist/csharp-ffi
           merge-multiple: true
 
+      # ~keep CSHARP_RIDS is the csharp-natives build matrix, the runtime.json.template
+      # RID-fallback graph, and the csproj <RuntimeIdentifiers> — one list so the three
+      # cannot drift. The copy used to end in `|| true`, which turned a RID whose native
+      # library never arrived (a matrix leg that failed under `fail-fast: false`, or an
+      # artifact that downloaded empty) into a silent partial stage. Fail on the copy and
+      # then assert every expected RID actually landed, so a missing native is loud here
+      # instead of shipping a runtime graph pointing at payloads that do not exist.
       - name: Stage runtimes/<rid>/native into NuGet project
         shell: bash
+        env:
+          CSHARP_RIDS: linux-x64 linux-arm64 osx-arm64 osx-x64 win-x64 win-arm64
         run: |
           mkdir -p packages/csharp/HtmlToMarkdown/runtimes
           for dir in dist/csharp-ffi/*/; do
             rid="$(basename "$dir")"
             mkdir -p "packages/csharp/HtmlToMarkdown/runtimes/${rid}/native"
-            cp -v "${dir}native/"* "packages/csharp/HtmlToMarkdown/runtimes/${rid}/native/" || true
+            cp -v "${dir}native/"* "packages/csharp/HtmlToMarkdown/runtimes/${rid}/native/"
           done
+          missing=""
+          for rid in ${CSHARP_RIDS}; do
+            dest="packages/csharp/HtmlToMarkdown/runtimes/${rid}/native"
+            if [[ -z "$(find "${dest}" -type f -print -quit 2>/dev/null)" ]]; then
+              missing="${missing} ${rid}"
+            fi
+          done
+          if [[ -n "${missing}" ]]; then
+            echo "::error::no native library staged for RID(s):${missing}"
+            exit 1
+          fi
+          echo "staged natives for all RIDs: ${CSHARP_RIDS}"
 
       - uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
         with:
@@ -3053,6 +3074,12 @@ jobs:
           project-name: html-to-markdown
           token: ${{ steps.app-token.outputs.token }}
 
+  # ~keep Deliberately off-cycle and therefore deliberately without `needs:`. The proxy has
+  # its own version lineage (cli-proxy/npm/package.json 0.0.1, cli-proxy/pypi/pyproject.toml
+  # 0.1.0) and its own `cli-proxy-v*` tag lineage, independent of the core crate version. It
+  # is gated on that tag prefix alone; a core release never runs it, and validate-versions —
+  # which asserts the language manifests against the *core* version — would be meaningless
+  # here and would fail every proxy release. Do not add it to `needs:`.
   cli-proxy:
     name: Publish CLI proxy package (npm)
     if: ${{ github.event_name == 'release' && startsWith(github.event.release.tag_name, 'cli-proxy-v') }}
@@ -3072,16 +3099,25 @@ jobs:
   # Additive best-effort like the language jobs above: intentionally NOT part of
   # finalize-release / announce `needs`, so a plugin hiccup never blocks the core
   # release. Both publish the same content every tagged release (version tracks core), so
-  # each guards against an already-published version. `needs: [prepare]` only — the plugin
-  # has no build- or runtime-dependency on the core packages (mcp-launch.sh resolves the CLI
-  # at runtime), so it publishes in parallel with the core jobs. ~keep
+  # each guards against an already-published version. The plugin has no build- or
+  # runtime-dependency on the core packages (mcp-launch.sh resolves the CLI at runtime), so
+  # both publish in parallel with the core jobs — but they DO depend on validate-versions,
+  # which owns the `plugin/.ai-rulez/config.toml [plugin].version == tag` assertion. Both
+  # `if:` blocks open with `!cancelled()`, which opts out of automatic failure propagation,
+  # so the `needs:` edge alone is not a gate: the explicit
+  # `needs.validate-versions.result == 'success'` term below is what actually stops a
+  # drifted plugin from shipping. Without it, liter-llm v1.19.0 published an npm bundle
+  # carrying 1.18.4 manifests (unrecoverable — npm forbids republishing a version) while
+  # the Hermes job rebuilt the 1.18.4 wheel, hit publish-pypi's skip-existing guard, and
+  # reported success having published nothing for the tag. ~keep
 
   publish-plugin-opencode:
     name: Publish OpenCode plugin to npm
-    needs: [prepare]
+    needs: [prepare, validate-versions]
     if: >-
       ${{ !cancelled() && needs.prepare.outputs.release_any == 'true'
-      && needs.prepare.outputs.is_tag == 'true' }}
+      && needs.prepare.outputs.is_tag == 'true'
+      && needs.validate-versions.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -3094,6 +3130,27 @@ jobs:
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org/"
+      # ~keep validate-versions asserts the plugin *source* pin
+      # (plugin/.ai-rulez/config.toml [plugin].version); it says nothing about the rendered
+      # bundle this job actually uploads. plugin/package.json is regenerated from that pin
+      # by ai-rulez, and its freshness is only enforced by ci-plugin.yaml, which does not
+      # gate this workflow. A stale plugin/package.json breaks the guard below both ways:
+      # the probe reads the *artifact's* version, so a stale-but-published version sets
+      # skip=true and the job goes green having shipped nothing for the tag, while a
+      # stale-but-unpublished version is permanently accepted by npm — under
+      # needs.prepare.outputs.npm_tag, i.e. possibly `latest`. Assert artifact == release
+      # before anything is probed or uploaded.
+      - name: Assert the plugin bundle matches the release
+        shell: bash
+        run: |
+          actual="$(jq -r '.version' plugin/package.json)"
+          expected="${{ needs.prepare.outputs.version }}"
+          if [[ "${actual}" != "${expected}" ]]; then
+            echo "::error::plugin/package.json declares ${actual} but the release is ${expected};" \
+              "regenerate the plugin bundle (task version:sync) before tagging"
+            exit 1
+          fi
+          echo "plugin/package.json matches the release at ${expected}"
       # Plain ESM adapter — no build step. Skip if this version is already on npm so a
       # release re-run is idempotent (publish-npm has no built-in skip-existing). ~keep
       - name: Skip if already on npm
@@ -3121,10 +3178,11 @@ jobs:
 
   publish-plugin-hermes:
     name: Publish Hermes plugin to PyPI
-    needs: [prepare]
+    needs: [prepare, validate-versions]
     if: >-
       ${{ !cancelled() && needs.prepare.outputs.release_any == 'true'
-      && needs.prepare.outputs.is_tag == 'true' }}
+      && needs.prepare.outputs.is_tag == 'true'
+      && needs.validate-versions.result == 'success' }}
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
@@ -3138,6 +3196,27 @@ jobs:
         uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
         with:
           python-version: "3.13"
+      # ~keep Same rendered-bundle gap as the npm job, but silent: this job had no guard at
+      # all, and publish-pypi's skip-existing is not one — a stale
+      # plugin/.hermes/package/pyproject.toml rebuilds an already-published wheel version,
+      # gets skipped, and the job reports success having shipped nothing for the tag.
+      # ai-rulez renders this manifest in PEP 440 form, so the semver prerelease suffix is
+      # normalised on the expected side before compare (3.8.0-rc.1 -> 3.8.0rc1,
+      # 4.0.0-beta.2 -> 4.0.0b2). An unrecognised spelling fails loudly rather than
+      # publishing, which is the safe direction. ~keep
+      - name: Assert the plugin bundle matches the release
+        shell: bash
+        run: |
+          pyproject="plugin/.hermes/package/pyproject.toml"
+          actual="$(awk -F"[\"']" '/^version = /{print $2; exit}' "${pyproject}")"
+          expected="$(printf '%s' "${{ needs.prepare.outputs.version }}" \
+            | sed -E 's/-alpha\.?([0-9]+)$/a\1/; s/-beta\.?([0-9]+)$/b\1/; s/-([A-Za-z]+)\.?([0-9]+)$/\1\2/')"
+          if [[ "${actual}" != "${expected}" ]]; then
+            echo "::error::${pyproject} declares ${actual} but the release is ${expected};" \
+              "regenerate the plugin bundle (task version:sync) before tagging"
+            exit 1
+          fi
+          echo "${pyproject} matches the release at ${expected}"
       - name: Build Hermes wheel
         run: uv build --wheel --out-dir dist-hermes plugin/.hermes/package
       # publish-pypi is idempotent (skips a version already on PyPI). ~keep
