@@ -82,7 +82,20 @@ if [ ! -f "src/rust/vendor/html-to-markdown-rs/Cargo.toml" ]; then
   # `directory` source additionally requires a .cargo-checksum.json that the vendoring
   # script does not produce. This rewrite only mutates the in-place file inside the R
   # install directory; the in-tree generated Cargo.toml keeps its monorepo path. ~keep
-  sed -i.bak -E 's#^(html-to-markdown-rs = \{ version = "[^"]*"), path = "[^"]*"#\1, path = "vendor/html-to-markdown-rs"#' src/rust/Cargo.toml
+  # ~keep Count the pattern before substituting and fail on zero. src/rust/Cargo.toml is
+  # alef-generated (it carries an `alef:hash:` header), so a regen that reformats this
+  # dependency into a multi-line table would leave the sed matching nothing -- silently, since
+  # sed reports success either way. cargo would then resolve the monorepo-relative `path`,
+  # which does not exist inside an unpacked CRAN tarball, and the build would fail far from
+  # here with a missing-path error rather than at the substitution that caused it.
+  dep_pattern='^(html-to-markdown-rs = \{ version = "[^"]*"), path = "[^"]*"'
+  dep_matches=$(grep -cE "${dep_pattern}" src/rust/Cargo.toml || true)
+  if [ "${dep_matches:-0}" -eq 0 ]; then
+    echo "ERROR: src/rust/Cargo.toml has no single-line html-to-markdown-rs path dependency to" >&2
+    echo "       rewrite; the generated manifest's shape has changed and vendoring cannot proceed." >&2
+    exit 1
+  fi
+  sed -i.bak -E "s#${dep_pattern}#\\1, path = \"vendor/html-to-markdown-rs\"#" src/rust/Cargo.toml
   rm -f src/rust/Cargo.toml.bak
 fi
 
