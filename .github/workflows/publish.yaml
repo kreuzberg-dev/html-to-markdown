@@ -183,8 +183,16 @@ jobs:
       # validate-versions action does not know about. Assert it against the tag
       # actually being released, so a drifted plugin fails the release instead of
       # shipping a bundle that lags the version it claims to be. ~keep
+      # ~keep A dry run synthesizes its tag as `<version>-dryrun-<sha>`, so the release
+      # version carries a suffix no manifest will ever hold and the assertion below fails
+      # on a plugin that is in fact correct. Strip the suffix rather than skipping the step
+      # on dry runs -- a dry run is exactly where a drifted plugin should surface, while
+      # there is still no tag and nothing has been published.
       - name: Validate plugin version matches the release
-        run: python3 scripts/sync_plugin_version.py --expect "${{ needs.prepare.outputs.version }}"
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: python3 scripts/sync_plugin_version.py --expect "${VERSION%%-dryrun-*}"
 
   check-pypi:
     name: Check PyPI for existing version
