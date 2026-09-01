@@ -3213,9 +3213,15 @@ jobs:
       # before anything is probed or uploaded.
       - name: Assert the plugin bundle matches the release
         shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           actual="$(jq -r '.version' plugin/package.json)"
-          expected="${{ needs.prepare.outputs.version }}"
+          # ~keep A dry run synthesizes its tag as `<version>-dryrun-<sha>`; the manifests never
+          # carry that suffix, so comparing it verbatim fails on a bundle that is in fact
+          # correct. Strip it rather than skipping the assertion on dry runs -- a dry run is
+          # where a drifted bundle should surface, while nothing has been published.
+          expected="${VERSION%%-dryrun-*}"
           if [[ "${actual}" != "${expected}" ]]; then
             echo "::error::plugin/package.json declares ${actual} but the release is ${expected};" \
               "regenerate the plugin bundle (task version:sync) before tagging"
@@ -3278,10 +3284,15 @@ jobs:
       # publishing, which is the safe direction. ~keep
       - name: Assert the plugin bundle matches the release
         shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
         run: |
           pyproject="plugin/.hermes/package/pyproject.toml"
           actual="$(awk -F"[\"']" '/^version = /{print $2; exit}' "${pyproject}")"
-          expected="$(printf '%s' "${{ needs.prepare.outputs.version }}" \
+          # ~keep Strip the dry-run suffix BEFORE the PEP 440 respelling, not after: the
+          # respelling's generic `-<word><digits>` rule would otherwise mangle `-dryrun-<sha>`
+          # into something that matches nothing, failing a bundle that is in fact correct.
+          expected="$(printf '%s' "${VERSION%%-dryrun-*}" \
             | sed -E 's/-alpha\.?([0-9]+)$/a\1/; s/-beta\.?([0-9]+)$/b\1/; s/-([A-Za-z]+)\.?([0-9]+)$/\1\2/')"
           if [[ "${actual}" != "${expected}" ]]; then
             echo "::error::${pyproject} declares ${actual} but the release is ${expected};" \
