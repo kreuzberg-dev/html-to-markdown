@@ -1687,7 +1687,14 @@ jobs:
   upload-elixir-release:
     name: Upload Elixir NIF archives to GitHub Release
     needs: [prepare, validate-versions, elixir-natives]
-    if: ${{ (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.validate-versions.result == 'success' }}
+    # ~keep `!cancelled()` is load-bearing, not decoration. `crates-gate` is `if: always()`
+    # over `check-cratesio`/`publish-crates`, which SKIP on a partial-target dispatch (e.g.
+    # targets=ruby,elixir). `elixir-natives` survives that only because it carries its own
+    # `!cancelled()`; without one here, GitHub's skipped-state propagation resumes at this job
+    # and skips it before the `if` below is ever consulted -- observed on runs 33491693123,
+    # 33494806766 and 33495781759, where every leg was green and this job still skipped.
+    # Opting out of propagation means every need that must have succeeded is named explicitly.
+    if: ${{ !cancelled() && (needs.prepare.outputs.is_tag == 'true' || needs.prepare.outputs.dry_run == 'true') && needs.validate-versions.result == 'success' && needs.elixir-natives.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -1867,7 +1874,10 @@ jobs:
   publish-rubygems:
     name: Publish Ruby gems
     needs: [prepare, validate-versions, ruby-gem, check-rubygems]
-    if: ${{ needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.validate-versions.result == 'success' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    # ~keep See `upload-elixir-release`: `ruby-gem` reaches this job through `crates-gate`,
+    # which is `if: always()` over jobs that skip on a partial-target dispatch. Without
+    # `!cancelled()` here the propagated skip wins over the `if`.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_ruby == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.validate-versions.result == 'success' && needs.ruby-gem.result == 'success' && (needs.check-rubygems.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -2241,7 +2251,9 @@ jobs:
   publish-hex:
     name: Publish Hex package
     needs: [prepare, validate-versions, elixir-package, upload-elixir-release, check-hex]
-    if: ${{ needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.validate-versions.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
+    # ~keep See `upload-elixir-release`. Both `elixir-package` and `upload-elixir-release`
+    # sit downstream of the skip-propagating `crates-gate` chain, so each is named explicitly.
+    if: ${{ !cancelled() && needs.prepare.outputs.release_elixir == 'true' && needs.prepare.outputs.is_tag == 'true' && needs.prepare.outputs.dry_run != 'true' && needs.validate-versions.result == 'success' && needs.elixir-package.result == 'success' && needs.upload-elixir-release.result == 'success' && (needs.check-hex.outputs.exists != 'true' || needs.prepare.outputs.force_republish == 'true') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
