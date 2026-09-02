@@ -113,9 +113,12 @@ cwd = "packages/python"
 manifest = "packages/python/pyproject.toml"
 # `uv sync` here resolves against the uv workspace root, so the venv it populates is ../../.venv,
 # not a local one; maturin needs VIRTUAL_ENV pointed at it or it cannot find an interpreter. ~keep
+# maturin is only a `[build-system] requires` entry, so no sync ever puts it on PATH and the hook
+# died with `sh: 1: maturin: not found`, failing all 289 python snippets as ERROR. `uvx` fetches it
+# into an ephemeral env and it still installs into the VIRTUAL_ENV named above. ~keep
 before = [
   "uv sync --no-install-project --no-install-workspace",
-  "VIRTUAL_ENV=$PWD/../../.venv maturin develop --release",
+  "VIRTUAL_ENV=$PWD/../../.venv uvx maturin develop --release",
 ]
 
 [workspace.docs.snippets.sessions.node]
@@ -143,7 +146,13 @@ before = [
 
 [workspace.docs.snippets.sessions.ruby]
 cwd = "packages/ruby"
-before = ["bundle install", "./build-extension.sh"]
+# `rm -rf .bundle tmp` first, exactly as `[crates.test.ruby].before` does: ruby/setup-ruby writes
+# `.bundle/config` with `path: vendor/bundle` + `deployment: true`, and build-extension.sh unsets
+# every BUNDLE_* variable before `exec rake compile`, so bare rake looks in the default gem home
+# and the Rakefile's `require "rb_sys/extensiontask"` raised LoadError -- failing all 289 ruby
+# snippets as ERROR. Dropping the local config makes `bundle install` land where bare rake looks.
+# ~keep
+before = ["rm -rf .bundle tmp", "bundle install", "./build-extension.sh"]
 
 [workspace.docs.snippets.sessions.php]
 cwd = "."
