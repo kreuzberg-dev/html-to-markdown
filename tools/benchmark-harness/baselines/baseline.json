@@ -51,7 +51,7 @@
       "median_ms": 9.770672166666664,
       "mad_ms": 0.018493416666663265,
       "mb_per_s": 16.207834244688367,
-      "output_bytes": 40572
+      "output_bytes": 40464
     },
     {
       "fixture": "mdream/mdn-array.html",
@@ -60,7 +60,7 @@
       "median_ms": 10.8775877,
       "mad_ms": 0.027514799999999617,
       "mb_per_s": 20.291641117723273,
-      "output_bytes": 70962
+      "output_bytes": 70964
     },
     {
       "fixture": "mdream/react-learn.html",
@@ -69,7 +69,7 @@
       "median_ms": 21.0535,
       "mad_ms": 0.052254833333332584,
       "mb_per_s": 12.009633100711989,
-      "output_bytes": 59483
+      "output_bytes": 59257
     },
     {
       "fixture": "mdream/github-markdown-complete.html",
@@ -78,7 +78,7 @@
       "median_ms": 19.053301,
       "mad_ms": 0.051249833333335104,
       "mb_per_s": 21.50580943750512,
-      "output_bytes": 51702
+      "output_bytes": 51639
     },
     {
       "fixture": "real-world/wikipedia/small_html.html",
@@ -87,7 +87,7 @@
       "median_ms": 44.962926249999995,
       "mad_ms": 0.11760049999999822,
       "mb_per_s": 20.634442575649082,
-      "output_bytes": 191023
+      "output_bytes": 187463
     },
     {
       "fixture": "real-world/wikipedia/lists_timeline.html",
@@ -96,7 +96,7 @@
       "median_ms": 15.9120345,
       "mad_ms": 0.028208375000000174,
       "mb_per_s": 15.10112915544216,
-      "output_bytes": 22667
+      "output_bytes": 22263
     },
     {
       "fixture": "real-world/wikipedia/tables_countries.html",
@@ -105,7 +105,7 @@
       "median_ms": 32.14343275,
       "mad_ms": 0.0534642500000011,
       "mb_per_s": 22.441707968598628,
-      "output_bytes": 184288
+      "output_bytes": 183854
     },
     {
       "fixture": "real-world/wikipedia/medium_python.html",
@@ -114,7 +114,7 @@
       "median_ms": 90.369955,
       "mad_ms": 0.2181890000000024,
       "mb_per_s": 13.129348597858364,
-      "output_bytes": 257533
+      "output_bytes": 256041
     },
     {
       "fixture": "real-world/wikipedia/large_rust.html",
@@ -123,7 +123,7 @@
       "median_ms": 49.015349,
       "mad_ms": 0.09306400000000181,
       "mb_per_s": 20.724577735506813,
-      "output_bytes": 190726
+      "output_bytes": 189741
     },
     {
       "fixture": "real-world/issues/gh-190/mitrade.html",
@@ -141,7 +141,7 @@
       "median_ms": 0.11949324076191482,
       "mad_ms": 0.0003271034379711407,
       "mb_per_s": 50.312158681875395,
-      "output_bytes": 2469
+      "output_bytes": 2459
     },
     {
       "fixture": "real-world/issues/gh-190/insight.html",
@@ -150,7 +150,7 @@
       "median_ms": 0.19769187015503875,
       "mad_ms": 0.0006788393426294809,
       "mb_per_s": 59.52870522811013,
-      "output_bytes": 1426
+      "output_bytes": 1422
     },
     {
       "fixture": "real-world/issues/gh-190/plusblog.html",
@@ -159,7 +159,7 @@
       "median_ms": 2.0673152000000004,
       "mad_ms": 0.005999700000000496,
       "mb_per_s": 13.461964533210603,
-      "output_bytes": 6949
+      "output_bytes": 6938
     },
     {
       "fixture": "real-world/issues/gh-190/rbloggers.html",
@@ -168,7 +168,7 @@
       "median_ms": 1.1729033139534883,
       "mad_ms": 0.003068883720930282,
       "mb_per_s": 38.28427684855953,
-      "output_bytes": 20161
+      "output_bytes": 20157
     },
     {
       "fixture": "real-world/issues/gh-190/ozonekorea.html",
@@ -177,7 +177,7 @@
       "median_ms": 3.27647059375,
       "mad_ms": 0.008813874999999971,
       "mb_per_s": 19.512296332180618,
-      "output_bytes": 25383
+      "output_bytes": 25382
     },
     {
       "fixture": "real-world/issues/gh-190/firsteigen.html",
@@ -195,7 +195,7 @@
       "median_ms": 2.758361710526316,
       "mad_ms": 0.0043056315789473665,
       "mb_per_s": 46.57005965053876,
-      "output_bytes": 7794
+      "output_bytes": 7678
     },
     {
       "fixture": "real-world/issues/gh-190/kimbrain.html",
@@ -204,7 +204,7 @@
       "median_ms": 2.7777315555555555,
       "mad_ms": 0.006534818713450408,
       "mb_per_s": 56.03566906683405,
-      "output_bytes": 40086
+      "output_bytes": 39984
     },
     {
       "fixture": "real-world/issues/gh-121-hacker-news.html",
@@ -222,7 +222,7 @@
       "median_ms": 23.595383666666663,
       "mad_ms": 0.126238333333335,
       "mb_per_s": 26.309100296879578,
-      "output_bytes": 42143
+      "output_bytes": 42141
     },
     {
       "fixture": "synthetic/optional_li.html",
