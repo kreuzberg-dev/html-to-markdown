@@ -11,4 +11,4 @@
 # Do not hand-edit; it is rewritten by `alef generate`/`alef all` on every successful run.
 
 [crates]
-html-to-markdown-rs = "431acbe2b86986a45b9d473da9d2ec6df9622d656aa154e7f98bd375219d13f2"
+html-to-markdown-rs = "4d8af3dd2147caf8b98f6c894d1ccd8478373fb5a3ba24249335c1c2f24c75b8"

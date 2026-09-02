@@ -1,5 +1,5 @@
 [workspace]
-alef_version = "0.79.5"
+alef_version = "0.82.0"
 languages = [
   "python",
   "node",
@@ -629,69 +629,6 @@ types = [
 ]
 functions = ["convert"]
 
-[crates.lint.python]
-precondition = "command -v ruff >/dev/null 2>&1"
-before = "cd packages/python && uv sync --no-install-project --no-install-workspace"
-typecheck = "cd packages/python && uv run --no-sync mypy ."
-
-[crates.lint.node]
-precondition = "command -v pnpm >/dev/null 2>&1"
-check = "pnpm dlx oxlint crates/html-to-markdown-node/index.js crates/html-to-markdown-node/index.d.ts"
-
-[crates.lint.ruby]
-precondition = "command -v bundle >/dev/null 2>&1"
-before = "cd packages/ruby && bundle install"
-
-[crates.lint.php]
-precondition = "command -v poly >/dev/null 2>&1"
-check = "poly lint crates/html-to-markdown-php"
-
-[crates.lint.go]
-precondition = "command -v gofmt >/dev/null 2>&1"
-before = "cargo build --release --locked -p html-to-markdown-ffi"
-
-[crates.lint.elixir]
-precondition = "command -v mix >/dev/null 2>&1"
-before = "cd packages/elixir && mix deps.get"
-check = "cd packages/elixir && mix credo"
-
-[crates.lint.java]
-precondition = "command -v mvn >/dev/null 2>&1"
-check = "mvn -f packages/java/pom.xml spotless:check -q"
-
-[crates.lint.r]
-precondition = "command -v poly >/dev/null 2>&1"
-check = "poly lint packages/r"
-
-[crates.lint.ffi]
-precondition = "test -d e2e/c"
-check = "cppcheck --std=c11 --enable=warning,style,performance --suppress=missingIncludeSystem --suppress=unusedStructMember e2e/c/"
-
-[crates.lint.wasm]
-precondition = "command -v pnpm >/dev/null 2>&1"
-check = "pnpm exec oxlint crates/html-to-markdown-wasm/src/ 2>/dev/null || true"
-
-[crates.lint.kotlin_android]
-precondition = "command -v ktfmt >/dev/null 2>&1"
-check = "find packages/kotlin-android \\( -name build -o -name .gradle \\) -prune -o \\( -name '*.kt' -o -name '*.kts' \\) -type f -print0 | xargs -0 ktfmt --kotlinlang-style --dry-run --set-exit-if-changed"
-
-[crates.update.kotlin_android]
-precondition = "command -v gradle >/dev/null 2>&1"
-update = "echo '[kotlin_android] skip: ben-manes/gradle-versions-plugin incompatible with Gradle 9.x'"
-upgrade = "echo '[kotlin_android] skip: ben-manes/gradle-versions-plugin incompatible with Gradle 9.x'"
-
-[crates.lint.swift]
-precondition = "command -v swift >/dev/null 2>&1"
-check = "swift format lint --recursive packages/swift/Sources"
-
-[crates.lint.dart]
-precondition = "command -v dart >/dev/null 2>&1"
-check = "cd packages/dart && dart analyze"
-
-[crates.lint.zig]
-precondition = "command -v zig >/dev/null 2>&1"
-check = "cd packages/zig && zig fmt --check src build.zig"
-
 [crates.test.python]
 precondition = "command -v uv >/dev/null 2>&1"
 before = "cd e2e/python && uv sync --no-install-project --no-install-workspace && uv pip install --refresh ../../packages/python"
@@ -726,21 +663,6 @@ e2e = "cd e2e/java && mvn test -q"
 precondition = "command -v dotnet >/dev/null 2>&1"
 before = "cargo build --release --locked -p html-to-markdown-ffi && scripts/ci/csharp/copy-ffi.sh"
 e2e = "dotnet test e2e/csharp"
-
-[crates.setup.node]
-precondition = "command -v pnpm >/dev/null 2>&1 && [ -f crates/html-to-markdown-node/package.json ]"
-install = "pnpm --filter @xberg-io/html-to-markdown install --no-frozen-lockfile"
-timeout_seconds = 600
-
-[crates.setup.wasm]
-precondition = "command -v pnpm >/dev/null 2>&1 && [ -f crates/html-to-markdown-wasm/package.json ]"
-install = "pnpm --filter @xberg-io/html-to-markdown-wasm install --no-frozen-lockfile"
-timeout_seconds = 600
-
-[crates.setup.csharp]
-precondition = "command -v dotnet >/dev/null 2>&1 && [ -f packages/csharp/HtmlToMarkdown/HtmlToMarkdown.csproj ]"
-install = "dotnet restore packages/csharp/HtmlToMarkdown/HtmlToMarkdown.csproj"
-timeout_seconds = 600
 
 [crates.test.elixir]
 precondition = "command -v mix >/dev/null 2>&1"
@@ -784,11 +706,6 @@ e2e = "cd e2e/dart && DYLD_FALLBACK_LIBRARY_PATH=$PWD/../../target/release LD_LI
 precondition = "command -v zig >/dev/null 2>&1"
 before = "cargo build --release --locked -p html-to-markdown-ffi"
 e2e = "cd e2e/zig && zig build test"
-
-[crates.build_commands.ruby]
-precondition = "command -v cargo >/dev/null 2>&1"
-build = "cd packages/ruby/ext/html_to_markdown_rb && cargo build --locked"
-build_release = "cd packages/ruby/ext/html_to_markdown_rb && cargo build --release --locked"
 
 [crates.publish]
 core_crate = "crates/html-to-markdown"
