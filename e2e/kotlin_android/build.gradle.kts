@@ -4,7 +4,7 @@ import java.util.zip.ZipFile
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id("com.android.library") version "9.2.1"
+    id("com.android.library") version "9.4.0"
 }
 
 group = "io.xberg.android"
@@ -57,14 +57,14 @@ kotlin {
 dependencies {
 
     // Jackson for JSON assertion helpers
-    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
-    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.0")
+    testImplementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
+    testImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.22.2")
 
     // jackson-module-kotlin registers constructors/properties for Kotlin data
     // classes, which have no default constructor and cannot be deserialized by
     // plain Jackson without this module.
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.19.0")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.22.2")
 
     // jspecify for null-safety annotations on wrapped types
     testImplementation("org.jspecify:jspecify:1.0.1")
@@ -143,8 +143,15 @@ tasks.withType<Test> {
     val libPath = System.getProperty("kb.lib.path") ?: "${rootDir}/../../target/release"
     systemProperty("jna.library.path", libPath)
 
-    // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/
-    workingDir = file("${rootDir}/../../test_documents")
+    // Resolve fixture paths (e.g. "docx/fake.docx") against test_documents/ when
+    // the consumer ships such fixtures. Guard on existence: Gradle test workers
+    // fail to fork if workingDir points at a directory that does not exist --
+    // Gradle reports a misleading "Gradle Test Executor N ... not in started or
+    // detached state" with no assertion text at all.
+    val testDocuments = file("${rootDir}/../../test_documents")
+    if (testDocuments.isDirectory) {
+        workingDir = testDocuments
+    }
 
     if (project.properties["alef.skipHostJni"] != "true") {
         val hostPlatform = if (System.getProperty("os.name").lowercase().contains("mac")) {
