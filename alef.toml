@@ -470,7 +470,7 @@ traineddata = "traineddata"
 # metrics. Listed per file rather than switching the rules off, so the metrics still
 # fire on every file NOT listed here -- new code stays covered, and each path below is
 # one discrete unit of work.
-# TODO(html-to-markdown-quality-debt): pay this down file by file and delete each entry as it goes green.
+# TODO(xberg-io/html-to-markdown#465): pay this down file by file and delete each entry as it goes green.
 # Do not add new paths here without a very good reason. ~keep
 ".github/workflows/ci-e2e.yaml" = ["file-too-long"]
 "CHANGELOG.md" = ["file-too-long"]

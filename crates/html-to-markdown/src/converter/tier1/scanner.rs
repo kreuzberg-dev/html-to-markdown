@@ -19,7 +19,7 @@
 //! section-order violations, and any HTML construct with in-text whitespace
 //! complexity or unclosed tags.
 
-// TODO(quality-debt): 5 cyclomatic-complexity and 38 size/complexity findings
+// TODO(xberg-io/html-to-markdown#465): 5 cyclomatic-complexity and 38 size/complexity findings
 // in this file, currently excluded via the quality-debt baseline in alef.toml. Splitting
 // these needs compiler-in-the-loop verification, not a mechanical pass. Delete this
 // note and the file's baseline entry together once it goes green. Help wanted.
