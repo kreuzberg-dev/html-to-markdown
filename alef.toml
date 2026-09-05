@@ -460,6 +460,29 @@ WebUI = "WebUI"
 traineddata = "traineddata"
 
 [workspace.poly.per-file-ignores]
+# Quality metrics do not apply to test code. A test function's length is its assertion
+# count and a table-driven test's arity mirrors its cases; splitting either to satisfy a
+# production-code maintainability metric makes the test harder to read, not easier. Only
+# `file-too-long` and `type-too-long` still apply here -- an oversized test FILE is a real
+# organisational problem, unlike an oversized test function. ~keep
+"**/tests/**/*" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/test/**/*" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/benches/**/*" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_test.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_tests.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/test_*.py" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_test.py" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/conftest.py" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*.test.ts" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*.test.js" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*.test.mjs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*.spec.ts" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*.spec.js" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_test.go" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*Test.java" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*Tests.cs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_test.dart" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"**/*_spec.rb" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
 # Stylistic rules disabled repo-wide. Each is a formatting or idiom preference with no
 # correctness or security consequence, and each fires in volumes no one can hand-maintain
 # (`require-unicode-regexp` alone was 724 across the polyrepo, `no-inline-comments` 200).
@@ -557,6 +580,25 @@ traineddata = "traineddata"
 "packages/swift/Sources/RustBridge*/**" = ["trailing-whitespace"]
 "e2e/**/*.py" = ["Q000"]
 "**/skills/**/SKILL.md" = ["MD032"]
+# Node build-time scripts whose console output IS their product: the two `verify-*` guards
+# report the check they ran, and fail the build via `console.error` + `process.exit(1)`;
+# `patch-bundler-entry.js` reports the wasm entry it rewrote. These are standalone scripts run
+# by npm/task with no subscriber or logger to route through. ~keep
+"crates/html-to-markdown-node/scripts/**" = ["no-console"]
+"crates/html-to-markdown-wasm/scripts/**" = ["no-console"]
+# Standalone browser demo asset, loaded straight into a `<script type="module">` on the docs
+# site with no bundler and no logger. Every `console.error` here already has a paired
+# user-visible status message; the console line is the devtools-side detail. ~keep
+"docs-site/public/demo/**" = ["no-console"]
+# Vendored upstream Apache Maven wrapper (Apache-2.0, (c) the original authors). The empty
+# `catch (IOException)` around a stream close is upstream's; editing it forks a file we take
+# verbatim and would re-take on every wrapper upgrade. ~keep
+"**/MavenWrapperDownloader.java" = ["empty-catch-block"]
+# `@opencode-ai/plugin` contract entrypoints. The exported `Plugin` factory is typed to return
+# a promise of the hooks object, and each tool `execute` relies on `async` to turn its
+# argument-validation `throw` into a rejection the OpenCode runtime handles. Dropping `async`
+# to satisfy require-await would make those throws synchronous and break the contract. ~keep
+"plugin/.ai-rulez/opencode/index.js" = ["require-await"]
 
 [[crates]]
 name = "html-to-markdown-rs"
