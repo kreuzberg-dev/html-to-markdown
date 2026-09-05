@@ -178,6 +178,18 @@ pub struct InlineImageWarning {
     pub message: String,
 }
 
+/// Parts used to construct an extracted inline image.
+#[derive(Debug)]
+pub struct InlineImageBuild {
+    pub(crate) data: Vec<u8>,
+    pub(crate) format: InlineImageFormat,
+    pub(crate) filename: Option<String>,
+    pub(crate) description: Option<String>,
+    pub(crate) dimensions: Option<ImageDimensions>,
+    pub(crate) source: InlineImageSource,
+    pub(crate) attributes: BTreeMap<String, String>,
+}
+
 /// Output containing extracted inline images from `convert()` when `extract_images` is enabled.
 #[derive(Debug, Clone)]
 pub struct HtmlExtraction {
@@ -295,25 +307,15 @@ impl InlineImageCollector {
         self.images.push(image);
     }
 
-    #[allow(clippy::too_many_arguments)]
-    pub(crate) const fn build_image(
-        &self,
-        data: Vec<u8>,
-        format: InlineImageFormat,
-        filename: Option<String>,
-        description: Option<String>,
-        dimensions: Option<ImageDimensions>,
-        source: InlineImageSource,
-        attributes: BTreeMap<String, String>,
-    ) -> InlineImage {
+    pub(crate) fn build_image(&self, image: InlineImageBuild) -> InlineImage {
         InlineImage {
-            data,
-            format,
-            filename,
-            description,
-            dimensions,
-            source,
-            attributes,
+            data: image.data,
+            format: image.format,
+            filename: image.filename,
+            description: image.description,
+            dimensions: image.dimensions,
+            source: image.source,
+            attributes: image.attributes,
         }
     }
 

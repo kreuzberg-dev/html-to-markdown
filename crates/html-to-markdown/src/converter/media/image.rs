@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 #[cfg(feature = "inline-images")]
-use crate::inline_images::{InlineImageCollector, InlineImageFormat, InlineImageSource};
+use crate::inline_images::{InlineImageBuild, InlineImageCollector, InlineImageFormat, InlineImageSource};
 
 #[cfg(feature = "inline-images")]
 type InlineCollectorHandle = std::rc::Rc<std::cell::RefCell<InlineImageCollector>>;
@@ -159,15 +159,15 @@ pub fn handle_inline_data_image(
 
     let dimensions = collector.infer_dimensions(index, &decoded, &format);
 
-    let image = collector.build_image(
-        decoded,
+    let image = collector.build_image(InlineImageBuild {
+        data: decoded,
         format,
-        filename_candidate,
+        filename: filename_candidate,
         description,
         dimensions,
-        InlineImageSource::ImgDataUri,
+        source: InlineImageSource::ImgDataUri,
         attributes,
-    );
+    });
 
     collector.push_image(index, image);
 }

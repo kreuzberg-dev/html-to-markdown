@@ -25,6 +25,18 @@ pub struct VisitorElementState<'p> {
     is_inline: bool,
 }
 
+/// Arguments needed to complete an element's visitor callback.
+pub struct VisitorElementEndContext<'a> {
+    /// Buffer containing the element's converted output.
+    pub(crate) output: &'a mut String,
+    /// Offset at which this element's output began.
+    pub(crate) element_output_start: usize,
+    /// Conversion state used to record a visitor error.
+    pub(crate) ctx: &'a crate::converter::Context,
+    /// Current traversal depth.
+    pub(crate) depth: usize,
+}
+
 impl<'p> VisitorElementState<'p> {
     fn build_node_ctx<'a>(&'a self, tag_name: &'a str, tag: &'a tl::HTMLTag<'a>, depth: usize) -> NodeContext<'a>
     where
@@ -42,29 +54,29 @@ impl<'p> VisitorElementState<'p> {
     }
 }
 
-/// Handles visitor callback for element start (before processing).
-///
-/// Returns the action to take **and** the state needed to call
-/// `handle_visitor_element_end` without recomputing attributes / parent.
-/// When the action is `Skip`, `Custom`, or `Error` the state is `None`
-/// because no matching end callback will fire.
-pub fn handle_visitor_element_start<'p>(
-    visitor_handle: &crate::visitor::VisitorHandle,
+/// Captures the state shared by an element's start and end visitor callbacks.
+pub fn build_visitor_element_state<'p>(
     tag_name: &str,
     node_handle: &tl::NodeHandle,
-    tag: &tl::HTMLTag,
     parser: &'p tl::Parser<'p>,
-    output: &mut String,
-    _ctx: &crate::converter::Context,
-    depth: usize,
     dom_ctx: &'p crate::converter::DomContext,
-) -> (VisitAction, Option<VisitorElementState<'p>>) {
-    let state = VisitorElementState {
+) -> VisitorElementState<'p> {
+    VisitorElementState {
         parent_tag: dom_ctx.parent_tag_name(node_handle.get_inner(), parser),
         index_in_parent: dom_ctx.get_sibling_index(node_handle.get_inner()).unwrap_or(0),
         is_inline: !is_block_level_element(tag_name),
-    };
+    }
+}
 
+/// Handles visitor callback for element start (before processing).
+pub fn handle_visitor_element_start(
+    visitor_handle: &crate::visitor::VisitorHandle,
+    tag_name: &str,
+    tag: &tl::HTMLTag,
+    state: &VisitorElementState<'_>,
+    output: &mut String,
+    depth: usize,
+) -> VisitAction {
     let node_ctx = state.build_node_ctx(tag_name, tag, depth);
 
     let visitor_start_result = {
@@ -73,8 +85,8 @@ pub fn handle_visitor_element_start<'p>(
     };
 
     match visitor_start_result {
-        crate::visitor::VisitResult::Continue => (VisitAction::Continue, Some(state)),
-        crate::visitor::VisitResult::Skip => (VisitAction::Skip, None),
+        crate::visitor::VisitResult::Continue => VisitAction::Continue,
+        crate::visitor::VisitResult::Skip => VisitAction::Skip,
         crate::visitor::VisitResult::Custom(custom_output) => {
             output.push_str(&custom_output);
 
@@ -84,10 +96,10 @@ pub fn handle_visitor_element_start<'p>(
                 let _ = visitor.visit_element_end(&node_ctx, element_content);
             }
 
-            (VisitAction::Custom, None)
+            VisitAction::Custom
         }
-        crate::visitor::VisitResult::Error(_msg) => (VisitAction::Error, None),
-        crate::visitor::VisitResult::PreserveHtml => (VisitAction::Continue, Some(state)),
+        crate::visitor::VisitResult::Error(_msg) => VisitAction::Error,
+        crate::visitor::VisitResult::PreserveHtml => VisitAction::Continue,
     }
 }
 
@@ -101,34 +113,31 @@ pub fn handle_visitor_element_end(
     tag_name: &str,
     state: &VisitorElementState<'_>,
     tag: &tl::HTMLTag,
-    output: &mut String,
-    element_output_start: usize,
-    ctx: &crate::converter::Context,
-    depth: usize,
+    end: VisitorElementEndContext<'_>,
 ) {
     if matches!(tag_name, "table") {
         return;
     }
 
-    let node_ctx = state.build_node_ctx(tag_name, tag, depth);
+    let node_ctx = state.build_node_ctx(tag_name, tag, end.depth);
 
-    let safe_start = element_output_start.min(output.len());
-    let safe_start = crate::converter::utility::content::floor_char_boundary(output, safe_start);
-    let element_content = &output[safe_start..];
+    let safe_start = end.element_output_start.min(end.output.len());
+    let safe_start = crate::converter::utility::content::floor_char_boundary(end.output, safe_start);
+    let element_content = &end.output[safe_start..];
 
     let mut visitor = visitor_handle.lock().expect("visitor mutex poisoned");
     match visitor.visit_element_end(&node_ctx, element_content) {
         VisitResult::Continue => {}
         VisitResult::Custom(custom) => {
-            output.truncate(safe_start);
-            output.push_str(&custom);
+            end.output.truncate(safe_start);
+            end.output.push_str(&custom);
         }
         VisitResult::Skip => {
-            output.truncate(safe_start);
+            end.output.truncate(safe_start);
         }
         VisitResult::Error(err) => {
-            if ctx.visitor_error.borrow().is_none() {
-                *ctx.visitor_error.borrow_mut() = Some(err);
+            if end.ctx.visitor_error.borrow().is_none() {
+                *end.ctx.visitor_error.borrow_mut() = Some(err);
             }
         }
         VisitResult::PreserveHtml => {}
