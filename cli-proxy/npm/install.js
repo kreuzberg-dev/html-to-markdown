@@ -39,9 +39,13 @@ function binaryName() {
 
 function httpGetBuffer(url, { headers = {} } = {}, maxRedirects = 5) {
   return new Promise((resolve, reject) => {
-    if (maxRedirects < 0) return reject(new Error("too many redirects"));
+    if (maxRedirects < 0) {
+      reject(new Error("too many redirects"));
+      return;
+    }
     if (!/^https:\/\//i.test(url)) {
-      return reject(new Error(`refusing non-https URL: ${url}`));
+      reject(new Error(`refusing non-https URL: ${url}`));
+      return;
     }
     const req = https.get(url, { headers: { "User-Agent": USER_AGENT, ...headers } }, (res) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
