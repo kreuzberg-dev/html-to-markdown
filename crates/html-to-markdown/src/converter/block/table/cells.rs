@@ -51,6 +51,68 @@ impl CellTextCache {
     }
 }
 
+/// Read-only conversion inputs threaded together through row/cell rendering: the parser, user
+/// options, conversion `Context`, and DOM lookup context.
+///
+/// ~keep These four are always passed as a group across this module's row-rendering functions;
+/// ~keep bundling them keeps each function's own signature down to its row/cell-specific
+/// ~keep parameters instead of repeating all four everywhere (too-many-parameters).
+#[derive(Clone, Copy)]
+pub struct RowEnv<'p> {
+    pub parser: &'p tl::Parser<'p>,
+    pub options: &'p crate::options::ConversionOptions,
+    pub ctx: &'p super::super::super::Context,
+    pub dom_ctx: &'p super::super::super::DomContext,
+}
+
+/// Append one layout-table cell's converted text to `row_text`, space-joining after the first
+/// non-empty cell.
+///
+/// Extracted from `append_layout_row`'s per-cell loop body — identical cell-name check,
+/// inline-image handling, and whitespace trim, unchanged.
+fn append_layout_cell_text(cell_handle: &tl::NodeHandle, row_text: &mut String, env: RowEnv<'_>, depth: usize) {
+    let Some(tl::Node::Tag(cell_tag)) = cell_handle.get(env.parser) else {
+        return;
+    };
+    let cell_name: Cow<'_, str> = env.dom_ctx.tag_info(cell_handle.get_inner(), env.parser).map_or_else(
+        || normalized_tag_name(cell_tag.name().as_utf8_str()).into_owned().into(),
+        |info| Cow::Borrowed(info.name.as_str()),
+    );
+    if !matches!(cell_name.as_ref(), "td" | "th" | "cell") {
+        return;
+    }
+
+    let mut cell_text = String::new();
+    // ~keep issue #433: honor keep_inline_images_in for images in
+    // ~keep layout-table cells even though cell content is converted
+    // ~keep as inline. A matching cell tag keeps images as markdown.
+    let cell_allow_inline_images = env.ctx.keep_inline_images_in.contains(cell_name.as_ref());
+    let cell_ctx = super::super::super::Context {
+        convert_as_inline: true,
+        cell_allow_inline_images,
+        ..env.ctx.clone()
+    };
+    let cell_children = cell_tag.children();
+    for cell_child in cell_children.top().iter() {
+        super::super::super::walk_node(
+            cell_child,
+            env.parser,
+            &mut cell_text,
+            env.options,
+            &cell_ctx,
+            depth + 1,
+            env.dom_ctx,
+        );
+    }
+    let cell_content = crate::text::normalize_whitespace_cow(&cell_text);
+    if !cell_content.trim().is_empty() {
+        if !row_text.is_empty() {
+            row_text.push(' ');
+        }
+        row_text.push_str(cell_content.trim());
+    }
+}
+
 /// Append a layout table row as a list item.
 ///
 /// For tables used for visual layout, converts rows to list items
@@ -58,76 +120,50 @@ impl CellTextCache {
 ///
 /// # Arguments
 /// * `row_handle` - Handle to the row element
-/// * `parser` - HTML parser instance
 /// * `output` - Mutable string to append content
-/// * `options` - Conversion options
-/// * `ctx` - Conversion context
-/// * `dom_ctx` - DOM context
+/// * `env` - Parser, options, conversion context, and DOM context
 /// * `depth` - Current recursion depth (the row's own depth; cell content is walked at `depth + 1`)
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[allow(clippy::too_many_arguments)]
-pub fn append_layout_row(
-    row_handle: &tl::NodeHandle,
-    parser: &tl::Parser,
-    output: &mut String,
-    options: &crate::options::ConversionOptions,
-    ctx: &super::super::super::Context,
-    dom_ctx: &super::super::super::DomContext,
-    depth: usize,
-) {
-    if let Some(tl::Node::Tag(row_tag)) = row_handle.get(parser) {
-        let mut row_text = String::new();
-        let row_children = row_tag.children();
-        for cell_handle in row_children.top().iter() {
-            if let Some(tl::Node::Tag(cell_tag)) = cell_handle.get(parser) {
-                let cell_name: Cow<'_, str> = dom_ctx.tag_info(cell_handle.get_inner(), parser).map_or_else(
-                    || normalized_tag_name(cell_tag.name().as_utf8_str()).into_owned().into(),
-                    |info| Cow::Borrowed(info.name.as_str()),
-                );
-                if matches!(cell_name.as_ref(), "td" | "th" | "cell") {
-                    let mut cell_text = String::new();
-                    // ~keep issue #433: honor keep_inline_images_in for images in
-                    // ~keep layout-table cells even though cell content is converted
-                    // ~keep as inline. A matching cell tag keeps images as markdown.
-                    let cell_allow_inline_images = ctx.keep_inline_images_in.contains(cell_name.as_ref());
-                    let cell_ctx = super::super::super::Context {
-                        convert_as_inline: true,
-                        cell_allow_inline_images,
-                        ..ctx.clone()
-                    };
-                    let cell_children = cell_tag.children();
-                    for cell_child in cell_children.top().iter() {
-                        super::super::super::walk_node(
-                            cell_child,
-                            parser,
-                            &mut cell_text,
-                            options,
-                            &cell_ctx,
-                            depth + 1,
-                            dom_ctx,
-                        );
-                    }
-                    let cell_content = crate::text::normalize_whitespace_cow(&cell_text);
-                    if !cell_content.trim().is_empty() {
-                        if !row_text.is_empty() {
-                            row_text.push(' ');
-                        }
-                        row_text.push_str(cell_content.trim());
-                    }
-                }
-            }
-        }
+pub fn append_layout_row(row_handle: &tl::NodeHandle, output: &mut String, env: RowEnv<'_>, depth: usize) {
+    let Some(tl::Node::Tag(row_tag)) = row_handle.get(env.parser) else {
+        return;
+    };
+    let mut row_text = String::new();
+    let row_children = row_tag.children();
+    for cell_handle in row_children.top().iter() {
+        append_layout_cell_text(cell_handle, &mut row_text, env, depth);
+    }
 
-        let trimmed = row_text.trim();
-        if !trimmed.is_empty() {
-            if !output.is_empty() && !output.ends_with('\n') {
-                output.push('\n');
-            }
-            let formatted = trimmed.strip_prefix("- ").unwrap_or(trimmed).trim_start();
-            output.push_str("- ");
-            output.push_str(formatted);
+    let trimmed = row_text.trim();
+    if !trimmed.is_empty() {
+        if !output.is_empty() && !output.ends_with('\n') {
             output.push('\n');
         }
+        let formatted = trimmed.strip_prefix("- ").unwrap_or(trimmed).trim_start();
+        output.push_str("- ");
+        output.push_str(formatted);
+        output.push('\n');
+    }
+}
+
+/// Advance `col` past any columns whose rowspan tracker still has rows remaining, decrementing
+/// each as it is skipped and clearing the tracker entry once exhausted.
+///
+/// Extracted from `collect_row_cell_widths`'s inner loop — identical decrement-and-clear logic,
+/// unchanged.
+fn skip_rowspan_columns(col: &mut usize, rowspan_tracker: &mut [Option<usize>]) {
+    while *col < rowspan_tracker.len() {
+        let Some(Some(remaining)) = rowspan_tracker.get_mut(*col) else {
+            break;
+        };
+        if *remaining == 0 {
+            break;
+        }
+        *remaining -= 1;
+        if *remaining == 0 {
+            rowspan_tracker[*col] = None;
+        }
+        *col += 1;
     }
 }
 
@@ -138,45 +174,37 @@ pub fn append_layout_row(
 /// Pass a shared tracker across all row calls to correctly handle multi-row spans.
 ///
 /// `depth` is the row's own recursion depth; cell content is measured at `depth + 1`.
+///
+/// # Arguments
+/// * `node_handle` - Handle to the row element
+/// * `env` - Parser, options, conversion context, and DOM context
+/// * `col_widths` - Per-column max content widths accumulated so far
+/// * `rowspan_tracker` - Mutable array tracking rowspan remainder for each column
+/// * `cell_cache` - Rendered markdown to store for later reuse by the render pass
+/// * `depth` - Row's own recursion depth
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[allow(clippy::too_many_arguments)]
 pub fn collect_row_cell_widths(
     node_handle: &tl::NodeHandle,
-    parser: &tl::Parser,
-    options: &crate::options::ConversionOptions,
-    ctx: &super::super::super::Context,
-    dom_ctx: &super::super::super::DomContext,
+    env: RowEnv<'_>,
     col_widths: &mut Vec<usize>,
     rowspan_tracker: &mut Vec<Option<usize>>,
     cell_cache: &mut CellTextCache,
     depth: usize,
 ) {
     let mut cells = Vec::new();
-    collect_table_cells(node_handle, parser, dom_ctx, &mut cells);
+    collect_table_cells(node_handle, env.parser, env.dom_ctx, &mut cells);
 
     let mut col = 0usize;
     let mut cell_iter = cells.iter();
 
     loop {
-        while col < rowspan_tracker.len() {
-            if let Some(Some(remaining)) = rowspan_tracker.get_mut(col) {
-                if *remaining > 0 {
-                    *remaining -= 1;
-                    if *remaining == 0 {
-                        rowspan_tracker[col] = None;
-                    }
-                    col += 1;
-                    continue;
-                }
-            }
-            break;
-        }
+        skip_rowspan_columns(&mut col, rowspan_tracker);
 
         let Some(cell_handle) = cell_iter.next() else {
             break;
         };
 
-        let text = cell_text_content(cell_handle, parser, options, ctx, dom_ctx, depth + 1);
+        let text = cell_text_content(cell_handle, env.parser, env.options, env.ctx, env.dom_ctx, depth + 1);
         const MAX_CELL_WIDTH: usize = 200;
         let width = text.chars().count().min(MAX_CELL_WIDTH);
         cell_cache.store(cell_handle.get_inner(), text);
@@ -188,7 +216,7 @@ pub fn collect_row_cell_widths(
             col_widths[col] = width;
         }
 
-        let (colspan, rowspan) = get_colspan_rowspan(cell_handle, parser);
+        let (colspan, rowspan) = get_colspan_rowspan(cell_handle, env.parser);
 
         if rowspan > 1 {
             if col >= rowspan_tracker.len() {
@@ -203,31 +231,28 @@ pub fn collect_row_cell_widths(
 
 /// Emit one cell of a rendered row, reusing the pre-pass rendering when it is cached.
 ///
+/// `env.ctx` is used as the cell's own context (already carrying `in_table_cell = true`).
 /// `depth` is the cell's own recursion depth.
 #[allow(clippy::trivially_copy_pass_by_ref)]
-#[allow(clippy::too_many_arguments)]
 fn emit_row_cell(
     cell_handle: &tl::NodeHandle,
-    parser: &tl::Parser,
     row_text: &mut String,
-    options: &crate::options::ConversionOptions,
-    cell_ctx: &super::super::super::Context,
-    dom_ctx: &super::super::super::DomContext,
+    env: RowEnv<'_>,
     col_width: Option<usize>,
     depth: usize,
     cell_cache: &mut CellTextCache,
 ) {
     if let Some(text) = cell_cache.take(cell_handle.get_inner()) {
-        emit_cell_text(cell_handle, parser, row_text, &text, col_width);
+        emit_cell_text(cell_handle, env.parser, row_text, &text, col_width);
     } else {
         convert_table_cell(
             cell_handle,
-            parser,
+            env.parser,
             row_text,
-            options,
-            cell_ctx,
+            env.options,
+            env.ctx,
             "",
-            dom_ctx,
+            env.dom_ctx,
             col_width,
             depth,
         );
@@ -236,6 +261,47 @@ fn emit_row_cell(
 
 /// Minimum separator dash count per column (matches `---`).
 const MIN_SEPARATOR_DASHES: usize = 3;
+
+/// If `col_index` still has pending rowspan rows, emit its blank continuation cell (padded to
+/// `col_widths`) into `row_text` and advance `col_index` past it.
+///
+/// Returns `true` when a continuation cell was emitted (caller should retry from the top of the
+/// loop) and `false` when `col_index` is not a pending rowspan continuation.
+///
+/// Extracted from `convert_table_row`'s has-span loop — identical padding and rowspan-tracker
+/// bookkeeping, unchanged.
+fn emit_rowspan_continuation(
+    col_index: &mut usize,
+    total_cols: usize,
+    rowspan_tracker: &mut [Option<usize>],
+    col_widths: &[usize],
+    row_text: &mut String,
+) -> bool {
+    if *col_index >= total_cols {
+        return false;
+    }
+    let Some(Some(remaining_rows)) = rowspan_tracker.get_mut(*col_index) else {
+        return false;
+    };
+    if *remaining_rows == 0 {
+        return false;
+    }
+
+    let width = col_widths.get(*col_index).copied();
+    row_text.push(' ');
+    if let Some(w) = width {
+        for _ in 0..w {
+            row_text.push(' ');
+        }
+    }
+    row_text.push_str(" |");
+    *remaining_rows -= 1;
+    if *remaining_rows == 0 {
+        rowspan_tracker[*col_index] = None;
+    }
+    *col_index += 1;
+    true
+}
 
 /// Convert a table row (tr) to Markdown format.
 ///
@@ -375,45 +441,25 @@ pub fn convert_table_row(
         ..ctx.clone()
     };
 
+    let row_env = RowEnv {
+        parser,
+        options,
+        ctx: &cell_ctx,
+        dom_ctx,
+    };
+
     let mut filled_cols = if has_span {
         let mut col_index = 0;
         let mut cell_iter = cells.iter();
 
         loop {
-            if col_index < total_cols {
-                if let Some(Some(remaining_rows)) = rowspan_tracker.get_mut(col_index) {
-                    if *remaining_rows > 0 {
-                        let width = col_widths.get(col_index).copied();
-                        row_text.push(' ');
-                        if let Some(w) = width {
-                            for _ in 0..w {
-                                row_text.push(' ');
-                            }
-                        }
-                        row_text.push_str(" |");
-                        *remaining_rows -= 1;
-                        if *remaining_rows == 0 {
-                            rowspan_tracker[col_index] = None;
-                        }
-                        col_index += 1;
-                        continue;
-                    }
-                }
+            if emit_rowspan_continuation(&mut col_index, total_cols, rowspan_tracker, col_widths, &mut row_text) {
+                continue;
             }
 
             if let Some(cell_handle) = cell_iter.next() {
                 let col_width = col_widths.get(col_index).copied();
-                emit_row_cell(
-                    cell_handle,
-                    parser,
-                    &mut row_text,
-                    options,
-                    &cell_ctx,
-                    dom_ctx,
-                    col_width,
-                    depth + 1,
-                    cell_cache,
-                );
+                emit_row_cell(cell_handle, &mut row_text, row_env, col_width, depth + 1, cell_cache);
 
                 let (colspan, rowspan) = get_colspan_rowspan(cell_handle, parser);
 
@@ -430,17 +476,7 @@ pub fn convert_table_row(
     } else {
         for (cell_idx, cell_handle) in cells.iter().enumerate() {
             let col_width = col_widths.get(cell_idx).copied();
-            emit_row_cell(
-                cell_handle,
-                parser,
-                &mut row_text,
-                options,
-                &cell_ctx,
-                dom_ctx,
-                col_width,
-                depth + 1,
-                cell_cache,
-            );
+            emit_row_cell(cell_handle, &mut row_text, row_env, col_width, depth + 1, cell_cache);
         }
         cells.len()
     };

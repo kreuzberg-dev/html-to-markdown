@@ -15,6 +15,81 @@
 use super::walk_node;
 use std::borrow::Cow;
 
+/// Run `<form>`'s visitor hook, if one is installed.
+///
+/// Returns `true` when the visitor already produced (or explicitly skipped) the output for
+/// this node and `handle_form` must return without falling through to its default rendering;
+/// `false` when there is no visitor or it returned `VisitResult::Continue`.
+///
+/// Extracted from `handle_form` — identical visitor dispatch and `VisitResult` handling,
+/// unchanged.
+#[cfg(feature = "visitor")]
+fn dispatch_form_visitor(
+    node_handle: &tl::NodeHandle,
+    tag: &tl::HTMLTag,
+    parser: &tl::Parser,
+    output: &mut String,
+    ctx: &super::Context,
+    depth: usize,
+    dom_ctx: &super::DomContext,
+) -> bool {
+    use crate::visitor::{NodeContext, NodeType, VisitResult};
+
+    let Some(ref visitor_handle) = ctx.visitor else {
+        return false;
+    };
+
+    let node_id = node_handle.get_inner();
+    let parent_tag = dom_ctx.parent_tag_name(node_id, parser);
+    let index_in_parent = dom_ctx.get_sibling_index(node_id).unwrap_or(0);
+    let action = tag
+        .attributes()
+        .get("action")
+        .flatten()
+        .map(|v| v.as_utf8_str().into_owned());
+    let method = tag
+        .attributes()
+        .get("method")
+        .flatten()
+        .map(|v| v.as_utf8_str().into_owned());
+    let node_ctx = NodeContext::with_lazy_attributes(
+        NodeType::Form,
+        Cow::Borrowed("form"),
+        tag,
+        depth,
+        index_in_parent,
+        parent_tag.map(Cow::Borrowed),
+        false,
+    );
+    let visit_result = {
+        let mut visitor = visitor_handle.lock().expect("visitor mutex poisoned");
+        visitor.visit_form(&node_ctx, action.as_deref(), method.as_deref())
+    };
+    match visit_result {
+        VisitResult::Continue => false,
+        VisitResult::Skip => true,
+        VisitResult::Custom(custom) => {
+            if !output.is_empty() && !output.ends_with("\n\n") {
+                output.push_str("\n\n");
+            }
+            output.push_str(&custom);
+            output.push_str("\n\n");
+            true
+        }
+        VisitResult::PreserveHtml => {
+            use crate::converter::utility::serialization::serialize_node;
+            output.push_str(&serialize_node(node_handle, parser));
+            true
+        }
+        VisitResult::Error(err) => {
+            if ctx.visitor_error.borrow().is_none() {
+                *ctx.visitor_error.borrow_mut() = Some(err);
+            }
+            true
+        }
+    }
+}
+
 /// Handles the `<form>` element.
 ///
 /// A form element is a container for form controls. In Markdown, it's rendered
@@ -38,58 +113,8 @@ pub fn handle_form(
 ) {
     if let Some(tl::Node::Tag(tag)) = node_handle.get(parser) {
         #[cfg(feature = "visitor")]
-        if let Some(ref visitor_handle) = ctx.visitor {
-            use crate::visitor::{NodeContext, NodeType, VisitResult};
-
-            let node_id = node_handle.get_inner();
-            let parent_tag = dom_ctx.parent_tag_name(node_id, parser);
-            let index_in_parent = dom_ctx.get_sibling_index(node_id).unwrap_or(0);
-            let action = tag
-                .attributes()
-                .get("action")
-                .flatten()
-                .map(|v| v.as_utf8_str().into_owned());
-            let method = tag
-                .attributes()
-                .get("method")
-                .flatten()
-                .map(|v| v.as_utf8_str().into_owned());
-            let node_ctx = NodeContext::with_lazy_attributes(
-                NodeType::Form,
-                Cow::Borrowed("form"),
-                tag,
-                depth,
-                index_in_parent,
-                parent_tag.map(Cow::Borrowed),
-                false,
-            );
-            let visit_result = {
-                let mut visitor = visitor_handle.lock().expect("visitor mutex poisoned");
-                visitor.visit_form(&node_ctx, action.as_deref(), method.as_deref())
-            };
-            match visit_result {
-                VisitResult::Continue => {}
-                VisitResult::Skip => return,
-                VisitResult::Custom(custom) => {
-                    if !output.is_empty() && !output.ends_with("\n\n") {
-                        output.push_str("\n\n");
-                    }
-                    output.push_str(&custom);
-                    output.push_str("\n\n");
-                    return;
-                }
-                VisitResult::PreserveHtml => {
-                    use crate::converter::utility::serialization::serialize_node;
-                    output.push_str(&serialize_node(node_handle, parser));
-                    return;
-                }
-                VisitResult::Error(err) => {
-                    if ctx.visitor_error.borrow().is_none() {
-                        *ctx.visitor_error.borrow_mut() = Some(err);
-                    }
-                    return;
-                }
-            }
+        if dispatch_form_visitor(node_handle, tag, parser, output, ctx, depth, dom_ctx) {
+            return;
         }
 
         if ctx.convert_as_inline {

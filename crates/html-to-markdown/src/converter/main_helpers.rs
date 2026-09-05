@@ -276,6 +276,84 @@ const HTML5_VOID_ELEMENTS: &[&str] = &[
     "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr",
 ];
 
+/// Advance past a `</tag>` closing tag, starting at the `/` immediately after `<` (`i` points
+/// at that `/`). Returns the index just past the `>`, or `len` if never terminated. Extracted
+/// from `expand_xml_self_closing_tags` — identical scan, unchanged.
+fn skip_closing_tag(bytes: &[u8], mut i: usize, len: usize) -> usize {
+    while i < len && bytes[i] != b'>' {
+        i += 1;
+    }
+    if i < len {
+        i += 1;
+    }
+    i
+}
+
+/// Scan a tag name starting at `start`, stopping at `>`, `/`, or ASCII whitespace. Returns the
+/// end index (exclusive) of the name. Extracted from `expand_xml_self_closing_tags` — identical
+/// scan, unchanged.
+fn scan_tag_name_end(bytes: &[u8], start: usize) -> usize {
+    let len = bytes.len();
+    let mut i = start;
+    while i < len {
+        let ch = bytes[i];
+        if ch == b'>' || ch == b'/' || ch.is_ascii_whitespace() {
+            break;
+        }
+        i += 1;
+    }
+    i
+}
+
+/// Whether `tag_name_bytes` (ASCII-case-insensitive) names an HTML5 void element. Extracted
+/// from `expand_xml_self_closing_tags` — identical lowercase-and-compare, unchanged.
+fn is_html5_void_element(tag_name_bytes: &[u8]) -> bool {
+    let tag_name_lower = tag_name_bytes.iter().map(u8::to_ascii_lowercase).collect::<Vec<_>>();
+    HTML5_VOID_ELEMENTS
+        .iter()
+        .any(|v| v.as_bytes() == tag_name_lower.as_slice())
+}
+
+/// Scan forward from `start` (the position right after the tag name) to find where the tag's
+/// attribute list ends, honoring quoted attribute values so a `/` or `>` inside a quoted string
+/// is not mistaken for the tag terminator. Returns `(self_closing, end)` where `end` is the
+/// index of the terminating `/` (when `self_closing` is true) or `>` (when false), or `len` if
+/// the tag is never closed. Extracted from `expand_xml_self_closing_tags` — identical
+/// quote-tracking scan, unchanged.
+fn scan_tag_terminator(bytes: &[u8], start: usize) -> (bool, usize) {
+    let len = bytes.len();
+    let mut i = start;
+    let mut in_single_quote = false;
+    let mut in_double_quote = false;
+
+    while i < len {
+        match bytes[i] {
+            b'"' if !in_single_quote => {
+                in_double_quote = !in_double_quote;
+                i += 1;
+            }
+            b'\'' if !in_double_quote => {
+                in_single_quote = !in_single_quote;
+                i += 1;
+            }
+            b'/' if !in_single_quote && !in_double_quote => {
+                if i + 1 < len && bytes[i + 1] == b'>' {
+                    return (true, i);
+                }
+                i += 1;
+            }
+            b'>' if !in_single_quote && !in_double_quote => {
+                return (false, i);
+            }
+            _ => {
+                i += 1;
+            }
+        }
+    }
+
+    (false, len)
+}
+
 /// Expand XML-style self-closing tags to explicit open+close pairs.
 ///
 /// HTML5 does not honour the `/>` self-close syntax for non-void elements.  When
@@ -313,12 +391,7 @@ pub fn expand_xml_self_closing_tags(input: &str) -> String {
         i += 1;
 
         if i < len && bytes[i] == b'/' {
-            while i < len && bytes[i] != b'>' {
-                i += 1;
-            }
-            if i < len {
-                i += 1;
-            }
+            i = skip_closing_tag(bytes, i, len);
             continue;
         }
 
@@ -327,54 +400,18 @@ pub fn expand_xml_self_closing_tags(input: &str) -> String {
         }
 
         let name_start = i;
-        while i < len {
-            let ch = bytes[i];
-            if ch == b'>' || ch == b'/' || ch.is_ascii_whitespace() {
-                break;
-            }
-            i += 1;
-        }
+        i = scan_tag_name_end(bytes, name_start);
         let tag_name_bytes = &bytes[name_start..i];
 
         if tag_name_bytes.is_empty() {
             continue;
         }
 
-        let tag_name_lower = tag_name_bytes.iter().map(u8::to_ascii_lowercase).collect::<Vec<_>>();
-        let is_void = HTML5_VOID_ELEMENTS
-            .iter()
-            .any(|v| v.as_bytes() == tag_name_lower.as_slice());
+        let is_void = is_html5_void_element(tag_name_bytes);
 
         let attrs_start = i;
-        let mut in_single_quote = false;
-        let mut in_double_quote = false;
-        let mut self_closing = false;
-
-        while i < len {
-            match bytes[i] {
-                b'"' if !in_single_quote => {
-                    in_double_quote = !in_double_quote;
-                    i += 1;
-                }
-                b'\'' if !in_double_quote => {
-                    in_single_quote = !in_single_quote;
-                    i += 1;
-                }
-                b'/' if !in_single_quote && !in_double_quote => {
-                    if i + 1 < len && bytes[i + 1] == b'>' {
-                        self_closing = true;
-                        break;
-                    }
-                    i += 1;
-                }
-                b'>' if !in_single_quote && !in_double_quote => {
-                    break;
-                }
-                _ => {
-                    i += 1;
-                }
-            }
-        }
+        let (self_closing, terminator) = scan_tag_terminator(bytes, attrs_start);
+        i = terminator;
 
         if self_closing && !is_void {
             output.push_str(&input[copy_start..tag_open]);
@@ -445,6 +482,100 @@ pub fn format_metadata_frontmatter(metadata: &BTreeMap<String, String>) -> Strin
     result
 }
 
+/// Record `<meta name>`/`<meta property>` content into `metadata`, honoring `strip_tags`/
+/// `preserve_tags` for `"meta"`. Extracted from `extract_head_metadata` — same tag-name,
+/// attribute-lookup, and key-formatting logic, unchanged.
+fn collect_meta_head_metadata(
+    child_tag: &tl::HTMLTag,
+    options: &ConversionOptions,
+    metadata: &mut BTreeMap<String, String>,
+) {
+    if !child_tag.name().as_utf8_str().eq_ignore_ascii_case("meta")
+        || options.strip_tags.iter().any(|t| t == "meta")
+        || options.preserve_tags.iter().any(|t| t == "meta")
+    {
+        return;
+    }
+
+    if let (Some(name), Some(content)) = (
+        child_tag.attributes().get("name").flatten(),
+        child_tag.attributes().get("content").flatten(),
+    ) {
+        let name_str = name.as_utf8_str();
+        let content_str = content.as_utf8_str();
+        metadata.insert(format!("meta-{name_str}"), content_str.to_string());
+    }
+    if let (Some(property), Some(content)) = (
+        child_tag.attributes().get("property").flatten(),
+        child_tag.attributes().get("content").flatten(),
+    ) {
+        let property_str = property.as_utf8_str();
+        let content_str = content.as_utf8_str();
+        metadata.insert(format!("meta-{property_str}"), content_str.to_string());
+    }
+}
+
+/// Record the `<title>` text into `metadata`, honoring `strip_tags`/`preserve_tags` for
+/// `"title"`. Extracted from `extract_head_metadata` — same traversal and trimming, unchanged.
+fn collect_title_head_metadata(
+    child_tag: &tl::HTMLTag,
+    parser: &tl::Parser,
+    options: &ConversionOptions,
+    metadata: &mut BTreeMap<String, String>,
+) {
+    if !child_tag.name().as_utf8_str().eq_ignore_ascii_case("title")
+        || options.strip_tags.iter().any(|t| t == "title")
+        || options.preserve_tags.iter().any(|t| t == "title")
+    {
+        return;
+    }
+
+    let mut title_content = String::new();
+    let title_children = child_tag.children();
+    for title_child in title_children.top().iter() {
+        if let Some(tl::Node::Raw(raw)) = title_child.get(parser) {
+            title_content.push_str(raw.as_utf8_str().as_ref());
+        }
+    }
+    title_content = title_content.trim().to_string();
+    if !title_content.is_empty() {
+        metadata.insert("title".to_string(), title_content);
+    }
+}
+
+/// Record a `<link rel="canonical">` href into `metadata`. Extracted from
+/// `extract_head_metadata` — same attribute lookups and `"canonical"` substring check, unchanged.
+fn collect_link_head_metadata(child_tag: &tl::HTMLTag, metadata: &mut BTreeMap<String, String>) {
+    if !child_tag.name().as_utf8_str().eq_ignore_ascii_case("link") {
+        return;
+    }
+    let Some(rel_attr) = child_tag.attributes().get("rel").flatten() else {
+        return;
+    };
+    let rel_str = rel_attr.as_utf8_str();
+    if !rel_str.contains("canonical") {
+        return;
+    }
+    let Some(href_attr) = child_tag.attributes().get("href").flatten() else {
+        return;
+    };
+    let href_str = href_attr.as_utf8_str();
+    metadata.insert("canonical".to_string(), href_str.to_string());
+}
+
+/// Record a `<base href>` into `metadata`. Extracted from `extract_head_metadata` — same
+/// attribute lookup, unchanged.
+fn collect_base_head_metadata(child_tag: &tl::HTMLTag, metadata: &mut BTreeMap<String, String>) {
+    if !child_tag.name().as_utf8_str().eq_ignore_ascii_case("base") {
+        return;
+    }
+    let Some(href_attr) = child_tag.attributes().get("href").flatten() else {
+        return;
+    };
+    let href_str = href_attr.as_utf8_str();
+    metadata.insert("base".to_string(), href_str.to_string());
+}
+
 /// Extract metadata from the head element.
 pub fn extract_head_metadata(
     node_handle: &tl::NodeHandle,
@@ -470,60 +601,10 @@ pub fn extract_head_metadata(
             let children = tag.children();
             for child_handle in children.top().iter() {
                 if let Some(tl::Node::Tag(child_tag)) = child_handle.get(parser) {
-                    if child_tag.name().as_utf8_str().eq_ignore_ascii_case("meta")
-                        && !options.strip_tags.iter().any(|t| t == "meta")
-                        && !options.preserve_tags.iter().any(|t| t == "meta")
-                    {
-                        if let (Some(name), Some(content)) = (
-                            child_tag.attributes().get("name").flatten(),
-                            child_tag.attributes().get("content").flatten(),
-                        ) {
-                            let name_str = name.as_utf8_str();
-                            let content_str = content.as_utf8_str();
-                            metadata.insert(format!("meta-{name_str}"), content_str.to_string());
-                        }
-                        if let (Some(property), Some(content)) = (
-                            child_tag.attributes().get("property").flatten(),
-                            child_tag.attributes().get("content").flatten(),
-                        ) {
-                            let property_str = property.as_utf8_str();
-                            let content_str = content.as_utf8_str();
-                            metadata.insert(format!("meta-{property_str}"), content_str.to_string());
-                        }
-                    }
-                    if child_tag.name().as_utf8_str().eq_ignore_ascii_case("title")
-                        && !options.strip_tags.iter().any(|t| t == "title")
-                        && !options.preserve_tags.iter().any(|t| t == "title")
-                    {
-                        let mut title_content = String::new();
-                        let title_children = child_tag.children();
-                        for title_child in title_children.top().iter() {
-                            if let Some(tl::Node::Raw(raw)) = title_child.get(parser) {
-                                title_content.push_str(raw.as_utf8_str().as_ref());
-                            }
-                        }
-                        title_content = title_content.trim().to_string();
-                        if !title_content.is_empty() {
-                            metadata.insert("title".to_string(), title_content);
-                        }
-                    }
-                    if child_tag.name().as_utf8_str().eq_ignore_ascii_case("link") {
-                        if let Some(rel_attr) = child_tag.attributes().get("rel").flatten() {
-                            let rel_str = rel_attr.as_utf8_str();
-                            if rel_str.contains("canonical") {
-                                if let Some(href_attr) = child_tag.attributes().get("href").flatten() {
-                                    let href_str = href_attr.as_utf8_str();
-                                    metadata.insert("canonical".to_string(), href_str.to_string());
-                                }
-                            }
-                        }
-                    }
-                    if child_tag.name().as_utf8_str().eq_ignore_ascii_case("base") {
-                        if let Some(href_attr) = child_tag.attributes().get("href").flatten() {
-                            let href_str = href_attr.as_utf8_str();
-                            metadata.insert("base".to_string(), href_str.to_string());
-                        }
-                    }
+                    collect_meta_head_metadata(child_tag, options, &mut metadata);
+                    collect_title_head_metadata(child_tag, parser, options, &mut metadata);
+                    collect_link_head_metadata(child_tag, &mut metadata);
+                    collect_base_head_metadata(child_tag, &mut metadata);
                 }
             }
         }

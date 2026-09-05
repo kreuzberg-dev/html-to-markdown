@@ -6,7 +6,7 @@
 use std::borrow::Cow;
 
 use super::cell::{collect_table_cells, get_colspan};
-use super::cells::{CellTextCache, append_layout_row, collect_row_cell_widths, convert_table_row};
+use super::cells::{CellTextCache, RowEnv, append_layout_row, collect_row_cell_widths, convert_table_row};
 use super::scanner::{TableScan, scan_table};
 use super::utils::{is_tag_name, normalized_tag_name};
 /// Maximum allowed table columns to prevent unbounded memory usage.
@@ -206,13 +206,33 @@ pub fn handle_table(
                                 if let Some(tl::Node::Tag(row_tag)) = row_handle.get(parser) {
                                     let row_tag_name = normalized_tag_name(row_tag.name().as_utf8_str());
                                     if matches!(row_tag_name.as_ref(), "tr" | "row") {
-                                        append_layout_row(row_handle, parser, output, options, ctx, dom_ctx, depth + 1);
+                                        append_layout_row(
+                                            row_handle,
+                                            output,
+                                            RowEnv {
+                                                parser,
+                                                options,
+                                                ctx,
+                                                dom_ctx,
+                                            },
+                                            depth + 1,
+                                        );
                                     }
                                 }
                             }
                         }
                         "tr" | "row" => {
-                            append_layout_row(child_handle, parser, output, options, ctx, dom_ctx, depth + 1);
+                            append_layout_row(
+                                child_handle,
+                                output,
+                                RowEnv {
+                                    parser,
+                                    options,
+                                    ctx,
+                                    dom_ctx,
+                                },
+                                depth + 1,
+                            );
                         }
                         "colgroup" | "col" => {}
                         _ => {
@@ -298,10 +318,12 @@ pub fn handle_table(
                                 if is_tag_name(row_handle, parser, dom_ctx, "tr") {
                                     collect_row_cell_widths(
                                         row_handle,
-                                        parser,
-                                        options,
-                                        &prepass_ctx,
-                                        dom_ctx,
+                                        RowEnv {
+                                            parser,
+                                            options,
+                                            ctx: &prepass_ctx,
+                                            dom_ctx,
+                                        },
                                         &mut widths,
                                         &mut prepass_rowspan,
                                         &mut cell_cache,
@@ -313,10 +335,12 @@ pub fn handle_table(
                         "tr" | "row" => {
                             collect_row_cell_widths(
                                 child_handle,
-                                parser,
-                                options,
-                                &prepass_ctx,
-                                dom_ctx,
+                                RowEnv {
+                                    parser,
+                                    options,
+                                    ctx: &prepass_ctx,
+                                    dom_ctx,
+                                },
                                 &mut widths,
                                 &mut prepass_rowspan,
                                 &mut cell_cache,
