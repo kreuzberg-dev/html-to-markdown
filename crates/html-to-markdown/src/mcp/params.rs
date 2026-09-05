@@ -238,99 +238,121 @@ impl TryFrom<ConvertConfig> for ConversionOptionsUpdate {
     type Error = InvalidEnumValue;
 
     fn try_from(config: ConvertConfig) -> Result<Self, Self::Error> {
-        let preprocessing = config.preprocessing.map(TryInto::try_into).transpose()?;
-        Ok(Self {
-            heading_style: validated_enum(
-                "heading_style",
-                config.heading_style,
-                HEADING_STYLE_VALUES,
-                HeadingStyle::parse,
-            )?,
-            list_indent_type: validated_enum(
-                "list_indent_type",
-                config.list_indent_type,
-                LIST_INDENT_TYPE_VALUES,
-                ListIndentType::parse,
-            )?,
-            list_indent_width: config.list_indent_width,
-            bullets: config.bullets,
-            strong_em_symbol: config.strong_em_symbol.and_then(|s| s.chars().next()),
-            escape_asterisks: config.escape_asterisks,
-            escape_underscores: config.escape_underscores,
-            escape_misc: config.escape_misc,
-            escape_ascii: config.escape_ascii,
-            code_language: config.code_language,
-            autolinks: config.autolinks,
-            default_title: config.default_title,
-            br_in_tables: config.br_in_tables,
-            compact_tables: config.compact_tables,
-            highlight_style: validated_enum(
-                "highlight_style",
-                config.highlight_style,
-                HIGHLIGHT_STYLE_VALUES,
-                HighlightStyle::parse,
-            )?,
-            extract_metadata: config.extract_metadata,
-            whitespace_mode: validated_enum(
-                "whitespace_mode",
-                config.whitespace_mode,
-                WHITESPACE_MODE_VALUES,
-                WhitespaceMode::parse,
-            )?,
-            strip_newlines: config.strip_newlines,
-            wrap: config.wrap,
-            wrap_width: config.wrap_width,
-            convert_as_inline: config.convert_as_inline,
-            sub_symbol: config.sub_symbol,
-            sup_symbol: config.sup_symbol,
-            newline_style: validated_enum(
-                "newline_style",
-                config.newline_style,
-                NEWLINE_STYLE_VALUES,
-                NewlineStyle::parse,
-            )?,
-            code_block_style: validated_enum(
-                "code_block_style",
-                config.code_block_style,
-                CODE_BLOCK_STYLE_VALUES,
-                CodeBlockStyle::parse,
-            )?,
-            keep_inline_images_in: config.keep_inline_images_in,
-            preprocessing,
-            encoding: config.encoding,
-            debug: config.debug,
-            strip_tags: config.strip_tags,
-            preserve_tags: config.preserve_tags,
-            skip_images: config.skip_images,
-            url_escape_style: validated_enum(
-                "url_escape_style",
-                config.url_escape_style,
-                URL_ESCAPE_STYLE_VALUES,
-                UrlEscapeStyle::parse,
-            )?,
-            link_style: validated_enum("link_style", config.link_style, LINK_STYLE_VALUES, LinkStyle::parse)?,
-            output_format: validated_enum(
-                "output_format",
-                config.output_format,
-                OUTPUT_FORMAT_VALUES,
-                OutputFormat::parse,
-            )?,
-            include_document_structure: config.include_document_structure,
-            extract_images: config.extract_images,
-            max_image_size: config.max_image_size,
-            capture_svg: config.capture_svg,
-            infer_dimensions: config.infer_dimensions,
-            max_depth: config.max_depth.map(|requested| Some(clamp_max_depth(requested))),
-            exclude_selectors: config.exclude_selectors,
-            tier_strategy: validated_enum(
-                "tier_strategy",
-                config.tier_strategy,
-                TIER_STRATEGY_VALUES,
-                parse_tier_strategy,
-            )?,
-            #[cfg(feature = "visitor")]
-            visitor: None,
-        })
+        config.into_update()
+    }
+}
+
+impl ConvertConfig {
+    fn into_update(mut self) -> Result<ConversionOptionsUpdate, InvalidEnumValue> {
+        let mut update = ConversionOptionsUpdate::default();
+        self.apply_basic_options(&mut update);
+        self.apply_formatting_options(&mut update)?;
+        self.apply_content_options(&mut update)?;
+        Ok(update)
+    }
+
+    fn apply_basic_options(&mut self, update: &mut ConversionOptionsUpdate) {
+        update.list_indent_width = self.list_indent_width.take();
+        update.bullets = self.bullets.take();
+        update.strong_em_symbol = self.strong_em_symbol.take().and_then(|value| value.chars().next());
+        update.escape_asterisks = self.escape_asterisks.take();
+        update.escape_underscores = self.escape_underscores.take();
+        update.escape_misc = self.escape_misc.take();
+        update.escape_ascii = self.escape_ascii.take();
+        update.code_language = self.code_language.take();
+        update.autolinks = self.autolinks.take();
+        update.default_title = self.default_title.take();
+        update.br_in_tables = self.br_in_tables.take();
+        update.compact_tables = self.compact_tables.take();
+        update.extract_metadata = self.extract_metadata.take();
+        update.strip_newlines = self.strip_newlines.take();
+        update.wrap = self.wrap.take();
+        update.wrap_width = self.wrap_width.take();
+        update.convert_as_inline = self.convert_as_inline.take();
+        update.sub_symbol = self.sub_symbol.take();
+        update.sup_symbol = self.sup_symbol.take();
+    }
+
+    fn apply_formatting_options(&mut self, update: &mut ConversionOptionsUpdate) -> Result<(), InvalidEnumValue> {
+        update.heading_style = validated_enum(
+            "heading_style",
+            self.heading_style.take(),
+            HEADING_STYLE_VALUES,
+            HeadingStyle::parse,
+        )?;
+        update.list_indent_type = validated_enum(
+            "list_indent_type",
+            self.list_indent_type.take(),
+            LIST_INDENT_TYPE_VALUES,
+            ListIndentType::parse,
+        )?;
+        update.highlight_style = validated_enum(
+            "highlight_style",
+            self.highlight_style.take(),
+            HIGHLIGHT_STYLE_VALUES,
+            HighlightStyle::parse,
+        )?;
+        update.whitespace_mode = validated_enum(
+            "whitespace_mode",
+            self.whitespace_mode.take(),
+            WHITESPACE_MODE_VALUES,
+            WhitespaceMode::parse,
+        )?;
+        update.newline_style = validated_enum(
+            "newline_style",
+            self.newline_style.take(),
+            NEWLINE_STYLE_VALUES,
+            NewlineStyle::parse,
+        )?;
+        update.code_block_style = validated_enum(
+            "code_block_style",
+            self.code_block_style.take(),
+            CODE_BLOCK_STYLE_VALUES,
+            CodeBlockStyle::parse,
+        )?;
+        update.url_escape_style = validated_enum(
+            "url_escape_style",
+            self.url_escape_style.take(),
+            URL_ESCAPE_STYLE_VALUES,
+            UrlEscapeStyle::parse,
+        )?;
+        update.link_style = validated_enum(
+            "link_style",
+            self.link_style.take(),
+            LINK_STYLE_VALUES,
+            LinkStyle::parse,
+        )?;
+        update.output_format = validated_enum(
+            "output_format",
+            self.output_format.take(),
+            OUTPUT_FORMAT_VALUES,
+            OutputFormat::parse,
+        )?;
+        Ok(())
+    }
+
+    fn apply_content_options(&mut self, update: &mut ConversionOptionsUpdate) -> Result<(), InvalidEnumValue> {
+        update.keep_inline_images_in = self.keep_inline_images_in.take();
+        update.preprocessing = self.preprocessing.take().map(TryInto::try_into).transpose()?;
+        update.encoding = self.encoding.take();
+        update.debug = self.debug.take();
+        update.strip_tags = self.strip_tags.take();
+        update.preserve_tags = self.preserve_tags.take();
+        update.skip_images = self.skip_images.take();
+        update.include_document_structure = self.include_document_structure.take();
+        update.extract_images = self.extract_images.take();
+        update.max_image_size = self.max_image_size.take();
+        update.capture_svg = self.capture_svg.take();
+        update.infer_dimensions = self.infer_dimensions.take();
+        update.max_depth = self.max_depth.take().map(|requested| Some(clamp_max_depth(requested)));
+        update.exclude_selectors = self.exclude_selectors.take();
+        update.tier_strategy = validated_enum(
+            "tier_strategy",
+            self.tier_strategy.take(),
+            TIER_STRATEGY_VALUES,
+            parse_tier_strategy,
+        )?;
+        Ok(())
     }
 }
 

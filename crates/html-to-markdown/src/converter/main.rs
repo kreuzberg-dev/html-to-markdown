@@ -436,22 +436,16 @@ pub fn walk_node(
             let visitor_element_state = if ctx.skip_visitor_hooks {
                 None
             } else if let Some(ref visitor_handle) = ctx.visitor {
-                use crate::converter::visitor_hooks::{VisitAction, handle_visitor_element_start};
+                use crate::converter::visitor_hooks::{
+                    VisitAction, build_visitor_element_state, handle_visitor_element_start,
+                };
 
-                let (action, state) = handle_visitor_element_start(
-                    visitor_handle,
-                    tag_name.as_ref(),
-                    node_handle,
-                    tag,
-                    parser,
-                    output,
-                    ctx,
-                    depth,
-                    dom_ctx,
-                );
+                let state = build_visitor_element_state(tag_name.as_ref(), node_handle, parser, dom_ctx);
+                let action =
+                    handle_visitor_element_start(visitor_handle, tag_name.as_ref(), tag, &state, output, depth);
 
                 match action {
-                    VisitAction::Continue => state,
+                    VisitAction::Continue => Some(state),
                     VisitAction::Skip => return,
                     VisitAction::Custom => return,
                     VisitAction::Error => return,
@@ -806,17 +800,19 @@ pub fn walk_node(
 
             #[cfg(feature = "visitor")]
             if let (Some(visitor_handle), Some(state)) = (ctx.visitor.as_ref(), visitor_element_state.as_ref()) {
-                use crate::converter::visitor_hooks::handle_visitor_element_end;
+                use crate::converter::visitor_hooks::{VisitorElementEndContext, handle_visitor_element_end};
 
                 handle_visitor_element_end(
                     visitor_handle,
                     tag_name.as_ref(),
                     state,
                     tag,
-                    output,
-                    element_output_start,
-                    ctx,
-                    depth,
+                    VisitorElementEndContext {
+                        output,
+                        element_output_start,
+                        ctx,
+                        depth,
+                    },
                 );
             }
         }

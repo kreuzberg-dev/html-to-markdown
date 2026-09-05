@@ -482,64 +482,167 @@ traineddata = "traineddata"
 "crates/html-to-markdown/examples/test_tables.rs" = ["function-too-long"]
 "crates/html-to-markdown/src/convert_api.rs" = ["function-too-long"]
 "crates/html-to-markdown/src/converter/block/container.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/block/div.rs" = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/block/heading.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/block/div.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/block/heading.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/block/horizontal_rule.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/block/line_break.rs" = ["function-too-long", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/block/paragraph.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/block/table/builder.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/block/paragraph.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/block/table/builder.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/block/table/caption.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/block/table/cell.rs" = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/block/table/cell.rs" = [
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/block/table/cells.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/block/table/mod.rs" = ["nesting-too-deep", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/block/unknown.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/context.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/form/elements.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/form/mod.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/handlers/blockquote.rs" = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/handlers/code_block.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/handlers/graphic.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/handlers/image.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/handlers/link.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/handlers/blockquote.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/handlers/code_block.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/handlers/graphic.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/handlers/image.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/handlers/link.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/head_metadata.rs" = ["nesting-too-deep"]
-"crates/html-to-markdown/src/converter/inline/code.rs" = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/inline/emphasis.rs" = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/inline/link.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/inline/code.rs" = [
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/inline/emphasis.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/inline/link.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/inline/mod.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/inline/ruby.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/inline/ruby.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/inline/semantic/marks.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/inline/semantic/mod.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/inline/semantic/typography.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/list/definition.rs" = ["function-too-long", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/list/item.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/list/item.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/list/mod.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/list/ordered.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/list/unordered.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/list/utils.rs" = ["nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/main.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/main.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/media/embedded.rs" = ["function-too-long", "too-many-parameters"]
 "crates/html-to-markdown/src/converter/media/image.rs" = ["cyclomatic-complexity", "function-too-long"]
 "crates/html-to-markdown/src/converter/media/mod.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/media/svg.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/metadata.rs" = ["nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/plain_text.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
+"crates/html-to-markdown/src/converter/plain_text.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+]
 "crates/html-to-markdown/src/converter/prescan.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
 "crates/html-to-markdown/src/converter/semantic/attributes.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/semantic/definition_list.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/semantic/figure.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/semantic/figure.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/semantic/mod.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/converter/semantic/sectioning.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/converter/semantic/summary.rs" = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/text_node.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+"crates/html-to-markdown/src/converter/semantic/summary.rs" = [
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
+"crates/html-to-markdown/src/converter/text_node.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/converter/tier1/router.rs" = ["cyclomatic-complexity", "function-too-long"]
-"crates/html-to-markdown/src/converter/tier1/scanner.rs" = ["cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep"]
+"crates/html-to-markdown/src/converter/tier1/scanner.rs" = [
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+]
 "crates/html-to-markdown/src/converter/utility/content.rs" = ["function-too-long", "nesting-too-deep"]
-"crates/html-to-markdown/src/converter/utility/preprocessing.rs" = ["file-too-long", "nesting-too-deep", "too-many-parameters"]
-"crates/html-to-markdown/src/converter/visitor_hooks.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/inline_images.rs" = ["too-many-parameters"]
-"crates/html-to-markdown/src/mcp/params.rs" = ["function-too-long"]
+"crates/html-to-markdown/src/converter/utility/preprocessing.rs" = [
+  "file-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+]
 "crates/html-to-markdown/src/metadata/extraction.rs" = ["cyclomatic-complexity", "function-too-long"]
-"crates/html-to-markdown/src/types/structure_builder.rs" = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
+"crates/html-to-markdown/src/types/structure_builder.rs" = [
+  "cyclomatic-complexity",
+  "function-too-long",
+  "nesting-too-deep",
+]
 "crates/html-to-markdown/src/visitor_helpers.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/visitor_helpers/helpers/state.rs" = ["too-many-parameters"]
 "crates/html-to-markdown/src/wrapper/sync.rs" = ["cyclomatic-complexity", "function-too-long"]
@@ -627,28 +730,118 @@ traineddata = "traineddata"
 # them. Exempts these paths from the uncomment sweep. ~keep
 ".cargo/config.toml" = ["comment", "doc-comment"]
 "Package.swift" = ["comment", "doc-comment"]
-"packages/**" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
-"crates/html-to-markdown-node/**" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
+"packages/**" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+"crates/html-to-markdown-node/**" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 # The php crate is MIXED: src/lib.rs, the visitor interface and the stubs are alef-generated,
 # but src/HtmlVisitor.php is hand-written and must keep its quality metrics. ~keep
 "crates/html-to-markdown-php/**" = ["comment", "doc-comment"]
-"crates/html-to-markdown-php/src/lib.rs" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
-"crates/html-to-markdown-php/src/HtmlVisitorInterface.php" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
-"crates/html-to-markdown-php/stubs/**" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
-"crates/html-to-markdown-rs-jni/**" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
+"crates/html-to-markdown-php/src/lib.rs" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+"crates/html-to-markdown-php/src/HtmlVisitorInterface.php" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+"crates/html-to-markdown-php/stubs/**" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+"crates/html-to-markdown-rs-jni/**" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 # ffi/py/wasm are MIXED: only the alef-generated src/lib.rs (+ ffi
 # build.rs/cbindgen.toml/header) is exempt; other modules are hand-written and
 # get the uncomment sweep. ~keep
-"crates/html-to-markdown-ffi/src/lib.rs" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
+"crates/html-to-markdown-ffi/src/lib.rs" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 "crates/html-to-markdown-ffi/build.rs" = ["comment", "doc-comment"]
 "crates/html-to-markdown-ffi/cbindgen.toml" = ["comment", "doc-comment"]
 "crates/html-to-markdown-ffi/include/html_to_markdown.h" = ["comment", "doc-comment"]
-"crates/html-to-markdown-py/src/lib.rs" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
-"crates/html-to-markdown-wasm/src/lib.rs" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
+"crates/html-to-markdown-py/src/lib.rs" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+"crates/html-to-markdown-wasm/src/lib.rs" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 # alef-generated e2e registry scaffold apps (alef:hash headers) — exempt from the
 # uncomment sweep; regeneration owns their comments. Distinct glob from the
 # builtin "**/test_apps/**" ruff-relaxation key. ~keep
-"test_apps/**" = ["comment", "doc-comment", "cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep", "too-many-parameters", "type-too-long"]
+"test_apps/**" = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 # alef-generated Python entrypoint; RET504 fires on the passthrough return. ~keep
 "packages/python/**/api.py" = ["RET504"]
 # Test-code relaxations on top of the builtin "**/tests/**" defaults. ~keep
