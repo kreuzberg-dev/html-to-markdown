@@ -740,13 +740,28 @@ values = ["PT019", "PLC0415", "SLF001"]
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores..alef-toml-merge-provenance.toml"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores..cargo/config.toml"
 values = ["comment", "doc-comment"]
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores..github/workflows/ci-e2e.yaml"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores..github/workflows/publish.yaml"
-values = ["typo"]
+values = ["file-too-long", "typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.CHANGELOG.md"
+values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -755,8 +770,23 @@ values = ["comment", "doc-comment"]
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores.alef.toml"
+values = ["file-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores.cli-proxy/**/*.py"
 values = ["PLR0917", "RUF100"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-cli/src/args.rs"
+values = ["type-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-cli/src/convert.rs"
+values = ["function-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -810,6 +840,11 @@ values = ["no-console"]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-php/**"
 values = ["comment", "doc-comment"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-php/src/HtmlVisitor.php"
+values = ["type-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -902,13 +937,348 @@ values = [
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/examples/test_inline_formatting.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/examples/test_tables.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/convert_api.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/container.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/div.rs"
+values = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/heading.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/horizontal_rule.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/line_break.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/paragraph.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/table/builder.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/table/caption.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/table/cell.rs"
+values = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/table/cells.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/table/mod.rs"
+values = ["nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/block/unknown.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/context.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/form/elements.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/form/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/handlers/blockquote.rs"
+values = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/handlers/code_block.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/handlers/graphic.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/handlers/image.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/handlers/link.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/head_metadata.rs"
+values = ["nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/code.rs"
+values = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/emphasis.rs"
+values = ["cyclomatic-complexity", "function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/link.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/ruby.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/semantic/marks.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/semantic/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/inline/semantic/typography.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/definition.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/item.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/ordered.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/unordered.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/list/utils.rs"
+values = ["nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/main.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/media/embedded.rs"
+values = ["function-too-long", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/media/image.rs"
+values = ["cyclomatic-complexity", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/media/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/media/svg.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/metadata.rs"
+values = ["nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/plain_text.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/prescan.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/attributes.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/definition_list.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/figure.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/mod.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/sectioning.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/semantic/summary.rs"
+values = ["function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/text_node.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/tier1/router.rs"
+values = ["cyclomatic-complexity", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/tier1/scanner.rs"
+values = ["cyclomatic-complexity", "file-too-long", "function-too-long", "nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/utility/content.rs"
+values = ["function-too-long", "nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/utility/preprocessing.rs"
+values = ["file-too-long", "nesting-too-deep", "too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/converter/visitor_hooks.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/inline_images.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/mcp/params.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/metadata/extraction.rs"
+values = ["cyclomatic-complexity", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/types/structure_builder.rs"
+values = ["cyclomatic-complexity", "function-too-long", "nesting-too-deep"]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown/src/visitor/types.rs"
-values = ["typo"]
+values = ["too-many-parameters", "typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/visitor_helpers.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/visitor_helpers/helpers/state.rs"
+values = ["too-many-parameters"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/src/wrapper/sync.rs"
+values = ["cyclomatic-complexity", "function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown/tests/visitor_integration_test.rs"
+values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.docs-site/public/demo/**"
 values = ["no-console"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.docs-site/src/content/docs/changelog.md"
+values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -962,7 +1332,12 @@ values = ["trailing-whitespace"]
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.plugin/.ai-rulez/opencode/index.js"
-values = ["require-await"]
+values = ["function-too-long", "require-await"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.poly.toml"
+values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -973,6 +1348,11 @@ values = ["MD057"]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.scripts/**/*.py"
 values = ["INP001", "S607", "T201", "D103", "D212"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.scripts/check_ffi_symbols.py"
+values = ["function-too-long", "nesting-too-deep"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -987,3 +1367,13 @@ values = [
   "too-many-parameters",
   "type-too-long",
 ]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.tools/benchmark-harness/examples/mdream_compare.rs"
+values = ["function-too-long"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.tools/benchmark-harness/src/main.rs"
+values = ["function-too-long"]
