@@ -443,6 +443,43 @@ values = ["SAFETY", "SPDX", "Copyright", "License", "licensed under"]
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores.**"
+values = [
+  "CPY001",
+  "UnorderedKey",
+  "eqeqeq",
+  "no-inline-comments",
+  "no-negated-condition",
+  "require-unicode-regexp",
+  "unicorn/consistent-function-scoping",
+  "unicorn/escape-case",
+  "unicorn/explicit-length-check",
+  "unicorn/new-for-builtins",
+  "unicorn/no-array-sort",
+  "unicorn/no-hex-escape",
+  "unicorn/no-lonely-if",
+  "unicorn/no-negated-condition",
+  "unicorn/no-typeof-undefined",
+  "unicorn/no-useless-undefined",
+  "unicorn/prefer-add-event-listener",
+  "unicorn/prefer-at",
+  "unicorn/prefer-code-point",
+  "unicorn/prefer-dom-node-append",
+  "unicorn/prefer-dom-node-remove",
+  "unicorn/prefer-import-meta-properties",
+  "unicorn/prefer-native-coercion-functions",
+  "unicorn/prefer-number-coercion",
+  "unicorn/prefer-query-selector",
+  "unicorn/prefer-single-call",
+  "unicorn/prefer-string-replace-all",
+  "unicorn/prefer-string-slice",
+  "unicorn/prefer-top-level-await",
+  "unicorn/prefer-type-error",
+  "unicorn/require-module-specifiers",
+]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores.**/*.pyi"
 values = ["A002", "F401", "I001", "PYI033", "TC006", "UP035"]
 
@@ -644,12 +681,30 @@ values = ["comment", "doc-comment"]
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-ffi/src/lib.rs"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-node/**"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -658,23 +713,97 @@ values = ["comment", "doc-comment"]
 
 [[entries]]
 relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-php/src/HtmlVisitorInterface.php"
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-php/src/lib.rs"
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.crates/html-to-markdown-php/stubs/**"
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
+
+[[entries]]
+relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-py/src/lib.rs"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-rs-jni/**"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown-wasm/src/lib.rs"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.crates/html-to-markdown/src/visitor/types.rs"
 values = ["typo"]
+
+[[entries]]
+relative_path = "poly.toml"
+key_path = "per-file-ignores.docs-site/src/content/docs/reference/**"
+values = ["file-too-long"]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -684,7 +813,16 @@ values = ["Q000"]
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.packages/**"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
 
 [[entries]]
 relative_path = "poly.toml"
@@ -724,4 +862,13 @@ values = ["INP001", "S607", "T201", "D103", "D212"]
 [[entries]]
 relative_path = "poly.toml"
 key_path = "per-file-ignores.test_apps/**"
-values = ["comment", "doc-comment"]
+values = [
+  "comment",
+  "doc-comment",
+  "cyclomatic-complexity",
+  "file-too-long",
+  "function-too-long",
+  "nesting-too-deep",
+  "too-many-parameters",
+  "type-too-long",
+]
